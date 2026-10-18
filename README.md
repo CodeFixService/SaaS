@@ -1,8 +1,8 @@
 # CodeFix
 
-App web instalable (PWA) para negocios de bicicletas que todavía no tienen sistema propio:
-reservas online con abono y comprobante, agenda con bloqueos, órdenes de trabajo, clientes,
-calificaciones, promociones, planes Gratis/Premium y un panel de administración general.
+App web (PWA) multi-negocio para Chile: reservas, catálogo u órdenes según el rubro, abono con comprobante,
+agenda, clientes, calificaciones, promociones, planes Gratis/Premium, socio y panel de súper administrador.
+Resumen corto del proyecto: [`MEMORIA.md`](MEMORIA.md).
 Servidor: **Supabase** (plan gratis). Publicación: **Cloudflare Pages**.
 
 ➡️ Configuración paso a paso: [`docs/CONFIGURAR.md`](docs/CONFIGURAR.md)
