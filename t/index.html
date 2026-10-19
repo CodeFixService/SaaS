@@ -124,7 +124,8 @@
     (p.texto ? '<div class="sub">' + esc(p.texto) + '</div>' : '') + (p.hasta ? '<div class="sub">Hasta el ' + App.fLarga(p.hasta) + '</div>' : '') + '</div>').join('');
   const c = pub.config || {};
   $('politica').textContent = App.txt('reserva_politica', { devolucion: c.minutos_devolucion || 10, horas: c.horas_cancelacion || 24 });
-  $('abono').textContent = plata(t.abono);
+  $('abono').textContent = t.cobro_modo === 'total' ? 'el precio del servicio' : plata(t.abono);
+  if (t.cobro_modo === 'total') { $('abono').parentElement.firstChild.textContent = '💳 Pago para confirmar: '; $('abono').closest('div').querySelector('.sub').textContent = '(pago completo)'; }
   $('nomCuenta').textContent = t.nombre;
   $('terminos').textContent = App.txt('terminos') || 'Acepto los términos de uso';
   $('cargando').classList.add('hidden'); $('todo').classList.remove('hidden');

@@ -46,6 +46,13 @@
       '<div class="btns"><button class="ghost small" data-l="comprobantes">Comprobantes revisados</button><button class="ghost small" data-l="notificaciones">Avisos viejos</button>' +
       '<button class="ghost small" data-l="reservas">Reservas expiradas/rechazadas (+60 días)</button><button class="danger small" data-l="todo">Limpiar todo</button></div>' +
       '<p class="sub">Versión de la base de datos: ' + esc(r.version) + ' · App: ' + esc(window.BT_CONFIG.VERSION) + '</p></div>';
+    rpc('admin_resumen_modelos').then((m) => {
+      const div = document.createElement('div'); div.className = 'card';
+      div.innerHTML = '<h2>🧩 Negocios por rubro</h2><table>' + m.por_rubro.map((x) => '<tr><td>' + esc(x.rubro) + ' <span class="sub">(' + esc(x.modelo) + ')</span></td><td class="r">' + x.negocios + '</td></tr>').join('') + '</table>' +
+        '<div class="stats" style="margin-top:10px">' + [['🛍️ Pedidos de tiendas este mes', m.pedidos_mes], ['💵 Ventas de tiendas este mes', plata(m.ventas_tiendas_mes)], ['🧾 Pedidos por revisar (tiendas)', m.pedidos_por_revisar]]
+          .map((x) => '<div class="card"><span>' + x[0] + '</span><b>' + x[1] + '</b></div>').join('') + '</div>';
+      const st = $('v-resumen').querySelector('.stats'); if (st) st.after(div);
+    }).catch(() => {});
     $('v-resumen').onclick = async (e) => {
       const ir = e.target.closest('[data-ir]'); if (ir) { show(ir.dataset.ir); return; }
       const b = e.target.closest('[data-l]'); if (!b) return;
@@ -84,7 +91,7 @@
         '<option value="365">+1 año</option><option value="otro">Otro número de días…</option><option value="0">Quitar Premium</option></select>' +
         '<a class="btn small ghost" target="_blank" rel="noopener" href="../t/?s=' + encodeURIComponent(t.slug) + '">🔗 Página</a>' +
         (t.telefono ? '<a class="btn small alt" target="_blank" rel="noopener" href="' + App.wa(t.telefono, 'Hola ' + (t.dueno || '') + ' 👋') + '">📲</a>' : '') +
-        (SUPER ? '<button class="small" data-conf="' + t.id + '">⚙️ Configurar</button>' : '') +
+        '<button class="small alt" data-ficha="' + t.id + '">📊 Ficha</button>' + (SUPER ? '<button class="small" data-conf="' + t.id + '">⚙️ Configurar</button>' : '') +
         '<button class="small ghost" data-chat="' + t.id + '" data-n="' + esc(t.nombre) + '">💬</button><button class="small alt" data-add="' + t.id + '" data-n="' + esc(t.nombre) + '">👤＋</button>' +
         (SUPER ? '<button class="small ' + (t.suspendido ? 'okb' : 'danger') + '" data-susp="' + t.id + '" data-s="' + (t.suspendido ? 0 : 1) + '">' + (t.suspendido ? 'Reactivar' : 'Suspender') + '</button>' +
         '<button class="small danger" data-del="' + t.id + '" data-n="' + esc(t.nombre) + '">🗑️</button>' : '') + '</div></div>';
@@ -101,6 +108,7 @@
   };
   $('tLista').onclick = async (e) => {
     const ch = e.target.closest('[data-chat]'); if (ch) { App.abrirChat(ch.dataset.chat, null, ch.dataset.n); return; }
+    const fi = e.target.closest('[data-ficha]'); if (fi) { fichaNegocio(negocios.find((x) => x.id === fi.dataset.ficha)); return; }
     const cf = e.target.closest('[data-conf]'); if (cf) { configurarNegocio(negocios.find((x) => x.id === cf.dataset.conf)); return; }
     const ad = e.target.closest('[data-add]'); if (ad) { agregarUsuario(ad.dataset.add, ad.dataset.n); return; }
     const dl = e.target.closest('[data-del]');
@@ -159,15 +167,48 @@
       '<div class="row"><div><label for="kT">WhatsApp</label><input id="kT" value="' + esc(t.telefono || '') + '"></div><div><label for="kM">Comuna</label><input id="kM" maxlength="60" value="' + esc(t.comuna || '') + '"></div></div>' +
       '<label><input type="checkbox" id="kO"' + (t.reservas_online ? ' checked' : '') + '> Recibe reservas / pedidos online</label>' +
       '<label><input type="checkbox" id="kA"' + (t.activo ? ' checked' : '') + '> Activo (aparece y recibe clientes nuevos)</label>' +
+      '<h3>💳 Cobro online</h3><div class="row"><div><label for="kM2">El cliente paga</label><select id="kM2"><option value="abono">Abono</option><option value="total">Pago completo</option></select></div>' +
+      '<div><label for="kP">% del abono (tiendas)</label><input id="kP" type="number" min="1" max="100"></div></div>' +
+      '<p class="sub">Reservas: el abono es el monto del link del negocio; con pago completo se cobra el precio del servicio. Tiendas: el abono es el % del pedido.</p>' +
+      '<h3>📏 Límites propios</h3><p class="sub" style="margin-top:0">Vacío = el de su plan.</p><div class="row">' +
+      [['reservas_mes', 'Reservas/pedidos al mes'], ['servicios', 'Servicios/productos'], ['promos', 'Promociones'], ['equipo', 'Equipo'], ['clientes_cuenta', 'Clientes con cuenta']]
+        .map((x) => '<div><label for="kL_' + x[0] + '">' + x[1] + '</label><input id="kL_' + x[0] + '" inputmode="numeric" data-lim="' + x[0] + '"></div>').join('') + '</div>' +
       '<div class="btns"><button class="ghost" data-cerrar>Cancelar</button><button id="kOk">Guardar</button></div><p class="err" id="kErr"></p>');
     const v = (id) => d.querySelector(id);
+    rpc('admin_negocio_detalle', { p_id: t.id }).then((x) => {
+      v('#kM2').value = x.cobro.modo; v('#kP').value = x.cobro.pct;
+      d.querySelectorAll('[data-lim]').forEach((i) => { const n = (x.limites_extra || {})[i.dataset.lim]; i.value = n === undefined ? '' : n; i.placeholder = 'plan: ' + (x.limites[i.dataset.lim] ?? '—'); });
+    }).catch((e) => { v('#kErr').textContent = e.message; });
     v('#kOk').onclick = async () => {
+      const lim = {}; d.querySelectorAll('[data-lim]').forEach((i) => { if (/^\d+$/.test(i.value.trim())) lim[i.dataset.lim] = i.value.trim(); });
+      const pct = parseInt(v('#kP').value, 10);
+      if (!(pct >= 1 && pct <= 100)) { v('#kErr').textContent = 'El % del abono va de 1 a 100'; return; }
       try {
+        await rpc('admin_negocio_cobro', { p_id: t.id, p: { cobro_modo: v('#kM2').value, cobro_pct: pct, limites: lim } });
         await rpc('admin_negocio_guardar', { p_id: t.id, p: { nombre: v('#kN').value.trim(), rubro_id: v('#kR').value || null, color: v('#kC').value,
           icono: v('#kI').value.trim(), telefono: v('#kT').value.trim(), comuna: v('#kM').value.trim(), reservas_online: v('#kO').checked, activo: v('#kA').checked } });
         d.close(); toast('✅ Guardado'); cargarNegocios();
       } catch (err) { v('#kErr').textContent = err.message; }
     };
+  }
+
+  // Ficha del negocio: cobro, límites, métricas del mes y últimos movimientos.
+  async function fichaNegocio(t) {
+    if (!t) return;
+    let x;
+    try { x = await rpc('admin_negocio_detalle', { p_id: t.id }); } catch (e) { toast(e.message); return; }
+    const cat = x.modelo === 'catalogo', m = x.mes;
+    const kpi = cat ? [['🛍️ Pedidos del mes', m.pedidos], ['💵 Ventas del mes', plata(m.ventas)], ['💳 Cobrado online', plata(m.cobrado_online)], ['🧾 Por revisar', m.por_revisar], ['📦 Productos', m.productos], ['⚠️ Agotados', m.agotados]]
+      : [['📅 Reservas del mes', m.reservas], ['💵 Ventas del mes', plata(m.ventas)], ['💳 Abonos cobrados', plata(m.cobrado_online)], ['🧾 Por revisar', m.por_revisar], ['🛠️ Servicios', m.servicios]];
+    modal('<h2>📊 ' + esc(t.nombre) + '</h2><p class="sub" style="margin-top:0">' + esc(x.rubro ? x.rubro.icono + ' ' + x.rubro.nombre : 'Sin rubro') + ' · modelo ' + esc(x.modelo) +
+      ' · ' + (x.premium ? '⭐ Premium hasta ' + new Date(x.premium_hasta).toLocaleDateString('es-CL') : 'Gratis') + '</p>' +
+      '<div class="stats">' + kpi.map((k) => '<div class="card"><span>' + k[0] + '</span><b>' + k[1] + '</b></div>').join('') + '</div>' +
+      '<h3>💳 Cobro</h3><p class="sub">' + (x.cobro.modo === 'total' ? 'Pago completo' : 'Abono' + (cat ? ' ' + x.cobro.pct + '%' : ' de ' + plata(x.cobro.link_monto || 0))) +
+      (cat ? ' · ' + (x.cobro.despacho ? 'Despacho ' + plata(x.cobro.despacho_costo) : 'Sin despacho') : '') + ' · ' + (x.cobro.link ? '✅ Tiene link de pago' : '⚠️ Sin link de pago') + '</p>' +
+      '<h3>📏 Límites</h3><p class="sub">' + Object.keys(x.limites).map((k) => esc(k) + ': <b>' + esc(String(x.limites[k] ?? '—')) + '</b>' + (k in (x.limites_extra || {}) ? ' ✳️' : '')).join(' · ') + '</p>' +
+      '<h3>👥 Equipo</h3><p class="sub">' + (x.equipo.map((p) => esc(p.nombre || p.email) + ' (' + esc(p.rol === 'negocio' ? 'dueño' : 'equipo') + ', visto ' + App.hace(p.visto_at) + ')').join(' · ') || '—') + '</p>' +
+      '<h3>🕒 Últimos movimientos</h3><ul class="list">' + (x.ultimos.map((u) => '<li><div class="grow"><b>' + esc(u.ref) + '</b> · ' + esc(u.nombre) + '<div class="sub">' + App.fHora(u.created_at) + ' · ' + esc(u.estado) + '</div></div><b>' + plata(u.total) + '</b></li>').join('') || '<li class="sub">Sin movimientos</li>') + '</ul>' +
+      '<div class="btns"><a class="btn ghost" target="_blank" rel="noopener" href="../' + (cat ? 'c' : 't') + '/?s=' + encodeURIComponent(t.slug) + '">🔗 Ver página</a><button data-cerrar>Cerrar</button></div>');
   }
 
   // Agregar un mecánico o un cliente a un negocio.
@@ -262,7 +303,36 @@
   function verAjuste(a) {
     ajuste = a;
     $('aSeg').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x.dataset.a === a));
-    ({ links: verLinks, planes: verPlanes, reglas: verReglas, textos: verTextos, avisos: verAvisos, push: verPush, calif: verCalif, registro: verRegistro, cuenta: verCuenta })[a]();
+    ({ rubros: verRubros, links: verLinks, planes: verPlanes, reglas: verReglas, textos: verTextos, avisos: verAvisos, push: verPush, calif: verCalif, registro: verRegistro, cuenta: verCuenta })[a]();
+  }
+
+  // Rubros: tipos de negocio con su modelo (reservas, catálogo u órdenes) y sus nombres propios.
+  async function verRubros() {
+    let l = [];
+    try { l = await rpc('admin_rubros'); } catch (e) { aBody().innerHTML = '<p class="err">' + esc(e.message) + '</p>'; return; }
+    const MOD = { reservas: '📅 Reservas', catalogo: '🛍️ Catálogo', ordenes: '🔧 Órdenes de trabajo' };
+    aBody().innerHTML = '<div class="card"><h2>🧩 Rubros</h2><p class="muted" style="margin-top:0">Cada rubro usa un modelo. Al crear un negocio eliges su rubro y queda con la administración de ese modelo.</p>' +
+      '<div class="btns"><button id="rbNuevo">➕ Nuevo rubro</button></div><ul class="list">' + l.map((r) => '<li><div class="grow"><b>' + esc(r.icono + ' ' + r.nombre) + '</b> ' + (r.activo ? '' : '<span class="pill">Oculto</span>') +
+        '<div class="sub">' + MOD[r.modelo] + ' · ' + r.negocios + ' negocio(s)</div></div><button class="small ghost" data-rb="' + r.id + '">✏️</button></li>').join('') + '</ul></div>';
+    const editar = (r) => {
+      r = r || { nombre: '', modelo: 'reservas', icono: '🏪', etiquetas: {}, activo: true };
+      const d = modal('<h2>' + (r.id ? '✏️ Editar rubro' : '➕ Nuevo rubro') + '</h2><div class="row"><div><label for="rN">Nombre</label><input id="rN" maxlength="60" value="' + esc(r.nombre) + '"></div>' +
+        '<div><label for="rI">Ícono</label><input id="rI" maxlength="8" value="' + esc(r.icono) + '"></div></div>' +
+        '<label for="rM">Modelo</label><select id="rM">' + Object.keys(MOD).map((k) => '<option value="' + k + '"' + (k === r.modelo ? ' selected' : '') + '>' + MOD[k] + '</option>').join('') + '</select>' +
+        '<div class="row"><div><label for="rS">Cómo se llama el servicio/producto</label><input id="rS" value="' + esc(r.etiquetas.servicio || '') + '" placeholder="Corte"></div>' +
+        '<div><label for="rP">Cómo se llama el profesional</label><input id="rP" value="' + esc(r.etiquetas.profesional || '') + '" placeholder="Barbero"></div></div>' +
+        '<label for="rX">Qué trae el cliente (opcional)</label><input id="rX" value="' + esc(r.etiquetas.item || '') + '" placeholder="Vehículo">' +
+        '<label class="check"><input type="checkbox" id="rA"' + (r.activo ? ' checked' : '') + '> Disponible al crear negocios</label>' +
+        '<div class="btns"><button class="ghost" data-cerrar>Cancelar</button><button id="rOk">Guardar</button></div><p class="err" id="rErr"></p>');
+      const v = (id) => d.querySelector(id);
+      v('#rOk').onclick = async () => {
+        const et = {}; [['servicio', '#rS'], ['profesional', '#rP'], ['item', '#rX']].forEach(([k, id]) => { const x = v(id).value.trim(); if (x) et[k] = x; });
+        try { await rpc('admin_rubro_guardar', { p_id: r.id || null, p_nombre: v('#rN').value, p_modelo: v('#rM').value, p_icono: v('#rI').value, p_etiquetas: et, p_activo: v('#rA').checked }); d.close(); verRubros(); }
+        catch (e) { v('#rErr').textContent = e.message; }
+      };
+    };
+    $('rbNuevo').onclick = () => editar(null);
+    aBody().querySelectorAll('[data-rb]').forEach((b) => { b.onclick = () => editar(l.find((r) => r.id === b.dataset.rb)); });
   }
 
   // Precios y links de pago (2 por plan, uno activo)

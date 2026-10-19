@@ -4,6 +4,9 @@
 --  Se puede volver a ejecutar sin perder datos (sirve para actualizar).
 -- =====================================================================
 
+-- Las funciones se revisan al usarse (así el orden de las secciones no importa).
+set check_function_bodies = off;
+
 -- ---------------------------------------------------------------------
 -- 0. Ajustes generales
 -- ---------------------------------------------------------------------
@@ -12,7 +15,7 @@ create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '2.2'::text $$;
+language sql immutable as $$ select '2.3'::text $$;
 
 -- Teléfono normalizado (solo números; celulares chilenos con 56 adelante).
 create or replace function public.tel_norm(t text) returns text
@@ -137,6 +140,11 @@ alter table public.negocios add column if not exists horarios jsonb not null def
 alter table public.negocios add column if not exists max_dia int not null default 0;         -- 0 = sin límite de bicis por día
 alter table public.negocios add column if not exists capacidad_dia int not null default 0;   -- mantenciones que se terminan por día (0 = no calcular entrega)
 alter table public.negocios add column if not exists max_espera_dias int not null default 14; -- tope de días hasta la entrega
+alter table public.negocios add column if not exists cobro_modo text not null default 'abono';  -- 'abono' | 'total'
+alter table public.negocios add column if not exists cobro_pct int not null default 30;
+alter table public.negocios add column if not exists despacho boolean not null default false;
+alter table public.negocios add column if not exists despacho_costo int not null default 0;
+alter table public.negocios add column if not exists limites_extra jsonb not null default '{}';  -- límites propios (súper admin)
 alter table public.negocios drop constraint if exists negocios_bloque_min_check;
 alter table public.negocios add constraint negocios_bloque_min_check check (bloque_min in (15, 20, 30, 45, 60, 90, 120, 180, 240));
 
@@ -228,10 +236,12 @@ $$;
 
 -- Límite de un plan (número o verdadero/falso), según si el negocio/cliente es Premium.
 create or replace function public.limite_negocio(t uuid, clave text) returns jsonb
-language sql stable security definer set search_path = '' as $$
-  select limites -> clave from public.planes
-  where codigo = case when public.negocio_es_premium(t) then 'negocio_premium' else 'negocio_free' end
-$$;
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  -- Primero el límite propio del negocio (lo pone el súper admin); si no, el de su plan.
+  return coalesce((select n.limites_extra -> clave from public.negocios n where n.id = t), (select limites -> clave from public.planes
+    where codigo = case when public.negocio_es_premium(t) then 'negocio_premium' else 'negocio_free' end));
+end $$;
 create or replace function public.limite_cliente(uid uuid, clave text) returns jsonb
 language sql stable security definer set search_path = '' as $$
   select limites -> clave from public.planes
@@ -792,7 +802,7 @@ language sql stable security definer set search_path = '' as $$
     'colacion_desde', to_char(t.colacion_desde, 'HH24:MI'), 'colacion_hasta', to_char(t.colacion_hasta, 'HH24:MI'),
     'anticipacion_dias', t.anticipacion_dias, 'hoy', (now() at time zone t.zona)::date,
     'reservas_online', t.reservas_online and (public.link_activo(t.id, 'abono')).id is not null,
-    'abono', (public.link_activo(t.id, 'abono')).monto,
+    'abono', (public.link_activo(t.id, 'abono')).monto, 'cobro_modo', t.cobro_modo,
     'nota', public.nota_negocio(t.id),
     'acepta_cuentas', (select count(*) from public.perfiles where negocio_id = t.id and rol = 'cliente')
                       < coalesce((public.limite_negocio(t.id, 'clientes_cuenta'))::int, 30),
@@ -954,7 +964,8 @@ begin
     p_hora::time + make_interval(mins => mins), nom, tel, public.tel_norm(tel),
     left(lower(trim(coalesce(nullif(p_email, ''), me.email, ''))), 120), left(trim(coalesce(p_bici, '')), 120),
     left(trim(coalesce(p_nota, '')), 500), me.id, case when me.id is null then 'online' else 'cliente' end,
-    'por_pagar', now() + make_interval(mins => coalesce(public.cfg_int('minutos_pago'), 30)), l.monto, 'pendiente',
+    'por_pagar', now() + make_interval(mins => coalesce(public.cfg_int('minutos_pago'), 30)),
+    case when c.cobro_modo = 'total' and coalesce(s.precio, 0) + ex_precio > 0 then coalesce(s.precio, 0) + ex_precio else l.monto end, 'pendiente',
     public.historial_mas('[]', 'por_pagar'),
     case when s.id is null then '[]'::jsonb else jsonb_build_array(jsonb_build_object('nombre', s.nombre, 'cant', 1, 'precio', s.precio)) end || ex,
     coalesce(s.precio, 0) + ex_precio, ent)
@@ -2370,7 +2381,6 @@ grant execute on function public.admin_negocio_guardar(uuid, jsonb) to authentic
 -- 22. (v2.2) Módulo CATÁLOGO: productos, carrito y pedidos sin cuenta
 --     (tiendas, comida, etc.). Todo se calcula y valida en el servidor.
 -- =====================================================================
-alter table public.negocios add column if not exists cobro_modo text not null default 'total';  -- 'total' | 'abono'
 alter table public.negocios add column if not exists cobro_pct int not null default 30;
 alter table public.negocios add column if not exists despacho boolean not null default false;
 alter table public.negocios add column if not exists despacho_costo int not null default 0;
@@ -2723,6 +2733,114 @@ begin
   if exists (select 1 from pg_extension where extname = 'pg_cron') then
     perform cron.unschedule(jobid) from cron.job where jobname = 'cf-pedidos';
     perform cron.schedule('cf-pedidos', '*/5 * * * *', 'select public.pedidos_tareas();');
+  end if;
+end $$;
+
+
+-- =====================================================================
+-- 23. (v2.3) Súper admin avanzado: cobro y límites por negocio, ficha del negocio, rubros
+-- =====================================================================
+alter table public.negocios add column if not exists limites_extra jsonb not null default '{}';
+-- Por defecto: reservas cobran abono fijo; tiendas, el total. (Migración única desde v2.2.)
+alter table public.negocios alter column cobro_modo set default 'abono';
+do $$
+begin
+  if not exists (select 1 from public.config where clave = 'mig_cobro_23') then
+    update public.negocios n set cobro_modo = 'abono'
+    where cobro_modo = 'total' and coalesce((public.negocio_rubro(n.id)) ->> 'modelo', 'reservas') <> 'catalogo';
+    insert into public.config (clave, valor) values ('mig_cobro_23', 'true');
+  end if;
+end $$;
+-- Las tiendas nuevas parten cobrando el total.
+create or replace function public.negocio_cobro_inicial() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if new.rubro_id is not null and (select modelo from public.rubros where id = new.rubro_id) = 'catalogo' then new.cobro_modo := 'total'; end if;
+  return new;
+end $$;
+drop trigger if exists negocio_z_cobro_inicial on public.negocios;
+create trigger negocio_z_cobro_inicial before insert on public.negocios for each row execute function public.negocio_cobro_inicial();
+
+-- Súper admin: cobro (abono o total), pedidos online, despacho y límites propios de un negocio.
+create or replace function public.admin_negocio_cobro(p_id uuid, p jsonb) returns void
+language plpgsql security definer set search_path = '' as $$
+declare lim jsonb := '{}'; k text;
+begin
+  perform public.super_check();
+  for k in select unnest(array['reservas_mes', 'servicios', 'promos', 'equipo', 'clientes_cuenta']) loop
+    if (p -> 'limites') ? k and coalesce(p -> 'limites' ->> k, '') ~ '^[0-9]{1,6}$' then lim := lim || jsonb_build_object(k, (p -> 'limites' ->> k)::int); end if;
+  end loop;
+  update public.negocios set
+    cobro_modo = coalesce(p ->> 'cobro_modo', cobro_modo),
+    cobro_pct = coalesce((p ->> 'cobro_pct')::int, cobro_pct),
+    despacho = coalesce((p ->> 'despacho')::boolean, despacho),
+    despacho_costo = coalesce((p ->> 'despacho_costo')::int, despacho_costo),
+    limites_extra = case when p ? 'limites' then lim else limites_extra end
+  where id = p_id;
+  if not found then raise exception 'Negocio no encontrado'; end if;
+  perform public.auditar('negocio_cobro', p_id::text || ' ' || p::text);
+end $$;
+
+-- Ficha completa de un negocio para el súper admin y el socio.
+create or replace function public.admin_negocio_detalle(p_id uuid) returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare t public.negocios; mes timestamptz := date_trunc('month', now()); modelo text;
+begin
+  perform public.admin_check();
+  select * into t from public.negocios where id = p_id;
+  if t.id is null then raise exception 'Negocio no encontrado'; end if;
+  modelo := coalesce((public.negocio_rubro(t.id)) ->> 'modelo', 'reservas');
+  return jsonb_build_object(
+    'modelo', modelo, 'rubro', public.negocio_rubro(t.id),
+    'cobro', jsonb_build_object('modo', t.cobro_modo, 'pct', t.cobro_pct, 'despacho', t.despacho, 'despacho_costo', t.despacho_costo,
+      'link', (public.link_tienda(t.id)).url, 'link_monto', (public.link_activo(t.id, 'abono')).monto),
+    'limites_extra', t.limites_extra,
+    'limites', (select jsonb_object_agg(k, public.limite_negocio(t.id, k)) from unnest(array['reservas_mes', 'servicios', 'promos', 'equipo', 'clientes_cuenta']) k),
+    'premium', public.negocio_es_premium(t.id), 'premium_hasta', t.premium_hasta,
+    'mes', case when modelo = 'catalogo' then jsonb_build_object(
+        'pedidos', (select count(*) from public.pedidos where negocio_id = t.id and created_at >= mes and estado not in ('expirado', 'cancelado', 'rechazado')),
+        'ventas', (select coalesce(sum(total), 0) from public.pedidos where negocio_id = t.id and created_at >= mes and estado in ('confirmado', 'preparando', 'listo', 'entregado')),
+        'cobrado_online', (select coalesce(sum(a_pagar), 0) from public.pedidos where negocio_id = t.id and created_at >= mes and estado in ('confirmado', 'preparando', 'listo', 'entregado')),
+        'por_revisar', (select count(*) from public.pedidos where negocio_id = t.id and estado = 'en_revision'),
+        'productos', (select count(*) from public.productos where negocio_id = t.id),
+        'agotados', (select count(*) from public.productos where negocio_id = t.id and stock = 0))
+      else jsonb_build_object(
+        'reservas', (select count(*) from public.reservas where negocio_id = t.id and created_at >= mes and estado not in ('expirada', 'rechazada')),
+        'ventas', (select coalesce(sum(total), 0) from public.reservas where negocio_id = t.id and created_at >= mes and estado = 'completada'),
+        'cobrado_online', (select coalesce(sum(abono_monto), 0) from public.reservas where negocio_id = t.id and created_at >= mes and abono_estado in ('pagado', 'aplicado')),
+        'por_revisar', (select count(*) from public.reservas where negocio_id = t.id and estado = 'en_revision'),
+        'servicios', (select count(*) from public.servicios where negocio_id = t.id)) end,
+    'ultimos', case when modelo = 'catalogo' then
+        (select coalesce(jsonb_agg(x), '[]') from (select codigo as ref, nombre, total, estado, created_at from public.pedidos
+          where negocio_id = t.id order by created_at desc limit 10) x)
+      else (select coalesce(jsonb_agg(x), '[]') from (select to_char(fecha, 'DD/MM') || ' ' || to_char(hora, 'HH24:MI') as ref, nombre, total, estado, created_at
+          from public.reservas where negocio_id = t.id order by created_at desc limit 10) x) end,
+    'equipo', (select coalesce(jsonb_agg(jsonb_build_object('nombre', nombre, 'email', email, 'rol', rol, 'visto_at', visto_at)), '[]')
+      from public.perfiles where negocio_id = t.id and rol in ('negocio', 'equipo')));
+end $$;
+
+-- Resumen global por modelo de negocio (para el panel del súper admin).
+create or replace function public.admin_resumen_modelos() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  perform public.admin_check();
+  return jsonb_build_object(
+    'por_rubro', (select coalesce(jsonb_agg(x order by x.negocios desc), '[]') from (
+      select coalesce(r.icono || ' ' || r.nombre, 'Sin rubro') as rubro, coalesce(r.modelo, 'reservas') as modelo, count(n.id) as negocios
+      from public.negocios n left join public.rubros r on r.id = n.rubro_id group by r.icono, r.nombre, r.modelo) x),
+    'pedidos_mes', (select count(*) from public.pedidos where created_at >= date_trunc('month', now()) and estado not in ('expirado', 'cancelado', 'rechazado')),
+    'ventas_tiendas_mes', (select coalesce(sum(total), 0) from public.pedidos where created_at >= date_trunc('month', now())
+      and estado in ('confirmado', 'preparando', 'listo', 'entregado')),
+    'pedidos_por_revisar', (select count(*) from public.pedidos where estado = 'en_revision'));
+end $$;
+
+revoke execute on function public.negocio_cobro_inicial(), public.admin_negocio_cobro(uuid, jsonb), public.admin_negocio_detalle(uuid),
+  public.admin_resumen_modelos() from public, anon, authenticated;
+grant execute on function public.admin_negocio_cobro(uuid, jsonb), public.admin_negocio_detalle(uuid), public.admin_resumen_modelos() to authenticated;
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    execute 'grant execute on all functions in schema public to service_role';
   end if;
 end $$;
 
