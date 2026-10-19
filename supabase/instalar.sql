@@ -16,7 +16,7 @@ create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '2.1'::text $$;
+language sql immutable as $$ select '2.2'::text $$;
 
 -- Teléfono normalizado (solo números; celulares chilenos con 56 adelante).
 create or replace function public.tel_norm(t text) returns text
@@ -2197,7 +2197,8 @@ language sql stable security definer set search_path = '' as $$
     'foto', p.foto, 'color', p.color, 'icono', p.icono, 'descripcion', p.descripcion,
     'negocio', case when t.id is null then null else jsonb_build_object(
        'id', t.id, 'nombre', t.nombre, 'slug', t.slug, 'logo', t.logo, 'color', t.color, 'icono', t.icono,
-       'telefono', t.telefono, 'premium', public.negocio_es_premium(t.id), 'premium_hasta', t.premium_hasta) end,
+       'telefono', t.telefono, 'premium', public.negocio_es_premium(t.id), 'premium_hasta', t.premium_hasta,
+       'modelo', coalesce((public.negocio_rubro(t.id)) ->> 'modelo', 'reservas'), 'rubro', public.negocio_rubro(t.id)) end,
     'premium', case when p.rol = 'cliente' then public.cliente_es_premium(p.id)
                     when p.rol in ('negocio', 'equipo') then public.negocio_es_premium(p.negocio_id)
                     else true end,
@@ -2368,6 +2369,367 @@ end $$;
 revoke execute on function public.admin_negocio_guardar(uuid, jsonb) from public, anon, authenticated;
 grant execute on function public.admin_negocio_guardar(uuid, jsonb) to authenticated;
 
+
+-- =====================================================================
+-- 22. (v2.2) Módulo CATÁLOGO: productos, carrito y pedidos sin cuenta
+--     (tiendas, comida, etc.). Todo se calcula y valida en el servidor.
+-- =====================================================================
+alter table public.negocios add column if not exists cobro_modo text not null default 'total';  -- 'total' | 'abono'
+alter table public.negocios add column if not exists cobro_pct int not null default 30;
+alter table public.negocios add column if not exists despacho boolean not null default false;
+alter table public.negocios add column if not exists despacho_costo int not null default 0;
+alter table public.negocios drop constraint if exists negocios_cobro_check;
+alter table public.negocios add constraint negocios_cobro_check check (cobro_modo in ('total', 'abono') and cobro_pct between 1 and 100
+  and despacho_costo between 0 and 1000000);
+
+create table if not exists public.productos (
+  id          uuid primary key default gen_random_uuid(),
+  negocio_id  uuid not null references public.negocios (id) on delete cascade,
+  nombre      text not null check (length(trim(nombre)) between 1 and 80),
+  descripcion text not null default '' check (length(descripcion) <= 500),
+  categoria   text not null default '' check (length(categoria) <= 40),
+  precio      int not null check (precio between 0 and 100000000),
+  stock       int check (stock is null or stock >= 0),          -- null = sin control de stock
+  foto        text check (foto is null or (foto ~ '^data:image/(jpeg|png|webp);base64,' and length(foto) <= 200000)),
+  activo      boolean not null default true,
+  orden       int not null default 0,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create index if not exists productos_negocio_idx on public.productos (negocio_id, activo);
+alter table public.productos enable row level security;
+drop policy if exists "ver productos" on public.productos;
+create policy "ver productos" on public.productos for select to authenticated
+  using (negocio_id = public.negocio_de(auth.uid()) or public.is_staff());
+
+create table if not exists public.pedidos (
+  id            uuid primary key default gen_random_uuid(),
+  negocio_id    uuid not null references public.negocios (id) on delete cascade,
+  codigo        text not null unique,
+  token         text not null unique,
+  nombre        text not null,
+  telefono      text not null,
+  tel_norm      text not null,
+  rut           text not null,
+  email         text not null default '',
+  entrega       text not null check (entrega in ('retiro', 'despacho')),
+  direccion     text not null default '',
+  nota          text not null default '',
+  items         jsonb not null,             -- [{id, nombre, precio, cant}] con el precio del momento
+  subtotal      int not null,
+  despacho      int not null default 0,
+  total         int not null,
+  a_pagar       int not null,
+  estado        text not null default 'por_pagar' check (estado in ('por_pagar', 'en_revision', 'confirmado', 'preparando',
+                  'listo', 'entregado', 'rechazado', 'cancelado', 'expirado')),
+  comprobante   text check (comprobante is null or length(comprobante) <= 600000),
+  comprobante_at timestamptz,
+  expira_at     timestamptz,
+  nota_negocio  text not null default '',
+  historial     jsonb not null default '[]',
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+create index if not exists pedidos_negocio_idx on public.pedidos (negocio_id, estado, created_at desc);
+alter table public.pedidos enable row level security;
+drop policy if exists "ver pedidos" on public.pedidos;
+create policy "ver pedidos" on public.pedidos for select to authenticated
+  using (negocio_id = public.negocio_de(auth.uid()) or public.is_staff());
+
+-- Link de pago de la tienda: el monto lo pone el cliente (link abierto), así que no se exige monto fijo.
+create or replace function public.link_tienda(p_negocio uuid) returns public.links_pago
+language sql stable security definer set search_path = '' as $$
+  select * from public.links_pago where tipo = 'abono' and negocio_id = p_negocio and activo and url <> '' order by slot limit 1
+$$;
+
+-- Devuelve el stock de un pedido que no se concretó.
+create or replace function public.pedido_devolver_stock(p_id uuid) returns void
+language sql security definer set search_path = '' as $$
+  update public.productos pr set stock = pr.stock + (i ->> 'cant')::int, updated_at = now()
+  from public.pedidos pe, jsonb_array_elements(pe.items) i
+  where pe.id = p_id and pr.id = (i ->> 'id')::uuid and pr.stock is not null
+$$;
+
+-- Vence los pedidos sin comprobante a tiempo (y libera su stock).
+create or replace function public.pedidos_vencer(p_negocio uuid default null) returns int
+language plpgsql security definer set search_path = '' as $$
+declare r record; n int := 0;
+begin
+  for r in select id from public.pedidos where estado = 'por_pagar' and expira_at < now()
+             and (p_negocio is null or negocio_id = p_negocio) for update skip locked loop
+    update public.pedidos set estado = 'expirado', historial = public.historial_mas(historial, 'expirado'), updated_at = now() where id = r.id;
+    perform public.pedido_devolver_stock(r.id);
+    n := n + 1;
+  end loop;
+  return n;
+end $$;
+
+create or replace function public.negocio_modelo(p_slug text) returns text
+language sql stable security definer set search_path = '' as $$
+  select coalesce(r.modelo, 'reservas') from public.negocios n left join public.rubros r on r.id = n.rubro_id where n.slug = p_slug
+$$;
+
+-- Página pública de la tienda.
+create or replace function public.catalogo_publico(p_slug text) returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare t public.negocios; l public.links_pago;
+begin
+  select * into t from public.negocios where slug = p_slug and activo and not suspendido;
+  if t.id is null then raise exception 'Esta tienda no está disponible'; end if;
+  l := public.link_tienda(t.id);
+  return jsonb_build_object(
+    'id', t.id, 'nombre', t.nombre, 'slug', t.slug, 'logo', t.logo, 'color', t.color, 'icono', t.icono,
+    'descripcion', t.descripcion, 'direccion', t.direccion, 'comuna', t.comuna, 'telefono', t.telefono, 'instagram', t.instagram,
+    'rubro', public.negocio_rubro(t.id), 'nota', public.nota_negocio(t.id),
+    'abierta', t.reservas_online and l.id is not null,
+    'cobro_modo', t.cobro_modo, 'cobro_pct', t.cobro_pct, 'despacho', t.despacho, 'despacho_costo', t.despacho_costo,
+    'minutos_pago', coalesce(public.cfg_int('minutos_pago'), 30),
+    'productos', (select coalesce(jsonb_agg(jsonb_build_object('id', p.id, 'nombre', p.nombre, 'descripcion', p.descripcion,
+        'categoria', p.categoria, 'precio', p.precio, 'foto', p.foto, 'agotado', p.stock is not null and p.stock = 0,
+        'stock', p.stock) order by p.orden, p.nombre), '[]')
+      from public.productos p where p.negocio_id = t.id and p.activo));
+end $$;
+
+-- Crear un pedido sin cuenta. Precios, stock, RUT y totales se validan aquí, no en el navegador.
+create or replace function public.pedido_crear(p_negocio uuid, p_items jsonb, p_nombre text, p_telefono text, p_rut text,
+  p_email text, p_entrega text, p_direccion text, p_nota text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare t public.negocios; it jsonb; pr public.productos; cant int; lista jsonb := '[]'; sub int := 0; desp int := 0;
+  tot int; pagar int; tel text := public.tel_norm(p_telefono); cod text; tok text; usados int;
+begin
+  select * into t from public.negocios where id = p_negocio and activo and not suspendido;
+  if t.id is null or not t.reservas_online or (public.link_tienda(t.id)).id is null then
+    return jsonb_build_object('ok', false, 'error', 'Esta tienda no está recibiendo pedidos online ahora');
+  end if;
+  if length(trim(coalesce(p_nombre, ''))) < 2 then return jsonb_build_object('ok', false, 'error', 'Escribe tu nombre'); end if;
+  if tel !~ '^569[0-9]{8}$' then return jsonb_build_object('ok', false, 'error', 'WhatsApp no válido (ej.: +56 9 1234 5678)'); end if;
+  if not public.rut_valido(p_rut) then return jsonb_build_object('ok', false, 'error', 'RUT no válido: revisa el dígito verificador'); end if;
+  if coalesce(p_email, '') <> '' and p_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then return jsonb_build_object('ok', false, 'error', 'Correo no válido'); end if;
+  if p_entrega not in ('retiro', 'despacho') then return jsonb_build_object('ok', false, 'error', 'Elige retiro o despacho'); end if;
+  if p_entrega = 'despacho' then
+    if not t.despacho then return jsonb_build_object('ok', false, 'error', 'Esta tienda no hace despacho'); end if;
+    if length(trim(coalesce(p_direccion, ''))) < 5 then return jsonb_build_object('ok', false, 'error', 'Escribe la dirección de despacho'); end if;
+    desp := t.despacho_costo;
+  end if;
+  if jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) not between 1 and 50 then
+    return jsonb_build_object('ok', false, 'error', 'El carro está vacío');
+  end if;
+  -- Anti-abuso: pedidos sin pagar del mismo WhatsApp y límite mensual del plan.
+  if (select count(*) from public.pedidos where negocio_id = t.id and tel_norm = tel and estado = 'por_pagar') >= 2 then
+    return jsonb_build_object('ok', false, 'error', 'Ya tienes pedidos esperando pago. Paga o cancela uno antes de hacer otro.');
+  end if;
+  select count(*) into usados from public.pedidos where negocio_id = t.id and created_at >= date_trunc('month', now())
+    and estado not in ('expirado', 'cancelado', 'rechazado');
+  if usados >= coalesce((public.limite_negocio(t.id, 'reservas_mes'))::int, 30) then
+    return jsonb_build_object('ok', false, 'error', 'Esta tienda llegó a su máximo de pedidos online del mes. Escríbele por WhatsApp.');
+  end if;
+  for it in select * from jsonb_array_elements(p_items) loop
+    cant := coalesce((it ->> 'cant')::int, 0);
+    if cant not between 1 and 99 then return jsonb_build_object('ok', false, 'error', 'Cantidad no válida'); end if;
+    select * into pr from public.productos where id = (it ->> 'id')::uuid and negocio_id = t.id and activo for update;
+    if pr.id is null then return jsonb_build_object('ok', false, 'error', 'Un producto ya no está disponible. Actualiza la página.'); end if;
+    if pr.stock is not null and pr.stock < cant then
+      return jsonb_build_object('ok', false, 'error', 'Solo quedan ' || pr.stock || ' de "' || pr.nombre || '"');
+    end if;
+    if lista @> jsonb_build_array(jsonb_build_object('id', pr.id)) then return jsonb_build_object('ok', false, 'error', 'Producto repetido'); end if;
+    lista := lista || jsonb_build_object('id', pr.id, 'nombre', pr.nombre, 'precio', pr.precio, 'cant', cant);
+    sub := sub + pr.precio * cant;
+  end loop;
+  tot := sub + desp;
+  if tot <= 0 then return jsonb_build_object('ok', false, 'error', 'El total no puede ser $0'); end if;
+  pagar := case when t.cobro_modo = 'abono' then greatest(1, ceil(tot * t.cobro_pct / 100.0)::int) else tot end;
+  -- Aparta el stock mientras paga.
+  update public.productos x set stock = x.stock - (i ->> 'cant')::int, updated_at = now()
+  from jsonb_array_elements(lista) i where x.id = (i ->> 'id')::uuid and x.stock is not null;
+  loop
+    cod := upper(substr(md5(gen_random_uuid()::text), 1, 6));
+    exit when not exists (select 1 from public.pedidos where codigo = cod);
+  end loop;
+  tok := replace(gen_random_uuid()::text, '-', '') || substr(md5(random()::text), 1, 8);
+  insert into public.pedidos (negocio_id, codigo, token, nombre, telefono, tel_norm, rut, email, entrega, direccion, nota, items,
+    subtotal, despacho, total, a_pagar, expira_at, historial)
+  values (t.id, cod, tok, left(trim(p_nombre), 80), left(trim(p_telefono), 30), tel, upper(regexp_replace(p_rut, '[^0-9kK]', '', 'g')),
+    left(trim(coalesce(p_email, '')), 120), p_entrega, left(trim(coalesce(p_direccion, '')), 200), left(trim(coalesce(p_nota, '')), 500),
+    lista, sub, desp, tot, pagar, now() + make_interval(mins => coalesce(public.cfg_int('minutos_pago'), 30)), public.historial_mas('[]', 'por_pagar'));
+  return jsonb_build_object('ok', true, 'codigo', cod, 'token', tok);
+end $$;
+
+-- Ver un pedido con su enlace secreto.
+create or replace function public.pedido_ver(p_token text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare p public.pedidos; t public.negocios; l public.links_pago;
+begin
+  if length(coalesce(p_token, '')) < 20 then return null; end if;
+  select * into p from public.pedidos where token = p_token;
+  if p.id is null then return null; end if;
+  if p.estado = 'por_pagar' and p.expira_at < now() then perform public.pedidos_vencer(p.negocio_id); select * into p from public.pedidos where id = p.id; end if;
+  select * into t from public.negocios where id = p.negocio_id;
+  l := public.link_tienda(t.id);
+  return jsonb_build_object('codigo', p.codigo, 'estado', p.estado, 'nombre', p.nombre, 'entrega', p.entrega, 'direccion', p.direccion,
+    'items', p.items, 'subtotal', p.subtotal, 'despacho', p.despacho, 'total', p.total, 'a_pagar', p.a_pagar,
+    'expira_at', p.expira_at, 'created_at', p.created_at, 'nota_negocio', p.nota_negocio, 'tiene_comprobante', p.comprobante is not null,
+    'link', case when p.estado = 'por_pagar' then l.url end, 'link_texto', case when p.estado = 'por_pagar' then l.texto end,
+    'negocio', jsonb_build_object('nombre', t.nombre, 'slug', t.slug, 'logo', t.logo, 'color', t.color, 'icono', t.icono,
+      'telefono', t.telefono, 'direccion', t.direccion, 'comuna', t.comuna));
+end $$;
+
+create or replace function public.pedido_comprobante(p_token text, p_imagen text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare p public.pedidos;
+begin
+  perform public.pedidos_vencer((select negocio_id from public.pedidos where token = p_token));
+  select * into p from public.pedidos where token = p_token and length(p_token) >= 20 for update;
+  if p.id is null then return jsonb_build_object('ok', false, 'error', 'Pedido no encontrado'); end if;
+  if p.estado = 'expirado' then return jsonb_build_object('ok', false, 'error', 'Se acabó el tiempo para pagar. Haz el pedido de nuevo.'); end if;
+  if p.estado <> 'por_pagar' then return jsonb_build_object('ok', false, 'error', 'Este pedido ya tiene comprobante'); end if;
+  if p_imagen !~ '^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$' or length(p_imagen) > 600000 then
+    return jsonb_build_object('ok', false, 'error', 'Imagen no válida o muy pesada');
+  end if;
+  update public.pedidos set comprobante = p_imagen, comprobante_at = now(), estado = 'en_revision', expira_at = null,
+    historial = public.historial_mas(historial, 'en_revision'), updated_at = now() where id = p.id;
+  perform public.avisar_negocio(p.negocio_id, '🧾 Pedido por revisar', p.nombre || ' · #' || p.codigo || ' · $' || p.a_pagar, '/negocio/#pedidos');
+  return jsonb_build_object('ok', true);
+end $$;
+
+create or replace function public.pedido_cancelar(p_token text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare p public.pedidos;
+begin
+  select * into p from public.pedidos where token = p_token and length(p_token) >= 20 for update;
+  if p.id is null then return jsonb_build_object('ok', false, 'error', 'Pedido no encontrado'); end if;
+  if p.estado <> 'por_pagar' then return jsonb_build_object('ok', false, 'error', 'Este pedido ya no se puede cancelar aquí. Escríbele a la tienda.'); end if;
+  update public.pedidos set estado = 'cancelado', historial = public.historial_mas(historial, 'cancelado'), updated_at = now() where id = p.id;
+  perform public.pedido_devolver_stock(p.id);
+  return jsonb_build_object('ok', true);
+end $$;
+
+-- ---------- Panel de la tienda ----------
+create or replace function public.negocio_productos() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare tid uuid := public.negocio_de(auth.uid());
+begin
+  if tid is null then raise exception 'Sin permiso'; end if;
+  return jsonb_build_object(
+    'productos', (select coalesce(jsonb_agg(p order by p.orden, p.nombre), '[]') from public.productos p where p.negocio_id = tid),
+    'limite', public.limite_negocio(tid, 'servicios'),
+    'cobro', (select jsonb_build_object('modo', cobro_modo, 'pct', cobro_pct, 'despacho', despacho, 'despacho_costo', despacho_costo,
+                'link', (public.link_tienda(id)).id is not null, 'online', reservas_online)
+              from public.negocios where id = tid));
+end $$;
+
+create or replace function public.producto_guardar(p jsonb) returns uuid
+language plpgsql security definer set search_path = '' as $$
+declare tid uuid := public.negocio_de(auth.uid()); pid uuid := nullif(p ->> 'id', '')::uuid; lim int;
+begin
+  if tid is null or not public.es_dueno(tid) then raise exception 'Solo el dueño de la tienda'; end if;
+  if pid is null then
+    lim := coalesce((public.limite_negocio(tid, 'servicios'))::int, 5);
+    if (select count(*) from public.productos where negocio_id = tid) >= lim then
+      raise exception 'Tu plan permite % productos. Activa Premium para agregar más.', lim;
+    end if;
+    insert into public.productos (negocio_id, nombre, descripcion, categoria, precio, stock, foto, activo)
+    values (tid, trim(p ->> 'nombre'), coalesce(trim(p ->> 'descripcion'), ''), coalesce(trim(p ->> 'categoria'), ''),
+      (p ->> 'precio')::int, nullif(p ->> 'stock', '')::int, nullif(p ->> 'foto', ''), coalesce((p ->> 'activo')::boolean, true))
+    returning id into pid;
+  else
+    update public.productos set nombre = trim(p ->> 'nombre'), descripcion = coalesce(trim(p ->> 'descripcion'), ''),
+      categoria = coalesce(trim(p ->> 'categoria'), ''), precio = (p ->> 'precio')::int, stock = nullif(p ->> 'stock', '')::int,
+      foto = case when p ? 'foto' then nullif(p ->> 'foto', '') else foto end, activo = coalesce((p ->> 'activo')::boolean, activo), updated_at = now()
+    where id = pid and negocio_id = tid;
+    if not found then raise exception 'Producto no encontrado'; end if;
+  end if;
+  return pid;
+end $$;
+
+create or replace function public.producto_borrar(p_id uuid) returns void
+language plpgsql security definer set search_path = '' as $$
+declare tid uuid := public.negocio_de(auth.uid());
+begin
+  if tid is null or not public.es_dueno(tid) then raise exception 'Solo el dueño de la tienda'; end if;
+  delete from public.productos where id = p_id and negocio_id = tid;
+end $$;
+
+create or replace function public.negocio_cobro_guardar(p_modo text, p_pct int, p_despacho boolean, p_costo int) returns void
+language plpgsql security definer set search_path = '' as $$
+declare tid uuid := public.negocio_de(auth.uid());
+begin
+  if tid is null or not public.es_dueno(tid) then raise exception 'Solo el dueño de la tienda'; end if;
+  update public.negocios set cobro_modo = p_modo, cobro_pct = p_pct, despacho = p_despacho, despacho_costo = greatest(0, coalesce(p_costo, 0))
+  where id = tid;
+end $$;
+
+create or replace function public.negocio_pedidos(p_estados text[]) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare tid uuid := public.negocio_de(auth.uid());
+begin
+  if tid is null then raise exception 'Sin permiso'; end if;
+  perform public.pedidos_vencer(tid);
+  return (select coalesce(jsonb_agg(x order by x.created_at desc), '[]') from (
+    select id, codigo, nombre, telefono, rut, email, entrega, direccion, nota, items, subtotal, despacho, total, a_pagar, estado,
+      comprobante is not null as tiene_comprobante, comprobante_at, expira_at, nota_negocio, created_at, token
+    from public.pedidos where negocio_id = tid and (p_estados is null or estado = any (p_estados)) order by created_at desc limit 300) x);
+end $$;
+
+create or replace function public.pedido_comprobante_ver(p_id uuid) returns text
+language sql stable security definer set search_path = '' as $$
+  select comprobante from public.pedidos where id = p_id and negocio_id = public.negocio_de(auth.uid())
+$$;
+
+-- Avanzar el pedido. Flujo: en_revision → confirmado/rechazado → preparando → listo → entregado.
+create or replace function public.pedido_estado(p_id uuid, p_estado text, p_nota text default '') returns void
+language plpgsql security definer set search_path = '' as $$
+declare tid uuid := public.negocio_de(auth.uid()); p public.pedidos; ok boolean;
+begin
+  if tid is null then raise exception 'Sin permiso'; end if;
+  select * into p from public.pedidos where id = p_id and negocio_id = tid for update;
+  if p.id is null then raise exception 'Pedido no encontrado'; end if;
+  ok := (p.estado = 'en_revision' and p_estado in ('confirmado', 'rechazado'))
+     or (p.estado = 'por_pagar' and p_estado in ('confirmado', 'cancelado'))          -- pagó por otro medio / no pagó
+     or (p.estado = 'confirmado' and p_estado in ('preparando', 'listo', 'entregado', 'cancelado'))
+     or (p.estado = 'preparando' and p_estado in ('listo', 'entregado'))
+     or (p.estado = 'listo' and p_estado = 'entregado');
+  if not ok then raise exception 'No se puede pasar de "%" a "%"', p.estado, p_estado; end if;
+  update public.pedidos set estado = p_estado, expira_at = null, nota_negocio = coalesce(nullif(trim(p_nota), ''), nota_negocio),
+    historial = public.historial_mas(historial, p_estado), updated_at = now() where id = p.id;
+  if p_estado in ('rechazado', 'cancelado') then perform public.pedido_devolver_stock(p.id); end if;
+end $$;
+
+-- Borrar comprobantes antiguos de pedidos (los llama la tarea automática).
+create or replace function public.pedidos_tareas() returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare v int; b int;
+begin
+  v := public.pedidos_vencer(null);
+  update public.pedidos set comprobante = null
+  where comprobante is not null and comprobante_at < now() - make_interval(days => coalesce(public.cfg_int('dias_comprobantes'), 30));
+  get diagnostics b = row_count;
+  return jsonb_build_object('vencidos', v, 'comprobantes_borrados', b);
+end $$;
+
+revoke execute on function public.pedido_devolver_stock(uuid), public.pedidos_vencer(uuid), public.pedidos_tareas(),
+  public.negocio_modelo(text), public.catalogo_publico(text),
+  public.pedido_crear(uuid, jsonb, text, text, text, text, text, text, text), public.pedido_ver(text), public.pedido_comprobante(text, text),
+  public.pedido_cancelar(text), public.negocio_productos(), public.producto_guardar(jsonb), public.producto_borrar(uuid),
+  public.negocio_cobro_guardar(text, int, boolean, int), public.negocio_pedidos(text[]), public.pedido_comprobante_ver(uuid),
+  public.pedido_estado(uuid, text, text) from public, anon, authenticated;
+grant execute on function public.negocio_modelo(text), public.catalogo_publico(text),
+  public.pedido_crear(uuid, jsonb, text, text, text, text, text, text, text), public.pedido_ver(text), public.pedido_comprobante(text, text),
+  public.pedido_cancelar(text) to anon, authenticated;
+grant execute on function public.negocio_productos(), public.producto_guardar(jsonb), public.producto_borrar(uuid),
+  public.negocio_cobro_guardar(text, int, boolean, int), public.negocio_pedidos(text[]), public.pedido_comprobante_ver(uuid),
+  public.pedido_estado(uuid, text, text) to authenticated;
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    execute 'grant execute on all functions in schema public to service_role';
+  end if;
+  -- Tarea automática de pedidos (cada 5 minutos), si pg_cron está instalado.
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    perform cron.unschedule(jobid) from cron.job where jobname = 'cf-pedidos';
+    perform cron.schedule('cf-pedidos', '*/5 * * * *', 'select public.pedidos_tareas();');
+  end if;
+end $$;
+
 -- Que la API de Supabase vea las funciones nuevas al instante.
 notify pgrst, 'reload schema';
 -- =====================================================================
@@ -2389,3 +2751,6 @@ select cron.schedule('bt-push', '* * * * *', $$
     headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxZXZ1ampyYWlzcmNvaXJzd3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzMzk3NzMsImV4cCI6MjEwNzkxNTc3M30.XHeUtKmMJ5sSMCeGCzYnsYS3xQwPYrDwuylw3p7ICFk"}'::jsonb,
     body := '{}'::jsonb)
 $$);
+
+select cron.unschedule(jobid) from cron.job where jobname = 'cf-pedidos';
+select cron.schedule('cf-pedidos', '*/5 * * * *', $$ select public.pedidos_tareas(); $$);

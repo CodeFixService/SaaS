@@ -98,17 +98,27 @@
   </section>
 
   <!-- MÁS -->
+  <section class="view" id="v-pedidos">
+    <div class="seg" id="pdSeg"><button data-f="activos" class="on">Por atender</button><button data-f="en_revision">🧾 Por revisar</button><button data-f="por_pagar">⏳ Sin pagar</button><button data-f="cerrados">Cerrados</button></div>
+    <div class="grid" id="pdLista"></div>
+  </section>
+  <section class="view" id="v-productos">
+    <div class="card" id="cobro"></div>
+    <div class="btns"><button id="prNuevo">➕ Nuevo producto</button><a class="btn ghost" id="prVer" target="_blank" rel="noopener">🔗 Ver mi tienda</a></div>
+    <p class="sub" id="prCuenta"></p>
+    <div class="grid" id="prLista"></div>
+  </section>
   <section class="view" id="v-mas">
     <div class="seg" id="mSeg">
       <button data-m="perfil" class="dueno">🏪 Perfil</button>
-      <button data-m="horario" class="dueno">⏰ Horario</button>
-      <button data-m="servicios" class="dueno">🛠️ Servicios</button>
+      <button data-m="horario" class="dueno solo-reservas">⏰ Horario</button>
+      <button data-m="servicios" class="dueno solo-reservas">🛠️ Servicios</button>
       <button data-m="abono" class="dueno">💳 Abono</button>
-      <button data-m="promos" class="dueno">🏷️ Promociones</button>
+      <button data-m="promos" class="dueno solo-reservas">🏷️ Promociones</button>
       <button data-m="plan" class="dueno">⭐ Plan</button>
       <button data-m="equipo">👥 Equipo</button>
-      <button data-m="stats">📊 Estadísticas</button>
-      <button data-m="recordar">🔔 Recordatorios</button>
+      <button data-m="stats" class="solo-reservas">📊 Estadísticas</button>
+      <button data-m="recordar" class="solo-reservas">🔔 Recordatorios</button>
       <button data-m="cuenta">👤 Mi cuenta</button>
     </div>
     <div id="mBody"></div>
@@ -116,10 +126,12 @@
 </main>
 
 <nav class="tabs">
-  <button data-v="hoy"><span class="i">🏠</span>Hoy</button>
-  <button data-v="agenda"><span class="i">📅</span>Agenda</button>
-  <button data-v="reservas"><span class="i">🧾</span>Reservas<span class="badge hidden" id="tabRev"></span></button>
-  <button data-v="clientes"><span class="i">👥</span>Clientes</button>
+  <button data-v="hoy" class="solo-reservas"><span class="i">🏠</span>Hoy</button>
+  <button data-v="agenda" class="solo-reservas"><span class="i">📅</span>Agenda</button>
+  <button data-v="reservas" class="solo-reservas"><span class="i">🧾</span>Reservas<span class="badge hidden" id="tabRev"></span></button>
+  <button data-v="clientes" class="solo-reservas"><span class="i">👥</span>Clientes</button>
+  <button data-v="pedidos" class="solo-catalogo hidden"><span class="i">🧾</span>Pedidos<span class="badge hidden" id="tabPed"></span></button>
+  <button data-v="productos" class="solo-catalogo hidden"><span class="i">🛍️</span>Productos</button>
   <button data-v="mas"><span class="i">⚙️</span>Más</button>
 </nav>
 
@@ -127,6 +139,7 @@
 <script src="../shared/vendor/supabase.js"></script>
 <script src="../shared/vendor/qrcode.js"></script>
 <script src="../shared/app.js"></script>
+<script src="catalogo.js"></script>
 <script src="negocio.js"></script>
 </body>
 </html>

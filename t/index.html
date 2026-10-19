@@ -97,6 +97,8 @@
   App.registrarSW();
   const slug = new URLSearchParams(location.search).get('s') || '';
   if (!slug) { $('cargando').textContent = 'Enlace no válido. Pídele al negocio su enlace.'; return; }
+  // Las tiendas (rubros de catálogo) tienen su propia página con carro de compras.
+  try { if (await App.rpc('negocio_modelo', { p_slug: slug }) === 'catalogo') { location.replace('../c/?s=' + encodeURIComponent(slug)); return; } } catch (e) { /* sigue como reservas */ }
   const [pub] = await Promise.all([App.cargarPublica()]);
   let t;
   try { t = await App.rpc('negocio_publico', { p_slug: slug }); } catch (e) { $('cargando').textContent = '⚠️ ' + e.message; return; }

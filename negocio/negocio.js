@@ -6,6 +6,12 @@
   const yo = await App.requerir(['negocio', 'equipo']);
   const pub = await App.cargarPublica();
   const T = yo.negocio_id;
+  // Tiendas (rubro de catálogo): productos y pedidos en vez de agenda y reservas.
+  const CATALOGO = ((yo.negocio || {}).modelo) === 'catalogo';
+  if (CATALOGO) {
+    document.querySelectorAll('.solo-reservas').forEach((x) => x.remove());
+    document.querySelectorAll('.solo-catalogo').forEach((x) => x.classList.remove('hidden'));
+  }
 
   const ESTADOS = {
     por_pagar: ['⏳ Esperando pago', 'warn'], en_revision: ['🧾 Por revisar', 'info'], confirmada: ['✅ Confirmada', 'ok'],
@@ -33,7 +39,7 @@
     $('hNombre').textContent = t.nombre;
     $('hPlan').textContent = P.premium ? 'PREMIUM' : 'GRATIS';
     $('hPlan').className = 'pill ' + (P.premium ? 'pro' : '');
-    $('tabRev').textContent = P.por_revisar; $('tabRev').classList.toggle('hidden', !P.por_revisar);
+    if ($('tabRev')) { $('tabRev').textContent = P.por_revisar; $('tabRev').classList.toggle('hidden', !P.por_revisar); }
     document.querySelectorAll('#mSeg .dueno').forEach((b) => b.classList.toggle('hidden', !P.dueno));
   }
   async function cargarCatalogo() {
@@ -54,6 +60,7 @@
     if (v === 'reservas') cargarReservas();
     if (v === 'clientes') cargarClientes();
     if (v === 'mas') verMas(subMas);
+    if ((v === 'productos' || v === 'pedidos') && window.Catalogo) window.Catalogo.mostrar(v);
   });
 
   // En vivo: cualquier cambio en las reservas del negocio refresca la vista.
@@ -766,5 +773,6 @@
   document.querySelectorAll('nav.tabs button').forEach((b) => b.addEventListener('click', () => { if (b.dataset.v !== 'detalle') volverA = b.dataset.v; }));
   const h = location.hash.slice(1);
   if (h === 'plan') { subMas = 'plan'; showOrig('mas'); }
+  else if (CATALOGO) showOrig(['productos', 'pedidos', 'mas'].includes(h) ? h : 'pedidos');
   else showOrig(['hoy', 'agenda', 'reservas', 'clientes', 'mas'].includes(h) ? h : 'hoy');
 })();

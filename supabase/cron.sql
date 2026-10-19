@@ -17,3 +17,6 @@ select cron.schedule('bt-push', '* * * * *', $$
     headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxZXZ1ampyYWlzcmNvaXJzd3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzMzk3NzMsImV4cCI6MjEwNzkxNTc3M30.XHeUtKmMJ5sSMCeGCzYnsYS3xQwPYrDwuylw3p7ICFk"}'::jsonb,
     body := '{}'::jsonb)
 $$);
+
+select cron.unschedule(jobid) from cron.job where jobname = 'cf-pedidos';
+select cron.schedule('cf-pedidos', '*/5 * * * *', $$ select public.pedidos_tareas(); $$);
