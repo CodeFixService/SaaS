@@ -34,7 +34,7 @@
         ' y la app necesita la ' + esc(window.BT_CONFIG.DB_VERSION) + '. Vuelve a correr la instalación de la base de datos (guía, paso 1).</div></div>' : '') +
       (r.pagos_por_revisar ? '<div class="aviso warn clic" data-ir="pagos"><div class="grow">💰 Tienes <b>' + r.pagos_por_revisar + '</b> pago(s) Premium por revisar.</div><span>›</span></div>' : '') +
       '<div class="stats">' +
-      [['🚲 Negocios', r.negocios], ['⭐ Negocios Premium', r.negocios_premium], ['🟢 Activos 7 días', r.negocios_activos_7d], ['⏳ Vencen en 7 días', r.por_vencer],
+      [['🏪 Negocios', r.negocios], ['⭐ Negocios Premium', r.negocios_premium], ['🟢 Activos 7 días', r.negocios_activos_7d], ['⏳ Vencen en 7 días', r.por_vencer],
         ['👥 Clientes con cuenta', r.clientes], ['⭐ Clientes Premium', r.clientes_premium], ['🔧 Personas de equipo', r.equipo], ['📅 Reservas este mes', r.reservas_mes],
         ['📅 Reservas hoy', r.reservas_hoy], ['💰 Ingresos del mes', plata(r.ingresos_mes)]].map((x) => '<div class="card"><span>' + x[0] + '</span><b>' + x[1] + '</b></div>').join('') + '</div>' +
       '<div class="card"><h2>🖥️ Servidor</h2><div class="sub">Base de datos: ' + MB(u.db_bytes) + ' de ' + MB(u.db_limite) + ' (' + pct + '%) · plan gratis de Supabase</div>' +
@@ -84,6 +84,7 @@
         '<option value="365">+1 año</option><option value="otro">Otro número de días…</option><option value="0">Quitar Premium</option></select>' +
         '<a class="btn small ghost" target="_blank" rel="noopener" href="../t/?s=' + encodeURIComponent(t.slug) + '">🔗 Página</a>' +
         (t.telefono ? '<a class="btn small alt" target="_blank" rel="noopener" href="' + App.wa(t.telefono, 'Hola ' + (t.dueno || '') + ' 👋') + '">📲</a>' : '') +
+        (SUPER ? '<button class="small" data-conf="' + t.id + '">⚙️ Configurar</button>' : '') +
         '<button class="small ghost" data-chat="' + t.id + '" data-n="' + esc(t.nombre) + '">💬</button><button class="small alt" data-add="' + t.id + '" data-n="' + esc(t.nombre) + '">👤＋</button>' +
         (SUPER ? '<button class="small ' + (t.suspendido ? 'okb' : 'danger') + '" data-susp="' + t.id + '" data-s="' + (t.suspendido ? 0 : 1) + '">' + (t.suspendido ? 'Reactivar' : 'Suspender') + '</button>' +
         '<button class="small danger" data-del="' + t.id + '" data-n="' + esc(t.nombre) + '">🗑️</button>' : '') + '</div></div>';
@@ -100,6 +101,7 @@
   };
   $('tLista').onclick = async (e) => {
     const ch = e.target.closest('[data-chat]'); if (ch) { App.abrirChat(ch.dataset.chat, null, ch.dataset.n); return; }
+    const cf = e.target.closest('[data-conf]'); if (cf) { configurarNegocio(negocios.find((x) => x.id === cf.dataset.conf)); return; }
     const ad = e.target.closest('[data-add]'); if (ad) { agregarUsuario(ad.dataset.add, ad.dataset.n); return; }
     const dl = e.target.closest('[data-del]');
     if (dl) {
@@ -143,6 +145,28 @@
         ['sNom', 'sEmail', 'sTel'].forEach((k) => { $(k).value = ''; }); $('sPass').value = App.clave();
       } catch (e) { $('sErr').textContent = e.message; }
       b.disabled = false;
+    };
+  }
+
+  // Súper admin: cambiar los datos principales de cualquier negocio.
+  function configurarNegocio(t) {
+    if (!t) return;
+    const op = rubros.map((r) => '<option value="' + r.id + '"' + (t.rubro && t.rubro.id === r.id ? ' selected' : '') + '>' + esc(r.icono + ' ' + r.nombre) + '</option>').join('');
+    const d = modal('<h2>⚙️ ' + esc(t.nombre) + '</h2>' +
+      '<label for="kN">Nombre</label><input id="kN" maxlength="80" value="' + esc(t.nombre) + '">' +
+      '<label for="kR">Rubro</label><select id="kR"><option value="">(sin rubro)</option>' + op + '</select>' +
+      '<div class="row"><div><label for="kC">Color</label><input id="kC" type="color" value="' + esc(t.color) + '"></div><div><label for="kI">Ícono</label><input id="kI" maxlength="8" value="' + esc(t.icono) + '"></div></div>' +
+      '<div class="row"><div><label for="kT">WhatsApp</label><input id="kT" value="' + esc(t.telefono || '') + '"></div><div><label for="kM">Comuna</label><input id="kM" maxlength="60" value="' + esc(t.comuna || '') + '"></div></div>' +
+      '<label><input type="checkbox" id="kO"' + (t.reservas_online ? ' checked' : '') + '> Recibe reservas / pedidos online</label>' +
+      '<label><input type="checkbox" id="kA"' + (t.activo ? ' checked' : '') + '> Activo (aparece y recibe clientes nuevos)</label>' +
+      '<div class="btns"><button class="ghost" data-cerrar>Cancelar</button><button id="kOk">Guardar</button></div><p class="err" id="kErr"></p>');
+    const v = (id) => d.querySelector(id);
+    v('#kOk').onclick = async () => {
+      try {
+        await rpc('admin_negocio_guardar', { p_id: t.id, p: { nombre: v('#kN').value.trim(), rubro_id: v('#kR').value || null, color: v('#kC').value,
+          icono: v('#kI').value.trim(), telefono: v('#kT').value.trim(), comuna: v('#kM').value.trim(), reservas_online: v('#kO').checked, activo: v('#kA').checked } });
+        d.close(); toast('✅ Guardado'); cargarNegocios();
+      } catch (err) { v('#kErr').textContent = err.message; }
     };
   }
 
@@ -206,7 +230,7 @@
     let l = [];
     try { l = await rpc('admin_pagos', { p_estado: pFiltro || null }); } catch (e) { $('pLista').innerHTML = '<p class="err">' + esc(e.message) + '</p>'; return; }
     $('pLista').innerHTML = l.length ? l.map((g) => '<div class="card"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:flex-start"><div><b>' + esc(g.quien) + '</b> <span class="pill">' +
-      (g.tipo === 'premium_negocio' ? '🚲 Negocio' : '👤 Cliente') + '</span><div class="sub">' + esc(g.email) + ' · ' + App.fHora(g.created_at) + '</div>' +
+      (g.tipo === 'premium_negocio' ? '🏪 Negocio' : '👤 Cliente') + '</span><div class="sub">' + esc(g.email) + ' · ' + App.fHora(g.created_at) + '</div>' +
       (g.premium_hasta ? '<div class="sub">Premium actual hasta ' + new Date(g.premium_hasta).toLocaleDateString('es-CL') + '</div>' : '') + (g.nota ? '<div class="sub">Nota: ' + esc(g.nota) + '</div>' : '') +
       '</div><div style="text-align:right"><span class="precio" style="font-size:20px">' + plata(g.monto) + '</span><div><span class="pill ' + (g.estado === 'aprobado' ? 'ok' : g.estado === 'rechazado' ? 'bad' : 'info') + '">' + g.estado.replace('_', ' ') + '</span></div></div></div>' +
       '<div class="acc">' + (g.tiene_comprobante ? '<button class="small ghost" data-ver="' + g.id + '">👁️ Comprobante</button>' : '<span class="sub">Comprobante borrado</span>') +
@@ -252,7 +276,7 @@
           '<div><label>Texto de la publicación</label><input data-t="' + tipo + '" data-s="' + n + '" data-k="texto" maxlength="300" value="' + esc(l.texto) + '" placeholder="Pago mensual"></div></div>' +
           '<label>Link de pago (Mercado Pago)</label><input data-t="' + tipo + '" data-s="' + n + '" data-k="url" value="' + esc(l.url) + '" placeholder="https://mpago.la/…"></div>'; }).join('') +
       '<div class="btns"><button data-guardar="' + tipo + '">💾 Guardar</button></div></div>';
-    aBody().innerHTML = bloque('premium_negocio', '🚲 Premium de negocios') + bloque('premium_cliente', '👤 Premium de clientes') +
+    aBody().innerHTML = bloque('premium_negocio', '🏪 Premium de negocios') + bloque('premium_cliente', '👤 Premium de clientes') +
       '<p class="sub">El abono de las reservas lo configura cada negocio con su propio link: ese dinero le llega directo al negocio y tú no lo ves.</p>';
     aBody().onclick = async (e) => {
       const b = e.target.closest('[data-guardar]'); if (!b) return;
@@ -272,7 +296,7 @@
     pub = await App.cargarPublica();
     const planes = pub.planes;
     aBody().innerHTML = ['negocio_free', 'negocio_premium', 'cliente_free', 'cliente_premium'].map((c) => { const p = planes[c]; return '<div class="card' + (/premium/.test(c) ? ' plan premium' : '') + '" data-plan="' + c + '"><h2>' +
-      ({ negocio_free: '🚲 Negocio gratis', negocio_premium: '🚲⭐ Negocio Premium', cliente_free: '👤 Cliente gratis', cliente_premium: '👤⭐ Cliente Premium' })[c] + '</h2>' +
+      ({ negocio_free: '🏪 Negocio gratis', negocio_premium: '🏪⭐ Negocio Premium', cliente_free: '👤 Cliente gratis', cliente_premium: '👤⭐ Cliente Premium' })[c] + '</h2>' +
       '<div class="row"><div><label>Nombre</label><input data-k="nombre" maxlength="40" value="' + esc(p.nombre) + '"></div><div><label>Duración del pago (días)</label><input data-k="duracion" inputmode="numeric" value="' + p.duracion_dias + '"></div></div>' +
       '<label>Descripción</label><input data-k="descripcion" maxlength="300" value="' + esc(p.descripcion) + '">' +
       '<label>Beneficios (uno por línea)</label><textarea data-k="beneficios" rows="5">' + esc(p.beneficios.join('\n')) + '</textarea>' +

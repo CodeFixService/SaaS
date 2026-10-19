@@ -162,7 +162,9 @@
   }
   // Cuentas de negocio y de equipo: las crea el servidor (nadie se registra solo).
   async function crearCuenta(d) {
-    const { data, error } = await sb.functions.invoke('servidor', { body: Object.assign({ accion: 'crear_cuenta' }, d) });
+    // Si la función no responde en 40 s, avisa en vez de quedar cargando.
+    const espera = new Promise((_, no) => setTimeout(() => no(new Error('La función "servidor" no respondió. Revisa en Supabase → Edge Functions que "servidor" esté desplegada (guía, paso 4).')), 40000));
+    const { data, error } = await Promise.race([sb.functions.invoke('servidor', { body: Object.assign({ accion: 'crear_cuenta' }, d) }), espera]);
     if (error) {
       let det = '';
       try { det = await error.context.text(); } catch (e) { /* sin detalle */ }

@@ -16,7 +16,7 @@ create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '2.0'::text $$;
+language sql immutable as $$ select '2.1'::text $$;
 
 -- Teléfono normalizado (solo números; celulares chilenos con 56 adelante).
 create or replace function public.tel_norm(t text) returns text
@@ -2345,6 +2345,28 @@ begin
     execute 'grant execute on all functions in schema public to service_role';
   end if;
 end $$;
+
+
+-- (v2.1) Súper admin: editar los datos principales de cualquier negocio.
+create or replace function public.admin_negocio_guardar(p_id uuid, p jsonb) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  perform public.super_check();
+  update public.negocios set
+    nombre = coalesce(nullif(trim(p ->> 'nombre'), ''), nombre),
+    rubro_id = case when p ? 'rubro_id' then nullif(p ->> 'rubro_id', '')::uuid else rubro_id end,
+    color = coalesce(nullif(p ->> 'color', ''), color),
+    icono = coalesce(nullif(trim(p ->> 'icono'), ''), icono),
+    telefono = coalesce(left(trim(p ->> 'telefono'), 30), telefono),
+    comuna = coalesce(left(trim(p ->> 'comuna'), 60), comuna),
+    reservas_online = coalesce((p ->> 'reservas_online')::boolean, reservas_online),
+    activo = coalesce((p ->> 'activo')::boolean, activo)
+  where id = p_id;
+  if not found then raise exception 'Negocio no encontrado'; end if;
+  perform public.auditar('negocio_editar', p_id::text);
+end $$;
+revoke execute on function public.admin_negocio_guardar(uuid, jsonb) from public, anon, authenticated;
+grant execute on function public.admin_negocio_guardar(uuid, jsonb) to authenticated;
 
 -- Que la API de Supabase vea las funciones nuevas al instante.
 notify pgrst, 'reload schema';

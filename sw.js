@@ -1,7 +1,7 @@
 /* CodeFix · Service worker: app instalable, funciona con mala señal y recibe notificaciones.
    Siempre intenta traer la versión nueva de internet (así nunca queda una versión vieja);
    si no hay señal, usa la copia guardada. */
-const CACHE = 'cf-v2.0';
+const CACHE = 'cf-v2.1';
 const BASE = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
   'shared/app.css', 'shared/app.js', 'shared/config.js', 'shared/vendor/supabase.js', 'shared/vendor/qrcode.js',
   'admin/', 'admin/admin.js', 'negocio/', 'negocio/negocio.js', 'cliente/', 't/', 'r/'];
