@@ -28,19 +28,19 @@
     const porDia = dias.map((d) => CM.completados(d, d).length), tot = porDia.reduce((a, b) => a + b, 0);
     const uso = dias.map((d) => CM.uso.find((u) => u.dia === d) || { trabajo_min: 0, descanso_min: 0, app_min: 0 });
     const tr = uso.map((u) => u.trabajo_min), de = uso.map((u) => u.descanso_min);
-    const dg = dias.map((d) => { const e = I.find((i) => i.tipo === 'diario' && i.fecha === d && i.datos && i.datos.animo); return e ? e.datos.animo : null; });
-    const en = dias.map((d) => { const e = I.find((i) => i.tipo === 'diario' && i.fecha === d && i.datos && i.datos.energia); return e ? e.datos.energia : null; });
+    const dg = dias.map((d) => CM.estadoDia(d).animo);
+    const en = dias.map((d) => CM.estadoDia(d).energia);
     const porEsp = CM.espacios.filter((e) => !e.archivado).map((e) => [e.nombre, e.color, CM.completados(dias[0], h).filter((i) => i.espacio_id === e.id).length]).filter((r) => r[2]);
     const dow = Array(7).fill(0); I.filter((i) => i.tipo === 'tarea' && i.hecho_at).forEach((i) => dow[new Date(i.hecho_at).getDay()]++);
     const est = { abierto: 0, en_curso: 0, hecho: 0 }; I.filter((i) => i.tipo === 'tarea' || i.tipo === 'proyecto').forEach((i) => { if (est[i.estado] !== undefined) est[i.estado]++; });
     const metas = I.filter((m) => m.tipo === 'meta' && m.estado === 'abierto').map((m) => [m.titulo, '#3d63ff', Math.round(CM.progresoMeta(m) * 100)]);
-    const ins = CM.insights(CM.limiteInsights());
+    const ins = ui.sinIns ? [] : CM.insights(CM.limiteInsights());
     let x = '<div class="titulo-v"><h2>Panel</h2></div><div class="chips">' + [7, 14, 30].map((n) => '<button type="button" class="chip' + (ui.n === n ? ' on' : '') + '" data-n="' + n + '">' + n + ' días</button>').join('') + '</div>';
     x += '<div class="kpis"><div><b>' + tot + '</b><span>cumplidas</span></div><div><b>' + CM.racha() + '</b><span>racha</span></div><div><b>' + CM.minTxt(Math.round(prom(uso.map((u) => u.app_min)))) + '</b><span>en app/día</span></div></div>';
     if (ins.length) x += '<h3 class="sec">Lo que destaca</h3>' + ins.map(CM.tarjetaInsight).join('');
     x += '<div class="card"><h3>Tareas cumplidas por día</h3>' + barras(porDia, dias, 'var(--c1)') + '</div>';
     x += '<div class="card"><h3>Trabajo vs descanso <span class="sub"><i class="dot" style="background:var(--c1)"></i>trabajo <i class="dot" style="background:var(--c2)"></i>fuera de horario (min en la app)</span></h3>' + apiladas(tr, de) + '</div>';
-    x += '<div class="card"><h3>Ánimo</h3>' + linea(dg, 'var(--c1)') + '<h3>Energía</h3>' + linea(en, 'var(--c2)') + '</div>';
+    x += '<div class="card"><h3>Ánimo (automático)</h3>' + linea(dg, 'var(--c1)') + '<h3>Energía</h3>' + linea(en, 'var(--c2)') + '</div>';
     x += '<div class="card"><h3>Mejor día de la semana</h3>' + barras(dow, DS, 'var(--c1)', 60) + '</div>';
     if (porEsp.length) x += '<div class="card"><h3>Por espacio</h3>' + hbar(porEsp) + '</div>';
     x += '<div class="card"><h3>Estado del tablero</h3>' + hbar([['Por hacer', '#8a93b2', est.abierto], ['En curso', '#3d63ff', est.en_curso], ['Hecho', '#2fb67c', est.hecho]]) + '</div>';
@@ -50,7 +50,7 @@
       x += '<div class="card"><h3>Revisión semanal</h3><p>Cumpliste <b>' + s1 + '</b> cosas, anotaste <b>' + logr + '</b> logros y resolviste <b>' + pr + '</b> problemas. Elige hoy <b>una</b> prioridad para la próxima semana.</p></div>';
     } else x += '<div class="card"><p class="sub">La revisión semanal y más consejos están en Pro.</p></div>';
     el.innerHTML = x;
-    el.onclick = (e) => { const b = e.target.closest('[data-n],[data-ir]'); if (!b) return; if (b.dataset.n) { ui.n = +b.dataset.n; CM.pintar(); } else CM.ir(b.dataset.ir); };
+    el.onclick = (e) => { const b = e.target.closest('[data-n],[data-ir]'); e.stopPropagation(); if (!b) return; if (b.dataset.n) { ui.n = +b.dataset.n; CM.pintar(); } else CM.ir(b.dataset.ir); };
   }
   CM.mod.panel = { render };
 })();

@@ -19,6 +19,30 @@
     if (p.tema === 'claro' || p.tema === 'oscuro') r.dataset.theme = p.tema === 'claro' ? 'light' : 'dark'; else delete r.dataset.theme;
     const a = document.getElementById('bAvatar'); if (a) { const d = CM.items.find((i) => i.tipo === 'diario' && i.fecha === hoy()), an = d && d.datos && d.datos.animo; a.innerHTML = '<span>' + esc(p.avatar || '🙂') + '</span>' + (an ? '<small>' + CM.ANIMO[an][0] + '</small>' : ''); }
   };
+
+  /* Estado automático del día: ánimo, energía y carga salen de lo que registras (no se guarda nada). */
+  const dd = (t) => (t ? CM.diaDe(t) : '');
+  CM.estadoDia = (d) => {
+    const I = CM.items, man = I.find((i) => i.tipo === 'diario' && i.fecha === d && i.datos && (i.datos.animo || i.datos.energia)), md = (man && man.datos) || {};
+    const nuevos = I.filter((i) => ['tarea', 'idea', 'problema', 'proyecto'].includes(i.tipo) && dd(i.created_at) === d);
+    const prob = nuevos.filter((i) => i.tipo === 'problema').length, ideas = nuevos.filter((i) => i.tipo === 'idea').length;
+    const hecho = CM.completados(d, d).length, logros = I.filter((i) => i.tipo === 'logro' && i.fecha === d).length;
+    const venc = I.filter((i) => i.tipo === 'tarea' && i.fecha && i.fecha < d && (i.estado !== 'hecho' || dd(i.hecho_at) >= d)).length;
+    const encur = d === hoy() ? Math.max(0, I.filter((i) => (i.tipo === 'tarea' || i.tipo === 'proyecto') && i.estado === 'en_curso').length - 3) : 0;
+    const u = CM.uso.find((x) => x.dia === d), desc = u ? u.descanso_min : 0;
+    const act = nuevos.length + hecho + logros;
+    const pts = nuevos.length + prob * 2 + venc * 1.5 + encur * 2 + desc / 30 - hecho * 0.5;
+    const carga = pts < 4 ? 1 : pts < 8 ? 2 : pts < 12 ? 3 : 4, cl = ['', 'Ligera', 'Normal', 'Alta', 'Sobrecargado'][carga];
+    const cl5 = (n) => Math.max(1, Math.min(5, Math.round(n)));
+    let an = 3 + (hecho >= 3 ? 1 : 0) + (hecho >= 6 || logros ? 1 : 0) - (prob >= 2 ? 1 : 0) - (venc >= 3 ? 1 : 0) - (carga === 4 ? 1 : 0);
+    let en = 3 + (hecho >= 5 ? 1 : 0) + (ideas >= 2 ? 1 : 0) - (desc > 60 ? 1 : 0) - (carga >= 3 ? 1 : 0);
+    return { animo: md.animo || (act ? cl5(an) : null), energia: md.energia || (act ? cl5(en) : null), carga: act || venc ? carga : 0, cargaTxt: cl, manual: !!(md.animo || md.energia), diario: man };
+  };
+  // Los check-ins de ánimo sin texto duran 7 días; el resto del diario no se toca.
+  CM.limpiarAnimo = async () => {
+    const lim = A.sumarDias(hoy(), -7), v = CM.items.filter((i) => i.tipo === 'diario' && !i.cuerpo && i.fecha && i.fecha < lim && i.datos && (i.datos.animo || i.datos.energia));
+    for (const i of v) { try { await CM.del(i.id); } catch (x) { break; } }
+  };
   /* Frase del día: cambia cada día, según el momento (trabajo, descanso, fin de semana). */
   const F = {
     gen: ['Hoy no tienes que hacerlo todo; solo lo siguiente.', 'Un paso pequeño hoy vale más que un plan perfecto mañana.', 'Constancia le gana al talento cuando el talento no es constante.', 'Lo que haces cada día pesa más que lo que haces de vez en cuando.', 'Empieza feo, pero empieza.', 'Tu futuro yo te agradece lo que termines hoy.', 'Avanzar lento sigue siendo avanzar.', 'No necesitas ganas: necesitas empezar dos minutos.', 'Prioriza lo importante, no lo ruidoso.', 'Cada tarea cerrada libera espacio en tu cabeza.', 'Hoy es un buen día para cumplirte a ti mismo.', 'Lo difícil primero; después todo se siente liviano.', 'Tú eliges el siguiente paso. Solo uno.', 'La disciplina es cuidarte con anticipación.', 'Termina lo empezado antes de empezar algo nuevo.', 'Un día imperfecto igual suma a tu racha.', 'Respira, ordena, avanza.', 'Tu ritmo es válido. Mantenlo.', 'Lo que mides, mejora. Lo que celebras, se repite.', 'Hoy construyes lo que mañana vas a usar.', 'No compares tu capítulo 3 con el capítulo 20 de otro.', 'Hazlo simple, hazlo hoy.', 'Estás más cerca de lo que crees.', 'Pequeñas victorias, grandes resultados.', 'Foco en una cosa; el resto puede esperar.', 'Tu energía es un recurso: invíertela bien.', 'Confía en el proceso y en tu constancia.', 'Hoy puedes ser un poco mejor que ayer.', 'La claridad llega al actuar, no al pensar más.', 'Mereces avanzar sin quemarte.'],

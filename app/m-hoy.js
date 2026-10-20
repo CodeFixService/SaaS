@@ -76,8 +76,14 @@
     if (rec.length) x += '<div class="card"><h2>Recordatorios</h2>' + rec.map((r) => '<div class="fila">' + chk(false, 'rec', r.id) + '<button type="button" class="grow tit" data-act="ficha" data-id="' + r.id + '">' + esc(r.titulo) + '<small class="muted">' + new Date(r.aviso_at).toLocaleString('es-CL', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) + '</small></button></div>').join('') + '</div>';
     // ánimo
     const esc5 = (k, v, L) => '<div class="esc5" data-k="' + k + '">' + [1, 2, 3, 4, 5].map((n) => '<button type="button" class="' + (v === n ? 'on' : '') + '" data-v="' + n + '" aria-label="' + L[n][1] + '" title="' + L[n][1] + '"><span>' + L[n][0] + '</span><small>' + L[n][1] + '</small></button>').join('') + '</div>';
-    x += '<div class="card"><h2>¿Cómo vas hoy?</h2><div class="row2"><div><p class="sub">Energía</p>' + esc5('energia', dd.energia, CM.ENERGIA) + '</div><div><p class="sub">Ánimo</p>' + esc5('animo', dd.animo, CM.ANIMO) + '</div></div></div>';
-    if (ins.length) x += '<div class="card"><h2>Lo que he notado</h2>' + ins.map(CM.tarjetaInsight).join('') + '<button class="small ghost" data-ir="panel" type="button">Ver análisis completo</button></div>';
+    const ed = CM.estadoDia(h), cb = ['', 'carga1', 'carga1', 'carga2', 'carga3'][ed.carga] || '';
+    x += '<div class="card"><h2>¿Cómo vas hoy? <span class="pill ' + (ed.carga >= 3 ? 'bad' : ed.carga ? 'ok' : '') + '">' + (ed.carga ? 'Carga ' + ed.cargaTxt.toLowerCase() : 'Sin datos aún') + '</span></h2>' +
+      '<div class="auto"><div><span>' + (ed.animo ? CM.ANIMO[ed.animo][0] : '–') + '</span><small>Ánimo' + (ed.animo ? ' · ' + CM.ANIMO[ed.animo][1] : '') + '</small></div><div><span>' + (ed.energia ? CM.ENERGIA[ed.energia][0] : '–') + '</span><small>Energía' + (ed.energia ? ' · ' + CM.ENERGIA[ed.energia][1] : '') + '</small></div></div>' +
+      '<div class="barra"><i style="width:' + (ed.carga * 25) + '%;background:' + (ed.carga >= 3 ? 'var(--bad)' : 'var(--ok)') + '"></i></div>' +
+      '<p class="sub">' + (ed.manual ? 'Marcado por ti.' : 'Se calcula solo según lo que agregas y cumples.') + (ed.carga === 4 ? ' <b>Vas sobrecargado: aplaza lo no urgente.</b>' : '') + '</p>' +
+      '<button type="button" class="small ghost" data-act="ajustar">' + (ui.aj ? 'Ocultar' : 'Ajustar a mano') + '</button>' +
+      (ui.aj ? '<div class="row2"><div><p class="sub">Energía</p>' + esc5('energia', dd.energia, CM.ENERGIA) + '</div><div><p class="sub">Ánimo</p>' + esc5('animo', dd.animo, CM.ANIMO) + '</div></div>' : '') + '</div>';
+    x += '<div class="card"><h2>Lo que he notado</h2>' + (ins.length ? ins.map(CM.tarjetaInsight).join('') : '<p class="sub">Aún no hay consejos.</p>') + '<button class="small ghost" data-act="analisis" type="button">' + (ui.an ? 'Ocultar análisis' : 'Ver análisis completo') + '</button><div id="anIn"></div></div>';
     el.innerHTML = x;
     CM.alSelectorEspacio(el);
     const inp = el.querySelector('#cap');
@@ -110,6 +116,8 @@
         switch (b.dataset.act) {
           case 'aterrizar': CM.aterrizar(); break;
           case 'tour': CM.tour(); break;
+          case 'ajustar': ui.aj = !ui.aj; CM.pintar(); break;
+          case 'analisis': ui.an = !ui.an; CM.pintar(); break;
           case 'guiaX': await CM.guardarPrefs({ guia: 'ok' }); CM.pintar(); break;
           case 'ficha': CM.ficha(id); break;
           case 'tarea': {
@@ -124,6 +132,7 @@
         }
       } catch (er) { toast(er.message); }
     };
+    if (ui.an) CM.cargarMod('panel').then(() => { const t = el.querySelector('#anIn'); if (t) CM.mod.panel.render(t); }).catch(() => {});
     el.querySelector('#capHoy') && (el.querySelector('#capHoy').onchange = (e) => { ui.hoy = e.target.checked; });
   }
   CM.mod.hoy = { render };

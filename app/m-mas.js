@@ -49,7 +49,8 @@
     const lim = uso ? uso.limite_items : 0, pc = uso && lim ? Math.min(100, Math.round(uso.items / lim * 100)) : 0;
     const hasta = c.premium_hasta ? A.fCorta(c.premium_hasta.slice(0, 10)) : '';
     let x = '<div class="titulo-v"><h2>Más</h2></div>';
-    x += '<div class="card"><h3>' + esc(c.nombre || c.email) + '</h3><p class="sub">' + esc(c.email) + ' · ' + (c.rol === 'admin' ? 'Administrador' : c.rol === 'socio' ? 'Socio' : c.premium ? 'Plan Pro' + (hasta ? ' hasta ' + hasta : '') : 'Plan gratis') + '</p>' +
+    const ed = CM.estadoDia(A.hoy());
+    x += '<div class="card"><div class="fila"><span class="avatar">' + esc((c.prefs || {}).avatar || '🙂') + (ed.animo ? '<small>' + CM.ANIMO[ed.animo][0] + '</small>' : '') + '</span><h3 style="margin:0">' + esc(c.nombre || c.email) + '</h3></div><p class="sub">' + esc(c.email) + ' · ' + (c.rol === 'admin' ? 'Administrador' : c.rol === 'socio' ? 'Socio' : c.premium ? 'Plan Pro' + (hasta ? ' hasta ' + hasta : '') : 'Plan gratis') + '</p>' +
       (c.rol === 'usuario' && !c.premium ? (pago && pago.estado === 'pendiente' ? '<p class="pill warn">Pago en revisión</p>' : '<button type="button" data-act="pro">' + CM.ico('estrella', 16) + ' Pasar a Pro</button>') : '') +
       (c.rol !== 'usuario' ? '<a class="btn" href="../admin/">Panel de administración</a>' : '') + '</div>';
     const pf = c.prefs || {};
@@ -57,6 +58,8 @@
       '<p class="sub">Ícono</p><div class="avs">' + CM.AVATARES.map((a) => '<button type="button" data-act="av" data-a="' + a + '" class="' + ((pf.avatar || '🙂') === a ? 'on' : '') + '">' + a + '</button>').join('') + '</div>' +
       '<p class="sub">Tema</p><div class="chips">' + [['auto', 'Automático'], ['oscuro', 'Oscuro'], ['claro', 'Claro']].map((t) => '<button type="button" class="chip' + ((pf.tema || 'auto') === t[0] ? ' on' : '') + '" data-act="tema" data-t="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>' +
       '<button type="button" class="small ghost" data-act="nom">Guardar nombre</button> <button type="button" class="small ghost" data-act="tour">Ver guía</button></div>';
+    const ck = CM.items.filter((i) => i.tipo === 'diario' && i.datos && (i.datos.animo || i.datos.energia)).sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+    x += '<div class="card"><h3>Registros de ánimo <span class="sub">(se borran solos a los 7 días)</span></h3>' + (ck.length ? ck.map((i) => '<div class="fila"><span class="grow">' + A.fCorta(i.fecha) + ' · ' + (CM.ANIMO[i.datos.animo || 0][0] || '') + ' ' + (CM.ENERGIA[i.datos.energia || 0][0] || '') + '</span><button type="button" class="x" data-act="delck" data-id="' + i.id + '" aria-label="Borrar">' + CM.ico('basura', 15) + '</button></div>').join('') : '<p class="sub">Sin registros manuales. El ánimo se calcula solo.</p>') + '</div>';
     x += '<div class="card"><h3>Espacios</h3>' + CM.espacios.filter((e) => !e.archivado).map((e) => '<div class="fila"><i class="dot" style="background:' + esc(e.color) + '"></i><span>' + esc(e.nombre) + ' <span class="sub">' + (e.modo === 'trabajo' ? 'trabajo ' + esc((e.horario || {}).desde || '') + '–' + esc((e.horario || {}).hasta || '') : 'personal') + '</span></span><button type="button" class="x" data-act="esp" data-id="' + e.id + '" aria-label="Editar">' + CM.ico('lapiz', 16) + '</button></div>').join('') +
       '<button type="button" class="small ghost" data-act="nesp">+ Espacio</button></div>';
     x += '<div class="card"><h3>Descanso</h3><label>Aviso si usas la app fuera de horario más de (min/día)<input id="p1" type="number" min="10" max="600" value="' + ok(p.limite_descanso_min, 60) + '"></label><label>Recordarme pausar cada (min)<input id="p2" type="number" min="0" max="180" value="' + ok(p.pausa_cada, 50) + '"></label>' +
@@ -75,6 +78,7 @@
         else if (a === 'tema') { await CM.guardarPrefs({ tema: b.dataset.t }); render(el); }
         else if (a === 'nom') { c.nombre = el.querySelector('#sN').value.trim() || c.nombre; await rpc('mi_perfil_guardar', { p_nombre: c.nombre, p_telefono: c.telefono }); toast('Guardado'); }
         else if (a === 'tour') CM.tour();
+        else if (a === 'delck') { await CM.del(b.dataset.id); render(el); }
         else if (a === 'pro') pagar();
         else if (a === 'esp') espacioForm(CM.espacio(b.dataset.id));
         else if (a === 'nesp') espacioForm();

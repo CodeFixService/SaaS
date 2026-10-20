@@ -48,6 +48,8 @@
       diarios.forEach((e) => { const n = CM.completados(e.fecha, e.fecha).length; if (e.datos.energia >= 4) alta.push(n); else if (e.datos.energia <= 2) baja.push(n); });
       if (alta.length >= 2 && baja.length >= 2 && prom(alta) > prom(baja) + 0.8) L.push({ n: 'info', p: 46, t: 'Tu energía manda', x: 'Los días con energía alta cumples ' + prom(alta).toFixed(1).replace('.', ',') + ' cosas; con energía baja, ' + prom(baja).toFixed(1).replace('.', ',') + '. Cuida el sueño y planifica menos en días bajos.' });
     }
+    const hoyE = CM.estadoDia(h);
+    if (hoyE.carga === 4) L.push({ n: 'ojo', p: 95, t: 'Hoy vas sobrecargado', x: 'Hay mucho abierto o nuevo para un solo día. Elige 3 cosas, mueve el resto a mañana y descansa.', ir: 'hoy' });
     const an = I.filter((e) => e.tipo === 'diario' && e.datos && e.datos.animo);
     if (an.length >= 6) {
       const bj = an.filter((e) => e.datos.animo <= 2).length / an.length;

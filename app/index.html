@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="cm.css">
 </head>
 <body class="con-tabs">
-<header class="top"><h1 style="flex:1;margin:0"><span id="chipModo"></span></h1><button class="icon-btn av" id="bAvatar" aria-label="Mi estilo"></button><button class="icon-btn" id="bAter" aria-label="Aterrizar" style="position:relative"></button><button class="icon-btn" id="bCampana" aria-label="Avisos" style="position:relative"></button></header>
+<header class="top"><h1 style="flex:1;margin:0"><span id="chipModo"></span></h1><button class="icon-btn" id="bAter" aria-label="Aterrizar" style="position:relative"></button><button class="icon-btn" id="bCampana" aria-label="Avisos" style="position:relative"></button></header>
 <main>
   <section class="view on" id="v-hoy"></section><section class="view" id="v-tablero"></section><section class="view" id="v-metas"></section>
   <section class="view" id="v-cerebro"></section><section class="view" id="v-panel"></section><section class="view" id="v-mas"></section>
@@ -36,7 +36,7 @@
   nav.onclick = (e) => { const b = e.target.closest('button[data-v]'); if (b) CM.ir(b.dataset.v); };
   const bAter = document.getElementById('bAter'); bAter.innerHTML = CM.ico('ancla', 20); bAter.onclick = CM.aterrizar;
   App.campana(document.getElementById('bCampana'));
-  CM.aplicarTema(); CM.primerTour(); document.getElementById('bAvatar').onclick = () => CM.ir('mas'); CM.chip(); setInterval(CM.chip, 60000);
+  CM.aplicarTema(); CM.primerTour(); CM.limpiarAnimo(); CM.chip(); setInterval(CM.chip, 60000);
   CM.iniciarLatido();
   CM.ir(location.hash.slice(1) || 'hoy');
   setInterval(() => { if (!document.hidden && Date.now() - CM.sync > 300000) CM.cargar().then(CM.emit).catch(() => {}); }, 60000);

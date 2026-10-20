@@ -44,3 +44,6 @@ header.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg
 .pill svg{animation:llama 1.6s ease-in-out infinite}@keyframes llama{50%{transform:scale(1.15)}}
 .conf{position:fixed;z-index:99;pointer-events:none}.conf i{position:absolute;width:7px;height:7px;border-radius:2px;animation:vuela .8s ease-out forwards}@keyframes vuela{to{transform:translate(var(--dx),var(--dy)) rotate(260deg);opacity:0}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.auto{display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center;margin:6px 0}.auto span{font-size:34px;display:block}.auto small{color:var(--muted);font-size:12px}
+.avatar{position:relative;font-size:34px;width:52px;height:52px;border-radius:16px;background:var(--brand-soft);display:grid;place-items:center}.avatar small{position:absolute;right:-6px;bottom:-6px;font-size:16px}
