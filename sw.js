@@ -1,10 +1,10 @@
-/* CodeFix · Service worker: app instalable, funciona con mala señal y recibe notificaciones.
+/* Centro de Mando · Service worker: app instalable, funciona con mala señal y recibe notificaciones.
    Siempre intenta traer la versión nueva de internet (así nunca queda una versión vieja);
    si no hay señal, usa la copia guardada. */
-const CACHE = 'cf-v2.3';
+const CACHE = 'cm-v3.0';
 const BASE = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
-  'shared/app.css', 'shared/app.js', 'shared/config.js', 'shared/vendor/supabase.js', 'shared/vendor/qrcode.js',
-  'admin/', 'admin/admin.js', 'negocio/', 'negocio/negocio.js', 'negocio/catalogo.js', 'cliente/', 't/', 'r/', 'c/', 'p/'];
+  'shared/app.css', 'shared/app.js', 'shared/config.js', 'shared/vendor/supabase.js',
+  'app/', 'app/cm.css', 'app/cm.js', 'app/m-hoy.js', 'app/m-insights.js', 'admin/', 'admin/admin.js'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(BASE.map((u) => new Request(u, { cache: 'reload' })))).catch(() => {}).then(() => self.skipWaiting()));
@@ -24,7 +24,7 @@ self.addEventListener('fetch', (e) => {
 self.addEventListener('push', (e) => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (err) { d = { title: e.data && e.data.text() }; }
-  e.waitUntil(self.registration.showNotification(d.title || 'CodeFix', {
+  e.waitUntil(self.registration.showNotification(d.title || 'Centro de Mando', {
     body: d.body || '', icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: d.tag, data: { url: d.url || '/' }
   }));
 });

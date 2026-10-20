@@ -66,24 +66,6 @@
     });
   }
 
-  function tema(color) {
-    if (!/^#[0-9a-f]{6}$/i.test(color || '')) return;
-    const n = parseInt(color.slice(1), 16);
-    const l = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
-    document.documentElement.style.setProperty('--brand', color);
-    document.documentElement.style.setProperty('--brand-ink', l > 0.62 ? '#0f172a' : '#ffffff');
-    let m = document.querySelector('meta[name=theme-color]');
-    if (!m) { m = document.createElement('meta'); m.name = 'theme-color'; document.head.appendChild(m); }
-    m.content = color;
-  }
-  // Logo (o ícono) dentro de un elemento .logo
-  function pintarLogo(el, t) {
-    if (!el || !t) return;
-    const ok = /^data:image\/(jpeg|png|webp);base64,/.test(t.logo || '');
-    el.style.backgroundImage = ok ? 'url("' + t.logo + '")' : '';
-    el.textContent = ok ? '' : (t.icono || '🚲');
-  }
-
   function friendly(err) {
     const m = String((err && (err.message || err.error_description)) || err || '');
     if (/Invalid login credentials/i.test(m)) return 'Correo o contraseña incorrectos';
@@ -92,8 +74,8 @@
     if (/Password should be/i.test(m)) return 'La contraseña debe tener al menos 6 caracteres';
     if (/rate limit|too many/i.test(m)) return 'Demasiados intentos. Espera unos minutos.';
     if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return 'Sin conexión. Revisa tu internet.';
-    if (/Could not find the function|schema cache|does not exist/i.test(m)) return 'Falta instalar la base de datos: corre supabase/schema.sql en Supabase → SQL Editor (guía, paso 1).';
-    if (/Database error saving new user/i.test(m)) return 'No se pudo crear la cuenta: el negocio no recibe clientes nuevos o el registro está cerrado.';
+    if (/Could not find the function|schema cache|does not exist/i.test(m)) return 'Falta instalar la base de datos: corre supabase/instalar.sql en Supabase → SQL Editor (guía, paso 1).';
+    if (/Database error saving new user/i.test(m)) return 'No se pudo crear la cuenta. Intenta de nuevo o escribe a soporte.';
     return m.replace(/^\w*Error:\s*/, '') || 'Error';
   }
   async function rpc(name, args) {
@@ -135,7 +117,7 @@
     if (cuenta) sb.rpc('registrar_visto').then(() => {}, () => {});
     return cuenta;
   }
-  const destino = (c) => !c ? 'index.html' : (c.rol === 'admin' || c.rol === 'socio') ? 'admin/' : c.rol === 'cliente' ? 'cliente/' : 'negocio/';
+  const destino = (c) => !c ? 'index.html' : (c.rol === 'admin' || c.rol === 'socio') ? 'admin/' : 'app/';
   // Úsalo al abrir cada panel: sin sesión o con otro rol, vuelve al inicio.
   async function requerir(roles) {
     let c = null;
@@ -143,7 +125,6 @@
     if (!c) { location.replace(ROOT + 'index.html?volver=' + encodeURIComponent(location.pathname + location.hash)); return new Promise(() => {}); }
     if (c.suspendido) { document.body.innerHTML = '<main><div class="card"><h2>Cuenta suspendida</h2><p class="muted">Contacta al administrador.</p><button onclick="App.salir()">Salir</button></div></main>'; return new Promise(() => {}); }
     if (roles && !roles.includes(c.rol)) { location.replace(ROOT + destino(c)); return new Promise(() => {}); }
-    if (c.negocio && c.negocio.color) tema(c.negocio.color);
     return c;
   }
   async function entrar(email, password) {
@@ -160,7 +141,15 @@
     cuenta = null; localStorage.removeItem('bt:cuenta');
     location.replace(ROOT + 'index.html');
   }
-  // Cuentas de negocio y de equipo: las crea el servidor (nadie se registra solo).
+  // Registro abierto: la persona crea su cuenta con correo y contraseña (7 días de Pro de prueba).
+  async function registrar(email, password, nombre) {
+    const { data, error } = await sb.auth.signUp({ email: email.trim(), password, options: { data: { nombre: String(nombre || '').trim() } } });
+    if (error) throw new Error(friendly(error));
+    if (!data.session) return { confirmar: true };
+    await refrescar(); sincronizarPush();
+    return { confirmar: false };
+  }
+  // Cuentas creadas desde el panel (socios y usuarios): las crea el servidor.
   async function crearCuenta(d) {
     // Si la función no responde en 40 s, avisa en vez de quedar cargando.
     const espera = new Promise((_, no) => setTimeout(() => no(new Error('La función "servidor" no respondió. Revisa en Supabase → Edge Functions que "servidor" esté desplegada (guía, paso 4).')), 40000));
@@ -179,8 +168,8 @@
     return l(0).toUpperCase() + l(1) + l(2) + n(3) + n(4) + n(5) + n(6) + l(7) + l(8);
   }
   function mensajeAcceso(d) {
-    return 'Hola ' + d.nombre + ' 👋\nTe creamos tu cuenta en ' + (d.lugar || 'CodeFix') + '.\n\n📲 Entra aquí e instala la app: ' + ROOT +
-      '\n👤 Correo: ' + d.email + '\n🔑 Contraseña: ' + d.password + '\n\nCambia tu contraseña en "Mi cuenta" la primera vez que entres.';
+    return 'Hola ' + d.nombre + '\nTe creamos tu cuenta en ' + (d.lugar || 'Centro de Mando') + '.\n\nEntra aquí e instala la app: ' + ROOT +
+      '\nCorreo: ' + d.email + '\nContraseña: ' + d.password + '\n\nCambia tu contraseña en "Mi cuenta" la primera vez que entres.';
   }
 
   /* ---------- Imágenes (comprobantes y logo) ---------- */
@@ -205,7 +194,6 @@
     });
   }
   const comprimirComprobante = (file) => achicar(file, 1400, 580000);
-  const comprimirLogo = (file) => achicar(file, 256, 110000);
   function descargar(dataUrl, nombre) {
     const a = document.createElement('a');
     a.href = dataUrl; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
@@ -317,106 +305,28 @@
     const negado = 'Notification' in global && Notification.permission === 'denied';
     const msg = ios && !instalada ? 'Para recibir avisos en iPhone: toca Compartir → "Agregar a inicio" y abre la app desde ese ícono.'
       : negado ? 'Las notificaciones están bloqueadas. Actívalas en los ajustes del navegador (candado junto a la dirección → Notificaciones → Permitir).'
-      : 'Actívalas para enterarte al instante de reservas, pagos, mensajes y cuando tu bici esté lista.';
+      : 'Actívalas para recibir tus recordatorios y avisos de descanso.';
     const d = modal('<h2>🔔 Activa las notificaciones</h2><p class="muted" style="margin-top:0">' + esc(msg) + '</p><div class="btns"><button class="ghost" data-cerrar>Ahora no</button>' +
       (!negado && !(ios && !instalada) ? '<button id="btPushSi">Activar</button>' : '') + '</div>');
     const b = d.querySelector('#btPushSi');
     if (b) b.onclick = async () => { try { await activarPush(); toast('✅ Notificaciones activadas'); d.close(); } catch (e) { toast(e.message); } };
   }
 
-  /* ---------- Chat (cliente ↔ negocio · negocio ↔ administrador) ---------- */
-  let chatCanal = null;
-  async function chatBoton(btn, icono) {
-    if (!btn || !cuenta) return;
-    btn.innerHTML = (icono || '💬') + '<span class="badge hidden"></span>'; btn.setAttribute('aria-label', 'Mensajes');
-    const badge = btn.querySelector('.badge');
-    let lista = [];
-    async function cargar() {
-      try { lista = await rpc('chat_lista'); } catch (e) { return; }
-      const n = lista.reduce((a, c) => a + (+c.no_leidos || 0), 0);
-      badge.textContent = n; badge.classList.toggle('hidden', !n);
-    }
-    btn.onclick = async () => { await cargar(); abrirLista(); };
-    function abrirLista() {
-      if (cuenta.rol === 'cliente' && lista[0]) { abrirChat(lista[0].negocio_id, lista[0].cliente_id, lista[0].nombre, cargar); return; }
-      const d = modal('<div style="display:flex;align-items:center;gap:8px"><h2 style="flex:1;margin:0">💬 Mensajes</h2><button class="small ghost" data-cerrar>Cerrar</button></div><ul class="list" id="btChats">' +
-        (lista.length ? lista.map((c, i) => '<li class="clic" data-i="' + i + '"><span class="grow"><b>' + esc(c.nombre) + '</b><div class="sub">' + (c.ultimo ? hace(c.ultimo) : 'Sin mensajes') + '</div></span>' +
-          (+c.no_leidos ? '<span class="pill bad">' + c.no_leidos + '</span>' : '') + '</li>').join('') : '<li class="muted">Sin conversaciones todavía.</li>') + '</ul>');
-      d.querySelector('#btChats').onclick = (e) => { const li = e.target.closest('[data-i]'); if (!li) return; const c = lista[+li.dataset.i]; d.close(); abrirChat(c.negocio_id, c.cliente_id, c.nombre, cargar); };
-    }
-    await cargar();
-    if (chatCanal) sb.removeChannel(chatCanal);
-    chatCanal = sb.channel('chat-' + cuenta.id).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensajes' }, () => cargar()).subscribe();
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) cargar(); });
-    if (location.hash === '#chat') abrirLista();
-    window.addEventListener('hashchange', () => { if (location.hash === '#chat') abrirLista(); });
-  }
-  // Ventana de chat flotante: se minimiza y sigue recibiendo mensajes en vivo.
-  let chatAbierto = null;
-  function abrirChat(negocio, cliente, titulo, alCerrar) {
-    if (chatAbierto) chatAbierto.cerrar();
-    const w = document.createElement('div');
-    w.className = 'chatwin';
-    w.innerHTML = '<div class="chathead"><b class="grow">💬 ' + esc(titulo || 'Mensajes') + '</b><span class="badge hidden"></span>' +
-      '<button class="icon-btn" data-l title="Limpiar conversación" aria-label="Limpiar">🧹</button><button class="icon-btn" data-m aria-label="Minimizar">–</button>' +
-      '<button class="icon-btn" data-x aria-label="Cerrar">✕</button></div><div class="chatbody"><div class="chatmsgs"></div>' +
-      '<div class="chatin"><label class="icon-btn" title="Adjuntar foto" aria-label="Adjuntar foto">📎<input type="file" accept="image/*" hidden></label>' +
-      '<input class="chattxt" maxlength="1000" placeholder="Escribe un mensaje…"><button class="chatenv">➤</button></div></div>';
-    document.body.appendChild(w);
-    const box = w.querySelector('.chatmsgs'), txt = w.querySelector('.chattxt'), bdg = w.querySelector('.chathead .badge');
-    let min = false, nuevos = 0;
-    async function leer() {
-      if (min) { nuevos++; bdg.textContent = nuevos; bdg.classList.remove('hidden'); return; }
-      let m = [];
-      try { m = await rpc('chat_leer', { p_negocio: negocio, p_cliente: cliente }); } catch (e) { box.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; return; }
-      box.innerHTML = m.length ? m.map((x) => '<div class="burb' + (x.mio ? ' mia' : '') + '">' + (x.imagen ? '<img src="' + x.imagen + '" alt="Foto" data-img>' : '') +
-        (x.texto ? esc(x.texto) : '') + '<div class="hora">' + hace(x.created_at) + '</div></div>').join('') : '<p class="empty">Escribe el primer mensaje 👋</p>';
-      box.scrollTop = box.scrollHeight;
-    }
-    const can = sb.channel('conv-' + negocio + (cliente || '')).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensajes', filter: 'negocio_id=eq.' + negocio }, leer).subscribe();
-    async function enviar(img) {
-      const t = txt.value.trim(); if (!t && !img) return;
-      txt.value = '';
-      try { await rpc('chat_enviar', { p_negocio: negocio, p_cliente: cliente, p_texto: t, p_imagen: img || null }); sb.functions.invoke('servidor').catch(() => {}); leer(); }
-      catch (e) { toast(e.message); txt.value = t; }
-    }
-    const cerrar = () => { sb.removeChannel(can); w.remove(); chatAbierto = null; if (alCerrar) alCerrar(); };
-    chatAbierto = { cerrar };
-    w.querySelector('[data-x]').onclick = cerrar;
-    w.querySelector('[data-m]').onclick = () => { min = !min; w.classList.toggle('min', min); if (!min) { nuevos = 0; bdg.classList.add('hidden'); leer(); } };
-    w.querySelector('.chathead b').onclick = () => { if (min) w.querySelector('[data-m]').click(); };
-    w.querySelector('[data-l]').onclick = async () => {
-      if (!await confirmar('¿Borrar todos los mensajes de esta conversación?', 'Sí, limpiar')) return;
-      try { await rpc('chat_limpiar', { p_negocio: negocio, p_cliente: cliente }); leer(); } catch (e) { toast(e.message); }
-    };
-    w.querySelector('input[type=file]').onchange = async (e) => {
-      const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-      try { enviar(await achicar(f, 1100, 380000)); } catch (err) { toast(err.message); }
-    };
-    box.onclick = (e) => { const i = e.target.closest('[data-img]'); if (i) verImagen(i.src, 'Foto', 'foto.jpg'); };
-    w.querySelector('.chatenv').onclick = () => enviar();
-    txt.onkeydown = (e) => { if (e.key === 'Enter') enviar(); };
-    leer(); setTimeout(() => txt.focus(), 100);
-  }
-
-  // Solo el administrador: borra un usuario o un negocio completo (lo hace el servidor).
-  async function borrarCuenta(tipo, id) {
-    const { data, error } = await sb.functions.invoke('servidor', { body: { accion: 'borrar', tipo, id } });
+  // Admin o socio (con motivo): borra una cuenta y todos sus datos (lo hace el servidor).
+  async function borrarCuenta(id, motivo) {
+    const { data, error } = await sb.functions.invoke('servidor', { body: { accion: 'borrar', id, motivo: motivo || '' } });
     if (error) throw new Error('No se pudo conectar con la función "servidor".');
     if (!data || !data.ok) throw new Error((data && data.error) || 'No se pudo borrar');
     return data;
   }
-
-  // Horario legible: "Lun–Vie 10:00–19:00 · Sáb 10:00–14:00"
-  function horarioTxt(t) {
-    const h = t.horarios || {}, a = String(t.abre).slice(0, 5), c = String(t.cierra).slice(0, 5);
-    const g = [];
-    [1, 2, 3, 4, 5, 6, 0].filter((d) => t.dias.includes(d)).forEach((d) => {
-      const r = (h[d] ? String(h[d].abre).slice(0, 5) + '–' + String(h[d].cierra).slice(0, 5) : a + '–' + c);
-      const u = g[g.length - 1];
-      if (u && u.r === r && u.fin === (d === 0 ? 6 : d - 1)) { u.fin = d; u.n++; } else g.push({ ini: d, fin: d, r, n: 1 });
-    });
-    return g.map((x) => DIAS[x.ini] + (x.n > 1 ? '–' + DIAS[x.fin] : '') + ' ' + x.r).join(' · ');
+  // Cada persona borra su propia cuenta y todos sus datos.
+  async function borrarMiCuenta() {
+    const { data, error } = await sb.functions.invoke('servidor', { body: { accion: 'borrar_mia' } });
+    if (error) throw new Error('No se pudo conectar con la función "servidor".');
+    if (!data || !data.ok) throw new Error((data && data.error) || 'No se pudo borrar');
+    try { await sb.auth.signOut(); } catch (e) { /* sin red */ }
+    cuenta = null; localStorage.removeItem('bt:cuenta');
+    return data;
   }
 
   /* ---------- App instalable ---------- */
@@ -462,7 +372,7 @@
   function pie() {
     const f = document.createElement('footer');
     f.className = 'pie';
-    f.innerHTML = '© ' + new Date().getFullYear() + ' ' + esc(txt('app_nombre') || 'CodeFix') + ' · CodeFix · v' + cfg.VERSION;
+    f.innerHTML = '© ' + new Date().getFullYear() + ' ' + esc(txt('app_nombre') || 'Centro de Mando') + ' · CodeFix · v' + cfg.VERSION;
     (document.querySelector('main') || document.body).appendChild(f);
   }
 
@@ -484,9 +394,9 @@
 
   global.App = {
     sb, ROOT, $, esc, plata, numero, iso, fechaDe, sumarDias, hoy, fCorta, fLarga, fHora, hace, DIAS, telNorm, wa, estrellas, nota,
-    toast, modal, confirmar, tema, pintarLogo, friendly, rpc, q, cargarPublica, txt, refrescar, requerir, entrar, salir, crearCuenta,
-    clave, mensajeAcceso, comprimirComprobante, comprimirLogo, descargar, verImagen, campana, irA, activarPush, ofrecerPush,
-    pushSoportado, registrarSW, pedirInstalar, pie, pestanas, destino, revisarVersion, actualizar, chatBoton, abrirChat, borrarCuenta, horarioTxt,
+    toast, modal, confirmar, friendly, rpc, q, cargarPublica, txt, refrescar, requerir, entrar, salir, crearCuenta, registrar,
+    clave, mensajeAcceso, comprimirComprobante, descargar, verImagen, campana, irA, activarPush, ofrecerPush,
+    pushSoportado, registrarSW, pedirInstalar, pie, pestanas, destino, revisarVersion, actualizar, borrarCuenta, borrarMiCuenta,
     get cuenta() { return cuenta; },
     get publica() { return publica; }
   };

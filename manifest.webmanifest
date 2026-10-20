@@ -1,12 +1,12 @@
 {
-  "name": "CodeFix",
-  "short_name": "CodeFix",
-  "description": "Plataforma para administrar negocios: reservas, catálogo, órdenes y pagos",
-  "start_url": "./",
+  "name": "Centro de Mando",
+  "short_name": "Mando",
+  "description": "Tu centro de mando personal: tareas, metas, ideas y descanso",
+  "start_url": "app/",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f4f6f8",
-  "theme_color": "#4f46e5",
+  "background_color": "#0a0e17",
+  "theme_color": "#3d63ff",
   "lang": "es",
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },

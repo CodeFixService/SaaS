@@ -1,12 +1,13 @@
 // CodeFix · Función "servidor" (Supabase → Edge Functions → nombre: servidor)
-//  1) { accion: 'crear_cuenta' }  El administrador crea negocios; el dueño crea a su equipo.
-//  2) { accion: 'borrar' }        Solo el administrador: borra un usuario o un negocio completo.
+//  1) { accion: 'crear_cuenta' }  El administrador crea socios y usuarios; el socio crea usuarios.
+//  2) { accion: 'borrar' }        Administrador o socio (con motivo): borra una cuenta y sus datos.
+//     { accion: 'borrar_mia' }    Cada persona borra su propia cuenta.
 //  3) { accion: 'ping' }          Diagnóstico.
 //  3) sin acción (cada minuto, pg_cron): envía por push los avisos nuevos de la campanita.
 import webpush from 'npm:web-push@3.6.7';
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 
-const VERSION = '2.3';
+const VERSION = '3.0';
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -18,7 +19,7 @@ const db = () => createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPAB
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
-type Cuenta = { email?: string; password?: string; nombre?: string; telefono?: string; rol?: string; negocio_nombre?: string; negocio_id?: string };
+type Cuenta = { email?: string; password?: string; nombre?: string; telefono?: string; rol?: string };
 
 async function crearCuenta(jwt: string, b: Cuenta) {
   const s = db();
@@ -29,8 +30,7 @@ async function crearCuenta(jwt: string, b: Cuenta) {
   if (password.length < 6) return { ok: false, error: 'La contraseña debe tener al menos 6 caracteres' };
   const { data: prep, error: e1 } = await s.rpc('preparar_cuenta', {
     p_caller: who.user.id, p_email: email, p_nombre: String(b.nombre || ''), p_telefono: String(b.telefono || ''),
-    p_rol: ['socio', 'negocio', 'equipo', 'cliente'].includes(String(b.rol)) ? b.rol : 'equipo', p_negocio_nombre: String(b.negocio_nombre || ''),
-    p_negocio: /^[0-9a-f-]{36}$/i.test(String(b.negocio_id || '')) ? b.negocio_id : null,
+    p_rol: b.rol === 'socio' ? 'socio' : 'usuario',
   });
   if (e1) return { ok: false, error: e1.message };
   if (!prep?.ok) return prep;
@@ -45,12 +45,13 @@ async function crearCuenta(jwt: string, b: Cuenta) {
   return { ok: true, id: nu.user.id };
 }
 
-async function borrar(jwt: string, b: { tipo?: string; id?: string }) {
+// Borra una cuenta y, por cascada, todos sus datos. El socio debe escribir el motivo (queda en el registro).
+async function borrar(jwt: string, b: { id?: string; motivo?: string }) {
   const s = db();
   const { data: who, error: e0 } = await s.auth.getUser(jwt);
   if (e0 || !who?.user) return { ok: false, error: 'Inicia sesión de nuevo' };
   if (!/^[0-9a-f-]{36}$/i.test(String(b.id || ''))) return { ok: false, error: 'Dato no válido' };
-  const { data: prep, error: e1 } = await s.rpc('preparar_borrado', { p_caller: who.user.id, p_tipo: b.tipo === 'negocio' ? 'negocio' : 'perfil', p_id: b.id });
+  const { data: prep, error: e1 } = await s.rpc('preparar_borrado', { p_caller: who.user.id, p_id: b.id, p_motivo: String(b.motivo || '') });
   if (e1) return { ok: false, error: e1.message };
   if (!prep?.ok) return prep;
   let n = 0;
@@ -58,8 +59,17 @@ async function borrar(jwt: string, b: { tipo?: string; id?: string }) {
     const { error } = await s.auth.admin.deleteUser(id);
     if (!error) n++;
   }
-  if (prep.negocio) await s.rpc('borrar_negocio', { p_id: prep.negocio });
   return { ok: true, borrados: n };
+}
+
+// Cada persona puede borrar su propia cuenta y todos sus datos.
+async function borrarMia(jwt: string) {
+  const s = db();
+  const { data: who, error: e0 } = await s.auth.getUser(jwt);
+  if (e0 || !who?.user) return { ok: false, error: 'Inicia sesión de nuevo' };
+  if ((who.user.email || '').toLowerCase() === 'juanjosuecastilloloyola@gmail.com') return { ok: false, error: 'La cuenta del súper administrador no se borra desde aquí' };
+  const { error } = await s.auth.admin.deleteUser(who.user.id);
+  return error ? { ok: false, error: error.message } : { ok: true };
 }
 
 async function enviarPush() {
@@ -103,6 +113,11 @@ Deno.serve(async (req) => {
     if (body?.accion === 'borrar') {
       const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
       try { return json(await borrar(jwt, body)); }
+      catch (e) { return json({ ok: false, error: 'Error del servidor: ' + String((e as Error).message || e) }); }
+    }
+    if (body?.accion === 'borrar_mia') {
+      const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+      try { return json(await borrarMia(jwt)); }
       catch (e) { return json({ ok: false, error: 'Error del servidor: ' + String((e as Error).message || e) }); }
     }
     return json(await enviarPush());

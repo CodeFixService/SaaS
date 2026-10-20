@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0e17">
+<title>Centro de Mando</title>
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/icon-192.png">
+<link rel="stylesheet" href="../shared/app.css">
+<link rel="stylesheet" href="cm.css">
+</head>
+<body class="con-tabs">
+<header class="top"><h1 style="flex:1;margin:0"><span id="chipModo"></span></h1><button class="icon-btn" id="bAter" aria-label="Aterrizar" style="position:relative"></button><button class="icon-btn" id="bCampana" aria-label="Avisos" style="position:relative"></button></header>
+<main>
+  <section class="view on" id="v-hoy"></section><section class="view" id="v-tablero"></section><section class="view" id="v-metas"></section>
+  <section class="view" id="v-cerebro"></section><section class="view" id="v-panel"></section><section class="view" id="v-mas"></section>
+</main>
+<nav class="tabs" id="nav"></nav>
+<div id="toast" role="status"></div>
+<script src="../shared/config.js"></script>
+<script src="../shared/vendor/supabase.js"></script>
+<script src="../shared/app.js"></script>
+<script src="cm.js"></script>
+<script>
+(async function () {
+  App.registrarSW();
+  const c = await App.requerir();
+  CM.cuenta = c;
+  await App.cargarPublica();
+  try { await CM.cargar(); } catch (e) { App.toast(e.message); }
+  const nav = document.getElementById('nav');
+  nav.innerHTML = CM.TABS.concat([['mas', 'Más']]).map((t) => '<button type="button" data-v="' + t[0] + '"><span class="i">' + CM.ico(t[0], 22) + '</span>' + t[1] + '</button>').join('');
+  nav.onclick = (e) => { const b = e.target.closest('button[data-v]'); if (b) CM.ir(b.dataset.v); };
+  const bAter = document.getElementById('bAter'); bAter.innerHTML = CM.ico('ancla', 20); bAter.onclick = CM.aterrizar;
+  App.campana(document.getElementById('bCampana'));
+  CM.chip(); setInterval(CM.chip, 60000);
+  CM.iniciarLatido();
+  CM.ir(location.hash.slice(1) || 'hoy');
+  setInterval(() => { if (!document.hidden && Date.now() - CM.sync > 300000) CM.cargar().then(CM.emit).catch(() => {}); }, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - CM.sync > 120000) CM.cargar().then(CM.emit).catch(() => {}); });
+})();
+</script>
+</body>
+</html>

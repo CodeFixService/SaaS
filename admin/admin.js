@@ -1,496 +1,124 @@
-/* CodeFix · Panel del administrador general. */
+/* Centro de Mando · Panel de administración (admin = todo; socio = todo, pero cada cambio pide motivo y queda en el registro). */
 (async function () {
   'use strict';
-  const { $, esc, plata, rpc, toast, modal, confirmar } = App;
+  const { $, esc, rpc, toast, modal, confirmar } = App;
   App.registrarSW();
   const yo = await App.requerir(['admin', 'socio']);
-  const SUPER = !!yo.is_admin;   // el socio no borra, no suspende ni cambia ajustes
-  if (!SUPER) document.querySelectorAll('.solo-super').forEach((x) => x.remove());
-  let rubros = [];
-  rpc('admin_rubros').then((l) => {
-    rubros = l.filter((r) => r.activo);
-    $('nRubro').innerHTML = rubros.map((r) => '<option value="' + r.id + '">' + esc(r.icono + ' ' + r.nombre) + '</option>').join('');
-  }).catch(() => {});
+  const SUPER = yo.rol === 'admin';
   let pub = await App.cargarPublica();
-  App.tema('#0f766e');
-  const MB = (b) => (b / 1048576).toFixed(1) + ' MB';
+  const MB = (b) => b < 1048576 ? Math.round(b / 1024) + ' KB' : (b / 1048576).toFixed(1).replace('.', ',') + ' MB';
+  const el = (v) => $('v-' + v);
+  const err = (e) => toast(e.message || String(e));
 
-  const show = App.pestanas((v) => {
-    if (v === 'resumen') verResumen();
-    if (v === 'negocios') cargarNegocios();
-    if (v === 'clientes') cargarClientes();
-    if (v === 'pagos') cargarPagos();
-    if (v === 'ajustes') verAjuste(ajuste);
-  });
+  // El socio siempre explica por qué; el administrador puede omitirlo.
+  function motivo(titulo) {
+    return new Promise((ok) => {
+      const d = modal('<h2>' + esc(titulo) + '</h2><label>' + (SUPER ? 'Motivo (opcional)' : 'Motivo (obligatorio)') + '<input id="mo" maxlength="200" placeholder="¿Por qué?"></label><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="mok" type="button">Confirmar</button></div>');
+      let res = null;
+      d.querySelector('#mok').onclick = () => { const v = d.querySelector('#mo').value.trim(); if (!SUPER && v.length < 4) return toast('Escribe el motivo'); res = v; d.close(); };
+      d.addEventListener('close', () => ok(res));
+      d.querySelector('#mo').focus();
+    });
+  }
+  const show = App.pestanas((v) => ({ resumen, usuarios, pagos, planes, ajustes, registro }[v] || (() => {}))());
+  App.campana($('bCampana'));
 
-  /* ---------- Resumen y servidor ---------- */
-  async function verResumen() {
-    let r;
-    try { r = await rpc('admin_resumen'); } catch (e) { $('v-resumen').innerHTML = '<p class="err">' + esc(e.message) + '</p>'; return; }
-    $('tabPagos').textContent = r.pagos_por_revisar; $('tabPagos').classList.toggle('hidden', !r.pagos_por_revisar);
-    const u = r.uso, pct = Math.round(100 * u.db_bytes / u.db_limite);
-    const tablas = Object.entries(u.tablas).sort((a, b) => b[1] - a[1]);
-    $('v-resumen').innerHTML = (r.version !== window.BT_CONFIG.DB_VERSION ? '<div class="aviso bad"><div class="grow">⚠️ La base de datos es la versión ' + esc(r.version) +
-        ' y la app necesita la ' + esc(window.BT_CONFIG.DB_VERSION) + '. Vuelve a correr la instalación de la base de datos (guía, paso 1).</div></div>' : '') +
-      (r.pagos_por_revisar ? '<div class="aviso warn clic" data-ir="pagos"><div class="grow">💰 Tienes <b>' + r.pagos_por_revisar + '</b> pago(s) Premium por revisar.</div><span>›</span></div>' : '') +
-      '<div class="stats">' +
-      [['🏪 Negocios', r.negocios], ['⭐ Negocios Premium', r.negocios_premium], ['🟢 Activos 7 días', r.negocios_activos_7d], ['⏳ Vencen en 7 días', r.por_vencer],
-        ['👥 Clientes con cuenta', r.clientes], ['⭐ Clientes Premium', r.clientes_premium], ['🔧 Personas de equipo', r.equipo], ['📅 Reservas este mes', r.reservas_mes],
-        ['📅 Reservas hoy', r.reservas_hoy], ['💰 Ingresos del mes', plata(r.ingresos_mes)]].map((x) => '<div class="card"><span>' + x[0] + '</span><b>' + x[1] + '</b></div>').join('') + '</div>' +
-      '<div class="card"><h2>🖥️ Servidor</h2><div class="sub">Base de datos: ' + MB(u.db_bytes) + ' de ' + MB(u.db_limite) + ' (' + pct + '%) · plan gratis de Supabase</div>' +
-      '<div class="barra"><i class="' + (pct >= 90 ? 'rojo' : pct >= 70 ? 'amarillo' : '') + '" style="width:' + Math.max(pct, 1) + '%"></i></div>' +
-      '<p class="sub">' + (pct >= 90 ? '🔴 Casi lleno: limpia o pasa a Supabase Pro.' : pct >= 70 ? '🟡 Va subiendo: programa una limpieza.' : '🟢 Todo bien.') + '</p>' +
-      '<table>' + tablas.map(([k, v]) => '<tr><td>' + esc(k) + '</td><td class="r">' + MB(v) + '</td></tr>').join('') + '</table>' +
-      '<p class="sub">Comprobantes guardados: ' + u.comprobantes + ' (' + MB(u.comprobantes_bytes) + ') · Logos: ' + MB(u.logos_bytes) + ' · Avisos: ' + u.notificaciones + ' · Reservas: ' + u.reservas + '</p>' +
-      '<h3>🧹 Limpieza</h3><p class="sub" style="margin-top:0">Se hace sola todos los días a las 4 AM. También puedes limpiar ahora:</p>' +
-      '<div class="btns"><button class="ghost small" data-l="comprobantes">Comprobantes revisados</button><button class="ghost small" data-l="notificaciones">Avisos viejos</button>' +
-      '<button class="ghost small" data-l="reservas">Reservas expiradas/rechazadas (+60 días)</button><button class="danger small" data-l="todo">Limpiar todo</button></div>' +
-      '<p class="sub">Versión de la base de datos: ' + esc(r.version) + ' · App: ' + esc(window.BT_CONFIG.VERSION) + '</p></div>';
-    rpc('admin_resumen_modelos').then((m) => {
-      const div = document.createElement('div'); div.className = 'card';
-      div.innerHTML = '<h2>🧩 Negocios por rubro</h2><table>' + m.por_rubro.map((x) => '<tr><td>' + esc(x.rubro) + ' <span class="sub">(' + esc(x.modelo) + ')</span></td><td class="r">' + x.negocios + '</td></tr>').join('') + '</table>' +
-        '<div class="stats" style="margin-top:10px">' + [['🛍️ Pedidos de tiendas este mes', m.pedidos_mes], ['💵 Ventas de tiendas este mes', plata(m.ventas_tiendas_mes)], ['🧾 Pedidos por revisar (tiendas)', m.pedidos_por_revisar]]
-          .map((x) => '<div class="card"><span>' + x[0] + '</span><b>' + x[1] + '</b></div>').join('') + '</div>';
-      const st = $('v-resumen').querySelector('.stats'); if (st) st.after(div);
-    }).catch(() => {});
-    $('v-resumen').onclick = async (e) => {
-      const ir = e.target.closest('[data-ir]'); if (ir) { show(ir.dataset.ir); return; }
-      const b = e.target.closest('[data-l]'); if (!b) return;
-      if (!await confirmar(b.dataset.l === 'comprobantes' ? 'Se borran TODOS los comprobantes ya revisados (los en revisión se mantienen). ¿Seguir?' : '¿Limpiar ahora?')) return;
-      try { const x = await rpc('limpiar', { p_que: b.dataset.l }); toast('🧹 Borrados: ' + x.comprobantes + ' comprobantes, ' + x.notificaciones + ' avisos, ' + x.reservas + ' reservas'); verResumen(); }
-      catch (err) { toast(err.message); }
-    };
-  }
-
-  /* ---------- Negocios ---------- */
-  let negocios = [], tFiltro = '';
-  $('nPass').value = App.clave();
-  $('nRegalo').textContent = (pub.config || {}).dias_regalo_negocio || 30;
-  async function cargarNegocios() {
-    try { negocios = await rpc('admin_negocios'); } catch (e) { $('tLista').innerHTML = '<p class="err">' + esc(e.message) + '</p>'; return; }
-    pintarNegocios();
-  }
-  $('tBuscar').oninput = pintarNegocios;
-  $('tSeg').onclick = (e) => { const b = e.target.closest('[data-f]'); if (!b) return; tFiltro = b.dataset.f; $('tSeg').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); pintarNegocios(); };
-  function pintarNegocios() {
-    const f = $('tBuscar').value.trim().toLowerCase(), semana = Date.now() - 7 * 864e5, enSiete = Date.now() + 7 * 864e5;
-    const l = negocios.filter((t) => (!f || (t.nombre + ' ' + t.email + ' ' + t.comuna + ' ' + t.dueno).toLowerCase().includes(f)) && (
-      !tFiltro || (tFiltro === 'premium' && t.premium) || (tFiltro === 'free' && !t.premium) || (tFiltro === 'suspendidos' && t.suspendido) ||
-      (tFiltro === 'vence' && t.premium && new Date(t.premium_hasta) < enSiete) || (tFiltro === 'inactivos' && (!t.visto_at || new Date(t.visto_at) < semana))));
-    $('tLista').innerHTML = l.length ? l.map((t) => {
-      const logo = /^data:image/.test(t.logo || '') ? 'background-image:url(\'' + t.logo + '\');' : '';
-      return '<div class="card"><div style="display:flex;gap:12px;align-items:flex-start"><div class="mini-logo" style="background-color:' + esc(t.color) + ';' + logo + '">' + (logo ? '' : esc(t.icono)) + '</div>' +
-        '<div class="grow"><b>' + esc(t.nombre) + '</b> ' + (t.rubro ? '<span class="pill info">' + esc(t.rubro.icono + ' ' + t.rubro.nombre) + '</span> ' : '') + (t.premium ? '<span class="pill pro">PREMIUM</span>' : '<span class="pill">GRATIS</span>') + (t.suspendido ? ' <span class="pill bad">Suspendido</span>' : '') +
-        (t.cobra_abono ? '' : ' <span class="pill warn">Sin link de abono</span>') +
-        '<div class="sub">' + esc(t.dueno || '') + ' · ' + esc(t.email || '') + (t.comuna ? ' · ' + esc(t.comuna) : '') + '</div>' +
-        '<div class="sub">' + (t.premium ? '⭐ Premium hasta ' + new Date(t.premium_hasta).toLocaleDateString('es-CL') : t.premium_hasta ? 'Premium venció el ' + new Date(t.premium_hasta).toLocaleDateString('es-CL') : 'Nunca fue Premium') +
-        ' · 🟢 visto ' + App.hace(t.visto_at) + '</div>' +
-        '<div class="sub">👥 ' + t.clientes + ' clientes (' + t.clientes_cuenta + ' con cuenta) · 🔧 ' + t.equipo + ' equipo · 📅 ' + t.reservas_mes + ' reservas este mes (' + t.reservas_total + ' total) · 🛠️ ' + t.servicios +
-        ' servicios · 🏷️ ' + t.promos + ' promos · ' + App.nota(t.nota) + '</div></div></div>' +
-        '<div class="acc"><select data-prem="' + t.id + '" aria-label="Premium"><option value="">⭐ Premium…</option><option value="7">+7 días</option><option value="30">+30 días</option><option value="90">+90 días</option>' +
-        '<option value="365">+1 año</option><option value="otro">Otro número de días…</option><option value="0">Quitar Premium</option></select>' +
-        '<a class="btn small ghost" target="_blank" rel="noopener" href="../t/?s=' + encodeURIComponent(t.slug) + '">🔗 Página</a>' +
-        (t.telefono ? '<a class="btn small alt" target="_blank" rel="noopener" href="' + App.wa(t.telefono, 'Hola ' + (t.dueno || '') + ' 👋') + '">📲</a>' : '') +
-        '<button class="small alt" data-ficha="' + t.id + '">📊 Ficha</button>' + (SUPER ? '<button class="small" data-conf="' + t.id + '">⚙️ Configurar</button>' : '') +
-        '<button class="small ghost" data-chat="' + t.id + '" data-n="' + esc(t.nombre) + '">💬</button><button class="small alt" data-add="' + t.id + '" data-n="' + esc(t.nombre) + '">👤＋</button>' +
-        (SUPER ? '<button class="small ' + (t.suspendido ? 'okb' : 'danger') + '" data-susp="' + t.id + '" data-s="' + (t.suspendido ? 0 : 1) + '">' + (t.suspendido ? 'Reactivar' : 'Suspender') + '</button>' +
-        '<button class="small danger" data-del="' + t.id + '" data-n="' + esc(t.nombre) + '">🗑️</button>' : '') + '</div></div>';
-    }).join('') : '<p class="empty">No hay negocios aquí.</p>';
-  }
-  $('tLista').onchange = async (e) => {
-    const s = e.target.closest('[data-prem]'); if (!s || !s.value) return;
-    let dias = s.value === 'otro' ? parseInt(prompt('¿Cuántos días de Premium?'), 10) : +s.value;
-    s.value = '';
-    if (isNaN(dias)) return;
-    if (dias === 0 && !await confirmar('¿Quitar el Premium a este negocio? Vuelve a la versión gratis.')) return;
-    try { await rpc('admin_premium', { p_tipo: 'negocio', p_id: s.dataset.prem, p_dias: dias }); App.sb.functions.invoke('servidor').catch(() => {}); toast(dias ? '⭐ +' + dias + ' días' : 'Premium quitado'); cargarNegocios(); }
-    catch (err) { toast(err.message); }
-  };
-  $('tLista').onclick = async (e) => {
-    const ch = e.target.closest('[data-chat]'); if (ch) { App.abrirChat(ch.dataset.chat, null, ch.dataset.n); return; }
-    const fi = e.target.closest('[data-ficha]'); if (fi) { fichaNegocio(negocios.find((x) => x.id === fi.dataset.ficha)); return; }
-    const cf = e.target.closest('[data-conf]'); if (cf) { configurarNegocio(negocios.find((x) => x.id === cf.dataset.conf)); return; }
-    const ad = e.target.closest('[data-add]'); if (ad) { agregarUsuario(ad.dataset.add, ad.dataset.n); return; }
-    const dl = e.target.closest('[data-del]');
-    if (dl) {
-      if (!await confirmar('¿ELIMINAR "' + dl.dataset.n + '" con todo: equipo, clientes con cuenta, reservas y comprobantes?\nNo se puede deshacer.', 'Sí, eliminar todo')) return;
-      try { const r = await App.borrarCuenta('negocio', dl.dataset.del); toast('🗑️ Negocio eliminado (' + r.borrados + ' cuentas)'); cargarNegocios(); } catch (err) { toast(err.message); }
-      return;
-    }
-    const b = e.target.closest('[data-susp]'); if (!b) return;
-    if (b.dataset.s === '1' && !await confirmar('¿Suspender el negocio? Ni el negocio ni su equipo podrán entrar y su página se cierra.')) return;
-    try { await rpc('admin_suspender', { p_tipo: 'negocio', p_id: b.dataset.susp, p_suspender: b.dataset.s === '1' }); cargarNegocios(); } catch (err) { toast(err.message); }
-  };
-  $('nCrear').onclick = async () => {
-    const b = $('nCrear'); $('nErr').textContent = '';
-    const d = { negocio_nombre: $('nNegocio').value.trim(), nombre: $('nDueno').value.trim(), email: $('nEmail').value.trim(), telefono: $('nTel').value.trim(), password: $('nPass').value.trim(), rol: 'negocio', negocio_id: $('nRubro').value };   // negocio_id = rubro
-    if (!d.negocio_nombre || !d.nombre || !d.email) { $('nErr').textContent = 'Completa el nombre del negocio, del dueño y el correo'; return; }
-    b.disabled = true; b.textContent = 'Creando…';
+  async function resumen() {
+    el('resumen').innerHTML = '<p class="sub">Cargando…</p>';
     try {
-      await App.crearCuenta(d);
-      const msg = App.mensajeAcceso({ nombre: d.nombre.split(' ')[0], email: d.email, password: d.password, lugar: 'CodeFix (' + d.negocio_nombre + ')' }) +
-        '\n\nTienes ' + ((pub.config || {}).dias_regalo_negocio || 30) + ' días de Premium de regalo 🎁';
-      modal('<h2>✅ Negocio creado</h2><p class="muted">Envíale sus datos de acceso:</p><pre class="link" style="white-space:pre-wrap;font:inherit">' + esc(msg) + '</pre><div class="btns"><button class="ghost" data-cerrar>Cerrar</button>' +
-        (d.telefono ? '<a class="btn" target="_blank" rel="noopener" href="' + App.wa(d.telefono, msg) + '">📲 Enviar por WhatsApp</a>' : '') + '</div>');
-      ['nNegocio', 'nDueno', 'nEmail', 'nTel'].forEach((k) => { $(k).value = ''; }); $('nPass').value = App.clave();
-      cargarNegocios();
-    } catch (e) { $('nErr').textContent = e.message; }
-    b.disabled = false; b.textContent = 'Crear negocio';
-  };
-
-  if ($('sCrear')) {
-    $('sPass').value = App.clave();
-    $('sCrear').onclick = async () => {
-      const b = $('sCrear'); $('sErr').textContent = '';
-      const d = { nombre: $('sNom').value.trim(), email: $('sEmail').value.trim(), telefono: $('sTel').value.trim(), password: $('sPass').value.trim(), rol: 'socio' };
-      if (!d.nombre || !d.email) { $('sErr').textContent = 'Completa el nombre y el correo'; return; }
-      b.disabled = true;
-      try {
-        await App.crearCuenta(d);
-        const msg = App.mensajeAcceso({ nombre: d.nombre.split(' ')[0], email: d.email, password: d.password, lugar: 'CodeFix (socio)' });
-        modal('<h2>✅ Socio creado</h2><pre class="link" style="white-space:pre-wrap;font:inherit">' + esc(msg) + '</pre><div class="btns"><button class="ghost" data-cerrar>Cerrar</button>' +
-          (d.telefono ? '<a class="btn" target="_blank" rel="noopener" href="' + App.wa(d.telefono, msg) + '">📲 WhatsApp</a>' : '') + '</div>');
-        ['sNom', 'sEmail', 'sTel'].forEach((k) => { $(k).value = ''; }); $('sPass').value = App.clave();
-      } catch (e) { $('sErr').textContent = e.message; }
-      b.disabled = false;
-    };
+      const [r, u] = await Promise.all([rpc('admin_resumen'), rpc('admin_uso')]);
+      const pc = Math.min(100, Math.round(u.db_bytes / u.limite_bytes * 100));
+      el('resumen').innerHTML = '<div class="titulo-v"><h2>Resumen</h2><span class="sub">' + (SUPER ? 'Administrador' : 'Socio') + '</span></div><div class="stats">' +
+        [['Usuarios', r.usuarios], ['Activos 7 d', r.activos7], ['Nuevos 7 d', r.nuevos7], ['Pro', r.pro], ['En prueba', r.prueba], ['Pagos por revisar', r.pagos_pendientes], ['Ingresos del mes', '$' + Number(r.ingresos_mes).toLocaleString('es-CL')], ['Socios', r.socios]].map((x) => '<div class="card"><b>' + x[1] + '</b><span>' + x[0] + '</span></div>').join('') + '</div>' +
+        '<div class="card"><h2>Servidor</h2><div class="barra"><i style="width:' + pc + '%;background:' + (pc > 80 ? 'var(--bad)' : 'var(--brand)') + '"></i></div><p class="sub">' + MB(u.db_bytes) + ' de ' + MB(u.limite_bytes) + ' (' + pc + '%) · ' + u.usuarios + ' cuentas · registro: ' + u.auditoria_filas + '/' + u.auditoria_max + ' filas</p>' +
+        '<div class="hb-t">' + u.tablas.slice(0, 6).map((t) => '<div class="fila"><span class="tit">' + esc(t.tabla) + '</span><span class="sub">' + MB(t.bytes) + ' · ' + t.filas + ' filas</span></div>').join('') + '</div></div>';
+    } catch (e) { el('resumen').innerHTML = '<p class="err">' + esc(e.message) + '</p>'; }
   }
 
-  // Súper admin: cambiar los datos principales de cualquier negocio.
-  function configurarNegocio(t) {
-    if (!t) return;
-    const op = rubros.map((r) => '<option value="' + r.id + '"' + (t.rubro && t.rubro.id === r.id ? ' selected' : '') + '>' + esc(r.icono + ' ' + r.nombre) + '</option>').join('');
-    const d = modal('<h2>⚙️ ' + esc(t.nombre) + '</h2>' +
-      '<label for="kN">Nombre</label><input id="kN" maxlength="80" value="' + esc(t.nombre) + '">' +
-      '<label for="kR">Rubro</label><select id="kR"><option value="">(sin rubro)</option>' + op + '</select>' +
-      '<div class="row"><div><label for="kC">Color</label><input id="kC" type="color" value="' + esc(t.color) + '"></div><div><label for="kI">Ícono</label><input id="kI" maxlength="8" value="' + esc(t.icono) + '"></div></div>' +
-      '<div class="row"><div><label for="kT">WhatsApp</label><input id="kT" value="' + esc(t.telefono || '') + '"></div><div><label for="kM">Comuna</label><input id="kM" maxlength="60" value="' + esc(t.comuna || '') + '"></div></div>' +
-      '<label><input type="checkbox" id="kO"' + (t.reservas_online ? ' checked' : '') + '> Recibe reservas / pedidos online</label>' +
-      '<label><input type="checkbox" id="kA"' + (t.activo ? ' checked' : '') + '> Activo (aparece y recibe clientes nuevos)</label>' +
-      '<h3>💳 Cobro online</h3><div class="row"><div><label for="kM2">El cliente paga</label><select id="kM2"><option value="abono">Abono</option><option value="total">Pago completo</option></select></div>' +
-      '<div><label for="kP">% del abono (tiendas)</label><input id="kP" type="number" min="1" max="100"></div></div>' +
-      '<p class="sub">Reservas: el abono es el monto del link del negocio; con pago completo se cobra el precio del servicio. Tiendas: el abono es el % del pedido.</p>' +
-      '<h3>📏 Límites propios</h3><p class="sub" style="margin-top:0">Vacío = el de su plan.</p><div class="row">' +
-      [['reservas_mes', 'Reservas/pedidos al mes'], ['servicios', 'Servicios/productos'], ['promos', 'Promociones'], ['equipo', 'Equipo'], ['clientes_cuenta', 'Clientes con cuenta']]
-        .map((x) => '<div><label for="kL_' + x[0] + '">' + x[1] + '</label><input id="kL_' + x[0] + '" inputmode="numeric" data-lim="' + x[0] + '"></div>').join('') + '</div>' +
-      '<div class="btns"><button class="ghost" data-cerrar>Cancelar</button><button id="kOk">Guardar</button></div><p class="err" id="kErr"></p>');
-    const v = (id) => d.querySelector(id);
-    rpc('admin_negocio_detalle', { p_id: t.id }).then((x) => {
-      v('#kM2').value = x.cobro.modo; v('#kP').value = x.cobro.pct;
-      d.querySelectorAll('[data-lim]').forEach((i) => { const n = (x.limites_extra || {})[i.dataset.lim]; i.value = n === undefined ? '' : n; i.placeholder = 'plan: ' + (x.limites[i.dataset.lim] ?? '—'); });
-    }).catch((e) => { v('#kErr').textContent = e.message; });
-    v('#kOk').onclick = async () => {
-      const lim = {}; d.querySelectorAll('[data-lim]').forEach((i) => { if (/^\d+$/.test(i.value.trim())) lim[i.dataset.lim] = i.value.trim(); });
-      const pct = parseInt(v('#kP').value, 10);
-      if (!(pct >= 1 && pct <= 100)) { v('#kErr').textContent = 'El % del abono va de 1 a 100'; return; }
-      try {
-        await rpc('admin_negocio_cobro', { p_id: t.id, p: { cobro_modo: v('#kM2').value, cobro_pct: pct, limites: lim } });
-        await rpc('admin_negocio_guardar', { p_id: t.id, p: { nombre: v('#kN').value.trim(), rubro_id: v('#kR').value || null, color: v('#kC').value,
-          icono: v('#kI').value.trim(), telefono: v('#kT').value.trim(), comuna: v('#kM').value.trim(), reservas_online: v('#kO').checked, activo: v('#kA').checked } });
-        d.close(); toast('✅ Guardado'); cargarNegocios();
-      } catch (err) { v('#kErr').textContent = err.message; }
-    };
-  }
-
-  // Ficha del negocio: cobro, límites, métricas del mes y últimos movimientos.
-  async function fichaNegocio(t) {
-    if (!t) return;
-    let x;
-    try { x = await rpc('admin_negocio_detalle', { p_id: t.id }); } catch (e) { toast(e.message); return; }
-    const cat = x.modelo === 'catalogo', m = x.mes;
-    const kpi = cat ? [['🛍️ Pedidos del mes', m.pedidos], ['💵 Ventas del mes', plata(m.ventas)], ['💳 Cobrado online', plata(m.cobrado_online)], ['🧾 Por revisar', m.por_revisar], ['📦 Productos', m.productos], ['⚠️ Agotados', m.agotados]]
-      : [['📅 Reservas del mes', m.reservas], ['💵 Ventas del mes', plata(m.ventas)], ['💳 Abonos cobrados', plata(m.cobrado_online)], ['🧾 Por revisar', m.por_revisar], ['🛠️ Servicios', m.servicios]];
-    modal('<h2>📊 ' + esc(t.nombre) + '</h2><p class="sub" style="margin-top:0">' + esc(x.rubro ? x.rubro.icono + ' ' + x.rubro.nombre : 'Sin rubro') + ' · modelo ' + esc(x.modelo) +
-      ' · ' + (x.premium ? '⭐ Premium hasta ' + new Date(x.premium_hasta).toLocaleDateString('es-CL') : 'Gratis') + '</p>' +
-      '<div class="stats">' + kpi.map((k) => '<div class="card"><span>' + k[0] + '</span><b>' + k[1] + '</b></div>').join('') + '</div>' +
-      '<h3>💳 Cobro</h3><p class="sub">' + (x.cobro.modo === 'total' ? 'Pago completo' : 'Abono' + (cat ? ' ' + x.cobro.pct + '%' : ' de ' + plata(x.cobro.link_monto || 0))) +
-      (cat ? ' · ' + (x.cobro.despacho ? 'Despacho ' + plata(x.cobro.despacho_costo) : 'Sin despacho') : '') + ' · ' + (x.cobro.link ? '✅ Tiene link de pago' : '⚠️ Sin link de pago') + '</p>' +
-      '<h3>📏 Límites</h3><p class="sub">' + Object.keys(x.limites).map((k) => esc(k) + ': <b>' + esc(String(x.limites[k] ?? '—')) + '</b>' + (k in (x.limites_extra || {}) ? ' ✳️' : '')).join(' · ') + '</p>' +
-      '<h3>👥 Equipo</h3><p class="sub">' + (x.equipo.map((p) => esc(p.nombre || p.email) + ' (' + esc(p.rol === 'negocio' ? 'dueño' : 'equipo') + ', visto ' + App.hace(p.visto_at) + ')').join(' · ') || '—') + '</p>' +
-      '<h3>🕒 Últimos movimientos</h3><ul class="list">' + (x.ultimos.map((u) => '<li><div class="grow"><b>' + esc(u.ref) + '</b> · ' + esc(u.nombre) + '<div class="sub">' + App.fHora(u.created_at) + ' · ' + esc(u.estado) + '</div></div><b>' + plata(u.total) + '</b></li>').join('') || '<li class="sub">Sin movimientos</li>') + '</ul>' +
-      '<div class="btns"><a class="btn ghost" target="_blank" rel="noopener" href="../' + (cat ? 'c' : 't') + '/?s=' + encodeURIComponent(t.slug) + '">🔗 Ver página</a><button data-cerrar>Cerrar</button></div>');
-  }
-
-  // Agregar un mecánico o un cliente a un negocio.
-  function agregarUsuario(tid, nombre) {
-    const d = modal('<h2>👤 Agregar a ' + esc(nombre) + '</h2><label for="uR">Tipo</label><select id="uR"><option value="cliente">Cliente</option><option value="equipo">Equipo</option></select>' +
-      '<div class="row"><div><label for="uN">Nombre</label><input id="uN" maxlength="80"></div><div><label for="uT">WhatsApp</label><input id="uT" inputmode="tel"></div></div>' +
-      '<label for="uE">Correo</label><input id="uE" type="email" autocomplete="off"><label for="uP">Contraseña</label><input id="uP" value="' + App.clave() + '">' +
-      '<div class="btns"><button class="ghost" data-cerrar>Cancelar</button><button id="uOk">Crear</button></div><p class="err" id="uErr"></p>');
-    d.querySelector('#uOk').onclick = async () => {
-      const v = (id) => d.querySelector(id).value.trim();
-      const x = { rol: v('#uR'), nombre: v('#uN'), telefono: v('#uT'), email: v('#uE'), password: v('#uP'), negocio_id: tid };
-      try {
-        await App.crearCuenta(x);
-        const msg = App.mensajeAcceso({ nombre: x.nombre.split(' ')[0], email: x.email, password: x.password, lugar: nombre });
-        d.close();
-        modal('<h2>✅ Cuenta creada</h2><pre class="link" style="white-space:pre-wrap;font:inherit">' + esc(msg) + '</pre><div class="btns"><button class="ghost" data-cerrar>Cerrar</button>' +
-          (x.telefono ? '<a class="btn" target="_blank" rel="noopener" href="' + App.wa(x.telefono, msg) + '">📲 WhatsApp</a>' : '') + '</div>');
-        cargarNegocios();
-      } catch (err) { d.querySelector('#uErr').textContent = err.message; }
-    };
-  }
-
-  /* ---------- Usuarios (clientes y equipo) ---------- */
-  let clientes = [];
-  async function cargarClientes() {
-    try { clientes = await rpc('admin_clientes'); } catch (e) { $('cLista').innerHTML = '<li class="err">' + esc(e.message) + '</li>'; return; }
-    const ts = Array.from(new Map(clientes.map((c) => [c.negocio_id, c.negocio])).entries());
-    const sel = $('cNegocio').value;
-    $('cNegocio').innerHTML = '<option value="">Todos los negocios</option>' + ts.map(([id, n]) => '<option value="' + id + '"' + (id === sel ? ' selected' : '') + '>' + esc(n) + '</option>').join('');
-    pintarClientes();
-  }
-  $('cBuscar').oninput = pintarClientes; $('cNegocio').onchange = pintarClientes;
-  function pintarClientes() {
-    const f = $('cBuscar').value.trim().toLowerCase(), t = $('cNegocio').value;
-    const l = clientes.filter((c) => (!f || (c.nombre + ' ' + c.email + ' ' + c.telefono).toLowerCase().includes(f)) && (!t || c.negocio_id === t));
-    $('cCuenta').textContent = l.length + ' usuarios · ' + l.filter((c) => c.premium).length + ' Premium';
-    $('cLista').innerHTML = l.length ? l.slice(0, 500).map((c) => '<li><div class="grow"><b>' + esc(c.nombre || c.email) + '</b> ' + (c.rol === 'equipo' ? '<span class="pill info">Equipo</span> ' : '') + (c.premium ? '<span class="pill pro">PREMIUM</span> ' : '') +
-      (c.suspendido ? '<span class="pill bad">Suspendido</span> ' : '') + App.nota(c.nota) + '<div class="sub">' + esc(c.email) + ' · ' + esc(c.telefono) + ' · ' + esc(c.negocio || '') + ' · ' + c.visitas + ' visitas · visto ' + App.hace(c.visto_at) +
-      (c.premium ? ' · Premium hasta ' + new Date(c.premium_hasta).toLocaleDateString('es-CL') : '') + '</div></div>' +
-      '<select data-cp="' + c.id + '" style="width:auto" aria-label="Acción"><option value="">Acción…</option><option value="30">⭐ +30 días</option><option value="90">⭐ +90 días</option><option value="0">Quitar Premium</option>' +
-      '<option value="' + (c.suspendido ? 'react' : 'susp') + '">' + (c.suspendido ? 'Reactivar' : 'Suspender') + '</option><option value="del">🗑️ Eliminar</option></select></li>').join('') : '<li class="muted">Sin usuarios.</li>';
-  }
-  $('cLista').onchange = async (e) => {
-    const s = e.target.closest('[data-cp]'); if (!s || !s.value) return;
-    const v = s.value; s.value = '';
+  async function usuarios(q) {
+    const cont = el('usuarios');
+    if (!cont.dataset.ok) { cont.dataset.ok = 1; cont.innerHTML = '<div class="titulo-v"><h2>Usuarios</h2><button class="small" id="uN" type="button">+ Cuenta</button></div><input id="uQ" type="search" placeholder="Buscar por nombre o correo"><div id="uL"></div>'; $('uQ').oninput = () => { clearTimeout(cont.t); cont.t = setTimeout(() => usuarios($('uQ').value), 300); }; $('uN').onclick = nueva; }
     try {
-      if (v === 'del') {
-        if (!await confirmar('¿Eliminar este usuario? Sus reservas quedan, sin la cuenta. No se puede deshacer.', 'Sí, eliminar')) return;
-        await App.borrarCuenta('perfil', s.dataset.cp);
-      } else if (v === 'susp' || v === 'react') await rpc('admin_suspender', { p_tipo: 'perfil', p_id: s.dataset.cp, p_suspender: v === 'susp' });
-      else await rpc('admin_premium', { p_tipo: 'cliente', p_id: s.dataset.cp, p_dias: +v });
-      toast('Listo'); cargarClientes();
-    } catch (err) { toast(err.message); }
-  };
-
-  /* ---------- Pagos Premium ---------- */
-  let pFiltro = 'en_revision';
-  $('pSeg').onclick = (e) => { const b = e.target.closest('[data-f]'); if (!b) return; pFiltro = b.dataset.f; $('pSeg').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); cargarPagos(); };
-  async function cargarPagos() {
-    let l = [];
-    try { l = await rpc('admin_pagos', { p_estado: pFiltro || null }); } catch (e) { $('pLista').innerHTML = '<p class="err">' + esc(e.message) + '</p>'; return; }
-    $('pLista').innerHTML = l.length ? l.map((g) => '<div class="card"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:flex-start"><div><b>' + esc(g.quien) + '</b> <span class="pill">' +
-      (g.tipo === 'premium_negocio' ? '🏪 Negocio' : '👤 Cliente') + '</span><div class="sub">' + esc(g.email) + ' · ' + App.fHora(g.created_at) + '</div>' +
-      (g.premium_hasta ? '<div class="sub">Premium actual hasta ' + new Date(g.premium_hasta).toLocaleDateString('es-CL') + '</div>' : '') + (g.nota ? '<div class="sub">Nota: ' + esc(g.nota) + '</div>' : '') +
-      '</div><div style="text-align:right"><span class="precio" style="font-size:20px">' + plata(g.monto) + '</span><div><span class="pill ' + (g.estado === 'aprobado' ? 'ok' : g.estado === 'rechazado' ? 'bad' : 'info') + '">' + g.estado.replace('_', ' ') + '</span></div></div></div>' +
-      '<div class="acc">' + (g.tiene_comprobante ? '<button class="small ghost" data-ver="' + g.id + '">👁️ Comprobante</button>' : '<span class="sub">Comprobante borrado</span>') +
-      (g.estado === 'en_revision' ? '<button class="small okb" data-ok="' + g.id + '">Aprobar</button><button class="small danger" data-no="' + g.id + '">Rechazar</button>' : '') + '</div></div>').join('')
-      : '<p class="empty">Nada por aquí.</p>';
+      const L = await rpc('admin_usuarios', { p_buscar: q || '' });
+      $('uL').innerHTML = L.map((u) => '<div class="card"><div class="fila"><span class="tit">' + esc(u.nombre || u.email) + '</span><span class="pill ' + (u.rol === 'admin' ? 'dark' : u.rol === 'socio' ? 'info' : '') + '">' + u.rol + '</span>' + (u.suspendido ? '<span class="pill bad">suspendido</span>' : '') + '</div>' +
+        '<p class="sub">' + esc(u.email) + ' · ' + u.registros + ' registros · ' + (u.premium_hasta && new Date(u.premium_hasta) > new Date() ? 'Pro hasta ' + App.fCorta(u.premium_hasta.slice(0, 10)) : 'gratis') + ' · visto ' + (u.visto_at ? App.hace(u.visto_at) : 'nunca') + '</p>' +
+        (u.rol === 'admin' ? '' : '<div class="btns-s"><button class="small ghost" data-a="pro" data-id="' + u.id + '">Días Pro</button><button class="small ghost" data-a="susp" data-id="' + u.id + '" data-s="' + (u.suspendido ? 0 : 1) + '">' + (u.suspendido ? 'Reactivar' : 'Suspender') + '</button><button class="small ghost" data-a="del" data-id="' + u.id + '" data-n="' + esc(u.email) + '">Eliminar</button></div>') + '</div>').join('') || '<p class="empty">Sin resultados</p>';
+    } catch (e) { $('uL').innerHTML = '<p class="err">' + esc(e.message) + '</p>'; }
   }
-  $('pLista').onclick = async (e) => {
-    const b = e.target.closest('button'); if (!b) return;
+  el('usuarios').onclick = async (e) => {
+    const b = e.target.closest('[data-a]'); if (!b) return; const id = b.dataset.id;
     try {
-      if (b.dataset.ver) { const img = await rpc('admin_pago_comprobante', { p_id: b.dataset.ver }); if (img) App.verImagen(img, 'Comprobante Premium', 'premium-' + b.dataset.ver.slice(0, 8) + '.jpg'); else toast('Ya fue borrado'); return; }
-      if (b.dataset.ok) {
-        if (!await confirmar('Revisa en tu Mercado Pago que el pago llegó.\n\n¿Aprobar y activar Premium?', 'Sí, aprobar')) return;
-        await rpc('admin_pago_resolver', { p_id: b.dataset.ok, p_aprobar: true, p_nota: null }); toast('⭐ Premium activado');
-      }
-      if (b.dataset.no) {
-        const nota = prompt('Motivo del rechazo (lo verá la persona)', 'No encontramos el pago');
-        if (nota === null) return;
-        await rpc('admin_pago_resolver', { p_id: b.dataset.no, p_aprobar: false, p_nota: nota }); toast('Pago rechazado');
-      }
-      App.sb.functions.invoke('servidor').catch(() => {});
-      cargarPagos();
-    } catch (err) { toast(err.message); }
+      if (b.dataset.a === 'pro') {
+        const d = modal('<h2>Días de Pro</h2><p class="sub">Positivo suma, negativo quita, 0 cancela.</p><input id="dp" type="number" value="30"><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="dk" type="button">Siguiente</button></div>');
+        d.querySelector('#dk').onclick = async () => { const n = +d.querySelector('#dp').value; d.close(); const m = await motivo('Días de Pro'); if (m === null) return; try { await rpc('admin_premium', { p_id: id, p_dias: n, p_motivo: m }); toast('Listo'); usuarios($('uQ').value); } catch (x) { err(x); } };
+      } else if (b.dataset.a === 'susp') { const m = await motivo(b.dataset.s === '1' ? 'Suspender cuenta' : 'Reactivar cuenta'); if (m === null) return; await rpc('admin_suspender', { p_id: id, p_suspender: b.dataset.s === '1', p_motivo: m }); usuarios($('uQ').value); }
+      else if (b.dataset.a === 'del') { if (!(await confirmar('Eliminar a ' + b.dataset.n + ' y todos sus datos. No se puede deshacer.', 'Eliminar'))) return; const m = await motivo('Eliminar cuenta'); if (m === null) return; await App.borrarCuenta(id, m); toast('Eliminada'); usuarios($('uQ').value); }
+    } catch (x) { err(x); }
+  };
+  function nueva() {
+    const d = modal('<h2>Nueva cuenta</h2><label>Nombre<input id="nn"></label><label>Correo<input id="ne" type="email"></label><label>Rol<select id="nr"><option value="usuario">Usuario</option><option value="socio">Socio</option></select></label><p class="sub">Le llega un correo para crear su contraseña.</p><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="nk" type="button">Crear</button></div>');
+    d.querySelector('#nk').onclick = async () => { try { await App.crearCuenta({ email: d.querySelector('#ne').value.trim(), nombre: d.querySelector('#nn').value.trim(), rol: d.querySelector('#nr').value }); d.close(); toast('Cuenta creada'); usuarios(); } catch (x) { err(x); } };
+  }
+
+  async function pagos() {
+    try {
+      const L = await rpc('admin_pagos', { p_estado: 'todos' });
+      el('pagos').innerHTML = '<div class="titulo-v"><h2>Pagos</h2></div>' + (L.map((g) => '<div class="card"><div class="fila"><span class="tit">' + esc(g.nombre || g.email) + '</span><span class="pill ' + (g.estado === 'aprobado' ? 'ok' : g.estado === 'rechazado' ? 'bad' : 'warn') + '">' + g.estado + '</span></div><p class="sub">' + g.plan + ' · $' + Number(g.monto).toLocaleString('es-CL') + ' · ' + App.hace(g.created_at) + '</p>' +
+        '<div class="btns-s"><button class="small ghost" data-a="ver" data-id="' + g.id + '">Ver comprobante</button>' + (g.estado === 'pendiente' ? '<button class="small" data-a="ok" data-id="' + g.id + '">Aprobar</button><button class="small ghost" data-a="no" data-id="' + g.id + '">Rechazar</button>' : '') + '</div></div>').join('') || '<p class="empty">Sin pagos</p>');
+    } catch (e) { el('pagos').innerHTML = '<p class="err">' + esc(e.message) + '</p>'; }
+  }
+  el('pagos').onclick = async (e) => {
+    const b = e.target.closest('[data-a]'); if (!b) return;
+    try {
+      if (b.dataset.a === 'ver') App.verImagen(await rpc('admin_pago_comprobante', { p_id: b.dataset.id }), 'Comprobante', 'comprobante.jpg');
+      else { const m = await motivo(b.dataset.a === 'ok' ? 'Aprobar pago' : 'Rechazar pago'); if (m === null) return; await rpc('admin_pago_resolver', { p_id: b.dataset.id, p_aprobar: b.dataset.a === 'ok', p_motivo: m }); toast('Listo'); pagos(); }
+    } catch (x) { err(x); }
   };
 
-  /* ---------- Ajustes ---------- */
-  let ajuste = 'links';
-  $('aSeg').onclick = (e) => { const b = e.target.closest('[data-a]'); if (b) verAjuste(b.dataset.a); };
-  const aBody = () => $('aBody');
-  function verAjuste(a) {
-    ajuste = a;
-    $('aSeg').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x.dataset.a === a));
-    ({ rubros: verRubros, links: verLinks, planes: verPlanes, reglas: verReglas, textos: verTextos, avisos: verAvisos, push: verPush, calif: verCalif, registro: verRegistro, cuenta: verCuenta })[a]();
+  function planes() {
+    const P = pub.planes || {};
+    el('planes').innerHTML = '<div class="titulo-v"><h2>Planes</h2></div>' + Object.keys(P).map((k) => { const p = P[k], l = p.limites || {}; return '<div class="card" data-k="' + k + '"><h3>' + esc(p.nombre) + ' <span class="sub">' + k + '</span></h3>' + ['espacios', 'items', 'recordatorios', 'insights', 'descanso'].map((c) => '<label>' + c + '<input data-l="' + c + '" type="number" value="' + (l[c] === undefined ? '' : l[c]) + '"></label>').join('') + '<label>Descripción<input data-d value="' + esc(p.descripcion || '') + '"></label><button type="button" data-g="' + k + '">Guardar</button></div>'; }).join('');
   }
+  el('planes').onclick = async (e) => {
+    const b = e.target.closest('[data-g]'); if (!b) return; const c = b.closest('.card'), k = b.dataset.g, p = pub.planes[k], lim = {};
+    c.querySelectorAll('[data-l]').forEach((i) => { if (i.value !== '') lim[i.dataset.l] = +i.value; });
+    const m = await motivo('Cambiar plan ' + p.nombre); if (m === null) return;
+    try { await rpc('admin_plan_guardar', { p_codigo: k, p_nombre: p.nombre, p_descripcion: c.querySelector('[data-d]').value, p_limites: lim, p_beneficios: p.beneficios || [], p_duracion: p.duracion_dias || 30, p_motivo: m }); pub = await App.cargarPublica(); toast('Guardado'); } catch (x) { err(x); }
+  };
 
-  // Rubros: tipos de negocio con su modelo (reservas, catálogo u órdenes) y sus nombres propios.
-  async function verRubros() {
-    let l = [];
-    try { l = await rpc('admin_rubros'); } catch (e) { aBody().innerHTML = '<p class="err">' + esc(e.message) + '</p>'; return; }
-    const MOD = { reservas: '📅 Reservas', catalogo: '🛍️ Catálogo', ordenes: '🔧 Órdenes de trabajo' };
-    aBody().innerHTML = '<div class="card"><h2>🧩 Rubros</h2><p class="muted" style="margin-top:0">Cada rubro usa un modelo. Al crear un negocio eliges su rubro y queda con la administración de ese modelo.</p>' +
-      '<div class="btns"><button id="rbNuevo">➕ Nuevo rubro</button></div><ul class="list">' + l.map((r) => '<li><div class="grow"><b>' + esc(r.icono + ' ' + r.nombre) + '</b> ' + (r.activo ? '' : '<span class="pill">Oculto</span>') +
-        '<div class="sub">' + MOD[r.modelo] + ' · ' + r.negocios + ' negocio(s)</div></div><button class="small ghost" data-rb="' + r.id + '">✏️</button></li>').join('') + '</ul></div>';
-    const editar = (r) => {
-      r = r || { nombre: '', modelo: 'reservas', icono: '🏪', etiquetas: {}, activo: true };
-      const d = modal('<h2>' + (r.id ? '✏️ Editar rubro' : '➕ Nuevo rubro') + '</h2><div class="row"><div><label for="rN">Nombre</label><input id="rN" maxlength="60" value="' + esc(r.nombre) + '"></div>' +
-        '<div><label for="rI">Ícono</label><input id="rI" maxlength="8" value="' + esc(r.icono) + '"></div></div>' +
-        '<label for="rM">Modelo</label><select id="rM">' + Object.keys(MOD).map((k) => '<option value="' + k + '"' + (k === r.modelo ? ' selected' : '') + '>' + MOD[k] + '</option>').join('') + '</select>' +
-        '<div class="row"><div><label for="rS">Cómo se llama el servicio/producto</label><input id="rS" value="' + esc(r.etiquetas.servicio || '') + '" placeholder="Corte"></div>' +
-        '<div><label for="rP">Cómo se llama el profesional</label><input id="rP" value="' + esc(r.etiquetas.profesional || '') + '" placeholder="Barbero"></div></div>' +
-        '<label for="rX">Qué trae el cliente (opcional)</label><input id="rX" value="' + esc(r.etiquetas.item || '') + '" placeholder="Vehículo">' +
-        '<label class="check"><input type="checkbox" id="rA"' + (r.activo ? ' checked' : '') + '> Disponible al crear negocios</label>' +
-        '<div class="btns"><button class="ghost" data-cerrar>Cancelar</button><button id="rOk">Guardar</button></div><p class="err" id="rErr"></p>');
-      const v = (id) => d.querySelector(id);
-      v('#rOk').onclick = async () => {
-        const et = {}; [['servicio', '#rS'], ['profesional', '#rP'], ['item', '#rX']].forEach(([k, id]) => { const x = v(id).value.trim(); if (x) et[k] = x; });
-        try { await rpc('admin_rubro_guardar', { p_id: r.id || null, p_nombre: v('#rN').value, p_modelo: v('#rM').value, p_icono: v('#rI').value, p_etiquetas: et, p_activo: v('#rA').checked }); d.close(); verRubros(); }
-        catch (e) { v('#rErr').textContent = e.message; }
-      };
+  const CFG = [['dias_prueba', 'Días de prueba Pro'], ['pro_precio_mensual', 'Precio mensual'], ['pro_precio_anual', 'Precio anual'], ['pro_link', 'Link de pago', 1], ['soporte_whatsapp', 'WhatsApp de soporte', 1], ['dias_comprobantes', 'Guardar comprobantes (días)'], ['limite_db_mb', 'Límite de base de datos (MB)'], ['auditoria_max', 'Máximo de filas del registro']];
+  function ajustes() {
+    const c = pub.config || {}, k = c.vapid_publica;
+    el('ajustes').innerHTML = '<div class="titulo-v"><h2>Ajustes</h2></div><div class="card">' + CFG.map((f) => '<label>' + f[1] + '<input data-c="' + f[0] + '" data-t="' + (f[2] ? 's' : 'n') + '" value="' + esc(c[f[0]] === undefined ? '' : c[f[0]]) + '"></label>').join('') + '<button type="button" id="cg">Guardar ajustes</button></div>' +
+      '<div class="card"><h2>Enviar aviso</h2><label>A<select id="avD"><option value="todos">Todos</option><option value="pro">Pro</option><option value="gratis">Gratis</option></select></label><label>Título<input id="avT" maxlength="90"></label><label>Mensaje<input id="avC" maxlength="240"></label><button type="button" id="avG">Enviar</button></div>' +
+      '<div class="card"><h2>Notificaciones push</h2><p class="muted">' + (k ? 'Claves creadas.' : 'Falta crear las claves.') + '</p>' + (SUPER ? '<button id="kG" type="button" class="' + (k ? 'ghost' : '') + '">' + (k ? 'Crear claves nuevas' : 'Crear claves') + '</button> ' : '') + '<button class="alt" id="kP" type="button">Probar servidor</button><p class="sub" id="kR"></p></div>';
+    $('cg').onclick = async () => {
+      const m = await motivo('Cambiar ajustes'); if (m === null) return;
+      try { for (const i of el('ajustes').querySelectorAll('[data-c]')) { const nv = i.dataset.t === 'n' ? Number(i.value) : i.value; if (JSON.stringify(nv) !== JSON.stringify(c[i.dataset.c]) && !(i.value === '' && c[i.dataset.c] === undefined)) await rpc('admin_config_guardar', { p_clave: i.dataset.c, p_valor: nv, p_motivo: m }); } pub = await App.cargarPublica(); toast('Guardado'); } catch (x) { err(x); }
     };
-    $('rbNuevo').onclick = () => editar(null);
-    aBody().querySelectorAll('[data-rb]').forEach((b) => { b.onclick = () => editar(l.find((r) => r.id === b.dataset.rb)); });
-  }
-
-  // Precios y links de pago (2 por plan, uno activo)
-  async function verLinks() {
-    let links = [];
-    try { links = await rpc('admin_links'); } catch (e) { aBody().innerHTML = '<p class="err">' + esc(e.message) + '</p>'; return; }
-    const bloque = (tipo, titulo) => '<div class="card"><h2>' + titulo + '</h2><p class="sub" style="margin-top:0">El precio que se publica es el del espacio activo. Para cambiar el precio, edita el monto y su link, o activa el otro espacio.</p>' +
-      [1, 2].map((n) => { const l = links.find((x) => x.tipo === tipo && x.slot === n) || { monto: 0, url: '', texto: '', activo: false };
-        return '<div class="slotpago' + (l.activo ? ' on' : '') + '"><label class="check" style="margin:0"><input type="radio" name="act-' + tipo + '" value="' + n + '"' + (l.activo ? ' checked' : '') + '> <b>Espacio ' + n + '</b>' +
-          (l.activo ? ' <span class="pill ok">Activo</span>' : '') + '</label><div class="row"><div><label>Precio</label><input data-t="' + tipo + '" data-s="' + n + '" data-k="monto" inputmode="numeric" value="' + (l.monto || '') + '"></div>' +
-          '<div><label>Texto de la publicación</label><input data-t="' + tipo + '" data-s="' + n + '" data-k="texto" maxlength="300" value="' + esc(l.texto) + '" placeholder="Pago mensual"></div></div>' +
-          '<label>Link de pago (Mercado Pago)</label><input data-t="' + tipo + '" data-s="' + n + '" data-k="url" value="' + esc(l.url) + '" placeholder="https://mpago.la/…"></div>'; }).join('') +
-      '<div class="btns"><button data-guardar="' + tipo + '">💾 Guardar</button></div></div>';
-    aBody().innerHTML = bloque('premium_negocio', '🏪 Premium de negocios') + bloque('premium_cliente', '👤 Premium de clientes') +
-      '<p class="sub">El abono de las reservas lo configura cada negocio con su propio link: ese dinero le llega directo al negocio y tú no lo ves.</p>';
-    aBody().onclick = async (e) => {
-      const b = e.target.closest('[data-guardar]'); if (!b) return;
-      const tipo = b.dataset.guardar, act = +((aBody().querySelector('input[name="act-' + tipo + '"]:checked') || {}).value || 0);
-      const val = (s, k) => aBody().querySelector('[data-t="' + tipo + '"][data-s="' + s + '"][data-k="' + k + '"]').value.trim();
+    $('avG').onclick = async () => { const m = await motivo('Enviar aviso'); if (m === null) return; try { const n = await rpc('admin_aviso', { p_destino: $('avD').value, p_titulo: $('avT').value, p_cuerpo: $('avC').value, p_motivo: m }); toast('Enviado a ' + n); } catch (x) { err(x); } };
+    if ($('kG')) $('kG').onclick = async () => {
+      if (k && !(await confirmar('Con claves nuevas todos deberán activar las notificaciones otra vez.', 'Continuar'))) return;
       try {
-        for (const s of [1, 2]) await rpc('link_guardar', { p_tipo: tipo, p_slot: s, p_monto: App.numero(val(s, 'monto')), p_url: val(s, 'url'), p_texto: val(s, 'texto'), p_activar: s === act });
-        pub = await App.cargarPublica(); toast('💾 Guardado'); verLinks();
-      } catch (err) { toast(err.message); }
-    };
-  }
-
-  // Planes: nombre, descripción, duración, beneficios y límites
-  const ETIQ = { reservas_mes: 'Reservas online al mes', servicios: 'Servicios', promos: 'Promociones activas', equipo: 'Personas en el equipo', clientes_cuenta: 'Clientes con cuenta',
-    estadisticas: 'Estadísticas', recordatorios: 'Recordatorios de mantención', historial: 'Visitas en el historial', anticipacion_extra: 'Días extra para reservar antes' };
-  async function verPlanes() {
-    pub = await App.cargarPublica();
-    const planes = pub.planes;
-    aBody().innerHTML = ['negocio_free', 'negocio_premium', 'cliente_free', 'cliente_premium'].map((c) => { const p = planes[c]; return '<div class="card' + (/premium/.test(c) ? ' plan premium' : '') + '" data-plan="' + c + '"><h2>' +
-      ({ negocio_free: '🏪 Negocio gratis', negocio_premium: '🏪⭐ Negocio Premium', cliente_free: '👤 Cliente gratis', cliente_premium: '👤⭐ Cliente Premium' })[c] + '</h2>' +
-      '<div class="row"><div><label>Nombre</label><input data-k="nombre" maxlength="40" value="' + esc(p.nombre) + '"></div><div><label>Duración del pago (días)</label><input data-k="duracion" inputmode="numeric" value="' + p.duracion_dias + '"></div></div>' +
-      '<label>Descripción</label><input data-k="descripcion" maxlength="300" value="' + esc(p.descripcion) + '">' +
-      '<label>Beneficios (uno por línea)</label><textarea data-k="beneficios" rows="5">' + esc(p.beneficios.join('\n')) + '</textarea>' +
-      '<h3>Límites</h3><div class="row">' + Object.keys(p.limites).map((k) => typeof p.limites[k] === 'boolean'
-        ? '<label class="check" style="flex:1 1 100%"><input type="checkbox" data-l="' + k + '"' + (p.limites[k] ? ' checked' : '') + '> ' + esc(ETIQ[k] || k) + '</label>'
-        : '<div><label>' + esc(ETIQ[k] || k) + '</label><input data-l="' + k + '" inputmode="numeric" value="' + p.limites[k] + '"></div>').join('') + '</div>' +
-      '<div class="btns"><button data-gp="' + c + '">💾 Guardar plan</button></div></div>'; }).join('');
-    aBody().onclick = async (e) => {
-      const b = e.target.closest('[data-gp]'); if (!b) return;
-      const card = aBody().querySelector('[data-plan="' + b.dataset.gp + '"]'), v = (k) => card.querySelector('[data-k="' + k + '"]').value;
-      const lim = {};
-      card.querySelectorAll('[data-l]').forEach((i) => { lim[i.dataset.l] = i.type === 'checkbox' ? i.checked : App.numero(i.value); });
-      try {
-        await rpc('admin_plan_guardar', { p_codigo: b.dataset.gp, p_nombre: v('nombre'), p_descripcion: v('descripcion'), p_limites: lim,
-          p_beneficios: v('beneficios').split('\n').map((x) => x.trim()).filter(Boolean), p_duracion: App.numero(v('duracion')) });
-        toast('⭐ Plan guardado');
-      } catch (err) { toast(err.message); }
-    };
-  }
-
-  // Reglas (tiempos y días)
-  function verReglas() {
-    const c = pub.config || {};
-    const campos = [['minutos_pago', 'Minutos para pagar el abono y subir el comprobante'], ['minutos_devolucion', 'Minutos para cancelar con devolución del abono'],
-      ['horas_cancelacion', 'Horas mínimas para cancelar/reagendar con saldo a favor'], ['dias_saldo', 'Días que dura el saldo a favor'],
-      ['dias_regalo_negocio', 'Días de Premium de regalo al crear un negocio'], ['dias_aviso_vencimiento', 'Días antes del vencimiento para avisar'],
-      ['dias_comprobantes', 'Días que se guardan los comprobantes']];
-    aBody().innerHTML = '<div class="card"><h2>⚖️ Reglas</h2>' + campos.map(([k, t]) => '<label>' + esc(t) + '</label><input data-c="' + k + '" inputmode="numeric" value="' + esc(c[k]) + '">').join('') +
-      '<label>Tu WhatsApp de soporte</label><input data-c="soporte_whatsapp" data-txt="1" value="' + esc(c.soporte_whatsapp || '') + '" placeholder="+56 9 …">' +
-      '<div class="btns"><button id="rG">💾 Guardar reglas</button></div></div>';
-    $('rG').onclick = async () => {
-      try {
-        for (const i of aBody().querySelectorAll('[data-c]')) {
-          const val = i.dataset.txt ? i.value.trim() : App.numero(i.value);
-          if (String(c[i.dataset.c]) !== String(val)) await rpc('admin_config_guardar', { p_clave: i.dataset.c, p_valor: val });
-        }
-        pub = await App.cargarPublica(); toast('⚖️ Reglas guardadas');
-      } catch (e) { toast(e.message); }
-    };
-  }
-
-  // Textos de la app
-  const TXT = { app_nombre: 'Nombre de la app', app_lema: 'Frase de bienvenida', reserva_pago: 'Instrucciones del abono (usa {minutos})',
-    reserva_politica: 'Política de cancelación (usa {devolucion} y {horas})', premium_negocio_titulo: 'Título Premium negocio', premium_negocio_texto: 'Texto Premium negocio',
-    premium_cliente_titulo: 'Título Premium cliente', premium_cliente_texto: 'Texto Premium cliente', pago_instrucciones: 'Instrucciones para pagar Premium',
-    bienvenida_negocio: 'Bienvenida del negocio nuevo', terminos: 'Términos (al crear cuenta)' };
-  async function verTextos() {
-    pub = await App.cargarPublica();
-    aBody().innerHTML = '<div class="card"><h2>✏️ Textos</h2>' + Object.keys(TXT).map((k) => '<label>' + esc(TXT[k]) + '</label><textarea data-x="' + k + '" rows="2">' + esc(pub.textos[k] || '') + '</textarea>').join('') +
-      '<div class="btns"><button id="xG">💾 Guardar textos</button></div></div>';
-    $('xG').onclick = async () => {
-      try {
-        for (const i of aBody().querySelectorAll('[data-x]')) if ((pub.textos[i.dataset.x] || '') !== i.value) await rpc('admin_texto_guardar', { p_clave: i.dataset.x, p_valor: i.value });
-        pub = await App.cargarPublica(); toast('✏️ Textos guardados');
-      } catch (e) { toast(e.message); }
-    };
-  }
-
-  // Avisos masivos (campanita + push)
-  function verAvisos() {
-    aBody().innerHTML = '<div class="card"><h2>📣 Enviar aviso</h2><p class="muted" style="margin-top:0">Llega a la campanita de la app y como notificación al celular.</p>' +
-      '<label for="vD">Para</label><select id="vD"><option value="negocios">Dueños de negocios</option><option value="equipos">Negocios y sus equipos</option><option value="clientes">Clientes</option><option value="todos">Todos</option></select>' +
-      '<label for="vT">Título</label><input id="vT" maxlength="90"><label for="vC">Mensaje</label><textarea id="vC" maxlength="240"></textarea>' +
-      '<div class="btns"><button id="vE">📣 Enviar</button></div></div>';
-    $('vE').onclick = async () => {
-      if (!await confirmar('¿Enviar el aviso?')) return;
-      try { const n = await rpc('admin_aviso', { p_destino: $('vD').value, p_titulo: $('vT').value, p_cuerpo: $('vC').value }); App.sb.functions.invoke('servidor').catch(() => {}); toast('📣 Enviado a ' + n + ' personas'); $('vT').value = ''; $('vC').value = ''; }
-      catch (e) { toast(e.message); }
-    };
-  }
-
-  // Notificaciones push: claves
-  function verPush() {
-    const pubk = (pub.config || {}).vapid_publica;
-    aBody().innerHTML = '<div class="card"><h2>🔔 Notificaciones al celular</h2><p class="muted" style="margin-top:0">' + (pubk ? '✅ Las claves están creadas.' : '⚠️ Falta crear las claves.') +
-      ' La función "servidor" las usa para enviar los avisos (guía, pasos 4 y 5).</p><div class="btns"><button id="kG" class="' + (pubk ? 'ghost' : '') + '">' + (pubk ? 'Crear claves nuevas' : 'Crear claves') + '</button>' +
-      '<button class="alt" id="kP">Probar función servidor</button></div><div id="kPush"></div><p class="sub" id="kR"></p></div>';
-    App.ofrecerPush($('kPush'));
-    $('kG').onclick = async () => {
-      if (pubk && !await confirmar('Al crear claves nuevas, todos deberán activar las notificaciones de nuevo. ¿Seguir?')) return;
-      try {
-        const k = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
-        const raw = new Uint8Array(await crypto.subtle.exportKey('raw', k.publicKey)), jwk = await crypto.subtle.exportKey('jwk', k.privateKey);
+        const kp = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+        const raw = new Uint8Array(await crypto.subtle.exportKey('raw', kp.publicKey)), jwk = await crypto.subtle.exportKey('jwk', kp.privateKey);
         const b64u = (u) => btoa(String.fromCharCode.apply(null, u)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-        await rpc('admin_push_claves', { p_publica: b64u(raw), p_privada: jwk.d });
-        pub = await App.cargarPublica(); toast('🔔 Claves creadas'); verPush();
-      } catch (e) { toast(e.message); }
+        await rpc('admin_push_claves', { p_publica: b64u(raw), p_privada: jwk.d }); pub = await App.cargarPublica(); toast('Claves creadas'); ajustes();
+      } catch (x) { err(x); }
     };
-    $('kP').onclick = async () => {
-      const { data, error } = await App.sb.functions.invoke('servidor', { body: { accion: 'ping' } });
-      $('kR').textContent = error ? '❌ No responde: créala en Supabase (guía, paso 4).' : data && data.servicio ? '✅ Funciona (versión ' + data.version + ').' : '⚠️ Responde, pero sin clave de servicio.';
-    };
+    $('kP').onclick = async () => { const { data, error } = await App.sb.functions.invoke('servidor', { body: { accion: 'ping' } }); $('kR').textContent = error ? 'No responde: despliega la función "servidor".' : data && data.servicio ? 'Funciona (v' + data.version + ').' : 'Responde, pero sin clave de servicio.'; };
   }
 
-  async function verCalif() {
-    let l = [];
-    try { l = await rpc('admin_calificaciones'); } catch (e) { aBody().innerHTML = '<p class="err">' + esc(e.message) + '</p>'; return; }
-    aBody().innerHTML = '<div class="card"><h2>⭐ Calificaciones</h2><p class="muted" style="margin-top:0">Borra las injustas u ofensivas. Los comentarios solo los ves tú.</p><ul class="list">' +
-      (l.map((q) => '<li><div class="grow"><span class="stars">' + App.estrellas(q.estrellas) + '</span> ' + (q.autor === 'cliente' ? esc(q.cliente) + ' → ' + esc(q.negocio) : esc(q.negocio) + ' → ' + esc(q.cliente)) +
-        (q.comentario ? '<div class="sub">“' + esc(q.comentario) + '”</div>' : '') + '<div class="sub">' + App.fHora(q.created_at) + '</div></div><button class="small danger" data-x="' + q.id + '">Borrar</button></li>').join('') || '<li class="muted">Sin calificaciones.</li>') + '</ul></div>';
-    aBody().onclick = async (e) => {
-      const b = e.target.closest('[data-x]'); if (!b || !await confirmar('¿Borrar la calificación?')) return;
-      try { await rpc('admin_calificacion_borrar', { p_id: b.dataset.x }); verCalif(); } catch (err) { toast(err.message); }
-    };
+  let filas = [];
+  async function registro() {
+    el('registro').innerHTML = '<p class="sub">Cargando…</p>';
+    try {
+      filas = await rpc('admin_auditoria', { p_limite: 5000 });
+      el('registro').innerHTML = '<div class="titulo-v"><h2>Registro de cambios</h2><span class="sub">' + filas.length + ' filas</span></div><div class="card"><p class="sub">Quién cambió o borró algo y por qué. Descárgalo y, si eres administrador, vacíalo para liberar espacio.</p><div class="btns-s"><button type="button" id="rD">Descargar CSV</button>' + (SUPER ? '<button type="button" class="ghost" id="rV">Vaciar lo descargado</button>' : '') + '</div></div>' +
+        filas.slice(0, 100).map((f) => '<div class="card"><div class="fila"><span class="tit">' + esc(f.accion) + '</span><span class="sub">' + App.hace(f.created_at) + '</span></div><p class="sub">' + esc(f.quien_email || '') + ' (' + esc(f.rol || '') + ') · ' + esc(f.detalle || '') + (f.motivo ? '<br><b>Motivo:</b> ' + esc(f.motivo) : '') + '</p></div>').join('');
+      $('rD').onclick = () => { const c = (s) => '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"'; const csv = 'id,fecha,quien,rol,accion,detalle,motivo\n' + filas.map((f) => [f.id, f.created_at, f.quien_email, f.rol, f.accion, f.detalle, f.motivo].map(c).join(',')).join('\n'); const u = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' })); App.descargar(u, 'registro-' + App.hoy() + '.csv'); setTimeout(() => URL.revokeObjectURL(u), 4000); App.pendienteVaciar = true; toast('Descargado'); };
+      if ($('rV')) $('rV').onclick = async () => { if (!filas.length) return; if (!App.pendienteVaciar) return toast('Primero descarga el CSV'); if (!(await confirmar('Se borran ' + filas.length + ' filas del registro (ya descargadas).', 'Vaciar'))) return; try { await rpc('auditoria_vaciar', { p_hasta_id: filas[0].id }); App.pendienteVaciar = false; toast('Registro vaciado'); registro(); } catch (x) { err(x); } };
+    } catch (e) { el('registro').innerHTML = '<p class="err">' + esc(e.message) + '</p>'; }
   }
-
-  async function verRegistro() {
-    let l = [];
-    try { l = await rpc('admin_auditoria'); } catch (e) { aBody().innerHTML = '<p class="err">' + esc(e.message) + '</p>'; return; }
-    aBody().innerHTML = '<div class="card"><h2>📜 Registro de cambios</h2><ul class="list">' + (l.map((a) => '<li><div class="grow"><b>' + esc(a.accion) + '</b> <span class="sub">' + esc(a.detalle) + '</span></div><span class="sub">' + App.fHora(a.created_at) + '</span></li>').join('') ||
-      '<li class="muted">Sin registros.</li>') + '</ul></div>';
-  }
-
-  function verCuenta() {
-    aBody().innerHTML = '<div class="card"><h2>👤 Mi cuenta</h2><p class="muted" style="margin-top:0">' + esc(yo.email) + '</p><label for="uP">Contraseña nueva</label><input id="uP" type="password" autocomplete="new-password">' +
-      '<div class="btns"><button class="alt" id="uPG">Cambiar contraseña</button><button class="danger" id="uS">Cerrar sesión</button></div></div>';
-    $('uPG').onclick = async () => { const { error } = await App.sb.auth.updateUser({ password: $('uP').value }); toast(error ? App.friendly(error) : '🔑 Contraseña cambiada'); };
-    $('uS').onclick = () => App.salir();
-  }
-
-  $('cargando').classList.add('hidden');
-  App.campana($('campana'));
-  App.chatBoton($('chatBtn'));
-  App.pie();
-  const h = location.hash.slice(1);
-  show(['resumen', 'negocios', 'clientes', 'pagos'].concat(SUPER ? ['ajustes'] : []).includes(h) ? h : 'resumen');
+  show(location.hash.slice(1) || 'resumen');
 })();
