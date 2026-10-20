@@ -1,2 +1,2 @@
-// CodeFix · función "servidor" v2.3 en una línea (carga index.ts desde GitHub).
-import 'https://raw.githubusercontent.com/CodeFixService/SaaS/8120f57529523a699cd185d2bcac14a139af4c9f/supabase/functions/servidor/index.ts';
+// CodeFix · función "servidor" v3.0 en una línea (carga index.ts desde GitHub).
+import 'https://raw.githubusercontent.com/CodeFixService/SaaS/c348aa7e09dda5382510fa42512b633a100f3981/supabase/functions/servidor/index.ts';
