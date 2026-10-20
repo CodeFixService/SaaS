@@ -44,7 +44,7 @@
     const fecha = new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' });
     const hora = new Date().getHours(), saludo = hora < 12 ? 'Buenos días' : hora < 20 ? 'Buenas tardes' : 'Buenas noches';
 
-    let x = '<div class="hero"><div><p class="sub cap">' + esc(fecha) + '</p><h2>' + saludo + (c.nombre ? ', ' + esc(c.nombre.split(' ')[0]) : '') + '</h2>' +
+    let x = '<div class="frase"><span>✨</span><p>' + esc(CM.frase()) + '</p></div>' + CM.guiaCard() + '<div class="hero"><div><p class="sub cap">' + esc(fecha) + '</p><h2>' + saludo + (c.nombre ? ', ' + esc(c.nombre.split(' ')[0]) : '') + '</h2>' +
       '<p class="estado ' + (trab ? 'trab' : 'desc') + '">' + CM.ico(trab ? 'maletin' : 'luna', 16) + (trab ? 'Horario de trabajo · ' + esc(trab.nombre) + ' hasta las ' + esc(trab.horario.hasta) : 'Fuera de horario de trabajo: baja el ritmo') + '</p></div>' +
       '<button type="button" class="aterriza" data-act="aterrizar">' + CM.ico('ancla', 22) + '<span>Aterrizar</span></button></div>';
     x += '<div class="kpis"><div class="kpi"><span class="ic-f">' + CM.ico('fuego', 18) + '</span><b>' + racha + '</b><small>días de racha</small></div>' +
@@ -75,8 +75,8 @@
     }
     if (rec.length) x += '<div class="card"><h2>Recordatorios</h2>' + rec.map((r) => '<div class="fila">' + chk(false, 'rec', r.id) + '<button type="button" class="grow tit" data-act="ficha" data-id="' + r.id + '">' + esc(r.titulo) + '<small class="muted">' + new Date(r.aviso_at).toLocaleString('es-CL', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) + '</small></button></div>').join('') + '</div>';
     // ánimo
-    const esc5 = (k, v) => '<div class="esc5" data-k="' + k + '">' + [1, 2, 3, 4, 5].map((n) => '<button type="button" class="' + (v === n ? 'on' : '') + '" data-v="' + n + '">' + n + '</button>').join('') + '</div>';
-    x += '<div class="card"><h2>¿Cómo vas hoy?</h2><div class="row2"><div><p class="sub">Energía</p>' + esc5('energia', dd.energia) + '</div><div><p class="sub">Ánimo</p>' + esc5('animo', dd.animo) + '</div></div></div>';
+    const esc5 = (k, v, L) => '<div class="esc5" data-k="' + k + '">' + [1, 2, 3, 4, 5].map((n) => '<button type="button" class="' + (v === n ? 'on' : '') + '" data-v="' + n + '" aria-label="' + L[n][1] + '" title="' + L[n][1] + '"><span>' + L[n][0] + '</span><small>' + L[n][1] + '</small></button>').join('') + '</div>';
+    x += '<div class="card"><h2>¿Cómo vas hoy?</h2><div class="row2"><div><p class="sub">Energía</p>' + esc5('energia', dd.energia, CM.ENERGIA) + '</div><div><p class="sub">Ánimo</p>' + esc5('animo', dd.animo, CM.ANIMO) + '</div></div></div>';
     if (ins.length) x += '<div class="card"><h2>Lo que he notado</h2>' + ins.map(CM.tarjetaInsight).join('') + '<button class="small ghost" data-ir="panel" type="button">Ver análisis completo</button></div>';
     el.innerHTML = x;
     CM.alSelectorEspacio(el);
@@ -101,13 +101,16 @@
         if (b.dataset.t) { ui.tipo = b.dataset.t; CM.pintar(); return; }
         if (b.dataset.ir) { CM.ir(b.dataset.ir); return; }
         if (b.dataset.v) {
-          const k = b.parentNode.dataset.k, v = Number(b.dataset.v), d0 = diarioHoy();
-          if (d0) await CM.datos(d0.id, { [k]: v }); else await CM.add('diario', { titulo: 'Diario', fecha: hoy(), datos: { [k]: v } });
+          const k = b.parentNode.dataset.k, v = Number(b.dataset.v);
+          b.parentNode.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+          ui.dq = (ui.dq || Promise.resolve()).then(async () => { const d0 = diarioHoy(); if (d0) await CM.datos(d0.id, { [k]: v }); else await CM.add('diario', { titulo: 'Diario', fecha: hoy(), datos: { [k]: v } }); CM.aplicarTema(); }).catch((er) => toast(er.message));
           return;
         }
         const id = b.dataset.id, it = id && CM.get(id);
         switch (b.dataset.act) {
           case 'aterrizar': CM.aterrizar(); break;
+          case 'tour': CM.tour(); break;
+          case 'guiaX': await CM.guardarPrefs({ guia: 'ok' }); CM.pintar(); break;
           case 'ficha': CM.ficha(id); break;
           case 'tarea': {
             const hecho = it.estado === 'hecho';

@@ -44,7 +44,7 @@
   CM.por = (tipo) => CM.items.filter((i) => i.tipo === tipo);
   CM.hijos = (id, tipo) => CM.items.filter((i) => i.padre === id && (!tipo || i.tipo === tipo));
   CM.espacio = (id) => CM.espacios.find((e) => e.id === id);
-  CM.enEsp = (i) => CM.ui.esp === 'todo' || i.espacio_id === CM.ui.esp;
+  CM.enEsp = (i) => { const f = CM.ui.esp; if (f === 'todo') return true; if (f.indexOf('modo:') === 0) { const e = CM.espacio(i.espacio_id); return !!e && e.modo === f.slice(5); } return i.espacio_id === f; };
   CM.diaDe = (t) => t ? iso(new Date(t)) : '';
   CM.ultimosDias = (n) => { const r = []; for (let k = n - 1; k >= 0; k--) r.push(sumarDias(hoy(), -k)); return r; };
   // Día en que se cumplió algo (los días de hábito usan su propia fecha).
@@ -63,7 +63,7 @@
   CM.emit = () => { cancelAnimationFrame(CM._raf); CM._raf = requestAnimationFrame(() => { if (CM.pintar) CM.pintar(); }); };
   CM.add = async (tipo, o) => {
     const row = Object.assign({ tipo, titulo: '', estado: DEF[tipo] || 'abierto' }, o || {});
-    if (row.espacio_id === undefined && CM.ui.esp !== 'todo') row.espacio_id = CM.ui.esp;
+    if (row.espacio_id === undefined && CM.ui.esp !== 'todo') { if (CM.ui.esp.indexOf('modo:') === 0) { const e = CM.espacios.find((x) => !x.archivado && x.modo === CM.ui.esp.slice(5)); if (e) row.espacio_id = e.id; } else row.espacio_id = CM.ui.esp; }
     const { data, error } = await sb.from('items').insert(row).select().single();
     if (error) throw new Error(A.friendly(error));
     CM.items.push(data); CM.emit(); return data;
@@ -348,8 +348,9 @@
   CM.selectorEspacio = () => {
     const l = esps();
     if (l.length < 2) return '';
-    return '<div class="seg" id="segEsp"><button type="button" data-e="todo" class="' + (CM.ui.esp === 'todo' ? 'on' : '') + '">Todo</button>' +
-      l.map((e) => '<button type="button" data-e="' + e.id + '" class="' + (CM.ui.esp === e.id ? 'on' : '') + '"><i style="background:' + esc(e.color) + '"></i>' + esc(e.nombre) + '</button>').join('') + '</div>';
+    const m = (v, t) => '<button type="button" data-e="' + v + '" class="' + (CM.ui.esp === v ? 'on' : '') + '">' + t + '</button>';
+    return '<div class="seg" id="segEsp">' + m('todo', 'Todo') + (l.some((e) => e.modo === 'trabajo') ? m('modo:trabajo', CM.ico('maletin', 13) + ' Trabajo') : '') + (l.some((e) => e.modo === 'personal') ? m('modo:personal', CM.ico('casa', 13) + ' Personal') : '') +
+      (l.length > 2 ? l.map((e) => '<button type="button" data-e="' + e.id + '" class="' + (CM.ui.esp === e.id ? 'on' : '') + '"><i style="background:' + esc(e.color) + '"></i>' + esc(e.nombre) + '</button>').join('') : '') + '</div>';
   };
   CM.alSelectorEspacio = (el) => {
     const s = el.querySelector('#segEsp'); if (!s) return;

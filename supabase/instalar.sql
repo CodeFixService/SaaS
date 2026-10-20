@@ -442,7 +442,7 @@ begin
   if p_prefs is not null then
     if jsonb_typeof(p_prefs) <> 'object' or length(p_prefs::text) > 1500 then raise exception 'Datos no válidos'; end if;
     select coalesce(jsonb_object_agg(k, v), '{}') into f from jsonb_each(p_prefs) as t(k, v)
-    where k in ('tz', 'limite_descanso_min', 'limite_app_min', 'pausa_cada', 'resumen_manana', 'cierre_noche', 'avisos_horario');
+    where k in ('tz', 'limite_descanso_min', 'limite_app_min', 'pausa_cada', 'resumen_manana', 'cierre_noche', 'avisos_horario', 'color', 'tema', 'avatar', 'guia', 'wip');
   end if;
   update public.perfiles set nombre = left(trim(coalesce(p_nombre, nombre)), 80), telefono = left(trim(coalesce(p_telefono, telefono)), 30),
     prefs = case when f is null then prefs else prefs || f end

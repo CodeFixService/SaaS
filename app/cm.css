@@ -28,6 +28,19 @@ header.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg
 .gf{width:100%;height:auto;color:var(--text)}.hb{display:grid;grid-template-columns:90px 1fr 34px;gap:8px;align-items:center;font-size:13px;margin:6px 0}.hb>div{height:10px;background:var(--field);border-radius:99px}.hb i{display:block;height:100%;border-radius:99px}.hb b{text-align:right}
 .ins{border-left:4px solid var(--brand);background:var(--card);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:8px}.ins.ojo{border-color:var(--warn)}.ins.bien{border-color:var(--ok)}.ins p{margin:4px 0 6px;font-size:14px;color:var(--muted)}
 .esc5{display:flex;gap:10px;align-items:center}.esc5 b{font-size:24px;font-variant-numeric:tabular-nums}.esc5 input{flex:1}
+.row2 .esc5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.row2 .esc5 button{background:var(--field);color:var(--text);border:2px solid transparent;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;min-height:0;box-shadow:none;transition:transform .15s,border-color .15s}.row2 .esc5 button span{font-size:24px;line-height:1}.row2 .esc5 button small{font-size:10px;color:var(--muted)}.row2 .esc5 button.on{border-color:var(--brand);background:var(--brand-soft);transform:scale(1.08)}.row2{display:grid;gap:14px}
 .dos{display:grid;grid-template-columns:1fr 1fr;gap:10px}.peligro{border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
 .empty{color:var(--muted);text-align:center;padding:14px 4px;font-size:14px}
 .hero-c{background:linear-gradient(135deg,var(--brand),color-mix(in srgb,var(--brand) 45%,#000));color:#fff;border-radius:var(--r);padding:18px;margin-bottom:14px}.hero-c h2{margin:0 0 4px;color:#fff}.hero-c p{margin:0 0 12px;opacity:.9}.hero-c button{background:#fff;color:#1b2b7a}
+
+.frase{display:flex;gap:10px;align-items:center;background:var(--brand-soft);border:1px solid var(--brand-line);border-radius:var(--r);padding:12px 14px;margin-bottom:14px}.frase p{margin:0;font-weight:600;font-size:15px}
+.guia .paso{display:block;width:100%;text-align:left;background:none;color:var(--text);border:0;box-shadow:none;padding:8px 0;min-height:0;font-weight:500}.guia .paso.ok{color:var(--muted);text-decoration:line-through}
+.icon-btn.av{font-size:22px;position:relative}.icon-btn.av small{position:absolute;right:-5px;bottom:-5px;font-size:13px}
+.pal{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}.pal button{width:34px;height:34px;border-radius:50%;border:3px solid transparent;padding:0;min-height:0;box-shadow:none}.pal button.on{border-color:var(--text)}
+.avs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.avs button{width:42px;height:42px;border-radius:12px;font-size:22px;background:var(--field);border:2px solid transparent;padding:0;min-height:0;box-shadow:none}.avs button.on{border-color:var(--brand);background:var(--brand-soft)}
+.view.on{animation:ent .28s ease}@keyframes ent{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card,.tk,.ins{animation:ent .25s ease both}button:active{transform:scale(.97)}.barra i{transition:width .6s ease}
+.chk{transition:transform .15s,background .15s}.chk.on{animation:pop .3s ease}@keyframes pop{50%{transform:scale(1.25)}}
+.pill svg{animation:llama 1.6s ease-in-out infinite}@keyframes llama{50%{transform:scale(1.15)}}
+.conf{position:fixed;z-index:99;pointer-events:none}.conf i{position:absolute;width:7px;height:7px;border-radius:2px;animation:vuela .8s ease-out forwards}@keyframes vuela{to{transform:translate(var(--dx),var(--dy)) rotate(260deg);opacity:0}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

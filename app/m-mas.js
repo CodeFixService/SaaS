@@ -52,6 +52,11 @@
     x += '<div class="card"><h3>' + esc(c.nombre || c.email) + '</h3><p class="sub">' + esc(c.email) + ' · ' + (c.rol === 'admin' ? 'Administrador' : c.rol === 'socio' ? 'Socio' : c.premium ? 'Plan Pro' + (hasta ? ' hasta ' + hasta : '') : 'Plan gratis') + '</p>' +
       (c.rol === 'usuario' && !c.premium ? (pago && pago.estado === 'pendiente' ? '<p class="pill warn">Pago en revisión</p>' : '<button type="button" data-act="pro">' + CM.ico('estrella', 16) + ' Pasar a Pro</button>') : '') +
       (c.rol !== 'usuario' ? '<a class="btn" href="../admin/">Panel de administración</a>' : '') + '</div>';
+    const pf = c.prefs || {};
+    x += '<div class="card"><h3>Mi estilo</h3><label>Nombre<input id="sN" maxlength="60" value="' + esc(c.nombre || '') + '"></label><p class="sub">Color</p><div class="pal">' + CM.COLORES.map((k) => '<button type="button" data-act="col" data-c="' + k + '" class="' + ((pf.color || CM.COLORES[0]) === k ? 'on' : '') + '" style="background:' + k + '" aria-label="' + k + '"></button>').join('') + '</div>' +
+      '<p class="sub">Ícono</p><div class="avs">' + CM.AVATARES.map((a) => '<button type="button" data-act="av" data-a="' + a + '" class="' + ((pf.avatar || '🙂') === a ? 'on' : '') + '">' + a + '</button>').join('') + '</div>' +
+      '<p class="sub">Tema</p><div class="chips">' + [['auto', 'Automático'], ['oscuro', 'Oscuro'], ['claro', 'Claro']].map((t) => '<button type="button" class="chip' + ((pf.tema || 'auto') === t[0] ? ' on' : '') + '" data-act="tema" data-t="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>' +
+      '<button type="button" class="small ghost" data-act="nom">Guardar nombre</button> <button type="button" class="small ghost" data-act="tour">Ver guía</button></div>';
     x += '<div class="card"><h3>Espacios</h3>' + CM.espacios.filter((e) => !e.archivado).map((e) => '<div class="fila"><i class="dot" style="background:' + esc(e.color) + '"></i><span>' + esc(e.nombre) + ' <span class="sub">' + (e.modo === 'trabajo' ? 'trabajo ' + esc((e.horario || {}).desde || '') + '–' + esc((e.horario || {}).hasta || '') : 'personal') + '</span></span><button type="button" class="x" data-act="esp" data-id="' + e.id + '" aria-label="Editar">' + CM.ico('lapiz', 16) + '</button></div>').join('') +
       '<button type="button" class="small ghost" data-act="nesp">+ Espacio</button></div>';
     x += '<div class="card"><h3>Descanso</h3><label>Aviso si usas la app fuera de horario más de (min/día)<input id="p1" type="number" min="10" max="600" value="' + ok(p.limite_descanso_min, 60) + '"></label><label>Recordarme pausar cada (min)<input id="p2" type="number" min="0" max="180" value="' + ok(p.pausa_cada, 50) + '"></label>' +
@@ -65,7 +70,12 @@
     el.onclick = async (e) => {
       const b = e.target.closest('[data-act]'); if (!b) return; const a = b.dataset.act;
       try {
-        if (a === 'pro') pagar();
+        if (a === 'col') { await CM.guardarPrefs({ color: b.dataset.c }); render(el); }
+        else if (a === 'av') { await CM.guardarPrefs({ avatar: b.dataset.a }); render(el); }
+        else if (a === 'tema') { await CM.guardarPrefs({ tema: b.dataset.t }); render(el); }
+        else if (a === 'nom') { c.nombre = el.querySelector('#sN').value.trim() || c.nombre; await rpc('mi_perfil_guardar', { p_nombre: c.nombre, p_telefono: c.telefono }); toast('Guardado'); }
+        else if (a === 'tour') CM.tour();
+        else if (a === 'pro') pagar();
         else if (a === 'esp') espacioForm(CM.espacio(b.dataset.id));
         else if (a === 'nesp') espacioForm();
         else if (a === 'prefs') { await rpc('mi_perfil_guardar', { p_nombre: c.nombre, p_telefono: c.telefono, p_prefs: { limite_descanso_min: +el.querySelector('#p1').value || 60, pausa_cada: +el.querySelector('#p2').value || 0, cierre_noche: el.querySelector('#p3').checked } }); c.prefs = Object.assign({}, p, { limite_descanso_min: +el.querySelector('#p1').value || 60, pausa_cada: +el.querySelector('#p2').value || 0, cierre_noche: el.querySelector('#p3').checked }); toast('Guardado'); }

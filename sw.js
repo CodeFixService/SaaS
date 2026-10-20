@@ -4,7 +4,7 @@
 const CACHE = 'cm-v3.0';
 const BASE = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
   'shared/app.css', 'shared/app.js', 'shared/config.js', 'shared/vendor/supabase.js',
-  'app/', 'app/cm.css', 'app/cm.js', 'app/m-hoy.js', 'app/m-insights.js', 'admin/', 'admin/admin.js'];
+  'app/', 'app/cm.css', 'app/cm.js', 'app/estilo.js', 'app/m-hoy.js', 'app/m-insights.js', 'admin/', 'admin/admin.js'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(BASE.map((u) => new Request(u, { cache: 'reload' })))).catch(() => {}).then(() => self.skipWaiting()));

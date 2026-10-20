@@ -48,6 +48,12 @@
       diarios.forEach((e) => { const n = CM.completados(e.fecha, e.fecha).length; if (e.datos.energia >= 4) alta.push(n); else if (e.datos.energia <= 2) baja.push(n); });
       if (alta.length >= 2 && baja.length >= 2 && prom(alta) > prom(baja) + 0.8) L.push({ n: 'info', p: 46, t: 'Tu energía manda', x: 'Los días con energía alta cumples ' + prom(alta).toFixed(1).replace('.', ',') + ' cosas; con energía baja, ' + prom(baja).toFixed(1).replace('.', ',') + '. Cuida el sueño y planifica menos en días bajos.' });
     }
+    const an = I.filter((e) => e.tipo === 'diario' && e.datos && e.datos.animo);
+    if (an.length >= 6) {
+      const bj = an.filter((e) => e.datos.animo <= 2).length / an.length;
+      if (bj >= 0.5) L.push({ n: 'ojo', p: 77, t: 'Ánimo bajo seguido', x: 'Más de la mitad de tus registros recientes son de ánimo bajo. Baja la carga, duerme y habla con alguien de confianza.' });
+      else if (an.slice(-5).every((e) => e.datos.animo >= 4)) L.push({ n: 'bien', p: 44, t: 'Buen ánimo sostenido', x: 'Tus últimos registros son de ánimo alto. Anota qué estás haciendo distinto y repítelo.', ir: 'cerebro' });
+    }
     const lim = Number((CM.cuenta.prefs || {}).limite_descanso_min) || 60, u7 = CM.uso.filter((u) => u.dia >= sumarDias(h, -6));
     if (u7.length >= 3 && prom(u7.map((u) => u.descanso_min)) > lim) L.push({ n: 'ojo', p: 78, t: 'Mucha pantalla fuera de horario', x: 'En promedio usas la app ' + Math.round(prom(u7.map((u) => u.descanso_min))) + ' min al día fuera de tu horario de trabajo. Cierra el día y desconecta.', ir: 'mas' });
     const venc = I.filter((i) => i.tipo === 'tarea' && i.estado !== 'hecho' && i.fecha && i.fecha < h);

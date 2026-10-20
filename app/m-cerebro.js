@@ -6,7 +6,7 @@
   const SUBS = [['ideas', 'Ideas'], ['problemas', 'Problemas'], ['notas', 'Notas'], ['diario', 'Diario'], ['logros', 'Logros']];
   const ord = (a, b) => b.created_at.localeCompare(a.created_at);
   const busca = (i) => !ui.q || (i.titulo + ' ' + (i.cuerpo || '')).toLowerCase().includes(ui.q);
-  const fila = (i, extra) => '<div class="card fila2"><button type="button" class="tit" data-act="ficha" data-id="' + i.id + '">' + esc(i.titulo || '(sin título)') + '</button>' + (extra || '') + '<p class="sub">' + A.fCorta(CM.diaDe(i.created_at)) + (i.cuerpo ? ' · ' + esc(i.cuerpo.slice(0, 90)) : '') + '</p></div>';
+  const fila = (i, extra) => '<div class="card fila2"><button type="button" class="tit" data-act="ficha" data-id="' + i.id + '">' + esc(i.titulo || '(sin título)') + '</button>' + (extra || '') + '<p class="sub">' + (CM.espacio(i.espacio_id) ? '<i class="dot" style="background:' + esc(CM.espacio(i.espacio_id).color) + '"></i> ' + esc(CM.espacio(i.espacio_id).nombre) + ' · ' : '') + A.fCorta(CM.diaDe(i.created_at)) + (i.cuerpo ? ' · ' + esc(i.cuerpo.slice(0, 90)) : '') + '</p></div>';
 
   function lluvia() {
     const d = modal('<h2>Lluvia de ideas</h2><p class="muted">5 minutos, sin juzgar. Escribe una idea por línea (Enter para agregar). Después las puntúas.</p><div class="esc5"><b id="t5">5:00</b><input id="li" maxlength="150" placeholder="Escribe y Enter" autocomplete="off"></div><ol id="ll" class="sub"></ol><div class="btns"><button class="ghost" data-cerrar type="button">Cerrar</button></div>');
