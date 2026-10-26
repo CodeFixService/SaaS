@@ -20,7 +20,7 @@
       d.querySelector('#mo').focus();
     });
   }
-  const show = App.pestanas((v) => ({ resumen, usuarios, pagos, planes, ajustes, registro, versiones }[v] || (() => {}))());
+  const show = App.pestanas((v) => ({ resumen, usuarios, pagos, planes, ajustes, registro, versiones, apps: () => window.MisApps.render(el('apps')) }[v] || (() => {}))());
   App.campana($('bCampana'));
 
   async function resumen() {

@@ -13,11 +13,11 @@
 <body class="con-tabs">
 <header class="top"><h1 id="tit">Administración</h1><a class="icon-btn" href="../app/" aria-label="Mi app">⌂</a><button class="icon-btn" id="bCampana" aria-label="Avisos"></button></header>
 <main>
-  <section class="view on" id="v-resumen"></section><section class="view" id="v-usuarios"></section><section class="view" id="v-pagos"></section>
+  <section class="view on" id="v-resumen"></section><section class="view" id="v-apps"></section><section class="view" id="v-usuarios"></section><section class="view" id="v-pagos"></section>
   <section class="view" id="v-planes"></section><section class="view" id="v-ajustes"></section><section class="view" id="v-registro"></section><section class="view" id="v-versiones" data-tab="ajustes"></section>
 </main>
 <nav class="tabs">
-  <button data-v="resumen" class="on"><span class="i">📊</span>Resumen</button><button data-v="usuarios"><span class="i">👥</span>Usuarios</button>
+  <button data-v="resumen" class="on"><span class="i">📊</span>Resumen</button><button data-v="apps"><span class="i">🛰️</span>Apps</button><button data-v="usuarios"><span class="i">👥</span>Usuarios</button>
   <button data-v="pagos"><span class="i">💳</span>Pagos</button><button data-v="planes"><span class="i">⭐</span>Planes</button>
   <button data-v="ajustes"><span class="i">⚙️</span>Ajustes</button><button data-v="registro"><span class="i">📜</span>Registro</button>
 </nav>
@@ -25,6 +25,7 @@
 <script src="../shared/config.js"></script>
 <script src="../shared/vendor/supabase.js"></script>
 <script src="../shared/app.js"></script>
+<script src="apps.js"></script>
 <script src="admin.js"></script>
 </body>
 </html>

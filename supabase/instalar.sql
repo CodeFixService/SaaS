@@ -1,5 +1,5 @@
 -- =====================================================================
---  Centro de Mando · Base de datos v3.3 (Supabase)
+--  Centro de Mando · Base de datos v3.4 (Supabase)
 --  Supabase → SQL Editor → New query → pega TODO este archivo → Run.
 --  Se puede volver a ejecutar sin perder datos.
 --  ATENCIÓN: la primera vez BORRA lo del sistema anterior (negocios,
@@ -136,7 +136,7 @@ end $$;
 create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '3.3'::text $$;
+language sql immutable as $$ select '3.4'::text $$;
 create or replace function public.cfg_int(c text) returns int
 language sql stable security definer set search_path = '' as $$
   select (valor #>> '{}')::int from public.config where clave = c
@@ -154,14 +154,16 @@ alter table public.textos enable row level security;
 alter table public.secretos enable row level security;
 alter table public.planes enable row level security;
 
-delete from public.config where clave not in ('vapid_publica', 'soporte_whatsapp', 'dias_aviso_vencimiento', 'dias_comprobantes');
+-- Solo se borran ajustes del sistema anterior; los tuyos (precios, link, días, versión liberada) se conservan al actualizar.
+delete from public.config where clave not in ('vapid_publica', 'soporte_whatsapp', 'dias_aviso_vencimiento', 'dias_comprobantes', 'dias_prueba',
+  'pro_link', 'pro_precio_mensual', 'pro_precio_anual', 'limite_db_mb', 'auditoria_max', 'version_liberada', 'version_min');
 insert into public.config (clave, valor) values
   ('dias_prueba', '7'), ('dias_aviso_vencimiento', '3'), ('dias_comprobantes', '30'), ('soporte_whatsapp', '""'),
   ('vapid_publica', '""'), ('pro_link', '""'), ('pro_precio_mensual', '4900'), ('pro_precio_anual', '49000'),
   ('limite_db_mb', '500'), ('auditoria_max', '2000'), ('version_liberada', '"3.0"')
 on conflict (clave) do nothing;
 
-delete from public.textos where clave not in ('app_nombre', 'app_lema', 'terminos', 'pago_instrucciones');
+delete from public.textos where clave not in ('app_nombre', 'app_lema', 'terminos', 'pago_instrucciones', 'pro_titulo', 'pro_texto');
 insert into public.textos (clave, valor) values
   ('app_nombre', 'Centro de Mando'),
   ('app_lema', 'Saca todo de tu cabeza. Elige una cosa. Avanza.'),
@@ -981,5 +983,10 @@ begin
   end loop;
 end $$;
 grant execute on function public.config_publica() to anon;
+
+-- Al correr este SQL la versión queda liberada al tiro: todos ven "Actualizar" (al publicar una versión nueva, sube este número).
+insert into public.config (clave, valor) values ('version_liberada', '"3.4"') on conflict (clave) do update set valor = excluded.valor
+  where case when public.config.valor #>> '{}' ~ '^\d+(\.\d+)*$'
+    then string_to_array(public.config.valor #>> '{}', '.')::int[] < string_to_array('3.4', '.')::int[] else true end;
 
 select 'Centro de Mando instalado v' || public.db_version() as resultado;

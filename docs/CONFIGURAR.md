@@ -103,3 +103,13 @@ Apenas hay una versión nueva en GitHub, **Administración → Resumen** muestra
 4. **🚀 Liberar para todos** (solo el súper administrador). Se bloquea si los pasos 1 o 2 no están listos.
 A cada usuario le aparece "✨ Hay una versión nueva" con **Actualizar ahora**. Si un teléfono queda raro: **Más → Reparar la app** (no borra datos).
 La app también funciona sin internet con la última versión guardada.
+
+## 9. Mis aplicaciones (todas tus apps en un solo lugar)
+**Administración → 🛰️ Apps** muestra una tarjeta por app: Centro de Mando, Billetera (Libreta de Cobros), CodeFix Apps,
+Barbería, BiciTaller y Estaciona. Cada una trae su versión publicada y liberada, la versión de su base de datos, su
+rendimiento (ingresos, cuentas, Pro, nuevos y activos) y botones para **abrir la app**, **abrir su admin**, **copiar su SQL**
+de actualización, **abrir su SQL Editor** y **🚀 Liberar**. Con **🚀 Liberar todo lo que está listo** liberas todas de una.
+- La primera vez toca **🔌 Conectar** en cada tarjeta y entra con tu cuenta de administrador de esa app (queda guardada en ese teléfono).
+- La versión y la configuración pública se leen de GitHub (rama `main` de cada repositorio).
+- En Centro de Mando y la Billetera, **correr el SQL ya deja liberada la versión**: todos ven "Actualizar" al tiro.
+- BiciTaller se actualiza sola apenas se publica (no necesita liberar).
