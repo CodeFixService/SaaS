@@ -10,24 +10,37 @@
 
   // Cómo se lee y se libera la versión en cada app (cada una lo guarda a su manera).
   const APPS = [
-    { id: 'cm', nombre: 'Centro de Mando', ico: 'diana', repo: 'SaaS', propia: true, web: A.ROOT, admin: 'admin/',
+    { id: 'cm', nombre: 'Centro de Mando', ico: 'diana', repo: 'SaaS', propia: true, worker: 'saas', sub: 'mando', admin: 'admin/',
       bd: { rpc: 'db_version' }, leer: { propia: true },
       liberar: (c, v) => c.rpc('admin_config_guardar', { p_clave: 'version_liberada', p_valor: v, p_motivo: 'Liberar desde Mis aplicaciones' }) },
-    { id: 'billetera', nombre: 'Billetera · Libreta de Cobros', ico: 'billetera', repo: 'Emprendedor', cfg: 'js/config.js', web: 'https://codefixservice.github.io/Emprendedor/', admin: 'admin/',
+    { id: 'billetera', nombre: 'Billetera · Libreta de Cobros', ico: 'billetera', repo: 'Emprendedor', cfg: 'js/config.js', worker: 'emprendedor', sub: 'billetera', admin: 'admin/',
       bd: { rpc: 'config_publica', campo: 'version_bd' }, leer: { rpc: 'config_publica', campo: 'version_liberada' },
       liberar: (c, v) => c.rpc('admin_guardar_ajustes', { p: { version_liberada: v } }) },
-    { id: 'aplicaciones', nombre: 'CodeFix Apps · FichaPro y Caja', ico: 'bolsa', repo: 'Aplicaciones', cfg: 'shared/config.js', web: 'https://codefixservice.github.io/Aplicaciones/', admin: 'apps/admin/',
+    { id: 'aplicaciones', nombre: 'CodeFix Apps · FichaPro y Caja', ico: 'bolsa', repo: 'Aplicaciones', cfg: 'shared/config.js', worker: 'aplicaciones', sub: 'apps', admin: 'apps/admin/',
       bd: { rpc: 'db_version' }, leer: { rpc: 'public_settings', campo: 'version_liberada' },
       liberar: (c, v) => c.rpc('admin_set_setting', { p_key: 'version_liberada', p_value: v }) },
-    { id: 'barberia', nombre: 'Barbería', ico: 'tijeras', repo: 'Barberia', cfg: 'shared/config.js', web: 'https://barberia.juanjosuecastilloloyola.workers.dev/', admin: 'admin/',
+    { id: 'barberia', nombre: 'Barbería', ico: 'tijeras', repo: 'Barberia', cfg: 'shared/config.js', worker: 'barberia', sub: 'barberia', admin: 'admin/',
       bd: { rpc: 'db_version' }, leer: { rpc: 'ajustes_publicos', campo: 'version_liberada' },
       liberar: (c, v) => c.rpc('admin_ajuste', { p_key: 'version_liberada', p_value: v }) },
-    { id: 'bicitaller', nombre: 'BiciTaller', ico: 'bici', repo: 'Taller', cfg: 'shared/config.js', web: 'https://bicitaller.pages.dev/', admin: 'admin/',
+    { id: 'bicitaller', nombre: 'BiciTaller', ico: 'bici', repo: 'Taller', cfg: 'shared/config.js', worker: 'taller', sub: 'bicitaller', admin: 'admin/',
       bd: { rpc: 'db_version' }, leer: null, liberar: null }, // se actualiza sola apenas se publica
-    { id: 'estaciona', nombre: 'Estaciona · Estacionamientos', ico: 'auto', repo: 'Estacionamiento', cfg: 'js/config.js', web: 'https://codefixservice.github.io/Estacionamiento/', admin: '#/admin',
+    { id: 'estaciona', nombre: 'Estaciona · Estacionamientos', ico: 'auto', repo: 'Estacionamiento', cfg: 'js/config.js', worker: 'estacionamiento', sub: 'estaciona', admin: '#/admin',
       bd: { rpc: 'ajustes_publicos', campo: 'version_bd' }, leer: { rpc: 'ajustes_publicos', campo: 'textos.version_liberada' },
       liberar: (c, v) => c.rpc('admin_guardar_textos', { p: { version_liberada: v } }) }
   ];
+  // Links que se arman solos según dónde se abre el Centro de Mando:
+  //  · en Cloudflare Workers (saas.<cuenta>.workers.dev) → <worker>.<cuenta>.workers.dev
+  //  · en tu dominio (mando.codefix.app)                → <sub>.codefix.app   (billetera, apps, barberia, bicitaller, estaciona)
+  //  · en pruebas o GitHub Pages                         → los Workers de tu cuenta de Cloudflare
+  const CUENTA_WORKERS = 'juanjosuecastilloloyola.workers.dev';
+  function webDe(a) {
+    const h = location.hostname, partes = h.split('.');
+    if (/\.workers\.dev$/.test(h) && partes.length >= 4) return 'https://' + a.worker + '.' + partes.slice(1).join('.') + '/';
+    if (/^(localhost|127\.|\d+\.\d+\.\d+\.\d+$)|github\.io$|pages\.dev$/.test(h) || partes.length < 2) return 'https://' + a.worker + '.' + CUENTA_WORKERS + '/';
+    const base = partes.length >= 3 ? partes.slice(1).join('.') : h; // mando.codefix.app → codefix.app; codefix.app → codefix.app
+    return 'https://' + a.sub + '.' + base + '/';
+  }
+  APPS.forEach((a) => { a.web = webDe(a); });
   const E = {}; // estado de cada app
   let raiz = null;
 

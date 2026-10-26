@@ -112,3 +112,20 @@ de actualización, **abrir su SQL Editor** y **🚀 Liberar**. Con **🚀 Libera
 - La versión y la configuración pública se leen de GitHub (rama `main` de cada repositorio).
 - En Centro de Mando y la Billetera, **correr el SQL ya deja liberada la versión**: todos ven "Actualizar" al tiro.
 - BiciTaller se actualiza sola apenas se publica (no necesita liberar).
+
+## 10. Dominio propio (un dominio para todas las apps)
+Compra **un** dominio en Cloudflare (por ejemplo `codefix.app`) y en cada Worker: **Settings → Domains & Routes → Add → Custom domain**:
+
+| App | Worker | Dirección con tu dominio |
+|---|---|---|
+| Centro de Mando | saas | `mando.codefix.app` |
+| Billetera | emprendedor | `billetera.codefix.app` |
+| CodeFix Apps | aplicaciones | `apps.codefix.app` |
+| Barbería | barberia | `barberia.codefix.app` |
+| BiciTaller | taller | `bicitaller.codefix.app` |
+| Estaciona | estacionamiento | `estaciona.codefix.app` |
+
+Los links de **Administración → Apps** se arman solos según dónde abras el Centro de Mando: desde
+`saas.<tu-cuenta>.workers.dev` apuntan a los Workers; desde `mando.codefix.app` apuntan a `billetera.codefix.app`, etc.
+No hay que cambiar código. Lo único: en el Supabase de cada app, **Authentication → URL Configuration**, agrega la
+dirección nueva en *Site URL* y *Redirect URLs* (para "olvidé mi contraseña").
