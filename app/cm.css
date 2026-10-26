@@ -47,3 +47,11 @@ header.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg
 
 .auto{display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center;margin:6px 0}.auto span{font-size:34px;display:block}.auto small{color:var(--muted);font-size:12px}
 .avatar{position:relative;font-size:34px;width:52px;height:52px;border-radius:16px;background:var(--brand-soft);display:grid;place-items:center}.avatar small{position:absolute;right:-6px;bottom:-6px;font-size:16px}
+
+/* Asistente de actualización (admin) */
+.aviso-ver{display:block;width:100%;text-align:left;background:var(--brand-soft);border:1px solid var(--brand-line);color:var(--text);border-radius:var(--r);padding:12px 14px;margin:0 0 14px;font-weight:700;box-shadow:none;min-height:0;line-height:1.4}
+.paso-act{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-top:1px solid var(--line)}.paso-act:first-of-type{border-top:0}
+.paso-act>b{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--field);color:var(--muted);font-size:14px}
+.paso-act.pend>b{background:var(--warn);color:#fff}.paso-act.ok>b{background:var(--ok);color:#fff}
+.paso-act h3{margin:4px 0 4px;font-size:15px}.paso-act p{margin:4px 0 8px}.paso-act .grow{flex:1;min-width:0}
+.stats b.ok{color:var(--ok)}.stats b.warn{color:var(--warn)}.stats b.bad{color:var(--bad)}

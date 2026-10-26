@@ -92,3 +92,14 @@ El negocio, al entrar, ve una lista de lo que le falta: logo y colores, servicio
 - La versión de la app está en `version.json` y `shared/config.js` (se ve al pie de cada pantalla).
 - Cuando se publica una versión nueva, a cada persona le aparece una ventana **"🔄 Hay una versión nueva → Actualizar ahora"**.
 - Si la versión trae cambios en la base de datos, el **Resumen** del admin lo avisa: corre el `instalar-corto.sql` nuevo.
+
+## 8. Actualizar a una versión nueva (cada vez que se publique una)
+La app **no se actualiza sola**: cada teléfono sigue con su versión guardada hasta que tú la liberas.
+Apenas hay una versión nueva en GitHub, **Administración → Resumen** muestra "🚀 Hay una versión nueva lista"
+(también en **Ajustes → 🔄 Actualizar la app**). Sigue los 4 pasos; cada uno queda con ✓ verde cuando está listo:
+1. **Base de datos** → **📋 Copiar consulta** → **↗ Abrir SQL Editor** → pega → **Run**. Debe decir `Centro de Mando instalado vX`. No borra datos.
+2. **Función "servidor"** (solo si cambió) → **📋 Copiar código** → **↗ Abrir Edge Functions** → `servidor` → pega → **Deploy** → **🩺 Probar de nuevo**.
+3. **Prueba en tu teléfono** → **⬇️ Actualizar mi teléfono**. Solo el tuyo cambia.
+4. **🚀 Liberar para todos** (solo el súper administrador). Se bloquea si los pasos 1 o 2 no están listos.
+A cada usuario le aparece "✨ Hay una versión nueva" con **Actualizar ahora**. Si un teléfono queda raro: **Más → Reparar la app** (no borra datos).
+La app también funciona sin internet con la última versión guardada.

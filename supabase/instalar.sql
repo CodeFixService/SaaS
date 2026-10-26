@@ -1,5 +1,5 @@
 -- =====================================================================
---  Centro de Mando · Base de datos v3.0 (Supabase)
+--  Centro de Mando · Base de datos v3.3 (Supabase)
 --  Supabase → SQL Editor → New query → pega TODO este archivo → Run.
 --  Se puede volver a ejecutar sin perder datos.
 --  ATENCIÓN: la primera vez BORRA lo del sistema anterior (negocios,
@@ -7,6 +7,106 @@
 --  usuario y los ajustes de plan se conservan.
 -- =====================================================================
 set check_function_bodies = off;
+create extension if not exists pgcrypto with schema extensions;
+
+-- ---------------------------------------------------------------------
+-- A0. Tablas y funciones base (para instalar desde cero en un Supabase nuevo).
+--     Si ya existen (actualización), no se tocan.
+-- ---------------------------------------------------------------------
+create table if not exists public.perfiles (
+  id                 uuid primary key references auth.users (id) on delete cascade,
+  email              text not null,
+  nombre             text not null default '' check (length(nombre) <= 80),
+  telefono           text not null default '' check (length(telefono) <= 30),
+  rol                text not null default 'usuario',
+  premium_hasta      timestamptz,
+  aviso_venc_para    timestamptz,
+  aviso_vencido_para timestamptz,
+  suspendido         boolean not null default false,
+  visto_at           timestamptz,
+  created_by         uuid,
+  created_at         timestamptz not null default now()
+);
+alter table public.perfiles enable row level security;
+create table if not exists public.invitaciones (
+  email      text primary key,
+  rol        text not null,
+  nombre     text not null default '',
+  telefono   text not null default '',
+  created_by uuid,
+  created_at timestamptz not null default now()
+);
+alter table public.invitaciones enable row level security;
+create table if not exists public.notificaciones (
+  id           uuid primary key default gen_random_uuid(),
+  para         uuid not null references public.perfiles (id) on delete cascade,
+  titulo       text not null,
+  cuerpo       text not null default '',
+  url          text not null default '',
+  leida        boolean not null default false,
+  push_enviado boolean not null default false,
+  created_at   timestamptz not null default now()
+);
+create index if not exists notif_para_idx on public.notificaciones (para, created_at desc);
+create index if not exists notif_push_idx on public.notificaciones (push_enviado, created_at) where not push_enviado;
+alter table public.notificaciones enable row level security;
+create table if not exists public.push_subs (
+  endpoint   text primary key,
+  perfil_id  uuid not null references public.perfiles (id) on delete cascade,
+  p256dh     text not null,
+  auth       text not null,
+  created_at timestamptz not null default now()
+);
+alter table public.push_subs enable row level security;
+create table if not exists public.auditoria (
+  id         bigserial primary key,
+  quien      uuid,
+  accion     text not null,
+  detalle    text not null default '',
+  created_at timestamptz not null default now()
+);
+alter table public.auditoria enable row level security;
+create or replace function public.avisar(p_para uuid, p_titulo text, p_cuerpo text, p_url text) returns void
+language sql security definer set search_path = '' as $$
+  insert into public.notificaciones (para, titulo, cuerpo, url)
+  select p_para, left(p_titulo, 90), left(coalesce(p_cuerpo, ''), 240), coalesce(p_url, '')
+  where p_para is not null
+$$;
+create or replace function public.push_guardar(p_endpoint text, p_p256dh text, p_auth text) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then raise exception 'Inicia sesión'; end if;
+  if p_endpoint !~ '^https://' then raise exception 'Suscripción no válida'; end if;
+  insert into public.push_subs (endpoint, perfil_id, p256dh, auth) values (p_endpoint, auth.uid(), p_p256dh, p_auth)
+  on conflict (endpoint) do update set perfil_id = excluded.perfil_id, p256dh = excluded.p256dh, auth = excluded.auth;
+end $$;
+create or replace function public.push_quitar(p_endpoint text) returns void
+language sql security definer set search_path = '' as $$
+  delete from public.push_subs where endpoint = p_endpoint and perfil_id = auth.uid()
+$$;
+create or replace function public.push_pendientes() returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare ids uuid[]; out jsonb;
+begin
+  select array_agg(id) into ids from (
+    select id from public.notificaciones where not push_enviado and created_at > now() - interval '1 day'
+    order by created_at limit 300 for update skip locked) x;
+  if ids is null then return jsonb_build_object('claves', null, 'envios', '[]'::jsonb); end if;
+  update public.notificaciones set push_enviado = true where id = any (ids);
+  select coalesce(jsonb_agg(jsonb_build_object('endpoint', s.endpoint, 'p256dh', s.p256dh, 'auth', s.auth,
+           'titulo', n.titulo, 'cuerpo', n.cuerpo, 'url', n.url, 'id', n.id)), '[]')
+    into out from public.notificaciones n join public.push_subs s on s.perfil_id = n.para where n.id = any (ids);
+  return jsonb_build_object('envios', out, 'claves', jsonb_build_object(
+    'publica', (select valor #>> '{}' from public.config where clave = 'vapid_publica'),
+    'privada', (select valor from public.secretos where clave = 'vapid_privada')));
+end $$;
+create or replace function public.push_borrar_endpoint(p_endpoint text) returns void
+language sql security definer set search_path = '' as $$ delete from public.push_subs where endpoint = p_endpoint $$;
+create or replace function public.registrar_visto() returns void
+language sql security definer set search_path = '' as $$
+  update public.perfiles set visto_at = now()
+  where id = auth.uid() and (visto_at is null or visto_at < now() - interval '5 minutes')
+$$;
 
 -- ---------------------------------------------------------------------
 -- A. Limpieza del sistema anterior
@@ -36,7 +136,7 @@ end $$;
 create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '3.0'::text $$;
+language sql immutable as $$ select '3.3'::text $$;
 create or replace function public.cfg_int(c text) returns int
 language sql stable security definer set search_path = '' as $$
   select (valor #>> '{}')::int from public.config where clave = c
@@ -58,7 +158,7 @@ delete from public.config where clave not in ('vapid_publica', 'soporte_whatsapp
 insert into public.config (clave, valor) values
   ('dias_prueba', '7'), ('dias_aviso_vencimiento', '3'), ('dias_comprobantes', '30'), ('soporte_whatsapp', '""'),
   ('vapid_publica', '""'), ('pro_link', '""'), ('pro_precio_mensual', '4900'), ('pro_precio_anual', '49000'),
-  ('limite_db_mb', '500'), ('auditoria_max', '2000')
+  ('limite_db_mb', '500'), ('auditoria_max', '2000'), ('version_liberada', '"3.0"')
 on conflict (clave) do nothing;
 
 delete from public.textos where clave not in ('app_nombre', 'app_lema', 'terminos', 'pago_instrucciones');
@@ -679,8 +779,14 @@ language plpgsql security definer set search_path = '' as $$
 begin
   perform public.edit_check(p_motivo);
   if p_clave not in ('dias_prueba', 'dias_aviso_vencimiento', 'dias_comprobantes', 'soporte_whatsapp', 'pro_link',
-                     'pro_precio_mensual', 'pro_precio_anual', 'limite_db_mb', 'auditoria_max') then
+                     'pro_precio_mensual', 'pro_precio_anual', 'limite_db_mb', 'auditoria_max', 'version_liberada', 'version_min') then
     raise exception 'Ajuste no válido';
+  end if;
+  -- Liberar versiones (o exigir una mínima) solo lo hace el súper administrador, con formato 3.3 o 3.3.1.
+  if p_clave in ('version_liberada', 'version_min') then
+    perform public.super_check();
+    if jsonb_typeof(p_valor) not in ('string', 'number') or (p_valor #>> '{}') !~ '^\d{1,3}(\.\d{1,3}){1,2}$' then raise exception 'Versión inválida (usa 3.3 o 3.3.1)'; end if;
+    p_valor := to_jsonb(p_valor #>> '{}');
   end if;
   insert into public.config (clave, valor) values (p_clave, p_valor) on conflict (clave) do update set valor = excluded.valor;
   perform public.auditar('ajuste', p_clave || ' = ' || p_valor::text, p_motivo);
@@ -875,3 +981,5 @@ begin
   end loop;
 end $$;
 grant execute on function public.config_publica() to anon;
+
+select 'Centro de Mando instalado v' || public.db_version() as resultado;

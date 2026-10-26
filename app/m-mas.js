@@ -67,7 +67,7 @@
     if (A.pushSoportado()) x += '<div class="card"><h3>Notificaciones</h3><button type="button" data-act="push">Activar en este dispositivo</button></div>';
     if (uso) x += '<div class="card"><h3>Espacio usado</h3><div class="barra"><i style="width:' + pc + '%"></i></div><p class="sub">' + uso.items + ' de ' + lim + ' registros · ' + mb(uso.bytes) + '</p>' +
       '<button type="button" class="small ghost" data-act="bajar">' + CM.ico('bajar', 15) + ' Descargar mis datos</button> <button type="button" class="small ghost" data-act="depurar">Limpiar antiguos</button><p class="sub">Descarga primero; limpiar borra hábitos y tareas hechas con más de 90 días.</p></div>';
-    x += '<div class="card">' + (A.pedirInstalar ? '<button type="button" class="ghost" data-act="inst">Instalar en el teléfono</button> ' : '') + '<button type="button" class="ghost" data-act="salir">Cerrar sesión</button></div>';
+    x += '<div class="card">' + (A.pedirInstalar ? '<button type="button" class="ghost" data-act="inst">Instalar en el teléfono</button> ' : '') + '<button type="button" class="ghost" data-act="salir">Cerrar sesión</button> <button type="button" class="ghost" data-act="reparar">Reparar la app</button><p class="sub">Versión ' + esc(BT_CONFIG.VERSION) + '. Reparar vuelve a descargar la app en este teléfono; no borra tus datos.</p></div>';
     x += '<div class="card peligro"><h3>Zona de riesgo</h3><button type="button" class="small ghost" data-act="borrar">Borrar todos mis datos</button> <button type="button" class="small ghost" data-act="cuenta">Eliminar mi cuenta</button></div>';
     el.innerHTML = x;
     el.onclick = async (e) => {
@@ -88,6 +88,7 @@
         else if (a === 'depurar') { if (await A.confirmar('¿Borrar hábitos y tareas hechas con más de 90 días? Descarga tus datos antes.', 'Limpiar')) { const n = await rpc('mi_depurar', { p_dias: 90 }); toast(n + ' registros eliminados'); await CM.cargar(); CM.pintar(); } }
         else if (a === 'inst') { if (!(await A.pedirInstalar())) toast('Usa "Agregar a pantalla de inicio" en el menú del navegador'); }
         else if (a === 'salir') A.salir();
+        else if (a === 'reparar') { if (await A.confirmar('Se vuelve a descargar la app en este teléfono. No se borra ningún dato.', 'Reparar')) A.repararApp(); }
         else if (a === 'borrar') { if (await A.confirmar('Se borran todas tus tareas, ideas y diario. No se puede deshacer.', 'Borrar todo')) { await rpc('mi_borrar_datos'); await CM.cargar(); toast('Datos borrados'); CM.pintar(); } }
         else if (a === 'cuenta') { if (await A.confirmar('Se elimina tu cuenta y todos tus datos para siempre.', 'Eliminar cuenta')) await A.borrarMiCuenta(); }
       } catch (er) { toast(er.message); }

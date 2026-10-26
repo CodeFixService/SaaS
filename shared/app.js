@@ -338,30 +338,49 @@
   global.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); instalar = e; document.dispatchEvent(new Event('bt:instalable')); });
   async function pedirInstalar() { if (!instalar) return false; instalar.prompt(); await instalar.userChoice; instalar = null; return true; }
 
-  /* ---------- Versión nueva: ventana para actualizar ---------- */
+  /* ---------- Versión nueva: solo cuando el administrador la libera ---------- */
+  // La app no cambia sola: cada celular usa su versión guardada hasta que la persona toca "Actualizar",
+  // y la ventana aparece solo cuando hay una versión liberada (Administración → Versiones) más nueva que la suya.
   const mayor = (a, b) => {
     const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number);
     for (let i = 0; i < Math.max(x.length, y.length); i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0);
     return false;
   };
+  const versionMenor = (a, b) => mayor(b, a);
   let avisada = false;
   async function revisarVersion() {
     if (avisada || document.hidden) return;
-    let v = '';
-    try { v = String((await (await fetch(ROOT + 'version.json?_=' + Date.now(), { cache: 'no-store' })).json()).version || ''); } catch (e) { return; }
-    if (!v || !mayor(v, cfg.VERSION)) return;
+    const c = ((await cargarPublica()) || {}).config || {};
+    const lib = c.version_liberada, min = c.version_min;
+    const forzada = !!(min && versionMenor(cfg.VERSION, min));
+    if (!forzada && !(lib && versionMenor(cfg.VERSION, lib))) return;
     avisada = true;
-    const d = modal('<h2>🔄 Hay una versión nueva</h2><p class="muted" style="margin-top:0">Tienes la v' + esc(cfg.VERSION) + ' y ya está disponible la v' + esc(v) +
-      '. Actualiza para tener las últimas mejoras.</p><div class="btns"><button class="ghost" data-cerrar>Después</button><button id="btActualizar">Actualizar ahora</button></div>');
+    const d = modal('<h2>' + (forzada ? '⚠️ Actualiza la app' : '✨ Hay una versión nueva') + '</h2><p class="muted" style="margin-top:0">' +
+      (forzada ? 'Tu versión (v' + esc(cfg.VERSION) + ') ya no funciona bien. Actualízala para seguir.' : 'Tienes la v' + esc(cfg.VERSION) + ' y ya está disponible la v' + esc(lib) + '. Actualiza para tener las últimas mejoras.') +
+      '</p><div class="btns">' + (forzada ? '' : '<button class="ghost" data-cerrar>Después</button>') + '<button id="btActualizar">Actualizar ahora</button></div>');
     d.querySelector('#btActualizar').onclick = actualizar;
   }
-  async function actualizar() {
+  // Pide al service worker que descargue la versión publicada completa y recarga. Si algo falla, sigue en la versión actual.
+  function actualizar() {
     const b = document.getElementById('btActualizar');
     if (b) { b.disabled = true; b.textContent = 'Actualizando…'; }
+    const listo = () => location.reload();
+    const fallo = (m) => { if (b) { b.disabled = false; b.textContent = 'Actualizar ahora'; } toast(m || 'No se pudo actualizar: revisa tu internet.'); };
+    if (!('serviceWorker' in navigator)) return listo();
+    navigator.serviceWorker.ready.then((reg) => {
+      const sw = reg.active; if (!sw) return listo();
+      const ch = new MessageChannel();
+      ch.port1.onmessage = (e) => { if (e.data && e.data.ok) listo(); else fallo(e.data && e.data.error); };
+      sw.postMessage({ tipo: 'actualizar' }, [ch.port2]);
+      setTimeout(() => fallo('Tardó demasiado. Prueba de nuevo.'), 45000);
+    }).catch(listo);
+  }
+  // Borra solo la copia guardada de esta app (no toca tus datos) y la vuelve a descargar.
+  async function repararApp() {
     try {
-      if ('caches' in global) { const k = await caches.keys(); await Promise.all(k.map((x) => caches.delete(x))); }
-      const reg = 'serviceWorker' in navigator && await navigator.serviceWorker.getRegistration();
-      if (reg) await reg.update();
+      for (const k of await caches.keys()) if (k.startsWith('cm-')) await caches.delete(k);
+      const regs = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistrations() : [];
+      for (const r of regs) if (r.scope === ROOT) await r.unregister();
     } catch (e) { /* igual recarga */ }
     location.reload();
   }
@@ -396,7 +415,7 @@
     sb, ROOT, $, esc, plata, numero, iso, fechaDe, sumarDias, hoy, fCorta, fLarga, fHora, hace, DIAS, telNorm, wa, estrellas, nota,
     toast, modal, confirmar, friendly, rpc, q, cargarPublica, txt, refrescar, requerir, entrar, salir, crearCuenta, registrar,
     clave, mensajeAcceso, comprimirComprobante, descargar, verImagen, campana, irA, activarPush, ofrecerPush,
-    pushSoportado, registrarSW, pedirInstalar, pie, pestanas, destino, revisarVersion, actualizar, borrarCuenta, borrarMiCuenta,
+    pushSoportado, registrarSW, pedirInstalar, pie, pestanas, destino, revisarVersion, actualizar, repararApp, versionMenor, borrarCuenta, borrarMiCuenta,
     get cuenta() { return cuenta; },
     get publica() { return publica; }
   };
