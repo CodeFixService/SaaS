@@ -385,20 +385,32 @@
     avisada = true;
     const d = modal('<h2>' + (forzada ? '⚠️ Actualiza la app' : '✨ Hay una versión nueva') + '</h2><p class="muted" style="margin-top:0">' +
       (forzada ? 'Tu versión (v' + esc(cfg.VERSION) + ') ya no funciona bien. Actualízala para seguir.' : 'Tienes la v' + esc(cfg.VERSION) + ' y ya está disponible la v' + esc(lib) + '. Actualiza para tener las últimas mejoras.') +
-      '</p><div class="btns">' + (forzada ? '' : '<button class="ghost" data-cerrar>Después</button>') + '<button id="btActualizar">Actualizar ahora</button></div>');
+      '</p><p class="err" id="btMsg" style="margin:0 0 10px"></p><div class="btns">' + (forzada ? '' : '<button class="ghost" data-cerrar>Después</button>') +
+      '<button class="ghost hidden" id="btReparar">Reparar la app</button><button id="btActualizar">Actualizar ahora</button></div>');
     d.querySelector('#btActualizar').onclick = actualizar;
+    d.querySelector('#btReparar').onclick = repararApp;
   }
   // Pide al service worker que descargue la versión publicada completa y recarga. Si algo falla, sigue en la versión actual.
   function actualizar() {
     const b = document.getElementById('btActualizar');
     if (b) { b.disabled = true; b.textContent = 'Actualizando…'; }
     const listo = () => location.reload();
-    const fallo = (m) => { if (b) { b.disabled = false; b.textContent = 'Actualizar ahora'; } toast(m || 'No se pudo actualizar: revisa tu internet.'); };
+    let terminado = false;
+    // El error se muestra dentro de la ventana (un aviso suelto quedaría escondido detrás) y se ofrece reparar la app.
+    const fallo = (m) => {
+      if (terminado) return; terminado = true;
+      if (b) { b.disabled = false; b.textContent = 'Reintentar'; }
+      const t = m || 'No se pudo actualizar: revisa tu internet.';
+      const msg = document.getElementById('btMsg');
+      if (msg) msg.textContent = /publicando/.test(t) ? t + ' (Cloudflare aún no termina de publicarla.)' : t + ' Si sigue igual, toca "Reparar la app" (no borra tus datos).';
+      else toast(t);
+      const r = document.getElementById('btReparar'); if (r) r.classList.remove('hidden');
+    };
     if (!('serviceWorker' in navigator)) return listo();
     navigator.serviceWorker.ready.then((reg) => {
       const sw = reg.active; if (!sw) return listo();
       const ch = new MessageChannel();
-      ch.port1.onmessage = (e) => { if (e.data && e.data.ok) listo(); else fallo(e.data && e.data.error); };
+      ch.port1.onmessage = (e) => { if (e.data && e.data.ok) { terminado = true; listo(); } else fallo(e.data && e.data.error); };
       sw.postMessage({ tipo: 'actualizar' }, [ch.port2]);
       setTimeout(() => fallo('Tardó demasiado. Prueba de nuevo.'), 45000);
     }).catch(listo);
