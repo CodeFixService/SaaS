@@ -34,12 +34,24 @@
     const u = URL.createObjectURL(blob); A.descargar(u, 'centro-de-mando-' + A.hoy() + '.json'); setTimeout(() => URL.revokeObjectURL(u), 4000);
   }
   function pagar() {
-    const c = (A.publica && A.publica.config) || {}, link = c.pro_link;
-    const d = modal('<h2>Pasar a Pro</h2><p class="muted">Más espacios, ideas y consejos ilimitados, revisión semanal.</p><label>Plan<select id="pp"><option value="mensual">Mensual · $' + Number(c.pro_precio_mensual || 0).toLocaleString('es-CL') + '</option><option value="anual">Anual · $' + Number(c.pro_precio_anual || 0).toLocaleString('es-CL') + '</option></select></label>' +
-      (link ? '<p><a href="' + esc(link) + '" target="_blank" rel="noopener">1. Pagar aquí</a></p>' : '<p class="sub">El administrador aún no configuró el link de pago.</p>') + '<label>2. Sube tu comprobante<input id="pf" type="file" accept="image/*"></label><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="po" type="button">Enviar</button></div>');
+    const c = (A.publica && A.publica.config) || {}, pm = Number(c.pro_precio_mensual || 0), pa = Number(c.pro_precio_anual || 0);
+    const linkDe = (plan) => (plan === 'anual' ? c.pro_link_anual || c.pro_link : c.pro_link || c.pro_link_anual) || '';
+    const ahorro = pa && pm ? Math.round(100 - pa * 100 / (pm * 12)) : 0;
+    const d = modal('<h2>' + CM.ico('estrella', 18) + ' Pasar a Pro</h2><p class="muted">Más espacios, ideas y consejos ilimitados, revisión semanal.</p>' +
+      '<div class="planes-pro"><button type="button" class="plan-op" data-p="mensual"><span class="sub">Mensual</span><b>$' + pm.toLocaleString('es-CL') + '</b><span class="sub">al mes</span></button>' +
+      (pa ? '<button type="button" class="plan-op" data-p="anual"><span class="sub">Anual</span><b>$' + pa.toLocaleString('es-CL') + '</b><span class="sub">' + (ahorro > 0 ? 'ahorras ' + ahorro + '%' : 'al año') + '</span></button>' : '') + '</div>' +
+      '<div id="pl"></div><label>2. Sube tu comprobante<input id="pf" type="file" accept="image/*"></label><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="po" type="button">Enviar</button></div>');
+    let plan = pa ? 'anual' : 'mensual';
+    const marcar = () => {
+      d.querySelectorAll('.plan-op').forEach((b) => b.classList.toggle('on', b.dataset.p === plan));
+      const l = linkDe(plan);
+      d.querySelector('#pl').innerHTML = l ? '<a class="btn block" href="' + esc(l) + '" target="_blank" rel="noopener">1. Pagar el plan ' + plan + ' aquí</a>' : '<p class="sub">El administrador aún no configuró el link de pago.</p>';
+    };
+    d.querySelectorAll('.plan-op').forEach((b) => { b.onclick = () => { plan = b.dataset.p; marcar(); }; });
+    marcar();
     d.querySelector('#po').onclick = async () => {
       const f = d.querySelector('#pf').files[0]; if (!f) return toast('Sube la foto del comprobante');
-      try { await rpc('pro_pagar', { p_plan: d.querySelector('#pp').value, p_comprobante: await A.comprimirComprobante(f) }); d.close(); toast('Enviado. Te avisamos al aprobarlo.'); pago = await rpc('mi_pago_pendiente'); CM.pintar(); } catch (e) { toast(e.message); }
+      try { await rpc('pro_pagar', { p_plan: plan, p_comprobante: await A.comprimirComprobante(f) }); d.close(); toast('Enviado. Te avisamos al aprobarlo.'); pago = await rpc('mi_pago_pendiente'); CM.pintar(); } catch (e) { toast(e.message); }
     };
   }
   async function render(el) {

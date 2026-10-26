@@ -21,7 +21,7 @@
     });
   }
   const show = App.pestanas((v) => ({ resumen, usuarios, pagos, planes, ajustes, registro, versiones, apps: () => window.MisApps.render(el('apps')) }[v] || (() => {}))());
-  App.campana($('bCampana'));
+  App.ponerIconos(); App.campana($('bCampana'));
 
   async function resumen() {
     el('resumen').innerHTML = '<p class="sub">Cargando…</p>';
@@ -157,7 +157,7 @@
     try { await rpc('admin_plan_guardar', { p_codigo: k, p_nombre: p.nombre, p_descripcion: c.querySelector('[data-d]').value, p_limites: lim, p_beneficios: p.beneficios || [], p_duracion: p.duracion_dias || 30, p_motivo: m }); pub = await App.cargarPublica(); toast('Guardado'); } catch (x) { err(x); }
   };
 
-  const CFG = [['dias_prueba', 'Días de prueba Pro'], ['pro_precio_mensual', 'Precio mensual'], ['pro_precio_anual', 'Precio anual'], ['pro_link', 'Link de pago', 1], ['soporte_whatsapp', 'WhatsApp de soporte', 1], ['dias_comprobantes', 'Guardar comprobantes (días)'], ['limite_db_mb', 'Límite de base de datos (MB)'], ['auditoria_max', 'Máximo de filas del registro']];
+  const CFG = [['dias_prueba', 'Días de prueba Pro'], ['pro_precio_mensual', 'Precio mensual'], ['pro_precio_anual', 'Precio anual'], ['pro_link', 'Link de pago mensual', 1], ['pro_link_anual', 'Link de pago anual', 1], ['soporte_whatsapp', 'WhatsApp de soporte', 1], ['dias_comprobantes', 'Guardar comprobantes (días)'], ['limite_db_mb', 'Límite de base de datos (MB)'], ['auditoria_max', 'Máximo de filas del registro']];
   function ajustes() {
     const c = pub.config || {}, k = c.vapid_publica;
     el('ajustes').innerHTML = '<div class="titulo-v"><h2>Ajustes</h2></div><button type="button" class="aviso-ver" id="bVer2">🔄 Actualizar la app<br><span class="sub">Base de datos, función del servidor, probar y liberar versiones</span></button><div class="card">' + CFG.map((f) => '<label>' + f[1] + '<input data-c="' + f[0] + '" data-t="' + (f[2] ? 's' : 'n') + '" value="' + esc(c[f[0]] === undefined ? '' : c[f[0]]) + '"></label>').join('') + '<button type="button" id="cg">Guardar ajustes</button></div>' +

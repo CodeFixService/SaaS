@@ -1,5 +1,5 @@
 -- =====================================================================
---  Centro de Mando · Base de datos v3.4 (Supabase)
+--  Centro de Mando · Base de datos v3.5 (Supabase)
 --  Supabase → SQL Editor → New query → pega TODO este archivo → Run.
 --  Se puede volver a ejecutar sin perder datos.
 --  ATENCIÓN: la primera vez BORRA lo del sistema anterior (negocios,
@@ -136,7 +136,7 @@ end $$;
 create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '3.4'::text $$;
+language sql immutable as $$ select '3.5'::text $$;
 create or replace function public.cfg_int(c text) returns int
 language sql stable security definer set search_path = '' as $$
   select (valor #>> '{}')::int from public.config where clave = c
@@ -156,10 +156,10 @@ alter table public.planes enable row level security;
 
 -- Solo se borran ajustes del sistema anterior; los tuyos (precios, link, días, versión liberada) se conservan al actualizar.
 delete from public.config where clave not in ('vapid_publica', 'soporte_whatsapp', 'dias_aviso_vencimiento', 'dias_comprobantes', 'dias_prueba',
-  'pro_link', 'pro_precio_mensual', 'pro_precio_anual', 'limite_db_mb', 'auditoria_max', 'version_liberada', 'version_min');
+  'pro_link', 'pro_link_anual', 'pro_precio_mensual', 'pro_precio_anual', 'limite_db_mb', 'auditoria_max', 'version_liberada', 'version_min');
 insert into public.config (clave, valor) values
   ('dias_prueba', '7'), ('dias_aviso_vencimiento', '3'), ('dias_comprobantes', '30'), ('soporte_whatsapp', '""'),
-  ('vapid_publica', '""'), ('pro_link', '""'), ('pro_precio_mensual', '4900'), ('pro_precio_anual', '49000'),
+  ('vapid_publica', '""'), ('pro_link', '""'), ('pro_link_anual', '""'), ('pro_precio_mensual', '4900'), ('pro_precio_anual', '49000'),
   ('limite_db_mb', '500'), ('auditoria_max', '2000'), ('version_liberada', '"3.0"')
 on conflict (clave) do nothing;
 
@@ -780,9 +780,13 @@ create or replace function public.admin_config_guardar(p_clave text, p_valor jso
 language plpgsql security definer set search_path = '' as $$
 begin
   perform public.edit_check(p_motivo);
-  if p_clave not in ('dias_prueba', 'dias_aviso_vencimiento', 'dias_comprobantes', 'soporte_whatsapp', 'pro_link',
+  if p_clave not in ('dias_prueba', 'dias_aviso_vencimiento', 'dias_comprobantes', 'soporte_whatsapp', 'pro_link', 'pro_link_anual',
                      'pro_precio_mensual', 'pro_precio_anual', 'limite_db_mb', 'auditoria_max', 'version_liberada', 'version_min') then
     raise exception 'Ajuste no válido';
+  end if;
+  -- Links de pago (mensual y anual): vacíos o con https://
+  if p_clave in ('pro_link', 'pro_link_anual') and coalesce(p_valor #>> '{}', '') <> '' and (p_valor #>> '{}') !~ '^https://[^ ]+$' then
+    raise exception 'El link de pago debe empezar con https://';
   end if;
   -- Liberar versiones (o exigir una mínima) solo lo hace el súper administrador, con formato 3.3 o 3.3.1.
   if p_clave in ('version_liberada', 'version_min') then
@@ -985,8 +989,8 @@ end $$;
 grant execute on function public.config_publica() to anon;
 
 -- Al correr este SQL la versión queda liberada al tiro: todos ven "Actualizar" (al publicar una versión nueva, sube este número).
-insert into public.config (clave, valor) values ('version_liberada', '"3.4"') on conflict (clave) do update set valor = excluded.valor
+insert into public.config (clave, valor) values ('version_liberada', '"3.5"') on conflict (clave) do update set valor = excluded.valor
   where case when public.config.valor #>> '{}' ~ '^\d+(\.\d+)*$'
-    then string_to_array(public.config.valor #>> '{}', '.')::int[] < string_to_array('3.4', '.')::int[] else true end;
+    then string_to_array(public.config.valor #>> '{}', '.')::int[] < string_to_array('3.5', '.')::int[] else true end;
 
 select 'Centro de Mando instalado v' || public.db_version() as resultado;

@@ -49,12 +49,11 @@ cada minuto: notificaciones al celular). Si alguna vez quieres reinstalarlas sol
    (Compartir → "Agregar a inicio") y abrirla desde ese ícono.
 
 ## 6. Precios y links de pago
-**Ajustes → 💳 Precios y links**: para el Premium de negocios y el de clientes tienes 2 espacios.
-Pon el precio, el texto y el link de Mercado Pago, marca cuál está **activo** y guarda.
-El precio que ve la gente es siempre el del espacio activo.
-
-El **abono** de las reservas lo configura cada negocio en **Más → 💳 Abono** con su propio link:
-ese dinero le llega directo al negocio.
+**Administración → Ajustes**: pon el **precio mensual** y el **precio anual** de Pro, y sus dos links:
+**Link de pago mensual** y **Link de pago anual** (deben empezar con `https://`) → **Guardar ajustes**.
+Al tocar "Pasar a Pro", la persona elige mensual o anual y el botón de pagar abre el link de ese plan
+(si el anual está vacío, usa el mensual). Después sube su comprobante y tú lo apruebas en **Pagos**
+(el mensual suma 30 días; el anual, 365).
 
 ## 7. Publicar en Cloudflare Pages
 1. Cloudflare → **Workers & Pages** → **Create** → pestaña **Pages** → **Connect to Git**.

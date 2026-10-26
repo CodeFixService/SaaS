@@ -10,21 +10,21 @@
 
   // Cómo se lee y se libera la versión en cada app (cada una lo guarda a su manera).
   const APPS = [
-    { id: 'cm', nombre: 'Centro de Mando', ico: '🎯', repo: 'SaaS', propia: true, web: A.ROOT, admin: 'admin/',
+    { id: 'cm', nombre: 'Centro de Mando', ico: 'diana', repo: 'SaaS', propia: true, web: A.ROOT, admin: 'admin/',
       bd: { rpc: 'db_version' }, leer: { propia: true },
       liberar: (c, v) => c.rpc('admin_config_guardar', { p_clave: 'version_liberada', p_valor: v, p_motivo: 'Liberar desde Mis aplicaciones' }) },
-    { id: 'billetera', nombre: 'Billetera · Libreta de Cobros', ico: '💰', repo: 'Emprendedor', cfg: 'js/config.js', web: 'https://codefixservice.github.io/Emprendedor/', admin: 'admin/',
+    { id: 'billetera', nombre: 'Billetera · Libreta de Cobros', ico: 'billetera', repo: 'Emprendedor', cfg: 'js/config.js', web: 'https://codefixservice.github.io/Emprendedor/', admin: 'admin/',
       bd: { rpc: 'config_publica', campo: 'version_bd' }, leer: { rpc: 'config_publica', campo: 'version_liberada' },
       liberar: (c, v) => c.rpc('admin_guardar_ajustes', { p: { version_liberada: v } }) },
-    { id: 'aplicaciones', nombre: 'CodeFix Apps · FichaPro y Caja', ico: '🛍️', repo: 'Aplicaciones', cfg: 'shared/config.js', web: 'https://codefixservice.github.io/Aplicaciones/', admin: 'apps/admin/',
+    { id: 'aplicaciones', nombre: 'CodeFix Apps · FichaPro y Caja', ico: 'bolsa', repo: 'Aplicaciones', cfg: 'shared/config.js', web: 'https://codefixservice.github.io/Aplicaciones/', admin: 'apps/admin/',
       bd: { rpc: 'db_version' }, leer: { rpc: 'public_settings', campo: 'version_liberada' },
       liberar: (c, v) => c.rpc('admin_set_setting', { p_key: 'version_liberada', p_value: v }) },
-    { id: 'barberia', nombre: 'Barbería', ico: '💈', repo: 'Barberia', cfg: 'shared/config.js', web: 'https://barberia.juanjosuecastilloloyola.workers.dev/', admin: 'admin/',
+    { id: 'barberia', nombre: 'Barbería', ico: 'tijeras', repo: 'Barberia', cfg: 'shared/config.js', web: 'https://barberia.juanjosuecastilloloyola.workers.dev/', admin: 'admin/',
       bd: { rpc: 'db_version' }, leer: { rpc: 'ajustes_publicos', campo: 'version_liberada' },
       liberar: (c, v) => c.rpc('admin_ajuste', { p_key: 'version_liberada', p_value: v }) },
-    { id: 'bicitaller', nombre: 'BiciTaller', ico: '🚲', repo: 'Taller', cfg: 'shared/config.js', web: 'https://bicitaller.pages.dev/', admin: 'admin/',
+    { id: 'bicitaller', nombre: 'BiciTaller', ico: 'bici', repo: 'Taller', cfg: 'shared/config.js', web: 'https://bicitaller.pages.dev/', admin: 'admin/',
       bd: { rpc: 'db_version' }, leer: null, liberar: null }, // se actualiza sola apenas se publica
-    { id: 'estaciona', nombre: 'Estaciona · Estacionamientos', ico: '🅿️', repo: 'Estacionamiento', cfg: 'js/config.js', web: 'https://codefixservice.github.io/Estacionamiento/', admin: '#/admin',
+    { id: 'estaciona', nombre: 'Estaciona · Estacionamientos', ico: 'auto', repo: 'Estacionamiento', cfg: 'js/config.js', web: 'https://codefixservice.github.io/Estacionamiento/', admin: '#/admin',
       bd: { rpc: 'ajustes_publicos', campo: 'version_bd' }, leer: { rpc: 'ajustes_publicos', campo: 'textos.version_liberada' },
       liberar: (c, v) => c.rpc('admin_guardar_textos', { p: { version_liberada: v } }) }
   ];
@@ -93,19 +93,19 @@
     const est = e.cargando ? pill('Revisando…') : e.error && !e.pub ? pill('⚠️ Sin datos', 'bad')
       : !a.liberar ? pill('🔁 Se actualiza sola al publicar', 'info') : s.faltaBd ? pill('🗄️ Falta actualizar la base de datos', 'bad')
       : s.alDia ? pill('✅ Al día', 'ok') : s.lista ? pill('🚀 Lista para liberar v' + esc(e.pub), 'warn') : !e.conectado ? pill('🔌 Conéctate para liberar', 'warn') : pill('Revisa la versión', 'warn');
-    n.innerHTML = '<div class="fila"><span class="app-ico">' + a.ico + '</span><div class="grow"><h3 style="margin:0">' + esc(a.nombre) + '</h3>' +
+    n.innerHTML = '<div class="fila"><span class="app-ico">' + A.ico(a.ico, 24) + '</span><div class="grow"><h3 style="margin:0">' + esc(a.nombre) + '</h3>' +
       '<p class="sub" style="margin:2px 0 0">Publicada ' + (e.pub ? 'v' + esc(e.pub) : '—') + (a.liberar ? ' · Liberada ' + (e.lib ? 'v' + esc(e.lib) : '—') : '') +
       ' · Base de datos ' + (e.bd ? 'v' + esc(e.bd) : '—') + (e.bdPide && e.bd && s.faltaBd ? ' (pide v' + esc(e.bdPide) + ')' : '') + '</p></div></div>' +
       '<div style="margin:8px 0">' + est + '</div>' +
       (e.conectado ? kpis(e.resumen) : '') + (e.error ? '<p class="sub warn">' + esc(e.error) + '</p>' : '') +
       '<div class="btns-s">' +
-        '<a class="btn small ghost" href="' + esc(a.web) + '" target="_blank" rel="noopener">↗ Abrir app</a>' +
-        '<a class="btn small ghost" href="' + esc(a.web + a.admin) + '" target="_blank" rel="noopener">↗ Admin</a>' +
-        '<button type="button" class="small' + (s.faltaBd ? '' : ' ghost') + '" data-a="sql">📋 Copiar SQL</button>' +
-        (ref ? '<a class="btn small ghost" href="https://supabase.com/dashboard/project/' + ref + '/sql/new" target="_blank" rel="noopener">↗ SQL Editor</a>' : '') +
-        (a.liberar && e.conectado ? '<button type="button" class="small" data-a="lib"' + (s.lista ? '' : ' disabled') + '>' + (s.alDia ? '✓ Liberada' : '🚀 Liberar v' + esc(e.pub || '?')) + '</button>' : '') +
-        (!a.propia && e.url ? (e.conectado ? '<button type="button" class="small ghost" data-a="salir">Desconectar</button>' : '<button type="button" class="small" data-a="con">🔌 Conectar</button>') : '') +
-        '<button type="button" class="small ghost" data-a="rec">🔄</button>' +
+        '<a class="btn small ghost" href="' + esc(a.web) + '" target="_blank" rel="noopener">' + A.ico('abrir', 15) + ' Abrir app</a>' +
+        '<a class="btn small ghost" href="' + esc(a.web + a.admin) + '" target="_blank" rel="noopener">' + A.ico('abrir', 15) + ' Admin</a>' +
+        '<button type="button" class="small' + (s.faltaBd ? '' : ' ghost') + '" data-a="sql">' + A.ico('copiar', 15) + ' Copiar SQL</button>' +
+        (ref ? '<a class="btn small ghost" href="https://supabase.com/dashboard/project/' + ref + '/sql/new" target="_blank" rel="noopener">' + A.ico('abrir', 15) + ' SQL Editor</a>' : '') +
+        (a.liberar && e.conectado ? '<button type="button" class="small" data-a="lib"' + (s.lista ? '' : ' disabled') + '>' + (s.alDia ? A.ico('check', 15) + ' Liberada' : A.ico('cohete', 15) + ' Liberar v' + esc(e.pub || '?')) + '</button>' : '') +
+        (!a.propia && e.url ? (e.conectado ? '<button type="button" class="small ghost" data-a="salir">Desconectar</button>' : '<button type="button" class="small" data-a="con">' + A.ico('enchufe', 15) + ' Conectar</button>') : '') +
+        '<button type="button" class="small ghost" data-a="rec" aria-label="Revisar">' + A.ico('refrescar', 15) + '</button>' +
       '</div>';
   }
   function pintarCabecera() {
@@ -113,7 +113,7 @@
     const listas = APPS.filter((a) => estadoDe(a).lista), bd = APPS.filter((a) => estadoDe(a).faltaBd), ok = APPS.filter((a) => estadoDe(a).alDia || (!a.liberar && E[a.id] && E[a.id].pub));
     h.innerHTML = '<div class="stats"><div class="card"><b>' + APPS.length + '</b><span>Aplicaciones</span></div><div class="card"><b class="ok">' + ok.length + '</b><span>Al día</span></div>' +
       '<div class="card"><b class="warn">' + listas.length + '</b><span>Listas para liberar</span></div><div class="card"><b class="bad">' + bd.length + '</b><span>Falta base de datos</span></div></div>' +
-      (listas.length ? '<button type="button" class="block" id="libTodo">🚀 Liberar todo lo que está listo (' + listas.length + ')</button>' : '');
+      (listas.length ? '<button type="button" class="block" id="libTodo">' + A.ico('cohete', 18) + ' Liberar todo lo que está listo (' + listas.length + ')</button>' : '');
     const b = h.querySelector('#libTodo');
     if (b) b.onclick = async () => {
       if (!(await confirmar('Se liberan ' + listas.map((a) => a.nombre + ' v' + E[a.id].pub).join(', ') + '. A sus usuarios les aparece el botón Actualizar.', 'Liberar todo'))) return;
@@ -130,7 +130,7 @@
     await cargar(a);
   }
   function conectar(a) {
-    const d = modal('<h2>' + a.ico + ' Conectar ' + esc(a.nombre) + '</h2><p class="muted">Entra con tu cuenta de administrador de esta app (queda guardada solo en este teléfono).</p>' +
+    const d = modal('<h2>Conectar ' + esc(a.nombre) + '</h2><p class="muted">Entra con tu cuenta de administrador de esta app (queda guardada solo en este teléfono).</p>' +
       '<label>Correo<input id="ce" type="email" autocomplete="username" value="' + esc((A.cuenta && A.cuenta.email) || '') + '"></label><label>Contraseña<input id="cp" type="password" autocomplete="current-password"></label>' +
       '<p class="err" id="cx"></p><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="cok" type="button">Conectar</button></div>');
     d.querySelector('#cok').onclick = async () => {
@@ -151,7 +151,7 @@
 
   function render(el) {
     raiz = el;
-    el.innerHTML = '<div class="titulo-v"><h2>Mis aplicaciones</h2><button type="button" class="small ghost" id="appsTodo">🔄 Revisar todas</button></div>' +
+    el.innerHTML = '<div class="titulo-v"><h2>Mis aplicaciones</h2><button type="button" class="small ghost" id="appsTodo">' + A.ico('refrescar', 15) + ' Revisar todas</button></div>' +
       '<p class="sub">Para actualizar una app: 1) 📋 Copiar SQL y pégalo en su SQL Editor (no borra datos), 2) 🚀 Liberar. Sus usuarios ven el botón Actualizar.</p>' +
       '<div id="appsCab"></div>' + APPS.map((a) => '<div class="card app-card" data-app="' + a.id + '"></div>').join('');
     el.querySelector('#appsTodo').onclick = () => APPS.forEach(cargar);
