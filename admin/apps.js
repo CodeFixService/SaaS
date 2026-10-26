@@ -41,6 +41,8 @@
     return 'https://' + a.sub + '.' + base + '/';
   }
   APPS.forEach((a) => { a.web = webDe(a); });
+  let NUCLEO = ''; // versión del núcleo del Centro de Mando (la que se reparte a todas)
+  fetch(A.ROOT + 'nucleo.json', { cache: 'no-store' }).then((r) => r.json()).then((j) => { NUCLEO = String(j.nucleo || ''); }).catch(() => {});
   const E = {}; // estado de cada app
   let raiz = null;
 
@@ -61,6 +63,7 @@
         fetch(RAW(a.repo, 'version.json'), { cache: 'no-store' }).then((r) => r.json()).catch(() => ({})),
         a.propia ? Promise.resolve('') : fetch(RAW(a.repo, a.cfg), { cache: 'no-store' }).then((r) => r.text()).catch(() => '')]);
       e.pub = String(vj.version || '');
+      e.nucleo = await fetch(RAW(a.repo, 'nucleo.json'), { cache: 'no-store' }).then((r) => r.json()).then((j) => String(j.nucleo || '')).catch(() => '');
       e.bdPide = vj.bd != null ? String(vj.bd) : a.propia ? String(global.BT_CONFIG.DB_VERSION || '') : ((conf.match(/DB_VERSION\s*:\s*'([^']+)'/) || [])[1] || '');
       if (a.propia) e.url = global.BT_CONFIG.SUPABASE_URL;
       else {
@@ -108,7 +111,8 @@
       : s.alDia ? pill('✅ Al día', 'ok') : s.lista ? pill('🚀 Lista para liberar v' + esc(e.pub), 'warn') : !e.conectado ? pill('🔌 Conéctate para liberar', 'warn') : pill('Revisa la versión', 'warn');
     n.innerHTML = '<div class="fila"><span class="app-ico">' + A.ico(a.ico, 24) + '</span><div class="grow"><h3 style="margin:0">' + esc(a.nombre) + '</h3>' +
       '<p class="sub" style="margin:2px 0 0">Publicada ' + (e.pub ? 'v' + esc(e.pub) : '—') + (a.liberar ? ' · Liberada ' + (e.lib ? 'v' + esc(e.lib) : '—') : '') +
-      ' · Base de datos ' + (e.bd ? 'v' + esc(e.bd) : '—') + (e.bdPide && e.bd && s.faltaBd ? ' (pide v' + esc(e.bdPide) + ')' : '') + '</p></div></div>' +
+      ' · Base de datos ' + (e.bd ? 'v' + esc(e.bd) : '—') + (e.bdPide && e.bd && s.faltaBd ? ' (pide v' + esc(e.bdPide) + ')' : '') +
+      ' · Núcleo ' + (e.nucleo ? 'v' + esc(e.nucleo) : '—') + (e.nucleo && NUCLEO && e.nucleo !== NUCLEO ? ' <span class="pill warn">falta sincronizar</span>' : '') + '</p></div></div>' +
       '<div style="margin:8px 0">' + est + '</div>' +
       (e.conectado ? kpis(e.resumen) : '') + (e.error ? '<p class="sub warn">' + esc(e.error) + '</p>' : '') +
       '<div class="btns-s">' +
