@@ -148,7 +148,7 @@
 
   function planes() {
     const P = pub.planes || {};
-    el('planes').innerHTML = '<div class="titulo-v"><h2>Planes</h2></div>' + Object.keys(P).map((k) => { const p = P[k], l = p.limites || {}; return '<div class="card" data-k="' + k + '"><h3>' + esc(p.nombre) + ' <span class="sub">' + k + '</span></h3>' + ['espacios', 'items', 'recordatorios', 'insights', 'descanso'].map((c) => '<label>' + c + '<input data-l="' + c + '" type="number" value="' + (l[c] === undefined ? '' : l[c]) + '"></label>').join('') + '<label>Descripción<input data-d value="' + esc(p.descripcion || '') + '"></label><button type="button" data-g="' + k + '">Guardar</button></div>'; }).join('');
+    el('planes').innerHTML = '<div class="titulo-v"><h2>Planes</h2></div>' + Object.keys(P).map((k) => { const p = P[k], l = p.limites || {}; return '<div class="card" data-k="' + k + '"><h3>' + esc(p.nombre) + ' <span class="sub">' + k + '</span></h3>' + [['espacios', 'Espacios'], ['items', 'Ítems'], ['recordatorios', 'Recordatorios'], ['insights', 'Insights'], ['descanso', 'Descanso']].map(([c, t]) => '<label>' + t + '<input data-l="' + c + '" type="number" value="' + (l[c] === undefined ? '' : l[c]) + '"></label>').join('') + '<label>Descripción<input data-d value="' + esc(p.descripcion || '') + '"></label><button type="button" data-g="' + k + '">Guardar</button></div>'; }).join('');
   }
   el('planes').onclick = async (e) => {
     const b = e.target.closest('[data-g]'); if (!b) return; const c = b.closest('.card'), k = b.dataset.g, p = pub.planes[k], lim = {};
