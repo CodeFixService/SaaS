@@ -50,6 +50,7 @@
       (hechas.length ? '<h3 class="sec">Trabajo finalizado</h3>' + hechas.slice(0, 20).map((i) => fila(i)).join('') : '');
   }
   function render(el) {
+    if (CM.ui.sub) { ui.sub = CM.ui.sub; CM.ui.sub = null; }
     const cuerpo = { ideas, problemas, notas, diario, logros }[ui.sub]();
     el.innerHTML = '<div class="titulo-v"><h2>Cerebro</h2></div>' + (['diario'].includes(ui.sub) ? '' : CM.selectorEspacio()) +
       '<div class="chips">' + SUBS.map((s) => '<button type="button" class="chip' + (ui.sub === s[0] ? ' on' : '') + '" data-sub="' + s[0] + '">' + s[1] + '</button>').join('') + '</div>' +

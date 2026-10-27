@@ -33,6 +33,8 @@
     libro: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19a2 2 0 0 1 2-2h13"/>',
     nube: '<path d="M7 18a4 4 0 0 1-.6-8A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 9z"/>',
     rayo: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>', flecha: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+    listas: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>',
+    compartir: '<path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13"/>', pdf: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/>',
     usuario: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>', ojo: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'
   };
   CM.ico = (n, s) => '<svg class="ic" width="' + (s || 20) + '" height="' + (s || 20) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (IC[n] || '') + '</svg>';
@@ -132,10 +134,10 @@
 
   /* ---------- Ficha de edición (sirve para todos los tipos) ---------- */
   const NOMBRE = { tarea: 'Tarea', proyecto: 'Proyecto', meta: 'Meta', resultado: 'Resultado clave', habito: 'Hábito', idea: 'Idea', problema: 'Problema',
-    solucion: 'Solución', nota: 'Nota', diario: 'Diario', logro: 'Logro', leccion: 'Lección', recordatorio: 'Recordatorio' };
+    solucion: 'Solución', nota: 'Nota', diario: 'Diario', logro: 'Logro', leccion: 'Lección', recordatorio: 'Recordatorio', falta: 'Lo que falta' };
   CM.nombre = NOMBRE;
   const CAMPOS = {
-    tarea: ['titulo', 'cuerpo', 'fecha', 'prioridad', 'espacio', 'estado'], proyecto: ['titulo', 'cuerpo', 'fecha', 'espacio', 'estado', 'donde'],
+    tarea: ['titulo', 'cuerpo', 'fecha', 'hora', 'prioridad', 'espacio', 'estado'], falta: ['titulo', 'lista', 'cant', 'para'], proyecto: ['titulo', 'cuerpo', 'fecha', 'espacio', 'estado', 'donde'],
     meta: ['titulo', 'cuerpo', 'espacio', 'periodo', 'fin', 'estado'], resultado: ['titulo', 'objetivo', 'actual', 'unidad'],
     habito: ['titulo', 'espacio', 'dias'], idea: ['titulo', 'cuerpo', 'espacio', 'impacto', 'ganas', 'esfuerzo', 'estado'],
     problema: ['titulo', 'cuerpo', 'espacio', 'estado'], solucion: ['titulo', 'cuerpo'], nota: ['titulo', 'cuerpo', 'espacio', 'etiquetas'],
@@ -167,8 +169,11 @@
     if (f.includes('estado') && ESTADOS[tipo]) h += '<div><label for="fEst">Estado</label>' + sel('fEst', ESTADOS[tipo], o.estado) + '</div>';
     if (f.includes('prioridad')) h += '<div><label for="fPri">Prioridad</label>' + sel('fPri', [[0, 'Normal'], [1, 'Importante'], [2, 'Urgente'], [3, 'Top del día']], o.prioridad) + '</div>';
     if (f.includes('fecha')) h += '<div><label for="fFec">Fecha</label><input id="fFec" type="date" value="' + esc(o.fecha || '') + '"></div>';
+    if (f.includes('hora')) h += '<div><label for="fHor">Hora (opcional)</label><input id="fHor" type="time" value="' + esc(dt.hora || '') + '"></div>';
     if (f.includes('espacio')) h += '<div><label for="fEsp">Espacio</label>' + sel('fEsp', [['', 'Sin espacio']].concat(esps().map((e) => [e.id, e.nombre])), o.espacio_id || '') + '</div>';
     h += '</div>';
+    if (f.includes('lista')) h += '<label for="fLis">Lista</label><input id="fLis" maxlength="40" list="dlListas" value="' + esc(dt.lista || '') + '">' + datalistListas() +
+      '<div class="row"><div><label for="fCan">Cantidad</label><input id="fCan" maxlength="30" value="' + esc(dt.cant || '') + '"></div><div><label for="fPar">Para quién</label><input id="fPar" maxlength="40" value="' + esc(dt.para || '') + '"></div></div>';
     if (f.includes('donde')) h += '<label for="fDon">Dónde quedé (para retomar sin perderte)</label><input id="fDon" maxlength="200" value="' + esc(dt.donde || '') + '" placeholder="Ej: falta conectar el pago">';
     if (f.includes('periodo')) h += '<div class="row"><div><label for="fPer">Periodo</label>' + sel('fPer', [['semana', 'Semana'], ['mes', 'Mes'], ['trimestre', 'Trimestre'], ['anio', 'Año']], dt.periodo || 'mes') + '</div><div><label for="fFin">Fecha límite</label><input id="fFin" type="date" value="' + esc(dt.fin || '') + '"></div></div>';
     if (f.includes('objetivo')) h += '<div class="row"><div><label for="fObj">Objetivo (número)</label><input id="fObj" inputmode="decimal" value="' + esc(dt.objetivo == null ? '' : dt.objetivo) + '"></div><div><label for="fAct">Llevo</label><input id="fAct" inputmode="decimal" value="' + esc(dt.actual == null ? 0 : dt.actual) + '"></div><div><label for="fUni">Unidad</label><input id="fUni" maxlength="20" value="' + esc(dt.unidad || '') + '" placeholder="clientes, kg, h…"></div></div>';
@@ -200,6 +205,8 @@
         if (v('fAvi') !== undefined) { campos.aviso_at = v('fAvi') ? new Date(v('fAvi')).toISOString() : null; campos.repite = v('fRep') || ''; }
         const nd = Object.assign({}, dt);
         if (v('fDon') !== undefined) nd.donde = v('fDon').trim();
+        if (v('fHor') !== undefined) { if (v('fHor')) nd.hora = v('fHor'); else delete nd.hora; }
+        if (v('fLis') !== undefined) { nd.lista = v('fLis').trim() || 'General'; nd.cant = v('fCan').trim(); nd.para = v('fPar').trim(); }
         if (v('fPer') !== undefined) { nd.periodo = v('fPer'); nd.fin = v('fFin') || ''; }
         if (v('fObj') !== undefined) { nd.objetivo = num(v('fObj')); nd.actual = num(v('fAct')); nd.unidad = v('fUni').trim(); }
         if (v('fImp') !== undefined) { nd.impacto = Number(v('fImp')); nd.ganas = Number(v('fGan')); nd.esfuerzo = Number(v('fEsf')); }
@@ -315,7 +322,9 @@
   };
 
   /* ---------- Módulos y pestañas ---------- */
-  const TABS = [['hoy', 'Hoy'], ['tablero', 'Tablero'], ['metas', 'Metas'], ['cerebro', 'Cerebro'], ['panel', 'Panel']];
+  // Barra de abajo: lo más usado + el botón central para anotar. Metas, Cerebro y Más se abren desde el menú de arriba.
+  const TABS = [['hoy', 'Hoy'], ['tablero', 'Tablero'], ['nuevo', 'Anotar'], ['listas', 'Listas'], ['panel', 'Panel']];
+  const VISTAS = ['hoy', 'tablero', 'listas', 'panel', 'metas', 'cerebro', 'mas'];
   CM.TABS = TABS;
   const cargados = {};
   function cargarMod(n) {
@@ -337,7 +346,8 @@
     CM.mod[n].render(el); scrollTo(0, y);
   };
   CM.ir = async (n) => {
-    if (!TABS.some((t) => t[0] === n) && n !== 'mas') n = 'hoy';
+    if (n === 'nuevo') { CM.anotar(); return; }
+    if (!VISTAS.includes(n)) n = 'hoy';
     document.querySelectorAll('.view').forEach((v) => v.classList.toggle('on', v.id === 'v-' + n));
     document.querySelectorAll('nav.tabs button[data-v]').forEach((b) => b.classList.toggle('on', b.dataset.v === n));
     if (location.hash !== '#' + n) history.replaceState(null, '', '#' + n);
@@ -356,5 +366,65 @@
     const s = el.querySelector('#segEsp'); if (!s) return;
     s.onclick = (e) => { const b = e.target.closest('[data-e]'); if (b) { CM.ui.esp = b.dataset.e; CM.pintar(); } };
   };
+  /* ---------- Anotar rápido (botón + de abajo): nota, tarea, lo que falta, idea, problema o recordatorio ---------- */
+  const listasUsadas = () => { const m = {}; CM.por('falta').forEach((i) => { const l = (i.datos && i.datos.lista) || 'General'; m[l] = Math.max(m[l] || 0, Date.parse(i.created_at) || 0); }); return Object.keys(m).sort((a, b) => m[b] - m[a]); };
+  CM.listasUsadas = listasUsadas;
+  function datalistListas() { return '<datalist id="dlListas">' + listasUsadas().map((l) => '<option value="' + esc(l) + '">').join('') + '</datalist>'; }
+  const TIPOS_A = [['nota', 'Nota'], ['tarea', 'Tarea'], ['falta', 'Lo que falta'], ['recordatorio', 'Recordar'], ['idea', 'Idea'], ['problema', 'Problema']];
+  const anot = { tipo: 'nota', lista: '' };
+  CM.anotar = function (tipo, ini) {
+    ini = ini || {};
+    if (tipo) anot.tipo = tipo;
+    if (ini.lista) anot.lista = ini.lista;
+    const mas1h = () => { const d = new Date(Date.now() + 3600e3); return pad(d.getHours()) + ':00'; };
+    const d = modal('<h2>¿Qué anotas?</h2><div class="chips" id="aTip"></div><div id="aCue"></div><p class="err" id="aErr"></p>' +
+      '<div class="btns"><button class="ghost" data-cerrar type="button">Cerrar</button><button id="aOk" type="button">Guardar</button></div>');
+    d.classList.add('hoja-anotar');
+    const $$ = (x) => d.querySelector('#' + x);
+    function dibujar(texto) {
+      const t = anot.tipo, L = listasUsadas();
+      if (!anot.lista) anot.lista = L[0] || 'General';
+      $$('aTip').innerHTML = TIPOS_A.map((x) => '<button type="button" class="chip' + (x[0] === t ? ' on' : '') + '" data-t="' + x[0] + '">' + x[1] + '</button>').join('');
+      let h = '';
+      if (t === 'nota') h += '<textarea id="aTxt" maxlength="4000" rows="4" placeholder="Escribe la nota…">' + esc(texto || '') + '</textarea>';
+      else h += '<input id="aTxt" maxlength="200" autocomplete="off" placeholder="' + ({ tarea: '¿Qué hay que hacer?', falta: '¿Qué falta? Ej: palta', recordatorio: '¿Qué te recuerdo?', idea: 'Tu idea', problema: '¿Qué problema?' }[t]) + '" value="' + esc(texto || '') + '">';
+      if (t === 'falta') {
+        h += '<div class="row"><div><label for="aCan">Cantidad</label><input id="aCan" maxlength="30" placeholder="Ej: 2 kg" autocomplete="off"></div><div><label for="aPar">Para quién</label><input id="aPar" maxlength="40" placeholder="Opcional" autocomplete="off"></div></div>' +
+          '<label for="aLis">Lista</label><div class="chips" id="aLisCh">' + L.slice(0, 8).map((l) => '<button type="button" class="chip' + (l === anot.lista ? ' on' : '') + '" data-l="' + esc(l) + '">' + esc(l) + '</button>').join('') + '</div>' +
+          '<input id="aLis" maxlength="40" list="dlListas" placeholder="Feria, Casa, Negocio…" value="' + esc(anot.lista) + '">' + datalistListas() +
+          '<p class="sub">Enter guarda y deja la ventana abierta para seguir anotando.</p>';
+      }
+      if (t === 'tarea') h += '<div class="row"><div><label for="aFec">Fecha</label><input id="aFec" type="date" value="' + esc(ini.fecha || hoy()) + '"></div><div><label for="aHor">Hora (opcional)</label><input id="aHor" type="time" value="' + esc(ini.hora || '') + '"></div></div>' +
+        '<div class="chips" id="aDia"><button type="button" class="chip" data-f="0">Hoy</button><button type="button" class="chip" data-f="1">Mañana</button><button type="button" class="chip" data-f="2">Pasado mañana</button></div>';
+      if (t === 'recordatorio') h += '<div class="row"><div><label for="aFec">Día</label><input id="aFec" type="date" value="' + esc(ini.fecha || hoy()) + '"></div><div><label for="aHor">Hora</label><input id="aHor" type="time" value="' + mas1h() + '"></div></div>';
+      $$('aCue').innerHTML = h;
+      const tx = $$('aTxt'); if (tx) { tx.focus(); tx.setSelectionRange(tx.value.length, tx.value.length); if (t !== 'nota') tx.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); guardar(); } }; }
+      ['aCan', 'aPar', 'aLis', 'aFec', 'aHor'].forEach((k) => { const i = $$(k); if (i) i.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); guardar(); } }; });
+    }
+    async function guardar() {
+      const t = anot.tipo, txt = ($$('aTxt').value || '').trim(), v = (k) => ($$(k) ? $$(k).value.trim() : '');
+      if (!txt) { $$('aErr').textContent = 'Escribe algo primero'; return; }
+      $$('aErr').textContent = '';
+      try {
+        if (t === 'nota') { const l = txt.split('\n'); await CM.add('nota', { titulo: l[0].slice(0, 200), cuerpo: l.length > 1 || l[0].length > 200 ? txt : '' }); }
+        else if (t === 'tarea') await CM.add('tarea', { titulo: txt, fecha: v('aFec') || null, datos: v('aHor') ? { hora: v('aHor') } : {} });
+        else if (t === 'falta') { anot.lista = v('aLis') || 'General'; await CM.add('falta', { titulo: txt, datos: { lista: anot.lista, cant: v('aCan'), para: v('aPar') } }); }
+        else if (t === 'recordatorio') { const f = v('aFec') || hoy(), hh = v('aHor') || mas1h(); await CM.add('recordatorio', { titulo: txt, aviso_at: new Date(f + 'T' + hh).toISOString() }); }
+        else await CM.add(t, { titulo: txt, datos: t === 'idea' ? { impacto: 3, ganas: 3, esfuerzo: 3 } : {} });
+        if (t === 'falta') { toast('Agregado a ' + anot.lista); const keep = { can: '', par: v('aPar') }; dibujar(''); if ($$('aPar')) $$('aPar').value = keep.par; }
+        else { toast(t === 'tarea' ? 'Tarea agregada' : 'Guardado'); d.close(); }
+      } catch (e) { $$('aErr').textContent = e.message; }
+    }
+    d.onclick = (e) => {
+      const b = e.target.closest('[data-t],[data-l],[data-f]'); if (!b) return;
+      if (b.dataset.t) { const tx = $$('aTxt'); anot.tipo = b.dataset.t; dibujar(tx ? tx.value : ''); }
+      else if (b.dataset.l) { anot.lista = b.dataset.l; $$('aLis').value = anot.lista; d.querySelectorAll('#aLisCh .chip').forEach((c) => c.classList.toggle('on', c === b)); $$('aTxt').focus(); }
+      else if (b.dataset.f) { $$('aFec').value = sumarDias(hoy(), Number(b.dataset.f)); $$('aTxt').focus(); }
+    };
+    $$('aOk').onclick = guardar;
+    dibujar(ini.titulo || '');
+    return d;
+  };
+
   global.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (h && h !== CM.actual) CM.ir(h); });
 })(window);

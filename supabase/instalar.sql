@@ -136,7 +136,7 @@ end $$;
 create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '3.5'::text $$;
+language sql immutable as $$ select '3.6'::text $$;
 create or replace function public.cfg_int(c text) returns int
 language sql stable security definer set search_path = '' as $$
   select (valor #>> '{}')::int from public.config where clave = c
@@ -232,7 +232,7 @@ create table if not exists public.items (
   espacio_id  uuid references public.espacios (id) on delete set null,
   padre       uuid references public.items (id) on delete cascade,
   tipo        text not null check (tipo in ('tarea', 'proyecto', 'meta', 'resultado', 'habito', 'check', 'idea', 'problema',
-                                           'solucion', 'nota', 'diario', 'logro', 'leccion', 'recordatorio')),
+                                           'solucion', 'nota', 'diario', 'logro', 'leccion', 'recordatorio', 'falta')),
   titulo      text not null default '' check (length(titulo) <= 200),
   cuerpo      text not null default '' check (length(cuerpo) <= 4000),
   estado      text not null default 'abierto' check (length(estado) <= 20),
@@ -246,6 +246,15 @@ create table if not exists public.items (
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
+-- v3.6: "falta" = lo que hay que comprar o traer (Listas). titulo = qué; datos = { lista, cant, para }.
+do $$
+declare c text;
+begin
+  for c in select conname from pg_constraint where conrelid = 'public.items'::regclass and contype = 'c' and pg_get_constraintdef(oid) like '%tipo%recordatorio%'
+  loop execute 'alter table public.items drop constraint ' || quote_ident(c); end loop;
+  alter table public.items add constraint items_tipo_check check (tipo in ('tarea', 'proyecto', 'meta', 'resultado', 'habito', 'check', 'idea', 'problema',
+    'solucion', 'nota', 'diario', 'logro', 'leccion', 'recordatorio', 'falta'));
+end $$;
 create index if not exists items_owner_tipo_idx on public.items (owner, tipo, estado);
 create index if not exists items_owner_fecha_idx on public.items (owner, fecha) where fecha is not null;
 create index if not exists items_padre_idx on public.items (padre) where padre is not null;
@@ -916,6 +925,36 @@ begin
       end if;
     end if;
 
+    -- v3.6: lo de mañana se avisa hoy a las 08:00, para organizarte con tiempo.
+    if hm >= '08:00' and hm < '08:15' then
+      select count(*), string_agg(t, ', ') into n1, top from (
+        select titulo as t from public.items where owner = r.id and estado not in ('hecho', 'resuelto')
+          and ((tipo = 'tarea' and fecha = hoy_l + 1) or (tipo = 'recordatorio' and (aviso_at at time zone r.tz)::date = hoy_l + 1))
+        order by coalesce(datos ->> 'hora', to_char(aviso_at at time zone r.tz, 'HH24:MI'), '99'), created_at limit 4) x;
+      if n1 > 0 and public.marcar_aviso(r.id, hoy_l, 'manana_sig') then
+        select count(*) into n2 from public.items where owner = r.id and estado not in ('hecho', 'resuelto')
+          and ((tipo = 'tarea' and fecha = hoy_l + 1) or (tipo = 'recordatorio' and (aviso_at at time zone r.tz)::date = hoy_l + 1));
+        perform public.avisar(r.id, 'Mañana tienes ' || n2 || case when n2 = 1 then ' cosa' else ' cosas' end, top || case when n2 > 4 then '…' else '' end, '/app/#hoy');
+        avisos := avisos + 1;
+      end if;
+    end if;
+    -- v3.6: lo de hoy con hora se avisa 1 hora antes (tareas con hora y recordatorios).
+    for e in select id, titulo, coalesce(datos ->> 'hora', to_char(aviso_at at time zone r.tz, 'HH24:MI')) as h from public.items
+             where owner = r.id and estado not in ('hecho', 'resuelto')
+               and ((tipo = 'tarea' and fecha = hoy_l and datos ->> 'hora' ~ '^\d\d:\d\d$')
+                 or (tipo = 'recordatorio' and (aviso_at at time zone r.tz)::date = hoy_l))
+    loop
+      if hm >= (e.h::time - interval '1 hour') and hm < e.h::time and e.h::time >= '01:00' then
+        if public.marcar_aviso(r.id, hoy_l, 'h1' || e.id) then
+          perform public.avisar(r.id, 'En 1 hora: ' || e.titulo, 'A las ' || e.h || '.', '/app/#hoy'); avisos := avisos + 1;
+        end if;
+      elsif e.h::time < '01:00' and hm < e.h::time then
+        if public.marcar_aviso(r.id, hoy_l, 'h1' || e.id) then
+          perform public.avisar(r.id, 'Pronto: ' || e.titulo, 'A las ' || e.h || '.', '/app/#hoy'); avisos := avisos + 1;
+        end if;
+      end if;
+    end loop;
+
     if coalesce(r.prefs ->> 'avisos_horario', 'true') <> 'false' then
       for e in select id, nombre, horario from public.espacios
                where owner = r.id and modo = 'trabajo' and not archivado and horario ? 'dias' and (horario -> 'dias') @> to_jsonb(dow)
@@ -968,6 +1007,49 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
+-- J2. Actualización automática (v3.6): cada 10 minutos la base revisa GitHub (rama main).
+--   · Si hay una base nueva (version.json → "bd"), descarga y ejecuta este mismo instalar.sql (no borra datos).
+--   · Si solo cambió la app, la libera para que los celulares se actualicen solos.
+--   Si algo falla, no cambia nada y lo vuelve a intentar en la siguiente vuelta.
+-- ---------------------------------------------------------------------
+create or replace function public.auto_actualizar() returns text
+language plpgsql security definer set search_path = '' as $$
+declare
+  base constant text := 'https://raw.githubusercontent.com/CodeFixService/SaaS/main/';
+  marca text := '?t=' || extract(epoch from now())::bigint; j jsonb; v_bd text; v_app text; codigo text; lib text;
+  re constant text := '^[0-9]+(\.[0-9]+)*$';
+begin
+  execute 'select content from extensions.http_get($1)' into codigo using base || 'version.json' || marca;
+  j := codigo::jsonb; v_bd := j ->> 'bd'; v_app := j ->> 'version';
+  if v_bd ~ re and string_to_array(v_bd, '.')::int[] > string_to_array(public.db_version(), '.')::int[] then
+    execute 'select content from extensions.http_get($1)' into codigo using base || 'supabase/instalar.sql' || marca;
+    if codigo is null or position('function public.db_version()' in codigo) = 0 then return 'instalar.sql no disponible'; end if;
+    execute codigo;
+    perform public.auditar('version', 'Base actualizada sola a la v' || public.db_version());
+    return 'base actualizada a ' || public.db_version();
+  end if;
+  if v_app ~ re and v_bd = public.db_version() then
+    select valor #>> '{}' into lib from public.config where clave = 'version_liberada';
+    if lib is null or lib !~ re or string_to_array(v_app, '.')::int[] > string_to_array(lib, '.')::int[] then
+      insert into public.config (clave, valor) values ('version_liberada', to_jsonb(v_app)) on conflict (clave) do update set valor = excluded.valor;
+      perform public.auditar('version', 'App v' || v_app || ' liberada sola');
+      return 'app liberada ' || v_app;
+    end if;
+  end if;
+  return 'al día';
+exception when others then
+  return 'sin cambios: ' || sqlerrm;
+end $$;
+do $$
+begin
+  create extension if not exists http with schema extensions;
+  perform cron.unschedule(jobid) from cron.job where jobname = 'cm-auto';
+  perform cron.schedule('cm-auto', '*/10 * * * *', 'select public.auto_actualizar()');
+exception when others then
+  raise notice 'Actualización automática no activada (%). Corre supabase/cron.sql y vuelve a correr este archivo.', sqlerrm;
+end $$;
+
+-- ---------------------------------------------------------------------
 -- K. Permisos de las funciones
 -- ---------------------------------------------------------------------
 do $$
@@ -977,7 +1059,7 @@ begin
            where n.nspname = 'public' and p.prokind = 'f' and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
   loop
     execute 'revoke execute on function ' || r.f || ' from public, anon, authenticated';
-    if r.proname in ('preparar_cuenta', 'cancelar_invitacion', 'preparar_borrado', 'push_pendientes', 'push_borrar_endpoint',
+    if r.proname in ('preparar_cuenta', 'cancelar_invitacion', 'preparar_borrado', 'push_pendientes', 'push_borrar_endpoint', 'auto_actualizar',
                      'tareas_periodicas', 'marcar_aviso', 'avisar', 'avisar_staff', 'items_antes', 'espacios_antes', 'handle_new_user') then
       if exists (select 1 from pg_roles where rolname = 'service_role') then execute 'grant execute on function ' || r.f || ' to service_role'; end if;
     else
@@ -989,8 +1071,8 @@ end $$;
 grant execute on function public.config_publica() to anon;
 
 -- Al correr este SQL la versión queda liberada al tiro: todos ven "Actualizar" (al publicar una versión nueva, sube este número).
-insert into public.config (clave, valor) values ('version_liberada', '"3.5"') on conflict (clave) do update set valor = excluded.valor
+insert into public.config (clave, valor) values ('version_liberada', '"4.3"') on conflict (clave) do update set valor = excluded.valor
   where case when public.config.valor #>> '{}' ~ '^\d+(\.\d+)*$'
-    then string_to_array(public.config.valor #>> '{}', '.')::int[] < string_to_array('3.5', '.')::int[] else true end;
+    then string_to_array(public.config.valor #>> '{}', '.')::int[] < string_to_array('4.3', '.')::int[] else true end;
 
 select 'Centro de Mando instalado v' || public.db_version() as resultado;

@@ -1,11 +1,11 @@
 /* Centro de Mando · Service worker
-   La app NO se actualiza sola: cada celular usa la versión que tiene guardada hasta que la persona toca
-   "Actualizar", y ese botón aparece solo cuando el administrador libera una versión nueva (Administración → Versiones).
+   Cada celular usa la versión que tiene guardada; cuando el administrador libera una versión nueva (Administración → Versiones,
+   o al correr instalar.sql) la app la descarga completa y se actualiza sola.
    Cada versión vive en su propio caché "cm-app-<versión>" y "cm-meta" guarda cuál se está usando. También recibe las notificaciones. */
 const ARCHIVOS = ['./', 'index.html', 'manifest.webmanifest', 'version.json', 'icons/icon-192.png', 'icons/icon-512.png',
   'shared/app.css', 'shared/app.js', 'shared/tema.css', 'shared/config.js', 'shared/vendor/supabase.js',
   'app/', 'app/index.html', 'app/cm.css', 'app/cm.js', 'app/estilo.js', 'app/m-hoy.js', 'app/m-tablero.js', 'app/m-metas.js', 'app/m-cerebro.js',
-  'app/m-insights.js', 'app/m-panel.js', 'app/m-mas.js', 'admin/', 'admin/index.html', 'admin/admin.js', 'admin/apps.js', 'shared/iconos.js', 'shared/instalar.js'];
+  'app/m-insights.js', 'app/m-listas.js', 'app/m-panel.js', 'app/m-mas.js', 'admin/', 'admin/index.html', 'admin/admin.js', 'admin/apps.js', 'shared/iconos.js', 'shared/instalar.js'];
 const META = 'cm-meta';
 let reinstalando = null;
 // "?t=" evita copias viejas del CDN (GitHub guarda archivos hasta 10 minutos).

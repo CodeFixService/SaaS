@@ -78,3 +78,17 @@ header.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg
 button.tit{display:block;width:100%;text-align:left;background:none;border:0;color:var(--text);font:inherit;font-weight:600;padding:2px 0;box-shadow:none;min-height:0;line-height:1.35;white-space:normal;overflow-wrap:anywhere}
 .meta-c>button.tit{font-size:17px;font-weight:700;margin-bottom:8px}.fila>button.tit{flex:1;width:auto;min-width:0}
 .avatar{overflow:visible;flex:none}
+
+/* v4.3 · Botón central para anotar, Listas (lo que falta) y ventana de anotar */
+nav.tabs button.nuevo{flex:none;width:58px;height:58px;margin:-18px 4px 0;border-radius:50%;background:var(--brand);color:#fff;box-shadow:0 6px 16px color-mix(in srgb,var(--brand) 45%,transparent);padding:0;align-self:flex-start;display:grid;place-items:center}
+nav.tabs button.nuevo .ic{width:28px;height:28px}nav.tabs button.nuevo.on{background:var(--brand);color:#fff}
+.hoja-anotar textarea{min-height:110px}.hoja-anotar .chips{margin-bottom:10px}.hoja-anotar label{margin-top:10px}
+.lista-c h2{display:flex;align-items:center;gap:8px;margin:0;font-size:17px;flex:1;min-width:0}.lista-c h2 span.n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lista-c .acc{display:flex;gap:6px;flex:none}.lista-c .acc button{width:38px;height:38px;min-height:0;padding:0;border-radius:11px;display:grid;place-items:center;background:var(--field);color:var(--text);border:1px solid var(--line);box-shadow:none}
+.lista-c .acc button.del{color:var(--bad)}.lista-c .cab{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.it-f{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent);border-radius:0;padding:10px 2px;color:var(--text);font:inherit;box-shadow:none;min-height:0}
+.it-f b{font-weight:650;overflow-wrap:anywhere}.it-f .c{font-weight:700;color:var(--brand);white-space:nowrap}.it-f .p{grid-column:1/-1;font-size:12.5px;color:var(--muted)}
+.hora{font-size:12px;font-weight:700;color:var(--brand);white-space:nowrap}.dia-sep{font-size:12px;font-weight:700;color:var(--muted);text-transform:capitalize;margin:12px 0 2px}
+.secs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.secs button{justify-content:flex-start;gap:8px;min-width:0}
+.hero .estado .ic{margin-right:6px;vertical-align:-3px}
+#toast{pointer-events:none;bottom:calc(100px + env(safe-area-inset-bottom))}

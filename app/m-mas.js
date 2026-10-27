@@ -65,6 +65,10 @@
     x += '<div class="card"><div class="fila"><span class="avatar">' + esc((c.prefs || {}).avatar || '🙂') + (ed.animo ? '<small>' + CM.ANIMO[ed.animo][0] + '</small>' : '') + '</span><h3 style="margin:0">' + esc(c.nombre || c.email) + '</h3></div><p class="sub">' + esc(c.email) + ' · ' + (c.rol === 'admin' ? 'Administrador' : c.rol === 'socio' ? 'Socio' : c.premium ? 'Plan Pro' + (hasta ? ' hasta ' + hasta : '') : 'Plan gratis') + '</p>' +
       (c.rol === 'usuario' && !c.premium ? (pago && pago.estado === 'pendiente' ? '<p class="pill warn">Pago en revisión</p>' : '<button type="button" data-act="pro">' + CM.ico('estrella', 16) + ' Pasar a Pro</button>') : '') +
       (c.rol !== 'usuario' ? '<a class="btn" href="../admin/">Panel de administración</a>' : '') + '</div>';
+    const sec = [['metas', '', 'metas', 'Metas'], ['cerebro', 'notas', 'libro', 'Notas'], ['cerebro', 'ideas', 'cerebro', 'Ideas'], ['cerebro', 'problemas', 'alerta', 'Problemas'],
+      ['cerebro', 'diario', 'luna', 'Diario'], ['cerebro', 'logros', 'estrella', 'Logros']];
+    x += '<div class="card"><h3>Secciones</h3><div class="secs">' + sec.map((s) => '<button type="button" class="ghost" data-act="sec" data-v="' + s[0] + '" data-s="' + s[1] + '">' + CM.ico(s[2], 18) + ' ' + s[3] + '</button>').join('') +
+      '<button type="button" class="ghost" data-act="aterrizar">' + CM.ico('ancla', 18) + ' Aterrizar</button></div></div>';
     const pf = c.prefs || {};
     x += '<div class="card"><h3>Mi estilo</h3><label>Nombre<input id="sN" maxlength="60" value="' + esc(c.nombre || '') + '"></label><p class="sub">Color</p><div class="pal">' + CM.COLORES.map((k) => '<button type="button" data-act="col" data-c="' + k + '" class="' + ((pf.color || CM.COLORES[0]) === k ? 'on' : '') + '" style="background:' + k + '" aria-label="' + k + '"></button>').join('') + '</div>' +
       '<p class="sub">Ícono</p><div class="avs">' + CM.AVATARES.map((a) => '<button type="button" data-act="av" data-a="' + a + '" class="' + ((pf.avatar || '🙂') === a ? 'on' : '') + '">' + a + '</button>').join('') + '</div>' +
@@ -85,7 +89,9 @@
     el.onclick = async (e) => {
       const b = e.target.closest('[data-act]'); if (!b) return; const a = b.dataset.act;
       try {
-        if (a === 'col') { await CM.guardarPrefs({ color: b.dataset.c }); render(el); }
+        if (a === 'sec') { CM.ui.sub = b.dataset.s || null; CM.ir(b.dataset.v); }
+        else if (a === 'aterrizar') CM.aterrizar();
+        else if (a === 'col') { await CM.guardarPrefs({ color: b.dataset.c }); render(el); }
         else if (a === 'av') { await CM.guardarPrefs({ avatar: b.dataset.a }); render(el); }
         else if (a === 'tema') { await CM.guardarPrefs({ tema: b.dataset.t }); render(el); }
         else if (a === 'nom') { c.nombre = el.querySelector('#sN').value.trim() || c.nombre; await rpc('mi_perfil_guardar', { p_nombre: c.nombre, p_telefono: c.telefono }); toast('Guardado'); }

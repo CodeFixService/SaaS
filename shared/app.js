@@ -367,8 +367,8 @@
   async function pedirInstalar() { if (!instalar) return false; instalar.prompt(); await instalar.userChoice; instalar = null; return true; }
 
   /* ---------- Versión nueva: solo cuando el administrador la libera ---------- */
-  // La app no cambia sola: cada celular usa su versión guardada hasta que la persona toca "Actualizar",
-  // y la ventana aparece solo cuando hay una versión liberada (Administración → Versiones) más nueva que la suya.
+  // Cada celular usa su versión guardada hasta que hay una versión liberada (Administración → Versiones) más nueva:
+  // entonces se actualiza sola. Solo si la suya ya es demasiado antigua (version_min) se muestra la ventana obligatoria.
   const mayor = (a, b) => {
     const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number);
     for (let i = 0; i < Math.max(x.length, y.length); i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0);
@@ -383,6 +383,7 @@
     const forzada = !!(min && versionMenor(cfg.VERSION, min));
     if (!forzada && !(lib && versionMenor(cfg.VERSION, lib))) return;
     avisada = true;
+    if (!forzada) { actualizarSola(); return; }
     const d = modal('<h2>' + (forzada ? '⚠️ Actualiza la app' : '✨ Hay una versión nueva') + '</h2><p class="muted" style="margin-top:0">' +
       (forzada ? 'Tu versión (v' + esc(cfg.VERSION) + ') ya no funciona bien. Actualízala para seguir.' : 'Tienes la v' + esc(cfg.VERSION) + ' y ya está disponible la v' + esc(lib) + '. Actualiza para tener las últimas mejoras.') +
       '</p><p class="err" id="btMsg" style="margin:0 0 10px"></p><div class="btns">' + (forzada ? '' : '<button class="ghost" data-cerrar>Después</button>') +
@@ -390,6 +391,23 @@
     d.querySelector('#btActualizar').onclick = actualizar;
     d.querySelector('#btReparar').onclick = repararApp;
   }
+  // v4.3: la versión liberada se instala sola, sin preguntar. Se descarga completa en segundo plano y la app se recarga
+  // apenas no estés escribiendo ni con una ventana abierta. Si Cloudflare aún no termina de publicarla, lo reintenta más tarde.
+  function actualizarSola() {
+    if (!('serviceWorker' in navigator)) { avisada = false; return; }
+    navigator.serviceWorker.ready.then((reg) => {
+      const sw = reg.active; if (!sw) { avisada = false; return; }
+      const ch = new MessageChannel();
+      ch.port1.onmessage = (e) => {
+        if (!(e.data && e.data.ok)) { setTimeout(() => { avisada = false; }, 5 * 60 * 1000); return; }
+        const libre = () => !document.querySelector('dialog[open]') && !(document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName));
+        const recargar = () => { if (libre()) { try { sessionStorage.setItem('bt:actualizada', e.data.version || ''); } catch (er) { /* sin storage */ } location.reload(); } else setTimeout(recargar, 4000); };
+        recargar();
+      };
+      sw.postMessage({ tipo: 'actualizar' }, [ch.port2]);
+    }).catch(() => { avisada = false; });
+  }
+  try { const v = sessionStorage.getItem('bt:actualizada'); if (v) { sessionStorage.removeItem('bt:actualizada'); setTimeout(() => toast('App actualizada a la v' + v), 1500); } } catch (e) { /* sin storage */ }
   // Pide al service worker que descargue la versión publicada completa y recarga. Si algo falla, sigue en la versión actual.
   function actualizar() {
     const b = document.getElementById('btActualizar');

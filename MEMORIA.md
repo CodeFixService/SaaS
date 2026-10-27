@@ -39,3 +39,11 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - Para repartirlo: `python3 nucleo/sincronizar.py <carpeta con los repos>` (copia, enlaza en las páginas, agrega al service worker y escribe nucleo.json).
 - El Centro de Mando → Apps muestra la versión del núcleo de cada app y avisa si falta sincronizar.
 - Cuentas: cada app es un proyecto Supabase propio → un correo = una cuenta por app (lo asegura Supabase); el mismo correo puede usarse en otra app.
+
+## v4.3 · Anotar rápido, Listas y actualización automática (base 3.6)
+- Barra de abajo: Hoy · Tablero · **+** (anotar) · Listas · Panel. Arriba: ⋯ = Más (Metas, Notas, Ideas, Problemas, Diario, Logros, Aterrizar).
+- **+**: Nota (por defecto) · Tarea (fecha + hora opcional, en `datos.hora`) · Lo que falta · Recordar · Idea · Problema.
+- **Listas** (`app/m-listas.js`): items tipo `falta` (titulo = qué; `datos` = { lista, cant, para }). PDF hecho a mano (sin librerías), Compartir (WhatsApp) y Eliminar con confirmación.
+- Avisos (`tareas_periodicas`): lo de mañana a las 08:00 del día anterior; tareas con hora y recordatorios, 1 hora antes.
+- **Actualización automática**: cron `cm-auto` cada 10 min → `auto_actualizar()` lee version.json de GitHub (main). Si `bd` es mayor, ejecuta instalar.sql; si solo cambió la app, la libera. La app instala sola la versión liberada (sin botón).
+- Al publicar: subir `VERSION` (config.js + version.json) y, si cambia la base, `db_version()` + `bd` en version.json. Nada más.

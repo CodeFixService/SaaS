@@ -66,8 +66,8 @@
   const PASOS = () => {
     const I = CM.items, p = pr();
     return [['Crea tu espacio de trabajo con horario', CM.espacios.some((e) => e.modo === 'trabajo' && !e.archivado), 'mas'], ['Anota tu primera tarea', I.some((i) => i.tipo === 'tarea'), 'hoy'],
-      ['Elige tu Top 3 del día', I.some((i) => i.tipo === 'tarea' && i.prioridad === 3), 'hoy'], ['Cuéntame cómo vas hoy (energía y ánimo)', I.some((i) => i.tipo === 'diario' && i.datos && i.datos.animo), 'hoy'],
-      ['Define una meta', I.some((i) => i.tipo === 'meta'), 'metas'], ['Personaliza tu estilo (color e ícono)', !!(p.color || p.avatar), 'mas']];
+      ['Elige tu Top 3 del día', I.some((i) => i.tipo === 'tarea' && i.prioridad === 3), 'hoy'], ['Anota algo que falta en una lista (+ → Lo que falta)', I.some((i) => i.tipo === 'falta'), 'listas'],
+      ['Activa las notificaciones (Más → Notificaciones)', typeof Notification !== 'undefined' && Notification.permission === 'granted', 'mas'], ['Personaliza tu estilo (color e ícono)', !!(p.color || p.avatar), 'mas']];
   };
   CM.guiaCard = () => {
     if (pr().guia === 'ok') return '';
@@ -78,7 +78,7 @@
       '<div class="btns-s"><button type="button" class="small ghost" data-act="tour">¿Cómo funciona?</button><button type="button" class="small ghost" data-act="guiaX">Ocultar guía</button></div></div>';
   };
   CM.tour = () => {
-    const S = [['Hoy', 'Tu pantalla diaria: captura rápido, elige tu Top 3 y marca lo cumplido. El botón Aterrizar te ayuda cuando te sientes perdido.'], ['Trabajo y vida personal', 'Crea espacios (Más → Espacios). Los de trabajo tienen horario: dentro te exijo avanzar, fuera te invito a descansar.'], ['Tablero y Metas', 'Tablero: Por hacer → En curso → Hecho. Metas: con resultados medibles y hábitos con racha.'], ['Cerebro', 'Ideas (con lluvia de ideas y puntaje), problemas con sus soluciones, notas, diario y logros.'], ['Panel', 'Gráficos y consejos que aprenden de tus propios datos: tu mejor día, tu energía, tu ritmo.'], ['Tu estilo', 'En Más → Mi estilo eliges color, ícono y tema. Tu ánimo diario cambia el ícono junto a tu avatar.']];
+    const S = [['Anotar (+)', 'El botón + de abajo sirve en cualquier pantalla: nota, tarea con fecha y hora, lo que falta, recordatorio o idea.'], ['Hoy', 'Lo de hoy ordenado por hora, tu Top 3 y los próximos días. Te aviso un día antes (a las 8:00) y 1 hora antes.'], ['Listas', 'Lo que falta (qué, cuánto y para quién), agrupado por lista: Feria, Casa, Negocio… Descárgala en PDF, compártela por WhatsApp y elimínala al terminar.'], ['Tablero y Panel', 'Tablero: Por hacer → En curso → Hecho. Panel: cómo vas.'], ['Más (arriba)', 'Metas, Notas, Ideas, Problemas, Diario, Logros, espacios de trabajo y tu estilo.']];
     let i = 0;
     const d = modal('<div id="tb"></div><div class="btns"><button class="ghost" data-cerrar type="button">Cerrar</button><button id="tn" type="button">Siguiente</button></div>');
     const pinta = () => { d.querySelector('#tb').innerHTML = '<h2>' + (i + 1) + '/' + S.length + ' · ' + esc(S[i][0]) + '</h2><p>' + esc(S[i][1]) + '</p>'; d.querySelector('#tn').textContent = i === S.length - 1 ? 'Listo' : 'Siguiente'; };
