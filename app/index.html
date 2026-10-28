@@ -41,7 +41,7 @@
   App.campana(document.getElementById('bCampana'));
   // Núcleo (pagos.js): cuenta nueva que debe su primer pago → pantalla de activación.
   if (c.rol === 'usuario') { if (!window.CFX_PAGOS) await new Promise((r) => addEventListener('load', r)); CFX_PAGOS.revisar({ rpc: App.rpc, salir: App.salir }); }
-  CM.aplicarTema(); CM.primerTour(); CM.limpiarAnimo(); CM.chip(); setInterval(CM.chip, 60000);
+  CM.aplicarTema(); CM.pintarAvatar(); CM.primerTour(); CM.limpiarAnimo(); CM.chip(); setInterval(CM.chip, 60000);
   CM.iniciarLatido();
   CM.ir(location.hash.slice(1) || 'hoy');
   setInterval(() => { if (!document.hidden && Date.now() - CM.sync > 300000) CM.cargar().then(CM.emit).catch(() => {}); }, 60000);

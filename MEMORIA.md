@@ -149,3 +149,22 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - Pruebas nuevas: `apl_r2.sql`, `cm_r2.sql`, `r2_ui.js`.
 - Versiones: CM 4.13/BD 4.4 · Billetera 1.17/BD 17 · Órbita 5.15/BD 5.10 · Barbería 2.14 · BiciTaller 2.14/BD 2.6 · Estaciona 2.9/BD 11.
 - No hecho (decidido): renombrar repos (Cloudflare Pages queda ligado al nombre; los dominios no dependen del nombre del repo); comisión oculta (no: se cobra transparente).
+
+## Etapa final (28/10/2026) · Cabecera, Ajustes y limpieza para vender · núcleo 2.2
+- **Versiones en main**: CM 4.16 (base 4.5) · Billetera 1.18.0 (base 18) · Órbita 5.18 (base 5.11) · Barbería 2.17 · BiciTaller 2.17 (base 2.6) · Estaciona 2.10.0 (base 11).
+- **Cabecera común** (`ayuda.js`): una sola llamada por app al tener la cuenta, también para el admin:
+  `CFX_AYUDA.iniciar({ rpc, app, admin, premium, pro, id, hasta, nombre, email, foto, cuenta, panel, quitar, salir })`.
+  Pone a la derecha del encabezado [🔔 campana de la app (una sola; las repetidas se esconden)] [FREE/PRO] [foto o iniciales].
+  La foto abre el menú: Ir al inicio, Mi cuenta, Panel de administración, Volver, Guía, Chat con soporte, Términos, Premium y Cerrar sesión (pide confirmar).
+  Reemplaza al ⋮ (`.cfx-boya` ya no existe). `quitar` = selector de lo que ya está en el menú (ADMIN, persona, casa, píldora del plan…). Admin = PRO.
+  También marca la sensación Premium (`CFX_PREMIUM.marcar`, nunca al admin); `pro` solo cambia la insignia (p. ej. prueba Pro en Billetera).
+- **Ajustes en cuadrícula**: `CFX_AJUSTES.montar(el, [{ k, ico, t, d, abrir(zona) | nodo }], { arriba })` → `{ abrir(k), grilla() }`. "←" vuelve a las tarjetas.
+  Usado en CM admin, Billetera admin, Órbita admin (secciones `.aj` existentes como `nodo`), Barbería admin, BiciTaller admin y Estaciona admin. Barbería dueño y Billetera/Órbita/Taller "Más" ya eran cuadrícula.
+- **Quitado de las apps (se hace en el CM)**: precios y links Premium, planes, textos, keys, cupones, avisos masivos, pagos Premium antiguos, soporte antiguo y versiones/liberar.
+  Se conservó lo propio: Billetera conexiones extra (y su pestaña Pagos para esos paquetes), reglas, notificaciones push/servidor, registro, socios, calificaciones, marca, mantención.
+  CM admin: Planes y Registro pasan a Ajustes (Planes del CM = Control → Planes); `#registro`/`#versiones` siguen funcionando.
+  Soporte de Billetera y Barbería → chat común (`CFX_AYUDA.chat`, llega a CM → Mensajes).
+- **Avisos**: CM → Control → Avisar viene marcado "Enviar en las 6 apps". `cfx_destinatarios('todos')` = todas las cuentas (CM suma socios, Billetera dueños y ayudantes, Órbita equipo).
+- **Diseño**: en computador `main` centrado con ancho máx. 1040 px (sin el espacio vacío de Billetera); el + centrado en su círculo; micrófono proporcional al campo (18–30 px).
+- **Pruebas**: `pruebas/recorrido.js` (ANCHO=360|768|1280) entra como admin, negocio y cliente a las 6, abre cada pestaña, Ajustes y el menú de la foto; informe en `capturas/recorrido-<ancho>.txt`.
+  Si npm no tiene red: módulo `pg` mínimo propio (NODE_PATH) — solo para pruebas locales.

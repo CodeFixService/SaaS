@@ -367,7 +367,7 @@ function crear(opts) {
       try {
         await como(user, async (c) => {
           if (upsert) await c.query('delete from storage.objects where bucket_id = $1 and name = $2', [bucket, ruta]);
-          await c.query(`insert into storage.objects (bucket_id, name, owner, owner_id, metadata) values ($1, $2, $3, $3::text, $4)`, [bucket, ruta, user ? user.sub : null, JSON.stringify({ size: datos.length, mimetype: type })]);
+          await c.query(`insert into storage.objects (bucket_id, name, owner, owner_id, metadata) values ($1, $2, $3::uuid, $3::text, $4)`, [bucket, ruta, user ? user.sub : null, JSON.stringify({ size: datos.length, mimetype: type })]);
         });
       } catch (e) {
         log(`[sim] subir ${clave}: ${e.message}`);

@@ -125,8 +125,12 @@
     if (!c) { location.replace(ROOT + 'index.html?volver=' + encodeURIComponent(location.pathname + location.hash)); return new Promise(() => {}); }
     if (c.suspendido) { document.body.innerHTML = '<main><div class="card"><h2>Cuenta suspendida</h2><p class="muted">Contacta al administrador.</p><button onclick="App.salir()">Salir</button></div></main>'; return new Promise(() => {}); }
     if (roles && !roles.includes(c.rol)) { location.replace(ROOT + destino(c)); return new Promise(() => {}); }
-    // Núcleo (premium.js): con Pro la app se ve dorada y la primera vez saluda.
-    if (c.rol === 'usuario') (window.CFX_PREMIUM ? Promise.resolve() : new Promise((r) => addEventListener('load', r))).then(() => window.CFX_PREMIUM && (window.CFX_AYUDA_PEND = { rpc: rpc, app: 'mando' }, window.CFX_AYUDA && CFX_AYUDA.iniciar(window.CFX_AYUDA_PEND), true) && CFX_PREMIUM.marcar({ premium: c.premium, id: c.id, hasta: c.premium_hasta }));
+    // Núcleo (ayuda.js): cabecera común [campana][FREE/PRO][foto], menú de la cuenta, ayuda y sensación Premium.
+    const enAdmin = /\/admin\//.test(location.pathname);
+    window.CFX_AYUDA_PEND = Object.assign(window.CFX_AYUDA_PEND || {}, { rpc, app: 'mando', admin: c.rol !== 'usuario', premium: !!c.premium, id: c.id, hasta: c.premium_hasta,
+      nombre: c.nombre, email: c.email, salir, quitar: 'a[href="../app/"]',
+      cuenta: enAdmin ? ROOT + 'app/#mas' : () => window.CM && window.CM.ir('mas'), panel: c.rol !== 'usuario' && !enAdmin ? ROOT + 'admin/' : null });
+    if (window.CFX_AYUDA) window.CFX_AYUDA.iniciar(window.CFX_AYUDA_PEND);
     return c;
   }
   async function entrar(email, password) {

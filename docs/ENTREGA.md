@@ -1,8 +1,9 @@
-# Entrega · CodeFix (28/10/2026 · ronda 2)
+# Entrega · CodeFix (28/10/2026 · etapa final)
 
 ## Qué hace cada app (para explicárselo a tus clientes)
 
-Todas: traen el botón 🛟 (guía para partir, chat con soporte y términos), se instalan en el celular como una app (sin tienda), avisan con notificaciones, funcionan con plan **Gratis** y **Premium**,
+Todas: arriba a la derecha la campana, el plan (FREE o PRO) y tu foto; al tocar la foto: inicio, mi cuenta, guía para partir, chat con soporte, términos, Premium y cerrar sesión.
+Los Ajustes se ven como tarjetas. Todas se instalan en el celular como una app (sin tienda), avisan con notificaciones, funcionan con plan **Gratis** y **Premium**,
 se pagan con transferencia, link o tarjeta y permiten descargar un **respaldo en Excel**. Los datos de cada persona solo los ve ella.
 
 **1. Centro de Mando** — Tu cabeza ordenada en el celular. Anotas al tiro (también con la voz) tareas, pedidos, ideas y recordatorios;
@@ -87,3 +88,14 @@ select 'Estaciona instalada v' || (select valor #>> '{}' from public.config wher
 7. **Mensajes** → todo lo que te escriben desde el 🛟 de las 6 apps llega aquí, con aviso al tiro (igual que los pagos por revisar).
 8. **Pagos → 🎁 Liberar el registro**: N días gratis para una app o las 6 (las cuentas creadas en ese tiempo quedan en gratis).
 9. **Apps → Panel de la app**: abre el panel de cada app ya iniciado (después de conectarla una vez).
+
+## Manual corto (para ti y para tus clientes)
+- **Tú (Centro de Mando)**: Resumen (lo que espera en las 6 apps) · Apps (conectar, liberar versiones, respaldos) · Pagos (precios y comprobantes de las 6) ·
+  Control (avisos a todas las cuentas de las 6, planes, textos, keys, cupones, verificaciones) · Mensajes (soporte de las 6) · Ajustes (versión, generales, notificaciones, registro).
+- **Panel admin de cada app**: solo lo propio de esa app (reglas, notificaciones, socios, calificaciones, registro…). Precios, planes, avisos a todos y versiones ya no están ahí.
+- **Negocio**: la barra de abajo (celular) o el menú lateral (computador) con el + al centro; "Más" en tarjetas; la foto arriba abre su cuenta y la ayuda.
+- **Cliente**: igual, con su plan FREE o PREMIUM arriba y el chat de soporte en el menú de la foto.
+
+## Al terminar esta etapa
+- No hay que pegar ninguna consulta: las bases se actualizan solas en máximo 10 minutos (CM base 4.5, Billetera 18, Órbita 5.11).
+- Libera en CM → Apps (o Ajustes → Versión del CM): CM 4.16 · Billetera 1.18.0 · Órbita 5.18 · Barbería 2.17 · BiciTaller 2.17 · Estaciona 2.10.0.

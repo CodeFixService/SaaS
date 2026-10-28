@@ -20,7 +20,10 @@
       d.querySelector('#mo').focus();
     });
   }
-  const show = App.pestanas((v) => ({ resumen, usuarios, pagos: () => window.PagosCentral.render(el('pagos')), mensajes: () => window.MensajesCentral.render(el('mensajes')), control: () => window.ControlApps.render(el('control')), planes, ajustes, registro, versiones, apps: () => window.MisApps.render(el('apps')) }[v] || (() => {}))());
+  const show = App.pestanas((v) => ({ resumen, usuarios, pagos: () => window.PagosCentral.render(el('pagos')), mensajes: () => window.MensajesCentral.render(el('mensajes')), control: () => window.ControlApps.render(el('control')), ajustes: () => ajustes(), apps: () => window.MisApps.render(el('apps')) }[v] || (() => {}))());
+  // Ajustes en cuadrícula (núcleo): cada sección se abre dentro y "←" vuelve a las tarjetas.
+  let AJ = null;
+  const irAjuste = (k) => { show('ajustes'); AJ.abrir(k); };
   App.ponerIconos(); App.campana($('bCampana'));
 
   async function resumen() {
@@ -58,7 +61,7 @@
     try {
       const e = await estadoVersion();
       if (e.pendiente) el('resumen').insertAdjacentHTML('afterbegin', '<button type="button" class="aviso-ver" id="bVer">🚀 Hay una versión nueva lista (v' + esc(e.pub.version) + ').<br><span class="sub">Pruébala en tu teléfono y libérala para todos.</span></button>');
-      if ($('bVer')) $('bVer').onclick = () => show('versiones');
+      if ($('bVer')) $('bVer').onclick = () => irAjuste('version');
     } catch (x) { /* sin internet */ }
   }
 
@@ -79,8 +82,7 @@
     return { pub, bd, fn, lib, okBd, okFn, okCel, liberada, pendiente: !liberada || !okBd };
   }
   let pub_ = null, pub2 = null;
-  async function versiones() {
-    const v = el('versiones');
+  async function versiones(v) {
     v.innerHTML = '<div class="titulo-v"><h2>Actualizar la app</h2></div><p class="sub">Revisando…</p>';
     let e;
     try { e = await estadoVersion(); } catch (x) { v.innerHTML = '<p class="err">No se pudo leer la versión publicada. Revisa tu internet.</p>'; return; }
@@ -107,12 +109,12 @@
       const b = ev.target.closest('[data-a]'); if (!b) return;
       const a = b.dataset.a;
       if (a === 'fn') copiarArchivo('supabase/functions/servidor/corto.ts', /^import /m, 'Código copiado. Pégalo en Edge Functions → servidor → Deploy');
-      else if (a === 'otra') versiones();
+      else if (a === 'otra') versiones(v);
       else if (a === 'cel') { b.disabled = true; b.textContent = 'Actualizando…'; App.actualizar(); }
       else if (a === 'rep') { if (await confirmar('Se vuelve a descargar la app en este teléfono. No se borra ningún dato.', 'Reparar')) App.repararApp(); }
       else if (a === 'lib') {
         if (!(await confirmar('¿Liberar la v' + e.pub.version + '? A todos les aparecerá "Hay una versión nueva" con el botón Actualizar.', 'Liberar'))) return;
-        try { await rpc('admin_config_guardar', { p_clave: 'version_liberada', p_valor: e.pub.version, p_motivo: 'Liberar v' + e.pub.version }); toast('v' + e.pub.version + ' liberada para todos'); if (!e.okCel) App.actualizar(); else versiones(); } catch (x) { err(x); }
+        try { await rpc('admin_config_guardar', { p_clave: 'version_liberada', p_valor: e.pub.version, p_motivo: 'Liberar v' + e.pub.version }); toast('v' + e.pub.version + ' liberada para todos'); if (!e.okCel) App.actualizar(); else versiones(v); } catch (x) { err(x); }
       }
     };
   }
@@ -151,54 +153,55 @@
     d.querySelector('#nk').onclick = async () => { try { await App.crearCuenta({ email: d.querySelector('#ne').value.trim(), nombre: d.querySelector('#nn').value.trim(), rol: d.querySelector('#nr').value }); d.close(); toast('Cuenta creada'); usuarios(); } catch (x) { err(x); } };
   }
 
-  function planes() {
-    const P = pub.planes || {};
-    el('planes').innerHTML = '<div class="titulo-v"><h2>Planes</h2></div>' + Object.keys(P).map((k) => { const p = P[k], l = p.limites || {}; return '<div class="card" data-k="' + k + '"><h3>' + esc(p.nombre) + ' <span class="sub">' + k + '</span></h3>' + [['espacios', 'Espacios'], ['items', 'Ítems'], ['recordatorios', 'Recordatorios'], ['insights', 'Insights'], ['descanso', 'Descanso']].map(([c, t]) => '<label>' + t + '<input data-l="' + c + '" type="number" value="' + (l[c] === undefined ? '' : l[c]) + '"></label>').join('') + '<label>Descripción<input data-d value="' + esc(p.descripcion || '') + '"></label><button type="button" data-g="' + k + '">Guardar</button></div>'; }).join('');
-  }
-  el('planes').onclick = async (e) => {
-    const b = e.target.closest('[data-g]'); if (!b) return; const c = b.closest('.card'), k = b.dataset.g, p = pub.planes[k], lim = {};
-    c.querySelectorAll('[data-l]').forEach((i) => { if (i.value !== '') lim[i.dataset.l] = +i.value; });
-    const m = await motivo('Cambiar plan ' + p.nombre); if (m === null) return;
-    try { await rpc('admin_plan_guardar', { p_codigo: k, p_nombre: p.nombre, p_descripcion: c.querySelector('[data-d]').value, p_limites: lim, p_beneficios: p.beneficios || [], p_duracion: p.duracion_dias || 30, p_motivo: m }); pub = await App.cargarPublica(); toast('Guardado'); } catch (x) { err(x); }
-  };
-
   // Precios, links y transferencia ya no van aquí: se editan una vez para las 6 apps en Pagos.
   const CFG = [['dias_prueba', 'Días de prueba Pro'], ['soporte_whatsapp', 'WhatsApp de soporte', 1], ['dias_comprobantes', 'Guardar comprobantes (días)'], ['limite_db_mb', 'Límite de base de datos (MB)'], ['auditoria_max', 'Máximo de filas del registro']];
   function ajustes() {
-    const c = pub.config || {}, k = c.vapid_publica;
-    el('ajustes').innerHTML = '<div class="titulo-v"><h2>Ajustes</h2></div><button type="button" class="aviso-ver" id="bVer2">🔄 Actualizar la app<br><span class="sub">Base de datos, función del servidor, probar y liberar versiones</span></button><div class="card">' + CFG.map((f) => '<label>' + f[1] + '<input data-c="' + f[0] + '" data-t="' + (f[2] ? 's' : 'n') + '" value="' + esc(c[f[0]] === undefined ? '' : c[f[0]]) + '"></label>').join('') + '<button type="button" id="cg">Guardar ajustes</button></div>' +
-      '<div class="card"><h2>Enviar aviso</h2><label>A<select id="avD"><option value="todos">Todos</option><option value="pro">Pro</option><option value="gratis">Gratis</option></select></label><label>Título<input id="avT" maxlength="90"></label><label>Mensaje<input id="avC" maxlength="240"></label><button type="button" id="avG">Enviar</button></div>' +
-      '<div class="card"><h2>Notificaciones push</h2><p class="muted">' + (k ? 'Claves creadas.' : 'Falta crear las claves.') + '</p>' + (SUPER ? '<button id="kG" type="button" class="' + (k ? 'ghost' : '') + '">' + (k ? 'Crear claves nuevas' : 'Crear claves') + '</button> ' : '') + '<button class="alt" id="kP" type="button">Probar servidor</button><p class="sub" id="kR"></p></div>';
-    $('bVer2').onclick = () => show('versiones');
+    AJ = window.CFX_AJUSTES.montar(el('ajustes'), [
+      { k: 'version', ico: '🔄', t: 'Versión', d: 'Probar y liberar la app', abrir: versiones },
+      { k: 'generales', ico: '⚙️', t: 'Ajustes generales', d: 'Prueba Pro, soporte y límites', abrir: generales },
+      { k: 'push', ico: '🔔', t: 'Notificaciones', d: 'Claves push y servidor', abrir: push },
+      { k: 'registro', ico: '📜', t: 'Registro de cambios', d: 'Quién cambió qué y por qué', abrir: registro },
+      { k: 'cuenta', ico: '👤', t: 'Mi cuenta', d: 'Foto, nombre y clave', abrir: () => { location.href = App.ROOT + 'app/#mas'; } }
+    ], { arriba: '<div class="titulo-v"><h2>Ajustes</h2></div><p class="sub">Precios, planes, textos, keys, cupones y avisos de las 6 apps están en Pagos y Control.</p>' });
+  }
+  function generales(z) {
+    const c = pub.config || {};
+    z.innerHTML = '<div class="card">' + CFG.map((f) => '<label>' + f[1] + '<input data-c="' + f[0] + '" data-t="' + (f[2] ? 's' : 'n') + '" value="' + esc(c[f[0]] === undefined ? '' : c[f[0]]) + '"></label>').join('') + '<button type="button" id="cg">Guardar ajustes</button></div>';
     $('cg').onclick = async () => {
       const m = await motivo('Cambiar ajustes'); if (m === null) return;
-      try { for (const i of el('ajustes').querySelectorAll('[data-c]')) { const nv = i.dataset.t === 'n' ? Number(i.value) : i.value; if (JSON.stringify(nv) !== JSON.stringify(c[i.dataset.c]) && !(i.value === '' && c[i.dataset.c] === undefined)) await rpc('admin_config_guardar', { p_clave: i.dataset.c, p_valor: nv, p_motivo: m }); } pub = await App.cargarPublica(); toast('Guardado'); } catch (x) { err(x); }
+      try { for (const i of z.querySelectorAll('[data-c]')) { const nv = i.dataset.t === 'n' ? Number(i.value) : i.value; if (JSON.stringify(nv) !== JSON.stringify(c[i.dataset.c]) && !(i.value === '' && c[i.dataset.c] === undefined)) await rpc('admin_config_guardar', { p_clave: i.dataset.c, p_valor: nv, p_motivo: m }); } pub = await App.cargarPublica(); toast('Guardado'); } catch (x) { err(x); }
     };
-    $('avG').onclick = async () => { const m = await motivo('Enviar aviso'); if (m === null) return; try { const n = await rpc('admin_aviso', { p_destino: $('avD').value, p_titulo: $('avT').value, p_cuerpo: $('avC').value, p_motivo: m }); toast('Enviado a ' + n); } catch (x) { err(x); } };
+  }
+  function push(z) {
+    const k = (pub.config || {}).vapid_publica;
+    z.innerHTML = '<div class="card"><p class="muted">' + (k ? 'Claves creadas.' : 'Falta crear las claves.') + '</p>' + (SUPER ? '<button id="kG" type="button" class="' + (k ? 'ghost' : '') + '">' + (k ? 'Crear claves nuevas' : 'Crear claves') + '</button> ' : '') + '<button class="alt" id="kP" type="button">Probar servidor</button><p class="sub" id="kR"></p></div>';
     if ($('kG')) $('kG').onclick = async () => {
       if (k && !(await confirmar('Con claves nuevas todos deberán activar las notificaciones otra vez.', 'Continuar'))) return;
       try {
         const kp = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
         const raw = new Uint8Array(await crypto.subtle.exportKey('raw', kp.publicKey)), jwk = await crypto.subtle.exportKey('jwk', kp.privateKey);
         const b64u = (u) => btoa(String.fromCharCode.apply(null, u)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-        await rpc('admin_push_claves', { p_publica: b64u(raw), p_privada: jwk.d }); pub = await App.cargarPublica(); toast('Claves creadas'); ajustes();
+        await rpc('admin_push_claves', { p_publica: b64u(raw), p_privada: jwk.d }); pub = await App.cargarPublica(); toast('Claves creadas'); push(z);
       } catch (x) { err(x); }
     };
     $('kP').onclick = async () => { const { data, error } = await App.sb.functions.invoke('servidor', { body: { accion: 'ping' } }); $('kR').textContent = error ? 'No responde: despliega la función "servidor".' : data && data.servicio ? 'Funciona (v' + data.version + ').' : 'Responde, pero sin clave de servicio.'; };
   }
 
   let filas = [];
-  async function registro() {
-    el('registro').innerHTML = '<p class="sub">Cargando…</p>';
+  async function registro(z) {
+    z.innerHTML = '<p class="sub">Cargando…</p>';
     try {
       filas = await rpc('admin_auditoria', { p_limite: 5000 });
-      el('registro').innerHTML = '<div class="titulo-v"><h2>Registro de cambios</h2><span class="sub">' + filas.length + ' filas</span></div><div class="card"><p class="sub">Quién cambió o borró algo y por qué. Descárgalo y, si eres administrador, vacíalo para liberar espacio.</p><div class="btns-s"><button type="button" id="rD">Descargar CSV</button>' + (SUPER ? '<button type="button" class="ghost" id="rV">Vaciar lo descargado</button>' : '') + '</div></div>' +
+      z.innerHTML = '<div class="card"><p class="sub">' + filas.length + ' filas. Quién cambió o borró algo y por qué. Descárgalo y, si eres administrador, vacíalo para liberar espacio.</p><div class="btns-s"><button type="button" id="rD">Descargar CSV</button>' + (SUPER ? '<button type="button" class="ghost" id="rV">Vaciar lo descargado</button>' : '') + '</div></div>' +
         '<button type="button" class="aviso-ver" id="rApps">🧹 Respaldo y limpieza de las 6 apps<br><span class="sub">En Apps: descarga el Excel de cada una, borra lo que ya no sirve y revisa tablas sobrantes.</span></button>' +
         filas.slice(0, 100).map((f) => '<div class="card"><div class="fila"><span class="tit">' + esc(f.accion) + '</span><span class="sub">' + App.hace(f.created_at) + '</span></div><p class="sub">' + esc(f.quien_email || '') + ' (' + esc(f.rol || '') + ') · ' + esc(f.detalle || '') + (f.motivo ? '<br><b>Motivo:</b> ' + esc(f.motivo) : '') + '</p></div>').join('');
       $('rD').onclick = () => { const c = (s) => '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"'; const csv = 'id,fecha,quien,rol,accion,detalle,motivo\n' + filas.map((f) => [f.id, f.created_at, f.quien_email, f.rol, f.accion, f.detalle, f.motivo].map(c).join(',')).join('\n'); const u = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' })); App.descargar(u, 'registro-' + App.hoy() + '.csv'); setTimeout(() => URL.revokeObjectURL(u), 4000); App.pendienteVaciar = true; toast('Descargado'); };
       $('rApps').onclick = () => show('apps');
-      if ($('rV')) $('rV').onclick = async () => { if (!filas.length) return; if (!App.pendienteVaciar) return toast('Primero descarga el CSV'); if (!(await confirmar('Se borran ' + filas.length + ' filas del registro (ya descargadas).', 'Vaciar'))) return; try { await rpc('auditoria_vaciar', { p_hasta_id: filas[0].id }); App.pendienteVaciar = false; toast('Registro vaciado'); registro(); } catch (x) { err(x); } };
-    } catch (e) { el('registro').innerHTML = '<p class="err">' + esc(e.message) + '</p>'; }
+      if ($('rV')) $('rV').onclick = async () => { if (!filas.length) return; if (!App.pendienteVaciar) return toast('Primero descarga el CSV'); if (!(await confirmar('Se borran ' + filas.length + ' filas del registro (ya descargadas).', 'Vaciar'))) return; try { await rpc('auditoria_vaciar', { p_hasta_id: filas[0].id }); App.pendienteVaciar = false; toast('Registro vaciado'); registro(z); } catch (x) { err(x); } };
+    } catch (e) { z.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; }
   }
-  show(location.hash.slice(1) || 'resumen');
+  // Direcciones antiguas (#registro, #versiones) abren su sección dentro de Ajustes.
+  const viejo = () => { const h = location.hash.slice(1); if (h === 'registro' || h === 'versiones') { irAjuste(h === 'registro' ? 'registro' : 'version'); return true; } return false; };
+  addEventListener('hashchange', viejo);
+  if (!viejo()) show(location.hash.slice(1) || 'resumen');
 })();

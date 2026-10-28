@@ -144,7 +144,7 @@ end $$;
 create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '4.4'::text $$;
+language sql immutable as $$ select '4.5'::text $$;
 create or replace function public.cfg_int(c text) returns int
 language sql stable security definer set search_path = '' as $$
   select (valor #>> '{}')::int from public.config where clave = c
@@ -1178,7 +1178,8 @@ begin
 end $$;
 create or replace function public.cfx_destinatarios(p_destino text) returns setof uuid
 language sql stable security definer set search_path = '' as $$
-  select id from public.perfiles where rol = 'usuario' and not suspendido
+  -- 'todos' = todas las cuentas (usuarios y socios); el resto, solo usuarios.
+  select id from public.perfiles where not suspendido and (rol = 'usuario' or (rol = 'socio' and p_destino = 'todos'))
     and (p_destino in ('todos', 'negocios') or (p_destino = 'premium' and premium_hasta > now()) or (p_destino = 'gratis' and (premium_hasta is null or premium_hasta <= now())))
 $$;
 create or replace function public.cfx_marcar_verificado(p_cuenta uuid, p_si boolean) returns void

@@ -28,7 +28,7 @@
     caja().innerHTML = '<div class="card"><h2>Aviso a todos</h2><p class="sub">Les llega a la campanita y como notificación.</p>' +
       '<label>A quién<select id="avD"><option value="todos">Todos</option><option value="negocios">Negocios (cuentas principales)</option><option value="clientes">Clientes</option><option value="premium">Solo Premium</option><option value="gratis">Solo gratis</option></select></label>' +
       '<label>Título<input id="avT" maxlength="80"></label><label>Mensaje<textarea id="avC" maxlength="240" rows="3"></textarea></label>' +
-      '<label class="fila" style="gap:8px"><input type="checkbox" id="avTodas" style="width:auto"> Enviar en las 6 apps</label><button type="button" class="block" id="avG">Enviar</button><div id="avR"></div></div>';
+      '<label class="fila" style="gap:8px"><input type="checkbox" id="avTodas" style="width:auto" checked> Enviar en las 6 apps (a todas las cuentas)</label><button type="button" class="block" id="avG">Enviar</button><div id="avR"></div></div>';
     raiz.querySelector('#avG').onclick = async () => {
       const apps = raiz.querySelector('#avTodas').checked ? M().APPS.filter(conectada) : [app()], res = [];
       if (!(await confirmar('Se envía a ' + raiz.querySelector('#avD').selectedOptions[0].text.toLowerCase() + ' en ' + apps.length + ' app(s).', 'Enviar'))) return;

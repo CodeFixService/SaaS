@@ -400,7 +400,8 @@
   };
 
   CM.fotoPerfil = async () => { try { const f = await CM.fotos.get(localStorage.getItem('cm:fotoPerfil')); return f ? f.d : null; } catch (e) { return null; } };
-  CM.pintarAvatar = async () => { const b = document.getElementById('bMas'), f = await CM.fotoPerfil(); if (b && f) { b.innerHTML = ''; b.style.backgroundImage = 'url(' + f + ')'; b.classList.add('foto'); } };
+  // La foto de perfil (solo en este teléfono) va en la cabecera común del núcleo.
+  CM.pintarAvatar = async () => { const f = await CM.fotoPerfil(); const P = window.CFX_AYUDA_PEND; if (P) { P.foto = f || null; if (window.CFX_AYUDA) window.CFX_AYUDA.iniciar(P); } };
 
   /* ---------- Buscar en todo: tareas, notas, ideas, problemas, pedidos, recordatorios… ---------- */
   CM.buscar = function () {

@@ -29,11 +29,10 @@ async function entrar(t, p, email, pass) {
     await p.click('text=Borrar todos'); await p.waitForTimeout(400); await p.locator('dialog button, [role=dialog] button', { hasText: 'Borrar' }).last().click(); await p.waitForTimeout(800);
     const n2 = (await t.sim.su('select count(*)::int n from notificaciones where negocio=$1', [neg]))[0].n;
     assert(n2 === 0 && n1 >= 1, 'borra uno y todos (' + n1 + '→' + n2 + ')');
-    await p.goto(t.base + '/app/#soporte'); await p.waitForTimeout(1500); await t.sinModales();
+    await p.goto(t.base + '/app/#soporte'); await p.waitForTimeout(1500);
+    assert(await p.locator('dialog.cfx-ayuda textarea').count() === 1, 'soporte abre el chat común');
     assert(await t.anchoOk(), 'ancho soporte');
-    await t.foto('soporte');
-    await p.click('[aria-label="Borrar chat"]'); await p.waitForTimeout(400); await p.locator('dialog button, [role=dialog] button', { hasText: 'Borrar' }).last().click(); await p.waitForTimeout(800);
-    assert((await t.sim.su('select count(*)::int n from soporte'))[0].n === 0, 'chat borrado');
+    await t.foto('soporte'); await t.sinModales();
     await p.goto(t.base + '/app/#reportes'); await p.waitForTimeout(2000); await t.sinModales();
     const [d] = await Promise.all([p.waitForEvent('download'), p.click('button:has-text("Excel")')]);
     assert(/\.xlsx$/.test(d.suggestedFilename()), 'excel negocio ' + d.suggestedFilename()); await d.saveAs('/tmp/claude-0/emp_neg.xlsx');
