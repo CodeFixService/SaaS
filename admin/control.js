@@ -6,7 +6,7 @@
   const A = global.App, { esc, toast, modal, confirmar } = A;
   const M = () => global.MisApps;
   let raiz = null, actual = 'cm', seccion = 'avisar';
-  const SECC = [['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['registro', '📜 Registro']];
+  const SECC = [['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['registro', '📜 Registro']];
   // Nombres legibles de las claves de los planes (las demás se muestran tal cual).
   const NOMBRE = { productos: 'Productos', clientes: 'Clientes', fichas: 'Fichas publicadas', equipo: 'Equipo', pedidos_mes: 'Pedidos al mes', respuestas: 'Respuestas rápidas',
     contactos: 'Contactos', favoritos: 'Favoritos', mensajes_seguidos: 'Mensajes seguidos', barberos: 'Barberos', servicios: 'Servicios', ofertas: 'Ofertas',
@@ -138,13 +138,29 @@
     };
   }
 
+  async function humano() {
+    let h = {};
+    try { h = await rpc('cfx_humano') || {}; } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
+    caja().innerHTML = '<div class="card"><h2>Verificación humana</h2><p class="sub">Con Cloudflare Turnstile, antes de entrar o crear una cuenta aparece "Confirma que no eres un robot". Evita cuentas falsas y ataques.</p>' +
+      '<ol class="sub"><li>En Cloudflare → Turnstile crea un sitio con los dominios de tus apps y copia la <b>site key</b> y la <b>secret key</b>.</li>' +
+      '<li>Pega la site key aquí y guárdala en las 6 apps.</li><li>En cada Supabase: Authentication → Attack Protection → CAPTCHA → Turnstile, pega la secret key y guarda.</li></ol>' +
+      '<p class="sub">Primero el paso 2 y después el 3 (si no, nadie puede entrar). Para apagarlo: deja vacío y guarda, y apágalo en Supabase.</p>' +
+      '<label>Site key<input id="huK" value="' + esc(h.site_key || '') + '" placeholder="0x4AAAAAAA…"></label>' +
+      '<label class="fila" style="gap:8px"><input type="checkbox" id="huTodas" style="width:auto" checked> Guardar en las 6 apps</label><button type="button" class="block" id="huG">Guardar</button><div id="huR"></div></div>';
+    raiz.querySelector('#huG').onclick = async () => {
+      const apps = raiz.querySelector('#huTodas').checked ? M().APPS.filter(conectada) : [app()], res = [];
+      for (const a of apps) { try { await M().rpcDe(M().cliente(a), 'cfx_humano_guardar', { p_site_key: raiz.querySelector('#huK').value.trim() }); res.push(a.nombre + ': ✓'); } catch (x) { res.push(a.nombre + ': ' + nf(x)); } }
+      raiz.querySelector('#huR').innerHTML = res.map((t) => '<p class="sub">' + esc(t) + '</p>').join('');
+    };
+  }
+
   async function registro() {
     let L = [];
     try { L = await rpc('cfx_registro_lista', { p_limite: 200 }); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
     caja().innerHTML = '<div class="card"><h2>Lo que se hizo en ' + esc(app().nombre) + '</h2>' + (L.map((r) => '<div style="padding:4px 0;border-top:1px solid var(--line)"><b>' + esc(r.accion) + '</b> <span class="sub">' + esc(r.quien) + ' · ' + A.hace(r.creado) + '</span><div class="sub">' + esc(r.detalle) + '</div></div>').join('') || '<p class="empty">Sin registros</p>') + '</div>';
   }
 
-  const F = { avisar, planes, textos, keys, cupones, verif, registro };
+  const F = { avisar, planes, textos, keys, cupones, verif, humano, registro };
   async function render(el) {
     raiz = el;
     el.innerHTML = '<div class="titulo-v"><h2>Control</h2><span class="sub">Las 6 apps</span></div><p class="sub">Cargando…</p>';

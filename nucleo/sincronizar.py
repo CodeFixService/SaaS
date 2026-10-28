@@ -3,7 +3,7 @@
 
 Uso:  python3 nucleo/sincronizar.py /ruta/a/los/repos      (carpeta que contiene saas, emprendedor, barberia, …)
 Hace en cada repositorio:
-  1. Copia los scripts de JS (iconos, instalar, barra, auto, fotos, voz, respaldo, pagos, verificar) y tema.css a la carpeta que usa esa app.
+  1. Copia los scripts de JS (humano en el <head>; iconos, instalar, barra, auto, fotos, voz, respaldo, pagos, verificar, premium) y tema.css a la carpeta que usa esa app.
   2. Enlaza tema.css en cada página (después del CSS propio) y los scripts al final del <body>, si faltan.
   3. Agrega los archivos a la lista del service worker (para que funcionen sin internet).
   4. Escribe nucleo.json con la versión del núcleo (el Centro de Mando la muestra en cada tarjeta).
@@ -35,7 +35,8 @@ SQL = {
 }
 INI, FIN = '-- >>> CFX núcleo (no editar aquí: se copia de saas/nucleo/sql con sincronizar.py)', '-- <<< CFX núcleo'
 TABLA = re.compile(r'create table (?:if not exists )?((?:public|privado)\.[a-z_]+)', re.I)
-JS = ('iconos.js', 'instalar.js', 'barra.js', 'auto.js', 'fotos.js', 'voz.js', 'respaldo.js', 'pagos.js', 'verificar.js')
+CABEZA = ('humano.js',)  # van primero en el <head> (antes de que la app cree su conexión a Supabase)
+JS = ('iconos.js', 'instalar.js', 'barra.js', 'auto.js', 'fotos.js', 'voz.js', 'respaldo.js', 'pagos.js', 'verificar.js', 'premium.js')
 SALTAR = re.compile(r'(^docs/|guia|legal|actualizar\.html)')
 
 
@@ -58,6 +59,12 @@ def enlazar(repo, js, css):
                 nuevo = nuevo[:fin] + '\n' + link + nuevo[fin:]
             else:
                 nuevo = nuevo.replace('</head>', link + '\n</head>', 1)
+        for nombre in CABEZA:
+            if nombre not in nuevo and '</head>' in nuevo:
+                cab = nuevo[:nuevo.index('</head>')]
+                k = cab.find('<script')
+                etiqueta = '<script src="' + rel + js + '/' + nombre + '"></script>\n'
+                nuevo = (nuevo[:k] + etiqueta + nuevo[k:]) if k >= 0 else nuevo.replace('</head>', etiqueta + '</head>', 1)
         for nombre in JS:
             if nombre not in nuevo and '</body>' in nuevo:
                 nuevo = nuevo.replace('</body>', '<script src="' + rel + js + '/' + nombre + '"></script>\n</body>', 1)
@@ -70,7 +77,7 @@ def cachear(repo, js, css, sw):
     if not os.path.exists(p):
         return
     s = open(p, encoding='utf-8').read()
-    falta = [x for x in [js + '/' + n for n in JS] + [css + '/tema.css'] if "'" + x + "'" not in s]
+    falta = [x for x in [js + '/' + n for n in CABEZA + JS] + [css + '/tema.css'] if "'" + x + "'" not in s]
     if not falta:
         return
     # Se agregan junto al primer archivo de esa carpeta que ya esté en la lista.
@@ -109,7 +116,7 @@ def main():
             continue
         os.makedirs(os.path.join(r, js), exist_ok=True)
         os.makedirs(os.path.join(r, css), exist_ok=True)
-        for nombre in JS:
+        for nombre in CABEZA + JS:
             destino = os.path.join(r, js, nombre)
             if os.path.abspath(destino) != os.path.abspath(os.path.join(AQUI, nombre)):
                 shutil.copy(os.path.join(AQUI, nombre), destino)

@@ -36,7 +36,7 @@ const IMG = __dirname + '/comprobante.png';
     assert((await t.sim.su("select comprobante is null c, estado from cfx_pagos"))[0].c, 'comprobante borrado al aprobar');
     // cambiar precios desde el panel
     await p.fill('#pgCfg [data-k="cliente.mensual"]', '3500'); await p.click('#pgGuardar'); await p.waitForTimeout(2500);
-    const cm = (await t.sim.su("select valor #>> '{cliente,mensual}' v from cfx_config"))[0].v;
+    const cm = (await t.sim.su("select valor #>> '{cliente,mensual}' v from cfx_config where clave = 'pagos'"))[0].v;
     assert(cm === '3500', 'precio guardado ' + cm);
     // usuario ya no bloqueado
     await q.reload(); await q.waitForTimeout(2500);

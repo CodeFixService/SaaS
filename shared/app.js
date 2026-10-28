@@ -125,6 +125,8 @@
     if (!c) { location.replace(ROOT + 'index.html?volver=' + encodeURIComponent(location.pathname + location.hash)); return new Promise(() => {}); }
     if (c.suspendido) { document.body.innerHTML = '<main><div class="card"><h2>Cuenta suspendida</h2><p class="muted">Contacta al administrador.</p><button onclick="App.salir()">Salir</button></div></main>'; return new Promise(() => {}); }
     if (roles && !roles.includes(c.rol)) { location.replace(ROOT + destino(c)); return new Promise(() => {}); }
+    // Núcleo (premium.js): con Pro la app se ve dorada y la primera vez saluda.
+    if (c.rol === 'usuario') (window.CFX_PREMIUM ? Promise.resolve() : new Promise((r) => addEventListener('load', r))).then(() => window.CFX_PREMIUM && CFX_PREMIUM.marcar({ premium: c.premium, id: c.id, hasta: c.premium_hasta }));
     return c;
   }
   async function entrar(email, password) {

@@ -9,7 +9,7 @@ const qi = (s) => '"' + String(s).replace(/"/g, '""') + '"';
 function crear(opts) {
   const pool = new Pool({ host: process.env.PGHOST || '/var/tmp/pgb', port: +(process.env.PGPORT || 54329), user: 'postgres', database: opts.db, max: 4 });
   const archivos = new Map(); // bucket/ruta -> { body, type }
-  const cache = {};
+  const cache = {}, ultimoAuth = {};
   const log = opts.log || (() => {});
 
   const usuario = (headers) => {
@@ -261,6 +261,7 @@ function crear(opts) {
     if (crudo && (headers['content-type'] || '').includes('json')) { try { body = JSON.parse(crudo.toString()); } catch (e) { body = null; } }
     const user = usuario(headers);
     try {
+      if (p === '/auth/v1/token' || p === '/auth/v1/signup') ultimoAuth.body = body;
       if (p === '/auth/v1/token') {
         const g = url.searchParams.get('grant_type');
         if (g === 'refresh_token') {
@@ -393,7 +394,7 @@ function crear(opts) {
   }
 
   return {
-    pool, su, rpc, crearUsuario, archivos,
+    pool, su, rpc, crearUsuario, archivos, ultimoAuth,
     async conectar(contexto) {
       await contexto.route(/https:\/\/[a-z0-9]+\.supabase\.co\//, manejar);
       if (contexto.routeWebSocket) await contexto.routeWebSocket(/supabase\.co\/realtime/, realtime);

@@ -35,10 +35,13 @@ async function abrir(repo, db, opts = {}) {
     const ctx = await browser.newContext({ viewport: { width: 360, height: 740 }, serviceWorkers: 'block', locale: 'es-CL', timezoneId: 'America/Santiago', acceptDownloads: true });
     await ctx.route(/fonts\.(googleapis|gstatic)\.com|cdn\.jsdelivr\.net|unpkg\.com|tile|openstreetmap|cartocdn|challenges\.cloudflare/, (r) => {
       const u = r.request().url();
+      // Turnstile simulado: entrega un token al tiro.
+      if (/turnstile/.test(u)) return r.fulfill({ status: 200, contentType: 'application/javascript', body: 'window.turnstile={render:function(el,o){setTimeout(function(){o.callback("token-prueba")},300)}};' });
       if (/jsdelivr|unpkg/.test(u)) return r.continue().catch(() => r.abort());
       return r.fulfill({ status: 200, body: '' });
     });
     await sim.conectar(ctx);
+    if (!opts.conHola) await ctx.addInitScript(() => { window.CFX_SIN_HOLA = true; });
     const page = await ctx.newPage();
     page.on('console', (m) => { if (m.type() === 'error') errores.push('[consola] ' + m.text()); });
     page.on('pageerror', (e) => errores.push('[página] ' + e.message));
