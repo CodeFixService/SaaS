@@ -64,7 +64,17 @@ NO me preguntes nada: hazlo de la mejor forma posible. Avísame al final qué qu
 - Solo los avisos que mando desde el CM (Control → Avisar) llegan a TODAS las cuentas de las 6 apps.
   Los avisos de cada app siguen siendo solo de esa app.
 
-### 6. Revisión final para vender
+### 6. Actividad de las 6 apps al Centro de Mando (solo para mí)
+- Que me lleguen al CM, como notificación, los movimientos importantes de las 6 apps: cuenta nueva registrada
+  (negocio o cliente), cliente creado por un negocio, negocio que activa Premium, pago enviado, verificación enviada,
+  mensaje de soporte, y cualquier otro evento importante de cada app.
+- Usar el puente que ya existe (`cfx_al_cm` en `nucleo/sql/ayuda.sql` → `cfx_aviso_externo` en el CM), con triggers
+  del núcleo (ej. en `auth.users` al registrarse) y ganchos por app para lo propio (clientes, pedidos, reservas…).
+- Que las vea SOLO el administrador (yo): no los socios ni nadie más (hoy `avisar_staff` también avisa a socios:
+  separar). Agruparlas por app, con filtro, y que pueda limpiarlas igual que las demás (borrar una o todas,
+  y que se borren solas después de un tiempo). Cuidar el límite de avisos para no llenar la base ni el teléfono.
+
+### 7. Revisión final para vender
 - Recorrer cada app como negocio, como cliente y como admin, en celular y computador: sin errores, sin textos raros,
   sin duplicados, todo en español de Chile.
 - Actualizar `MEMORIA.md` y `docs/ENTREGA.md` (descripción de cada app para vender + manual corto de uso).
