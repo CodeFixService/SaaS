@@ -1,0 +1,12 @@
+select count(*) = 2 as pagos_conservados from public.pagos;
+select public.tareas_periodicas(date_trunc('day', now()) + interval '6 hours 1 minute') is not null as corre;
+select titulo, cuerpo from public.notificaciones where titulo = 'Limpieza automática';
+select public.tareas_periodicas(date_trunc('day', now()) + interval '6 hours 2 minute') is not null as corre_de_nuevo;
+select count(*) = 1 as un_solo_aviso from public.notificaciones where titulo = 'Limpieza automática';
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000001';
+set role authenticated;
+select jsonb_array_length(public.admin_respaldo() -> 'Pagos') = 2 as respaldo_pagos;
+select public.admin_limpiar('pagos', 365) = 1 as borra_pago_antiguo;
+select public.admin_limpiar('comprobantes', 0) = 0 as no_borra_pendiente;
+reset role;
+select count(*) = 1 and bool_and(comprobante is not null) as queda_pendiente from public.pagos;

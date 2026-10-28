@@ -120,6 +120,7 @@
         '<a class="btn small ghost" href="' + esc(a.web + a.admin) + '" target="_blank" rel="noopener">' + A.ico('abrir', 15) + ' Admin</a>' +
         (a.liberar && e.conectado ? '<button type="button" class="small" data-a="lib"' + (s.lista ? '' : ' disabled') + '>' + (s.alDia ? A.ico('check', 15) + ' Liberada' : A.ico('cohete', 15) + ' Liberar v' + esc(e.pub || '?')) + '</button>' : '') +
         (!a.propia && e.url ? (e.conectado ? '<button type="button" class="small ghost" data-a="salir">Desconectar</button>' : '<button type="button" class="small" data-a="con">' + A.ico('enchufe', 15) + ' Conectar</button>') : '') +
+        (e.conectado ? '<button type="button" class="small ghost" data-a="limp">' + A.ico('escoba', 15) + ' Respaldo y limpieza</button>' : '') +
         '<button type="button" class="small ghost" data-a="rec" aria-label="Revisar">' + A.ico('refrescar', 15) + '</button>' +
       '</div>';
   }
@@ -128,7 +129,13 @@
     const listas = APPS.filter((a) => estadoDe(a).lista), bd = APPS.filter((a) => estadoDe(a).faltaBd), ok = APPS.filter((a) => estadoDe(a).alDia || (!a.liberar && E[a.id] && E[a.id].pub));
     h.innerHTML = '<div class="stats"><div class="card"><b>' + APPS.length + '</b><span>Aplicaciones</span></div><div class="card"><b class="ok">' + ok.length + '</b><span>Al día</span></div>' +
       '<div class="card"><b class="warn">' + listas.length + '</b><span>Listas para liberar</span></div><div class="card"><b class="bad">' + bd.length + '</b><span>Falta base de datos</span></div></div>' +
-      (listas.length ? '<button type="button" class="block" id="libTodo">' + A.ico('cohete', 18) + ' Liberar todo lo que está listo (' + listas.length + ')</button>' : '');
+      (listas.length ? '<button type="button" class="block" id="libTodo">' + A.ico('cohete', 18) + ' Liberar todo lo que está listo (' + listas.length + ')</button>' : '') +
+      '<button type="button" class="block ghost" id="resTodo" style="margin-top:8px">' + A.ico('bajar', 18) + ' Respaldar todas las apps conectadas (Excel)</button>';
+    h.querySelector('#resTodo').onclick = async () => {
+      const con = APPS.filter((a) => E[a.id] && E[a.id].conectado);
+      let n = 0; for (const a of con) { if (await respaldar(a)) n++; await new Promise((r) => setTimeout(r, 700)); }
+      toast(n + ' de ' + con.length + ' respaldos descargados' + (con.length < APPS.length ? ' (conecta las demás para respaldarlas)' : ''));
+    };
     const b = h.querySelector('#libTodo');
     if (b) b.onclick = async () => {
       if (!(await confirmar('Se liberan ' + listas.map((a) => a.nombre + ' v' + E[a.id].pub).join(', ') + '. A sus usuarios les aparece el botón Actualizar.', 'Liberar todo'))) return;
@@ -143,6 +150,57 @@
     try { const { error } = await a.liberar(cliente(a), e.pub); if (error) throw new Error(error.message); if (!sinPreguntar) toast(a.nombre + ' v' + e.pub + ' liberada'); }
     catch (x) { toast(a.nombre + ': ' + x.message); }
     await cargar(a);
+  }
+  // Respaldo y limpieza (funciones cfx_*, iguales en las 6 apps): Excel del admin, lo que se puede borrar y tablas sobrantes.
+  const nf = (x) => /Could not find|does not exist|PGRST202/i.test(x.message) ? 'La base de esta app aún no tiene esta función: se actualiza sola en máx. 10 minutos.' : x.message;
+  async function respaldar(a) {
+    try { CFX_RESPALDO.excel(a.repo.toLowerCase() + '-admin', await rpcDe(cliente(a), 'cfx_respaldo')); E[a.id].respaldado = true; toast('Respaldo de ' + a.nombre + ' descargado'); return true; }
+    catch (x) { toast(a.nombre + ': ' + nf(x)); return false; }
+  }
+  async function limpieza(a) {
+    const c = cliente(a), e = E[a.id], bajadas = new Set();
+    const d = modal('<div class="fila"><h2 class="grow" style="margin:0">' + A.ico('escoba', 20) + ' ' + esc(a.nombre) + '</h2><button class="small ghost" data-cerrar type="button">Cerrar</button></div>' +
+      '<div class="card"><h3>1. Respaldo</h3><p class="sub">Excel con cuentas, pagos, ajustes y registro de esta app. Descárgalo antes de borrar.</p><button type="button" data-r>' + A.ico('bajar', 15) + ' Descargar respaldo (Excel)</button></div>' +
+      '<div class="card"><h3>2. Limpieza</h3><div data-l><p class="sub">Revisando…</p></div></div>' +
+      '<div class="card"><h3>3. Tablas sobrantes</h3><p class="sub">Restos de versiones antiguas que la app ya no usa. Las vacías se borran con un toque; las que tienen datos piden respaldo y escribir "sí".</p><div data-i><p class="sub">Revisando…</p></div></div>');
+    d.querySelector('[data-r]').onclick = () => respaldar(a);
+    async function pintar() {
+      const L = d.querySelector('[data-l]'), I = d.querySelector('[data-i]');
+      try {
+        const l = await rpcDe(c, 'cfx_limpieza');
+        L.innerHTML = l.map((x) => '<div class="fila" style="padding:6px 0;border-top:1px solid var(--line)"><div class="grow"><b>' + esc(x.titulo) + '</b><div class="sub">' + esc(x.detalle) + ' · ' + Number(x.filas).toLocaleString('es-CL') + ' por borrar</div></div>' +
+          '<button type="button" class="small ghost" data-c="' + esc(x.clave) + '" data-t="' + esc(x.titulo) + '"' + (+x.filas ? '' : ' disabled') + '>Borrar</button></div>').join('');
+      } catch (x) { L.innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; }
+      try {
+        const t = await rpcDe(c, 'cfx_inventario');
+        I.innerHTML = t.length ? t.map((x) => '<div class="fila" style="padding:6px 0;border-top:1px solid var(--line)"><div class="grow"><b>' + esc(x.tabla) + '</b><div class="sub">' + (+x.filas ? Number(x.filas).toLocaleString('es-CL') + ' filas' : 'vacía') + '</div></div>' +
+          (+x.filas ? '<button type="button" class="small ghost" data-td="' + esc(x.tabla) + '">Respaldo</button>' : '') + '<button type="button" class="small ghost" data-tb="' + esc(x.tabla) + '" data-f="' + x.filas + '">Borrar</button></div>').join('')
+          : '<p class="pill ok">✅ Sin tablas sobrantes</p>';
+      } catch (x) { I.innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; }
+    }
+    d.onclick = async (ev) => {
+      const b = ev.target.closest('[data-c],[data-td],[data-tb]'); if (!b) return;
+      try {
+        if (b.dataset.c) {
+          if (!e.respaldado && !(await confirmar('Aún no descargas el respaldo de ' + a.nombre + ' en esta sesión. ¿Borrar igual?', 'Borrar igual'))) return;
+          if (!(await confirmar(b.dataset.t + ': se borra lo indicado. No se puede deshacer.', 'Borrar'))) return;
+          toast(await rpcDe(c, 'cfx_limpiar', { p_clave: b.dataset.c }) + ' borrados');
+        } else if (b.dataset.td) {
+          CFX_RESPALDO.json(a.repo.toLowerCase() + '-' + b.dataset.td, await rpcDe(c, 'cfx_inventario_datos', { p_tabla: b.dataset.td })); bajadas.add(b.dataset.td); toast('Respaldo descargado');
+        } else {
+          let conf = '';
+          if (+b.dataset.f) {
+            if (!bajadas.has(b.dataset.tb)) return toast('Primero descarga su respaldo');
+            const m = modal('<h2>Borrar ' + esc(b.dataset.tb) + '</h2><p class="muted">Tiene ' + b.dataset.f + ' filas. Ya descargaste su respaldo. Escribe <b>sí</b> para borrarla.</p><input id="si" autocomplete="off"><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="sk" type="button">Borrar</button></div>');
+            conf = await new Promise((ok) => { let v = null; m.querySelector('#sk').onclick = () => { v = m.querySelector('#si').value; m.close(); }; m.addEventListener('close', () => ok(v)); });
+            if (conf === null) return;
+          } else if (!(await confirmar('Borrar la tabla vacía ' + b.dataset.tb + '.', 'Borrar'))) return;
+          toast(await rpcDe(c, 'cfx_inventario_borrar', { p_tabla: b.dataset.tb, p_confirmacion: conf }));
+        }
+      } catch (x) { toast(nf(x)); }
+      pintar();
+    };
+    pintar();
   }
   function conectar(a) {
     const d = modal('<h2>Conectar ' + esc(a.nombre) + '</h2><p class="muted">Entra con tu cuenta de administrador de esta app (queda guardada solo en este teléfono).</p>' +
@@ -167,6 +225,7 @@
       else if (act === 'con') conectar(a);
       else if (act === 'salir') cliente(a).auth.signOut().then(() => cargar(a));
       else if (act === 'rec') cargar(a);
+      else if (act === 'limp') limpieza(a);
     };
     pintarCabecera();
     APPS.forEach(cargar);

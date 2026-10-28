@@ -28,10 +28,22 @@
     };
     const eb = d.querySelector('#eb'); if (eb) eb.onclick = async () => { await sb.from('espacios').update({ archivado: true }).eq('id', e.id); d.close(); await CM.cargar(); CM.pintar(); };
   }
+  // Respaldo: Excel para leer (una hoja por tipo) o copia completa en .json (núcleo: respaldo.js).
   async function descargarTodo() {
     const [it, us] = await Promise.all([A.q(sb.from('items').select('*').limit(20000)), A.q(sb.from('uso_dia').select('*'))]);
-    const blob = new Blob([JSON.stringify({ exportado: new Date().toISOString(), espacios: CM.espacios, items: it, uso: us }, null, 1)], { type: 'application/json' });
-    const u = URL.createObjectURL(blob); A.descargar(u, 'centro-de-mando-' + A.hoy() + '.json'); setTimeout(() => URL.revokeObjectURL(u), 4000);
+    const d = modal('<h2>' + CM.ico('bajar', 18) + ' Descargar mis datos</h2><p class="muted">' + it.length + ' registros. El Excel se lee fácil; la copia completa sirve para guardar todo tal cual.</p>' +
+      '<div class="btns"><button type="button" class="ghost" data-f="json">Copia completa</button><button type="button" data-f="xlsx">Excel</button></div>');
+    d.onclick = (e) => {
+      const b = e.target.closest('[data-f]'); if (!b) return;
+      if (b.dataset.f === 'json') CFX_RESPALDO.json('centro-de-mando', { exportado: new Date().toISOString(), espacios: CM.espacios, items: it, uso: us });
+      else {
+        const esp = Object.fromEntries((CM.espacios || []).map((x) => [x.id, x.nombre])), hojas = { Espacios: (CM.espacios || []).map((x) => ({ nombre: x.nombre, modo: x.modo, archivado: x.archivado })) };
+        it.forEach((x) => { const k = x.tipo.charAt(0).toUpperCase() + x.tipo.slice(1); (hojas[k] = hojas[k] || []).push({ titulo: x.titulo, detalle: x.cuerpo, estado: x.estado, fecha: x.fecha, espacio: esp[x.espacio_id] || '', etiquetas: (x.etiquetas || []).join(', '), datos: Object.keys(x.datos || {}).length ? x.datos : '', creado: x.created_at, hecho: x.hecho_at }); });
+        hojas['Uso por día'] = us.map((x) => ({ dia: x.dia, minutos_app: x.app_min, trabajo: x.trabajo_min, descanso: x.descanso_min, foco: x.foco_min, aperturas: x.aperturas }));
+        CFX_RESPALDO.excel('centro-de-mando', hojas);
+      }
+      d.close(); toast('Descargado');
+    };
   }
   function pagar() {
     const c = (A.publica && A.publica.config) || {}, pm = Number(c.pro_precio_mensual || 0), pa = Number(c.pro_precio_anual || 0);

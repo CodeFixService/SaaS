@@ -1,0 +1,20 @@
+\set ON_ERROR_STOP 1
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000a1', 'juanjosuecastilloloyola@gmail.com'), ('00000000-0000-0000-0000-0000000000b1', 'b@x.cl'), ('00000000-0000-0000-0000-0000000000c1', 'c@x.cl');
+select email, es_admin from public.perfiles order by email;
+insert into public.conversaciones (id, a, b) values ('00000000-0000-0000-0000-00000000cc01', '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000c1');
+insert into public.mensajes (conv, autor, texto, creado) values ('00000000-0000-0000-0000-00000000cc01', '00000000-0000-0000-0000-0000000000b1', 'viejo', now() - interval '29 days');
+insert into public.estacionamientos (dueno, titulo, direccion, lat, lng, estado, actualizado) values ('00000000-0000-0000-0000-0000000000b1', 'Est 1', 'Calle 1', -33.4, -70.6, 'pausado', now() - interval '40 days');
+select public.limpieza();
+select count(*) = 2 as dos_avisos from public.notificaciones where titulo = '🧹 Limpieza automática';
+select public.recordar_pausados() = 1 as recuerda;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000b1';
+set role authenticated;
+select public.borrar_notificacion(null) >= 1 as borra_avisos;
+select (select string_agg(k || '=' || jsonb_array_length(v), ' ') from jsonb_each(public.mi_respaldo()) as t(k, v)) as respaldo;
+select public.borrar_conversacion('00000000-0000-0000-0000-00000000cc01') = 1 as borra_conv;
+reset role;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000a1';
+set role authenticated;
+select jsonb_array_length(public.cfx_respaldo() -> 'Usuarios') = 3 as cfx_resp, jsonb_array_length(public.cfx_limpieza()) = 4 as cfx_limp;
+select public.cfx_limpiar('mensajes') >= 0 as limpia;
+select public.cfx_inventario() = '[]'::jsonb as inventario;

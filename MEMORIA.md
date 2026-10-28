@@ -70,9 +70,25 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Pendiente del dueño**: pegar UNA vez la consulta corta de cada app (supabase/instalar-corto.sql, apunta a main) en su Supabase. Entregárselas al final, una por app y en orden.
 - **Pruebas**: Postgres local + simulador de Supabase con Playwright (rutas *.supabase.co → rpc/REST sobre Postgres), revisar a 360 px, sin errores en consola.
 - **Pendientes (en orden)**:
-  1. Limpieza y respaldo: borrar chats y notificaciones (cualquier cuenta); borrado automático a los 30 días con aviso 2 días antes; respaldo descargable por empresa; el admin respalda y borra registros/comprobantes; recordar eliminar productos/servicios sin stock o que ya no se ofrecen; inventario de tablas/config sobrantes (borrar solo lo vacío o sin uso; lo que tenga datos, mostrar al dueño con respaldo y pedir "sí").
+  1. ✅ (ver "P1 hecho" abajo) Limpieza y respaldo: borrar chats y notificaciones (cualquier cuenta); borrado automático a los 30 días con aviso 2 días antes; respaldo descargable por empresa; el admin respalda y borra registros/comprobantes; recordar eliminar productos/servicios sin stock o que ya no se ofrecen; inventario de tablas/config sobrantes (borrar solo lo vacío o sin uso; lo que tenga datos, mostrar al dueño con respaldo y pedir "sí").
   2. Pagos ordenados: mensual, anual y "otro pago" personalizado (admin y cada negocio).
   3. Interruptores de funciones por plan (como Barbería) en las 6 + completar funciones de admin que faltan (textos editables, avisos masivos, socios, keys/cupones, registro, planes) + pasar a global las exclusivas que sirvan (verificación de identidad solo en Estaciona).
   4. Centro de Mando como súper panel (control rápido de cada app: liberar, avisar a todos, precios, textos).
   5. Cuentas de clientes con sensación Premium; verificación humana (Cloudflare Turnstile) cuando el dueño lo configure.
   6. Al final: descripción de cada app para entregar a clientes + las 6 consultas para pegar.
+
+## P1 hecho (28/10/2026) · Limpieza y respaldo · núcleo 1.6
+- **Versiones en main**: CM 4.8 (base 3.9) · Billetera 1.13.0 (base 12) · CodeFix Apps 5.10 (base 5.5) · Barbería 2.9 · BiciTaller 2.9 (base 2.1) · Estaciona 2.5.0 (base 6).
+- **Núcleo**: `respaldo.js` → `CFX_RESPALDO.excel(nombre, {Hoja: filas})` (.xlsx real, sin librerías) y `.json`.
+- **En las 6**: borrar un aviso (✕) o todos; borrar un chat completo (para ambos; Estaciona no deja si hay denuncia abierta).
+  Avisos y mensajes se guardan **30 días**; aviso "🧹 Limpieza automática" máx. 1/semana, siempre ≥2 días antes (columna `aviso_limpieza_at`).
+  Cada lunes recordatorio de lo que ya no se ofrece (Apps: productos agotados >30 d; Barbería/Taller: servicios ocultos y ofertas vencidas; Estaciona: pausados >30 d).
+  Respaldo Excel del negocio: `mi_respaldo()` (Billetera usa `exportar_datos`).
+- **API común del admin (igual en las 6, la usa CM → Apps)**: `cfx_respaldo()`, `cfx_limpieza()` → [{clave,titulo,detalle,filas}], `cfx_limpiar(clave)`,
+  `cfx_inventario()` (tablas que no están en `cfx_tablas()`), `cfx_inventario_datos(tabla)`, `cfx_inventario_borrar(tabla, 'sí')`. Nada se borra solo.
+  Al crear tablas nuevas: regenerar el bloque con `python3 pruebas/inventario.py <repo> --sql "<chequeo admin>"` y verificar con `--verificar`.
+- **CM → Apps**: botón 🧹 Respaldo y limpieza por app (Excel, limpiezas con conteo, tablas sobrantes) y "Respaldar todas las apps conectadas".
+- **Arreglado**: CM borraba la tabla `pagos` en cada actualización (ahora solo si es la del sistema antiguo) y vaciaba invitaciones.
+- **BiciTaller**: `schema.sql`/`cron.sql` re-sincronizados con `instalar.sql`; editar schema.sql y correr `node supabase/generar.mjs`.
+- **Pruebas** (`saas/pruebas/`): `stub.sql` + `base.sh <repo>` (base local), `actualizar.sh <repo>` (main → nuevo), `sim.js` (Supabase simulado en Playwright: auth, rest, rpc, storage, functions, realtime),
+  `h.js` (abrir app a 360 px y juntar errores), `*_p1.sql` y `*_ui.js` por app. `npm install` en esa carpeta; Postgres en /var/tmp/pgb:54329.
