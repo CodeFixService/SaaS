@@ -117,3 +117,5 @@ nav.tabs button.nuevo .ic{width:28px;height:28px}nav.tabs button.nuevo.on{backgr
 #bMas.foto{background:center/cover no-repeat;border-radius:50%}
 .busca-r{display:grid;gap:6px;margin-top:10px;max-height:55vh;overflow:auto}.busca-r .res{display:flex;gap:8px;align-items:center;justify-content:flex-start;text-align:left;background:var(--field);color:var(--text);border:1px solid var(--line);box-shadow:none;min-height:44px}
 .busca-r .res .grow{flex:1;min-width:0;overflow-wrap:anywhere}.qr-inv{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.qr-inv img{width:140px;height:140px;border-radius:12px;background:#fff;padding:6px}
+.suma{margin:6px 0 4px;font-size:15px}.suma .warn,.ped .warn,.ped-it small.warn{color:var(--warn,#d97706);font-weight:600}.ped .pr,.ped-it small.pr{color:var(--brand);font-weight:700}
+.ped-it .grow{cursor:pointer}.ped-it small{display:block}

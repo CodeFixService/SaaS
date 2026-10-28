@@ -46,7 +46,8 @@
     x += '<div class="card"><h3>Lo que te falta</h3>' + hbar([['Atrasado', '#ef5b5b', atr], ['Tareas', '#3d63ff', pe('tarea').length], ['Pedidos', '#e0457b', pe('pedido').length], ['Recordatorios', '#f5b942', pe('recordatorio').length],
       ['Ideas', '#2fb67c', pe('idea').length], ['Problemas', '#8a5cf6', pe('problema').length], ['Notas', '#8a93b2', pe('nota').length]]) + '<button type="button" class="small ghost" data-ir="hoy">Ver en Hoy</button></div>';
     const P = I.filter((i) => i.tipo === 'pedido'), pPend = P.filter((p) => p.estado !== 'hecho'), n = (v) => Number(v) || 0;
-    const porCobrar = pPend.reduce((a, p) => a + Math.max(0, n(p.datos.total) - n(p.datos.abono)), 0), abonos = pPend.reduce((a, p) => a + n(p.datos.abono), 0);
+    const totP = (d) => (d.items || []).reduce((a, x) => a + (x.verificar ? 0 : n(x.precio) * (/^\d+$/.test(String(x.cant || '').trim()) ? Number(x.cant) : 1)), 0) || n(d.total);
+    const porCobrar = pPend.reduce((a, p) => a + Math.max(0, totP(p.datos) - n(p.datos.abono)), 0), abonos = pPend.reduce((a, p) => a + n(p.datos.abono), 0);
     const entregados = P.filter((p) => p.estado === 'hecho' && p.hecho_at && CM.diaDe(p.hecho_at) >= dias[0]).length;
     if (P.length) x += '<div class="card"><h3>Pedidos</h3><div class="kpis"><div><b>' + pPend.length + '</b><span>por entregar</span></div><div><b>' + entregados + '</b><span>entregados (' + ui.n + ' d)</span></div><div><b>$' + porCobrar.toLocaleString('es-CL') + '</b><span>saldo por cobrar</span></div></div>' +
       '<p class="sub">Abonos recibidos de pedidos pendientes: $' + abonos.toLocaleString('es-CL') + '</p><button type="button" class="small ghost" data-ir="pedidos">Ver pedidos</button></div>';

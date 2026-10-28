@@ -1,4 +1,4 @@
-/* Centro de Mando · Pedidos: para quién, qué pide (qué, color, cantidad, nota y foto), entrega, abono y total.
+/* Centro de Mando · Pedidos: para quién, qué pide (qué, color, cantidad, precio, nota y foto), entrega y abono; el total se suma solo.
    Estados Pendiente → Listo → Entregado. PDF de uno o de todos (una página por pedido), compartir, WhatsApp al cliente.
    Las fotos quedan solo en este teléfono (CM.fotos); el servidor guarda únicamente el texto. */
 (function () {
@@ -10,7 +10,16 @@
     ['Celeste', '#7dd3fc'], ['Verde', '#16a34a'], ['Amarillo', '#facc15'], ['Naranjo', '#f97316'], ['Dorado', '#d4a017'], ['Plateado', '#c0c4cc'], ['Café', '#8b5a2b']];
   const plata = (n) => '$' + Math.round(Number(n) || 0).toLocaleString('es-CL');
   const num = (v) => Number(String(v || '').replace(/[^\d]/g, '')) || 0;
-  const saldo = (d) => Math.max(0, num(d.total) - num(d.abono));
+  // Precios: escribes solo números (1000, 1560…) y la app suma sola. "Verificar precio" = aún no lo sabes.
+  const cantN = (x) => /^\d+$/.test(String(x.cant || '').trim()) ? Number(x.cant) : 1;
+  const linea = (x) => x.verificar ? 0 : num(x.precio) * cantN(x);
+  const totalDe = (d) => { const t = (d.items || []).reduce((a, x) => a + linea(x), 0); return t || num(d.total); };
+  const porVerificar = (d) => (d.items || []).filter((x) => x.verificar).length;
+  const saldo = (d) => Math.max(0, totalDe(d) - num(d.abono));
+  // Teléfono: escribes "912345678" y queda +56 9 1234 5678 (se guarda solo con números).
+  const telNorm = (t) => { let n = String(t || '').replace(/\D/g, ''); if (n.length === 9 && n[0] === '9') n = '56' + n; else if (n.length === 8) n = '569' + n; return n; };
+  const telVer = (t) => { const n = telNorm(t); return n.length === 11 && n.startsWith('569') ? '+56 9 ' + n.slice(3, 7) + ' ' + n.slice(7) : t || ''; };
+  const precioTxt = (x) => x.verificar ? 'precio por verificar' : num(x.precio) ? (cantN(x) > 1 ? cantN(x) + ' × ' + plata(x.precio) + ' = ' : '') + plata(linea(x)) : '';
   const fEnt = (p) => p.fecha ? new Date(p.fecha + 'T12:00').toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' }) + (p.datos.hora ? ' · ' + p.datos.hora : '') : 'Sin fecha';
   const itemTxt = (x) => [x.que, x.color, x.cant ? 'x' + x.cant : ''].filter(Boolean).join(' · ');
 
@@ -69,9 +78,9 @@
     doc.texto(M, doc.y - 34, 22, 'F2', cortar(win(p.titulo || 'Sin nombre'), 22, W - 2 * M, true));
     doc.texto(M, doc.y - 52, 10.5, 'F1', win('Entrega: ' + fEnt(p)), gris);
     doc.y -= 52;
-    if (d.tel) { doc.texto(M, doc.y - 15, 10.5, 'F1', win('Teléfono: ' + d.tel), gris); doc.y -= 15; }
+    if (d.tel) { doc.texto(M, doc.y - 15, 10.5, 'F1', win('Teléfono: ' + telVer(d.tel)), gris); doc.y -= 15; }
     doc.y -= 22;
-    const cols = [[M, 22, '#'], [M + 22, 168, 'Qué'], [M + 190, 96, 'Color'], [M + 286, W - M - (M + 286), 'Cantidad']];
+    const cols = [[M, 22, '#'], [M + 22, 142, 'Qué'], [M + 164, 72, 'Color'], [M + 236, 50, 'Cant.'], [M + 286, W - M - (M + 286), 'Precio']];
     const cab = () => { doc.rect(M, doc.y - 16, W - 2 * M, 22, doc.RGB); cols.forEach((k) => doc.texto(k[0] + 6, doc.y - 9, 9.5, 'F2', win(k[2]), '1 1 1')); doc.y -= 18; };
     cab();
     for (let i = 0; i < items.length; i++) {
@@ -83,20 +92,22 @@
       doc.texto(cols[1][0] + 6, ty, 11, 'F2', cortar(win(x.que), 11, cols[1][1] - 10, true));
       doc.texto(cols[2][0] + 6, ty, 11, 'F1', cortar(win(x.color || '—'), 11, cols[2][1] - 10));
       doc.texto(cols[3][0] + 6, ty, 11, 'F1', cortar(win(x.cant || '1'), 11, cols[3][1] - 10));
+      const pr = x.verificar ? 'por verificar' : num(x.precio) ? plata(linea(x)) : '—';
+      doc.texto(W - M - 6 - ancho(win(pr), x.verificar ? 9 : 11, !x.verificar), ty, x.verificar ? 9 : 11, x.verificar ? 'F1' : 'F2', win(pr), x.verificar ? '0.85 0.45 0.05' : null);
       nota.forEach((l, k) => doc.texto(cols[1][0] + 6, ty - 13 - k * 11, 9, 'F1', l, gris));
       doc.y -= alto;
     }
     doc.linea(M, doc.y - 2, W - M, doc.y - 2);
     doc.y -= 16;
     // Totales
-    if (num(d.total) || num(d.abono)) {
+    if (totalDe(d) || num(d.abono)) {
       doc.espacio(64);
       const bx = W - M - 170;
-      doc.rect(bx, doc.y - 58, 170, 60, '0.95 0.96 0.97');
-      const fila = (t, v, y, b) => { doc.texto(bx + 10, y, 10.5, b ? 'F2' : 'F1', win(t)); doc.texto(bx + 160 - ancho(win(v), 10.5, b), y, 10.5, b ? 'F2' : 'F1', win(v)); };
-      fila('Total', num(d.total) ? plata(d.total) : '—', doc.y - 14);
+      doc.rect(bx - 40, doc.y - 58, 210, 60, '0.95 0.96 0.97');
+      const fila = (t, v, y, b) => { doc.texto(bx - 30, y, 10.5, b ? 'F2' : 'F1', win(t)); doc.texto(bx + 160 - ancho(win(v), 10.5, b), y, 10.5, b ? 'F2' : 'F1', win(v)); };
+      fila('Total' + (porVerificar(d) ? ' (+' + porVerificar(d) + ' por verificar)' : ''), totalDe(d) ? plata(totalDe(d)) : '—', doc.y - 14);
       fila('Abono', plata(d.abono), doc.y - 31);
-      fila('Saldo', num(d.total) ? plata(saldo(d)) : '—', doc.y - 49, true);
+      fila('Saldo', totalDe(d) ? plata(saldo(d)) : '—', doc.y - 49, true);
       doc.y -= 70;
     }
     if (d.nota) {
@@ -136,8 +147,8 @@
     A.descargar(u, archivo(lista)); setTimeout(() => URL.revokeObjectURL(u), 5000);
     toast(lista.length === 1 ? 'PDF descargado' : 'PDF con ' + lista.length + ' pedidos descargado');
   }
-  const textoPedido = (p) => '*Pedido de ' + p.titulo + '*\nEntrega: ' + fEnt(p) + '\n' + (p.datos.items || []).map((x, k) => (k + 1) + '. ' + itemTxt(x) + (x.nota ? ' (' + x.nota + ')' : '')).join('\n') +
-    (num(p.datos.total) ? '\nTotal: ' + plata(p.datos.total) + ' · Abono: ' + plata(p.datos.abono) + ' · Saldo: ' + plata(saldo(p.datos)) : num(p.datos.abono) ? '\nAbono: ' + plata(p.datos.abono) : '');
+  const textoPedido = (p) => '*Pedido de ' + p.titulo + '*\nEntrega: ' + fEnt(p) + '\n' + (p.datos.items || []).map((x, k) => (k + 1) + '. ' + itemTxt(x) + (x.nota ? ' (' + x.nota + ')' : '') + (precioTxt(x) ? ' — ' + precioTxt(x) : '')).join('\n') +
+    (totalDe(p.datos) ? '\nTotal: ' + plata(totalDe(p.datos)) + (porVerificar(p.datos) ? ' (+' + porVerificar(p.datos) + ' por verificar)' : '') + ' · Abono: ' + plata(p.datos.abono) + ' · Saldo: ' + plata(saldo(p.datos)) : num(p.datos.abono) ? '\nAbono: ' + plata(p.datos.abono) : '');
   async function compartir(lista) {
     const f = new File([await pdf(lista)], archivo(lista), { type: 'application/pdf' });
     if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f], title: lista.length === 1 ? 'Pedido de ' + lista[0].titulo : 'Pedidos' }); } catch (e) { /* canceló */ } return; }
@@ -145,8 +156,8 @@
     window.open('https://wa.me/?text=' + encodeURIComponent(lista.map(textoPedido).join('\n\n')), '_blank', 'noopener');
   }
   function avisarCliente(p) {
-    const tel = String(p.datos.tel || '').replace(/\D/g, ''), n = tel.length === 9 ? '56' + tel : tel;
-    const msg = 'Hola ' + p.titulo.split(' ')[0] + ', tu pedido está listo 🎉\n' + (p.datos.items || []).map((x) => '• ' + itemTxt(x)).join('\n') + (num(p.datos.total) ? '\nSaldo por pagar: ' + plata(saldo(p.datos)) : '');
+    const n = telNorm(p.datos.tel);
+    const msg = 'Hola ' + p.titulo.split(' ')[0] + ', tu pedido está listo 🎉\n' + (p.datos.items || []).map((x) => '• ' + itemTxt(x)).join('\n') + (totalDe(p.datos) ? '\nSaldo por pagar: ' + plata(saldo(p.datos)) : '');
     window.open('https://wa.me/' + n + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
   }
 
@@ -160,35 +171,60 @@
     if (!p && ini.titulo) { const w = ini.titulo.trim().split(/\s+/); quien = w.shift() || ''; primero = w.join(' '); }
     const previos = Array.from(new Set(CM.por('pedido').flatMap((x) => (x.datos.items || []).map((i) => i.que)).filter(Boolean))).slice(0, 40);
     const dlg = modal('<h2>' + (p ? 'Pedido de ' + esc(p.titulo) : 'Nuevo pedido') + '</h2>' +
-      '<div class="row"><div><label for="pQ">Para quién</label><input id="pQ" maxlength="60" value="' + esc(quien) + '" placeholder="Nombre" autocomplete="off"></div><div><label for="pT">Teléfono (opcional)</label><input id="pT" type="tel" maxlength="20" value="' + esc(d.tel || '') + '" placeholder="9 1234 5678"></div></div>' +
+      '<div class="row"><div><label for="pQ">Para quién</label><input id="pQ" maxlength="60" value="' + esc(quien) + '" placeholder="Nombre" autocomplete="off"></div><div><label for="pT">Teléfono (opcional)</label><input id="pT" type="tel" maxlength="20" value="' + esc(telVer(d.tel)) + '" placeholder="9 1234 5678" inputmode="tel"></div></div>' +
       '<div class="row"><div><label for="pF">Entrega</label><input id="pF" type="date" value="' + esc((p && p.fecha) || ini.fecha || '') + '"></div><div><label for="pH">Hora (opcional)</label><input id="pH" type="time" value="' + esc(d.hora || '') + '"></div></div>' +
       '<h3 class="sec">Lo que pide</h3><div id="pItems"></div>' +
       '<div class="card add-item"><label for="iQ">Qué</label><input id="iQ" maxlength="60" list="dlQue" placeholder="Ej: mantel, globo…" value="' + esc(primero) + '" autocomplete="off"><datalist id="dlQue">' + previos.map((x) => '<option value="' + esc(x) + '">').join('') + '</datalist>' +
       '<label>Color</label><div class="colores" id="iCols">' + COLORES.map((c) => '<button type="button" data-c="' + c[0] + '" title="' + c[0] + '" style="background:' + c[1] + '"></button>').join('') + '</div><input id="iC" maxlength="30" placeholder="O escribe el color" autocomplete="off">' +
-      '<div class="row"><div><label for="iN">Cantidad</label><input id="iN" maxlength="15" inputmode="numeric" placeholder="1" autocomplete="off"></div><div><label>Foto (opcional)</label><button type="button" class="ghost" id="iFb">' + CM.ico('camara', 18) + ' <span id="iFt">Agregar</span></button><input id="iF" type="file" accept="image/*" hidden></div></div>' +
+      '<div class="row"><div><label for="iN">Cantidad</label><input id="iN" maxlength="15" inputmode="numeric" placeholder="1" autocomplete="off"></div><div><label for="iP">Precio c/u</label><input id="iP" inputmode="numeric" maxlength="12" placeholder="$0" autocomplete="off"></div></div>' +
+      '<label class="check"><input type="checkbox" id="iV"> No sé el precio (verificar después)</label>' +
+      '<div class="row"><div><label>Foto (opcional)</label><button type="button" class="ghost" id="iFb">' + CM.ico('camara', 18) + ' <span id="iFt">Agregar</span></button><input id="iF" type="file" accept="image/*" hidden></div></div>' +
       '<label for="iD">Nota corta (opcional)</label><input id="iD" maxlength="80" placeholder="Ej: con nombre Sofía" autocomplete="off">' +
-      '<button type="button" id="iAdd" class="block">' + CM.ico('plus', 18) + ' Agregar al pedido</button></div>' +
-      '<div class="row"><div><label for="pA">Abono</label><input id="pA" inputmode="numeric" value="' + esc(d.abono ? plata(d.abono) : '') + '" placeholder="$0"></div><div><label for="pTo">Total (opcional)</label><input id="pTo" inputmode="numeric" value="' + esc(d.total ? plata(d.total) : '') + '" placeholder="$0"></div></div>' +
+      '<button type="button" id="iAdd" class="block">' + CM.ico('plus', 18) + ' <span id="iAddT">Agregar al pedido</span></button></div>' +
+      '<p class="suma" id="pSum"></p>' +
+      '<label for="pA">Abono</label><input id="pA" inputmode="numeric" value="' + esc(d.abono ? plata(d.abono) : '') + '" placeholder="$0">' +
       '<label for="pN">Nota del pedido (opcional)</label><textarea id="pN" maxlength="300" rows="2">' + esc(d.nota || '') + '</textarea>' +
       '<p class="err" id="pErr"></p><div class="btns">' + (p ? '<button class="danger" id="pDel" type="button">' + CM.ico('basura', 16) + '</button>' : '') + '<button class="ghost" data-cerrar type="button">Cancelar</button><button id="pOk" type="button">Guardar pedido</button></div>');
     dlg.classList.add('hoja-pedido');
     const $$ = (x) => dlg.querySelector('#' + x);
-    let foto = null;
+    let foto = null, editando = null;
+    function pintarSuma() {
+      const t = totalDe(d), v = porVerificar(d), a = num($$('pA') ? $$('pA').value : d.abono);
+      $$('pSum').innerHTML = d.items.length ? 'Total: <b>' + plata(t) + '</b>' + (v ? ' <span class="warn">+ ' + v + ' por verificar</span>' : '') + (a ? ' · Abono ' + plata(a) + ' · Saldo <b>' + plata(Math.max(0, t - a)) + '</b>' : '') : '';
+    }
     async function pintarItems() {
-      $$('pItems').innerHTML = d.items.length ? d.items.map((x, k) => '<div class="ped-it"><span class="ft" data-f="' + esc(x.foto || '') + '">' + (x.foto ? '' : CM.ico('pedidos', 16)) + '</span><div class="grow"><b>' + esc(x.que) + '</b><small>' + esc([x.color, x.cant ? 'x' + x.cant : '', x.nota].filter(Boolean).join(' · ')) + '</small></div><button type="button" class="x" data-x="' + k + '" aria-label="Quitar">' + CM.ico('x', 14) + '</button></div>').join('')
+      pintarSuma();
+      $$('pItems').innerHTML = d.items.length ? d.items.map((x, k) => '<div class="ped-it"><span class="ft" data-f="' + esc(x.foto || '') + '">' + (x.foto ? '' : CM.ico('pedidos', 16)) + '</span><div class="grow" data-ed="' + k + '"><b>' + esc(x.que) + '</b><small>' + esc([x.color, x.cant ? 'x' + x.cant : '', x.nota].filter(Boolean).join(' · ')) + '</small>' + (precioTxt(x) ? '<small class="' + (x.verificar ? 'warn' : 'pr') + '">' + esc(precioTxt(x)) + '</small>' : '') + '</div><button type="button" class="x" data-x="' + k + '" aria-label="Quitar">' + CM.ico('x', 14) + '</button></div>').join('')
         : '<p class="sub">Aún no agregas nada. Llena "Qué" abajo y toca Agregar.</p>';
       for (const el of $$('pItems').querySelectorAll('.ft[data-f]')) { if (!el.dataset.f) continue; const f = await CM.fotos.get(el.dataset.f); if (f) el.style.backgroundImage = 'url(' + f.d + ')'; }
     }
     function agregar() {
       const que = $$('iQ').value.trim();
       if (!que) { $$('iQ').focus(); return false; }
-      d.items.push({ que, color: $$('iC').value.trim(), cant: $$('iN').value.trim(), nota: $$('iD').value.trim(), foto: foto || undefined });
-      ['iQ', 'iC', 'iN', 'iD'].forEach((k) => { $$(k).value = ''; }); foto = null; $$('iFt').textContent = 'Agregar';
+      const it = { que, color: $$('iC').value.trim(), cant: $$('iN').value.trim(), nota: $$('iD').value.trim(), foto: foto || undefined };
+      if ($$('iV').checked) it.verificar = true; else if (num($$('iP').value)) it.precio = num($$('iP').value);
+      if (editando !== null) d.items.splice(editando, 0, it); else d.items.push(it);
+      editando = null; $$('iAddT').textContent = 'Agregar al pedido';
+      ['iQ', 'iC', 'iN', 'iD', 'iP'].forEach((k) => { $$(k).value = ''; }); $$('iV').checked = false; foto = null; $$('iFt').textContent = 'Agregar';
       dlg.querySelectorAll('#iCols button').forEach((b) => b.classList.remove('on'));
       pintarItems(); $$('iQ').focus(); return true;
     }
     $$('iAdd').onclick = agregar;
-    ['iQ', 'iC', 'iN', 'iD'].forEach((k) => { $$(k).onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); agregar(); } }; });
+    // Precio con puntos solo al mostrarlo: 1500 → $1.500
+    $$('iP').oninput = () => { const n = num($$('iP').value); $$('iP').value = n ? plata(n) : ''; if (n) $$('iV').checked = false; };
+    $$('iV').onchange = () => { if ($$('iV').checked) $$('iP').value = ''; };
+    $$('pA').oninput = () => { const n = num($$('pA').value); $$('pA').value = n ? plata(n) : ''; pintarSuma(); };
+    $$('pT').onblur = () => { $$('pT').value = telVer($$('pT').value); };
+    // Tocar una cosa ya agregada la sube al formulario para corregirla (ej. ponerle el precio en la tienda).
+    $$('pItems').addEventListener('click', (e) => {
+      const g = e.target.closest('[data-ed]'); if (!g || e.target.closest('[data-x]')) return;
+      if (editando !== null) { toast('Primero guarda el que estás corrigiendo'); return; }
+      const k = Number(g.dataset.ed), [x] = d.items.splice(k, 1); editando = k;
+      $$('iQ').value = x.que || ''; $$('iC').value = x.color || ''; $$('iN').value = x.cant || ''; $$('iD').value = x.nota || '';
+      $$('iP').value = num(x.precio) ? plata(x.precio) : ''; $$('iV').checked = !!x.verificar; foto = x.foto || null; $$('iFt').textContent = foto ? 'Foto lista ✓' : 'Agregar';
+      $$('iAddT').textContent = 'Guardar cambio'; pintarItems(); $$('iP').focus(); $$('iQ').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    ['iQ', 'iC', 'iN', 'iD', 'iP'].forEach((k) => { $$(k).onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); agregar(); } }; });
     $$('iCols').onclick = (e) => { const b = e.target.closest('[data-c]'); if (!b) return; $$('iC').value = b.dataset.c; dlg.querySelectorAll('#iCols button').forEach((x) => x.classList.toggle('on', x === b)); };
     $$('iFb').onclick = () => $$('iF').click();
     $$('iF').onchange = async () => { const f = $$('iF').files[0]; if (!f) return; $$('iFt').textContent = 'Guardando…'; try { foto = await CM.fotos.guardar(f, 900); $$('iFt').textContent = 'Foto lista ✓'; } catch (er) { $$('iFt').textContent = 'Agregar'; toast(er.message); } };
@@ -199,7 +235,8 @@
       const titulo = $$('pQ').value.trim();
       if (!titulo) { $$('pErr').textContent = 'Escribe para quién es el pedido'; $$('pQ').focus(); return; }
       if (!d.items.length) { $$('pErr').textContent = 'Agrega al menos una cosa al pedido'; return; }
-      const nd = { items: d.items, tel: $$('pT').value.trim(), abono: num($$('pA').value), total: num($$('pTo').value), nota: $$('pN').value.trim() };
+      if (editando !== null) { $$('pErr').textContent = 'Toca "Guardar cambio" en la cosa que estás corrigiendo'; return; }
+      const nd = { items: d.items, tel: telNorm($$('pT').value), abono: num($$('pA').value), nota: $$('pN').value.trim() };
       if ($$('pH').value) nd.hora = $$('pH').value;
       Object.keys(nd).forEach((k) => { if (nd[k] === '' || nd[k] === 0) delete nd[k]; });
       if (JSON.stringify(nd).length > 2900) { $$('pErr').textContent = 'El pedido es muy largo: divídelo en dos.'; return; }
@@ -240,8 +277,9 @@
       '<div class="acc"><button type="button" data-act="pdf" data-id="' + p.id + '" aria-label="PDF" title="Descargar PDF">' + CM.ico('pdf', 18) + '</button><button type="button" data-act="share" data-id="' + p.id + '" aria-label="Compartir" title="Compartir">' + CM.ico('compartir', 18) + '</button>' +
       (d.tel ? '<button type="button" data-act="wsp" data-id="' + p.id + '" aria-label="WhatsApp al cliente" title="Avisar por WhatsApp">' + CM.ico('wsp', 18) + '</button>' : '') + '</div></div>' +
       '<p class="sub">' + CM.ico('reloj', 13) + ' ' + esc(fEnt(p)) + (venc ? ' <span class="pill bad">atrasado</span>' : p.fecha === h ? ' <span class="pill warn">hoy</span>' : p.fecha === sumarDias(h, 1) ? ' <span class="pill info">mañana</span>' : '') + '</p>' +
-      items.map((x) => '<p class="it-l"><b>' + esc(x.que) + '</b> ' + esc([x.color, x.cant ? 'x' + x.cant : ''].filter(Boolean).join(' · ')) + (x.nota ? ' <span class="sub">— ' + esc(x.nota) + '</span>' : '') + (x.foto ? ' ' + CM.ico('camara', 13) : '') + '</p>').join('') +
-      (num(d.total) || num(d.abono) ? '<p class="tot">Abono <b>' + plata(d.abono) + '</b>' + (num(d.total) ? ' · Total <b>' + plata(d.total) + '</b> · Saldo <b class="' + (saldo(d) ? 'debe' : 'ok') + '">' + plata(saldo(d)) + '</b>' : '') + '</p>' : '') +
+      items.map((x) => '<p class="it-l"><b>' + esc(x.que) + '</b> ' + esc([x.color, x.cant ? 'x' + x.cant : ''].filter(Boolean).join(' · ')) + (x.nota ? ' <span class="sub">— ' + esc(x.nota) + '</span>' : '') + (x.foto ? ' ' + CM.ico('camara', 13) : '') + (precioTxt(x) ? ' <span class="' + (x.verificar ? 'warn' : 'pr') + '">' + esc(x.verificar ? '⚠ verificar precio' : plata(linea(x))) + '</span>' : '') + '</p>').join('') +
+      (totalDe(d) ? '<p class="tot">Total <b>' + plata(totalDe(d)) + '</b>' + (porVerificar(d) ? ' <span class="warn">(+' + porVerificar(d) + ' por verificar)</span>' : '') + ' · Abono <b>' + plata(d.abono) + '</b> · Saldo <b class="' + (saldo(d) ? 'debe' : 'ok') + '">' + plata(saldo(d)) + '</b></p>'
+        : num(d.abono) || porVerificar(d) ? '<p class="tot">' + (num(d.abono) ? 'Abono <b>' + plata(d.abono) + '</b>' : '') + (porVerificar(d) ? ' <span class="warn">' + porVerificar(d) + ' por verificar</span>' : '') + '</p>' : '') +
       '<div class="btns-s"><button type="button" class="small' + (sig[0] === 'abierto' ? ' ghost' : '') + '" data-act="estado" data-e="' + sig[0] + '" data-id="' + p.id + '">' + CM.ico(sig[0] === 'abierto' ? 'izq' : 'check', 15) + ' ' + sig[1] + '</button></div></div>';
   }
   function render(el) {
