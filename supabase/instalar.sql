@@ -136,7 +136,7 @@ end $$;
 create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '3.7'::text $$;
+language sql immutable as $$ select '3.8'::text $$;
 create or replace function public.cfg_int(c text) returns int
 language sql stable security definer set search_path = '' as $$
   select (valor #>> '{}')::int from public.config where clave = c
@@ -1059,7 +1059,7 @@ end $$;
 -- ---------------------------------------------------------------------
 -- J2. Actualización automática (v3.6): cada 10 minutos la base revisa GitHub (rama main).
 --   · Si hay una base nueva (version.json → "bd"), descarga y ejecuta este mismo instalar.sql (no borra datos).
---   · Si solo cambió la app, la libera para que los celulares se actualicen solos.
+--   · La app la liberas tú desde el panel cuando la pruebes (no se libera sola).
 --   Si algo falla, no cambia nada y lo vuelve a intentar en la siguiente vuelta.
 -- ---------------------------------------------------------------------
 create or replace function public.auto_actualizar() returns text
@@ -1078,14 +1078,7 @@ begin
     perform public.auditar('version', 'Base actualizada sola a la v' || public.db_version());
     return 'base actualizada a ' || public.db_version();
   end if;
-  if v_app ~ re and v_bd = public.db_version() then
-    select valor #>> '{}' into lib from public.config where clave = 'version_liberada';
-    if lib is null or lib !~ re or string_to_array(v_app, '.')::int[] > string_to_array(lib, '.')::int[] then
-      insert into public.config (clave, valor) values ('version_liberada', to_jsonb(v_app)) on conflict (clave) do update set valor = excluded.valor;
-      perform public.auditar('version', 'App v' || v_app || ' liberada sola');
-      return 'app liberada ' || v_app;
-    end if;
-  end if;
+  -- La app NO se libera sola: la liberas tú desde el panel (Actualizar la app → Liberar) después de probarla.
   return 'al día';
 exception when others then
   return 'sin cambios: ' || sqlerrm;
@@ -1121,9 +1114,6 @@ end $$;
 grant execute on function public.config_publica() to anon;
 grant execute on function public.notif_accion(uuid, text) to anon;
 
--- Al correr este SQL la versión queda liberada al tiro: todos ven "Actualizar" (al publicar una versión nueva, sube este número).
-insert into public.config (clave, valor) values ('version_liberada', '"4.4"') on conflict (clave) do update set valor = excluded.valor
-  where case when public.config.valor #>> '{}' ~ '^\d+(\.\d+)*$'
-    then string_to_array(public.config.valor #>> '{}', '.')::int[] < string_to_array('4.4', '.')::int[] else true end;
+-- La versión de la app ya no se libera al correr este archivo: se libera desde el panel (Actualizar la app → Liberar).
 
 select 'Centro de Mando instalado v' || public.db_version() as resultado;

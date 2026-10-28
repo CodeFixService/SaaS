@@ -36,7 +36,7 @@
     // Aviso cuando hay una versión nueva publicada que falta instalar o liberar.
     try {
       const e = await estadoVersion();
-      if (e.pendiente) el('resumen').insertAdjacentHTML('afterbegin', '<button type="button" class="aviso-ver" id="bVer">🚀 Hay una versión nueva lista (v' + esc(e.pub.version) + ').<br><span class="sub">Actualízala en 4 pasos: base de datos, función, probar y liberar.</span></button>');
+      if (e.pendiente) el('resumen').insertAdjacentHTML('afterbegin', '<button type="button" class="aviso-ver" id="bVer">🚀 Hay una versión nueva lista (v' + esc(e.pub.version) + ').<br><span class="sub">Pruébala en tu teléfono y libérala para todos.</span></button>');
       if ($('bVer')) $('bVer').onclick = () => show('versiones');
     } catch (x) { /* sin internet */ }
   }
@@ -70,23 +70,22 @@
       '<div class="stats">' + k('Publicada en GitHub', 'v' + e.pub.version) + k('Liberada para todos', e.lib ? 'v' + e.lib : '—', e.liberada ? 'ok' : 'warn') + k('Tu teléfono', 'v' + BT_CONFIG.VERSION, e.okCel ? 'ok' : 'warn') + k('Base de datos', e.bd ? 'v' + e.bd : '—', e.okBd ? 'ok' : 'bad') + '</div>' +
       '<div class="card">' +
       (e.liberada && !bloqueo ? '<p class="pill ok">✅ Todo al día. Cuando se publique una versión nueva, aquí verás los pasos.</p>' : '') +
-      paso(1, e.okBd, 'Base de datos' + (e.okBd ? ' al día (v' + esc(e.bd) + ')' : ': falta actualizar a v' + esc(e.pub.bd)),
-        (e.okBd ? '' : '<p class="sub">Copia la consulta y pégala en Supabase → SQL Editor → New query → Run. Debe responder "Centro de Mando instalado v' + esc(e.pub.bd) + '". No borra tus datos.</p>') +
-        '<div class="btns-s"><button type="button" class="small' + (e.okBd ? ' ghost' : '') + '" data-a="sql">📋 Copiar consulta</button><a class="btn small ghost" target="_blank" rel="noopener" href="https://supabase.com/dashboard/project/' + PROYECTO + '/sql/new">↗ Abrir SQL Editor</a>' + (e.okBd ? '' : '<button type="button" class="small ghost" data-a="otra">🔄 Ya la corrí</button>') + '</div>') +
-      paso(2, e.pub.funcion ? e.okFn : null, 'Función "servidor"' + (e.okFn ? ' al día' + (e.fn ? ' (v' + esc(e.fn) + ')' : '') : e.fn ? ': tienes v' + esc(e.fn) + ', falta v' + esc(e.pub.funcion) : ': no responde'),
+      // La base se actualiza sola (cada 10 min, desde GitHub): aquí solo se ve su estado.
+      paso(1, e.okBd, 'Base de datos' + (e.okBd ? ' al día (v' + esc(e.bd) + ')' : ': actualizándose sola a la v' + esc(e.pub.bd)),
+        e.okBd ? '' : '<p class="sub">Se actualiza sola en máximo 10 minutos, sin borrar datos. Toca "Revisar de nuevo" en un rato.</p><div class="btns-s"><button type="button" class="small ghost" data-a="otra">🔄 Revisar de nuevo</button></div>') +
+      (e.okFn ? '' : paso(2, e.pub.funcion ? e.okFn : null, 'Función "servidor"' + (e.okFn ? ' al día' + (e.fn ? ' (v' + esc(e.fn) + ')' : '') : e.fn ? ': tienes v' + esc(e.fn) + ', falta v' + esc(e.pub.funcion) : ': no responde'),
         (e.okFn ? '' : '<p class="sub">Copia el código y en Supabase → Edge Functions → servidor → Code: borra todo, pega y toca Deploy. Si no existe, créala con el nombre "servidor".</p>') +
-        '<div class="btns-s"><button type="button" class="small' + (e.okFn ? ' ghost' : '') + '" data-a="fn">📋 Copiar código</button><a class="btn small ghost" target="_blank" rel="noopener" href="https://supabase.com/dashboard/project/' + PROYECTO + '/functions">↗ Abrir Edge Functions</a><button type="button" class="small ghost" data-a="otra">🩺 Probar de nuevo</button></div>') +
+        '<div class="btns-s"><button type="button" class="small' + (e.okFn ? ' ghost' : '') + '" data-a="fn">📋 Copiar código</button><a class="btn small ghost" target="_blank" rel="noopener" href="https://supabase.com/dashboard/project/' + PROYECTO + '/functions">↗ Abrir Edge Functions</a><button type="button" class="small ghost" data-a="otra">🩺 Probar de nuevo</button></div>')) +
       paso(3, e.okCel, e.okCel ? 'Tu teléfono ya tiene la v' + esc(BT_CONFIG.VERSION) : 'Pruébala en tu teléfono',
         '<p class="sub">Solo tu teléfono cambia. Revisa que todo funcione antes de liberarla.</p>' + (e.okCel ? '' : '<button type="button" class="small" data-a="cel">⬇️ Actualizar mi teléfono a la v' + esc(e.pub.version) + '</button>')) +
       paso(4, e.liberada, 'Liberar para todos',
-        '<p class="sub">' + (bloqueo ? '🔒 Primero termina los pasos 1 y 2: si liberas antes, la app de tus usuarios fallaría.' : 'A cada usuario le aparece "Hay una versión nueva" con el botón Actualizar. Nadie recibe cambios hasta que tú lo apruebas.') + '</p>' +
+        '<p class="sub">' + (bloqueo ? '🔒 Espera que la base termine de actualizarse: si liberas antes, la app de tus usuarios fallaría.' : 'Al liberar, la app de cada usuario se actualiza sola. Nadie recibe cambios hasta que tú lo apruebas.') + '</p>' +
         (SUPER ? '<button type="button" class="block" data-a="lib"' + (e.liberada || bloqueo ? ' disabled' : '') + '>' + (e.liberada ? '✓ La v' + esc(e.pub.version) + ' ya está liberada' : '🚀 Liberar v' + esc(e.pub.version) + ' para todos') + '</button>' : '<p class="sub">Solo el súper administrador puede liberar.</p>')) +
       '</div><div class="card"><button type="button" class="ghost" data-a="rep">🛠️ Reparar la app en este teléfono</button><p class="sub">Vuelve a descargar la app. No borra datos.</p></div>';
     v.onclick = async (ev) => {
       const b = ev.target.closest('[data-a]'); if (!b) return;
       const a = b.dataset.a;
-      if (a === 'sql') copiarArchivo('supabase/instalar-corto.sql', /http_get/, 'Consulta copiada. Pégala en Supabase → SQL Editor → Run');
-      else if (a === 'fn') copiarArchivo('supabase/functions/servidor/corto.ts', /^import /m, 'Código copiado. Pégalo en Edge Functions → servidor → Deploy');
+      if (a === 'fn') copiarArchivo('supabase/functions/servidor/corto.ts', /^import /m, 'Código copiado. Pégalo en Edge Functions → servidor → Deploy');
       else if (a === 'otra') versiones();
       else if (a === 'cel') { b.disabled = true; b.textContent = 'Actualizando…'; App.actualizar(); }
       else if (a === 'rep') { if (await confirmar('Se vuelve a descargar la app en este teléfono. No se borra ningún dato.', 'Reparar')) App.repararApp(); }

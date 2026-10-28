@@ -21,9 +21,10 @@
       liberar: (c, v) => c.rpc('admin_set_setting', { p_key: 'version_liberada', p_value: v }) },
     { id: 'barberia', nombre: 'Barbería', ico: 'tijeras', repo: 'Barberia', cfg: 'shared/config.js', worker: 'barberia', sub: 'barberia', admin: 'admin/',
       bd: { rpc: 'db_version' }, leer: { rpc: 'ajustes_publicos', campo: 'version_liberada' },
-      liberar: (c, v) => c.rpc('admin_ajuste', { p_key: 'version_liberada', p_value: v }) },
+      liberar: async (c, v) => { const r = await c.rpc('admin_liberar', { p_version: v }); return r.error ? c.rpc('admin_ajuste', { p_key: 'version_liberada', p_value: v }) : r; } },
     { id: 'bicitaller', nombre: 'BiciTaller', ico: 'bici', repo: 'Taller', cfg: 'shared/config.js', worker: 'taller', sub: 'bicitaller', admin: 'admin/',
-      bd: { rpc: 'db_version' }, leer: null, liberar: null }, // se actualiza sola apenas se publica
+      bd: { rpc: 'db_version' }, leer: { rpc: 'config_publica', campo: 'config.version_liberada' },
+      liberar: (c, v) => c.rpc('admin_config_guardar', { p_clave: 'version_liberada', p_valor: v, p_motivo: 'Liberar desde Centro de Mando' }) },
     { id: 'estaciona', nombre: 'Estaciona · Estacionamientos', ico: 'auto', repo: 'Estacionamiento', cfg: 'js/config.js', worker: 'estacionamiento', sub: 'estaciona', admin: '#/admin',
       bd: { rpc: 'ajustes_publicos', campo: 'version_bd' }, leer: { rpc: 'ajustes_publicos', campo: 'textos.version_liberada' },
       liberar: (c, v) => c.rpc('admin_guardar_textos', { p: { version_liberada: v } }) }
@@ -104,10 +105,9 @@
   function pintarTarjeta(a) {
     const n = raiz && raiz.querySelector('[data-app="' + a.id + '"]'); if (!n) return;
     const e = E[a.id] || {}, s = estadoDe(a);
-    const ref = e.url ? new URL(e.url).hostname.split('.')[0] : '';
     const pill = (t, cls) => '<span class="pill ' + (cls || '') + '">' + t + '</span>';
     const est = e.cargando ? pill('Revisando…') : e.error && !e.pub ? pill('⚠️ Sin datos', 'bad')
-      : !a.liberar ? pill('🔁 Se actualiza sola al publicar', 'info') : s.faltaBd ? pill('🗄️ Falta actualizar la base de datos', 'bad')
+      : !a.liberar ? pill('🔁 Se actualiza sola al publicar', 'info') : s.faltaBd ? pill('🗄️ La base se está actualizando sola (máx. 10 min)', 'warn')
       : s.alDia ? pill('✅ Al día', 'ok') : s.lista ? pill('🚀 Lista para liberar v' + esc(e.pub), 'warn') : !e.conectado ? pill('🔌 Conéctate para liberar', 'warn') : pill('Revisa la versión', 'warn');
     n.innerHTML = '<div class="fila"><span class="app-ico">' + A.ico(a.ico, 24) + '</span><div class="grow"><h3 style="margin:0">' + esc(a.nombre) + '</h3>' +
       '<p class="sub" style="margin:2px 0 0">Publicada ' + (e.pub ? 'v' + esc(e.pub) : '—') + (a.liberar ? ' · Liberada ' + (e.lib ? 'v' + esc(e.lib) : '—') : '') +
@@ -118,8 +118,6 @@
       '<div class="btns-s">' +
         '<a class="btn small ghost" href="' + esc(a.web) + '" target="_blank" rel="noopener">' + A.ico('abrir', 15) + ' Abrir app</a>' +
         '<a class="btn small ghost" href="' + esc(a.web + a.admin) + '" target="_blank" rel="noopener">' + A.ico('abrir', 15) + ' Admin</a>' +
-        '<button type="button" class="small' + (s.faltaBd ? '' : ' ghost') + '" data-a="sql">' + A.ico('copiar', 15) + ' Copiar SQL</button>' +
-        (ref ? '<a class="btn small ghost" href="https://supabase.com/dashboard/project/' + ref + '/sql/new" target="_blank" rel="noopener">' + A.ico('abrir', 15) + ' SQL Editor</a>' : '') +
         (a.liberar && e.conectado ? '<button type="button" class="small" data-a="lib"' + (s.lista ? '' : ' disabled') + '>' + (s.alDia ? A.ico('check', 15) + ' Liberada' : A.ico('cohete', 15) + ' Liberar v' + esc(e.pub || '?')) + '</button>' : '') +
         (!a.propia && e.url ? (e.conectado ? '<button type="button" class="small ghost" data-a="salir">Desconectar</button>' : '<button type="button" class="small" data-a="con">' + A.ico('enchufe', 15) + ' Conectar</button>') : '') +
         '<button type="button" class="small ghost" data-a="rec" aria-label="Revisar">' + A.ico('refrescar', 15) + '</button>' +
@@ -156,27 +154,16 @@
       d.close(); toast('Conectado a ' + a.nombre); cargar(a);
     };
   }
-  async function copiarSql(a) {
-    try {
-      const t = await (await fetch(RAW(a.repo, 'supabase/instalar-corto.sql'), { cache: 'no-store' })).text();
-      if (!/http_get/.test(t)) throw new Error('no se encontró supabase/instalar-corto.sql');
-      const limpio = t.split('\n').filter((x) => !x.startsWith('--')).join('\n').trim();
-      try { await navigator.clipboard.writeText(limpio); } catch (x) { const ta = document.createElement('textarea'); ta.value = limpio; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
-      toast('SQL de ' + a.nombre + ' copiado. Pégalo en su SQL Editor → Run');
-    } catch (x) { toast('No se pudo copiar: ' + x.message); }
-  }
-
   function render(el) {
     raiz = el;
     el.innerHTML = '<div class="titulo-v"><h2>Mis aplicaciones</h2><button type="button" class="small ghost" id="appsTodo">' + A.ico('refrescar', 15) + ' Revisar todas</button></div>' +
-      '<p class="sub">Para actualizar una app: 1) 📋 Copiar SQL y pégalo en su SQL Editor (no borra datos), 2) 🚀 Liberar. Sus usuarios ven el botón Actualizar.</p>' +
+      '<p class="sub">La base de cada app se actualiza sola. Cuando una versión nueva esté lista, pruébala y toca 🚀 Liberar (o Liberar todo): a sus usuarios se les actualiza sola.</p>' +
       '<div id="appsCab"></div>' + APPS.map((a) => '<div class="card app-card" data-app="' + a.id + '"></div>').join('');
     el.querySelector('#appsTodo').onclick = () => APPS.forEach(cargar);
     el.onclick = (ev) => {
       const b = ev.target.closest('[data-a]'), c = ev.target.closest('[data-app]'); if (!b || !c) return;
       const a = APPS.find((x) => x.id === c.dataset.app), act = b.dataset.a;
-      if (act === 'sql') copiarSql(a);
-      else if (act === 'lib') liberar(a);
+      if (act === 'lib') liberar(a);
       else if (act === 'con') conectar(a);
       else if (act === 'salir') cliente(a).auth.signOut().then(() => cargar(a));
       else if (act === 'rec') cargar(a);
