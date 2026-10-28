@@ -65,7 +65,7 @@
     x += '<div class="card"><div class="fila"><button type="button" class="avatar con-foto" data-act="foto" aria-label="Cambiar foto" title="Cambiar foto">' + esc((c.prefs || {}).avatar || '🙂') + '<span class="cam">' + CM.ico('camara', 13) + '</span></button><input type="file" id="fPerfil" accept="image/*" hidden><h3 style="margin:0">' + esc(c.nombre || c.email) + '</h3></div><p class="sub">' + esc(c.email) + ' · ' + (c.rol === 'admin' ? 'Administrador' : c.rol === 'socio' ? 'Socio' : c.premium ? 'Plan Pro' + (hasta ? ' hasta ' + hasta : '') : 'Plan gratis') + '</p>' +
       (c.rol === 'usuario' && !c.premium ? (pago && pago.estado === 'pendiente' ? '<p class="pill warn">Pago en revisión</p>' : '<button type="button" data-act="pro">' + CM.ico('estrella', 16) + ' Pasar a Pro</button>') : '') +
       (c.rol !== 'usuario' ? '<a class="btn" href="../admin/">Panel de administración</a>' : '') + '</div>';
-    const sec = [['metas', '', 'metas', 'Metas'], ['cerebro', 'notas', 'libro', 'Notas'], ['cerebro', 'ideas', 'cerebro', 'Ideas'], ['cerebro', 'problemas', 'alerta', 'Problemas'],
+    const sec = [['panel', '', 'panel', 'Panel'], ['metas', '', 'metas', 'Metas'], ['cerebro', 'notas', 'libro', 'Notas'], ['cerebro', 'ideas', 'cerebro', 'Ideas'], ['cerebro', 'problemas', 'alerta', 'Problemas'],
       ['cerebro', 'diario', 'luna', 'Diario'], ['cerebro', 'logros', 'estrella', 'Logros']];
     x += '<div class="card"><h3>Secciones</h3><div class="secs">' + sec.map((s) => '<button type="button" class="ghost" data-act="sec" data-v="' + s[0] + '" data-s="' + s[1] + '">' + CM.ico(s[2], 18) + ' ' + s[3] + '</button>').join('') +
       '<button type="button" class="ghost" data-act="aterrizar">' + CM.ico('ancla', 18) + ' Aterrizar</button></div></div>';

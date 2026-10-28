@@ -330,7 +330,7 @@
 
   /* ---------- Módulos y pestañas ---------- */
   // Barra de abajo: lo más usado + el botón central para anotar. Metas, Cerebro y Más se abren desde el menú de arriba.
-  const TABS = [['hoy', 'Hoy'], ['tablero', 'Tablero'], ['nuevo', 'Anotar'], ['pedidos', 'Pedidos'], ['panel', 'Panel']];
+  const TABS = [['hoy', 'Hoy'], ['pedidos', 'Pedidos'], ['nuevo', 'Anotar'], ['tablero', 'Tablero'], ['mas', 'Más']];
   const VISTAS = ['hoy', 'tablero', 'pedidos', 'panel', 'metas', 'cerebro', 'mas'];
   CM.TABS = TABS;
   const cargados = {};
