@@ -75,7 +75,7 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
   3. ✅ (ver "P3 y P4 hechos") Interruptores de funciones por plan (como Barbería) en las 6 + completar funciones de admin que faltan (textos editables, avisos masivos, socios, keys/cupones, registro, planes) + pasar a global las exclusivas que sirvan (verificación de identidad solo en Estaciona).
   4. ✅ Centro de Mando como súper panel (control rápido de cada app: liberar, avisar a todos, precios, textos).
   5. ✅ (ver "P5 hecho") Cuentas de clientes con sensación Premium; verificación humana (Cloudflare Turnstile) cuando el dueño lo configure.
-  6. Al final: descripción de cada app para entregar a clientes + las 6 consultas para pegar.
+  6. ✅ Entrega: `docs/ENTREGA.md` (descripción de cada app + las 6 consultas + pasos).
 
 ## P1 hecho (28/10/2026) · Limpieza y respaldo · núcleo 1.6
 - **Versiones en main**: CM 4.8 (base 3.9) · Billetera 1.13.0 (base 12) · CodeFix Apps 5.10 (base 5.5) · Barbería 2.9 · BiciTaller 2.9 (base 2.1) · Estaciona 2.5.0 (base 6).
@@ -123,7 +123,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Pendiente de P3**: socios en las apps que no los tienen (Billetera, Apps, Estaciona); CodeFix Apps no tiene textos editables (sus textos están en el HTML).
 
 ## P5 hecho (28/10/2026) · Sensación Premium y verificación humana · núcleo 1.9
-- **Versiones en main**: CM 4.11 (base 4.2) · Billetera 1.16.0 (base 15) · CodeFix Apps 5.13 (base 5.8) · Barbería 2.12 · BiciTaller 2.12 (base 2.4) · Estaciona 2.8.0 (base 9).
+- **Versiones en main (al cierre)**: CM 4.12 (base 4.3) · Billetera 1.16.1 (base 16) · CodeFix Apps 5.14 (base 5.9) · Barbería 2.13 · BiciTaller 2.13 (base 2.5) · Estaciona 2.8.1 (base 10).
+- El bloqueo del primer pago solo corre si hay link o transferencia configurados; al configurar la primera forma de pago se reinicia `inicio_desde`.
 - `premium.js` → `CFX_PREMIUM.marcar({premium, id, hasta, beneficios})`: con Premium la app se ve dorada (línea arriba, pestaña activa y botón +) y saluda una vez
   ("¡Ya eres Premium!"; no sale si hay pantalla de pago abierta). Se llama al cargar la cuenta en las 6 (clientes y negocios; nunca admin).
 - `humano.js` (va PRIMERO en el `<head>`; sincronizar.py lo pone ahí): envuelve `fetch` y, si la app tiene site key (`cfx_humano()`, pública), pide Turnstile antes de
