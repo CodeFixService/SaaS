@@ -72,8 +72,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Pendientes (en orden)**:
   1. ✅ (ver "P1 hecho" abajo) Limpieza y respaldo: borrar chats y notificaciones (cualquier cuenta); borrado automático a los 30 días con aviso 2 días antes; respaldo descargable por empresa; el admin respalda y borra registros/comprobantes; recordar eliminar productos/servicios sin stock o que ya no se ofrecen; inventario de tablas/config sobrantes (borrar solo lo vacío o sin uso; lo que tenga datos, mostrar al dueño con respaldo y pedir "sí").
   2. ✅ (ver "P2 hecho") Pagos ordenados: mensual, anual y "otro pago" personalizado.
-  3. Interruptores de funciones por plan (como Barbería) en las 6 + completar funciones de admin que faltan (textos editables, avisos masivos, socios, keys/cupones, registro, planes) + pasar a global las exclusivas que sirvan (verificación de identidad solo en Estaciona).
-  4. Centro de Mando como súper panel (control rápido de cada app: liberar, avisar a todos, precios, textos).
+  3. ✅ (ver "P3 y P4 hechos") Interruptores de funciones por plan (como Barbería) en las 6 + completar funciones de admin que faltan (textos editables, avisos masivos, socios, keys/cupones, registro, planes) + pasar a global las exclusivas que sirvan (verificación de identidad solo en Estaciona).
+  4. ✅ Centro de Mando como súper panel (control rápido de cada app: liberar, avisar a todos, precios, textos).
   5. Cuentas de clientes con sensación Premium; verificación humana (Cloudflare Turnstile) cuando el dueño lo configure.
   6. Al final: descripción de cada app para entregar a clientes + las 6 consultas para pegar.
 
@@ -108,3 +108,16 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **CM → Pagos** (`admin/pagos.js`): formulario único "Guardar en las 6 apps", lista de comprobantes por revisar de todas las apps (aprobar con días / rechazar con motivo)
   y "Cuentas sin primer pago" (eximir por correo). Usa las conexiones de Apps (`MisApps.preparar/cliente/conectar`).
 - Los pagos antiguos de cada app (sus tablas y paneles propios) quedan solo como historial.
+
+## P3 y P4 hechos (28/10/2026) · Control de las 6 apps desde el Centro de Mando · núcleo 1.8
+- **Versiones en main**: CM 4.10 (base 4.1) · Billetera 1.15.0 (base 14) · CodeFix Apps 5.12 (base 5.7) · Barbería 2.11 · BiciTaller 2.11 (base 2.3) · Estaciona 2.7.0 (base 8).
+- **SQL común** `nucleo/sql/admin.sql`: `cfx_planes`/`cfx_plan_guardar` (interruptores sí/no y límites, cada app los aplica como antes),
+  `cfx_textos`/`cfx_texto_guardar`, `cfx_aviso_masivo(destino: todos|negocios|clientes|premium|gratis)`, keys (`cfx_keys_crear/lista`, `cfx_key_revocar`, `cfx_key_canjear`
+  → da Premium y exime del primer pago), cupones (`cfx_cupones_lista`, `cfx_cupon_guardar/borrar`, `cfx_cupon_ver`; se aplican en pagos.js), verificación de identidad
+  (`cfx_verif_enviar/estado/lista/fotos/resolver`, `cfx_rut_ok`; fotos se borran al revisar) y `cfx_registro` (todo lo que hace el admin desde el núcleo).
+  Ganchos por app: `cfx_planes_app`, `cfx_plan_guardar_app`, `cfx_textos_app`, `cfx_texto_guardar_app`, `cfx_destinatarios`, `cfx_marcar_verificado` (Estaciona marca `verificado`).
+- **JS común**: `pagos.js` ahora con "Tengo un cupón" y "Tengo una key"; `verificar.js` (`CFX_VERIFICAR.abrir({rpc})`), con botón en cada app (CM Más, Billetera Mi cuenta,
+  Apps Mi perfil, Barbería Más, BiciTaller Mi cuenta). Estaciona mantiene su verificación propia (#/verificar) y su panel.
+- **CM**: pestaña **Control** (`admin/control.js`): eliges la app y manejas Avisar (o en las 6), Planes, Textos, Keys, Cupones (guardar en las 6), Verificaciones y Registro.
+  **Resumen** con tablero "Las 6 apps" (pagos y verificaciones por revisar, versiones por liberar). Barra: Resumen · Apps · + · Pagos · Control.
+- **Pendiente de P3**: socios en las apps que no los tienen (Billetera, Apps, Estaciona); CodeFix Apps no tiene textos editables (sus textos están en el HTML).

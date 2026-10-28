@@ -57,6 +57,7 @@
     const ed = CM.estadoDia(A.hoy());
     x += '<div class="card"><div class="fila"><button type="button" class="avatar con-foto" data-act="foto" aria-label="Cambiar foto" title="Cambiar foto">' + esc((c.prefs || {}).avatar || '🙂') + '<span class="cam">' + CM.ico('camara', 13) + '</span></button><input type="file" id="fPerfil" accept="image/*" hidden><h3 style="margin:0">' + esc(c.nombre || c.email) + '</h3></div><p class="sub">' + esc(c.email) + ' · ' + (c.rol === 'admin' ? 'Administrador' : c.rol === 'socio' ? 'Socio' : c.premium ? 'Plan Pro' + (hasta ? ' hasta ' + hasta : '') : 'Plan gratis') + '</p>' +
       (c.rol === 'usuario' && !c.premium ? (pago && pago.estado === 'pendiente' ? '<p class="pill warn">Pago en revisión</p>' : '<button type="button" data-act="pro">' + CM.ico('estrella', 16) + ' Pasar a Pro</button>') : '') +
+      (c.rol === 'usuario' ? ' <button type="button" class="ghost" data-act="verif">🪪 Verificar identidad</button>' : '') +
       (c.rol !== 'usuario' ? '<a class="btn" href="../admin/">Panel de administración</a>' : '') + '</div>';
     const sec = [['panel', '', 'panel', 'Panel'], ['metas', '', 'metas', 'Metas'], ['cerebro', 'notas', 'libro', 'Notas'], ['cerebro', 'ideas', 'cerebro', 'Ideas'], ['cerebro', 'problemas', 'alerta', 'Problemas'],
       ['cerebro', 'diario', 'luna', 'Diario'], ['cerebro', 'logros', 'estrella', 'Logros']];
@@ -103,6 +104,7 @@
         else if (a === 'tour') CM.tour();
         else if (a === 'delck') { await CM.del(b.dataset.id); render(el); }
         else if (a === 'pro') pagar();
+        else if (a === 'verif') CFX_VERIFICAR.abrir({ rpc });
         else if (a === 'esp') espacioForm(CM.espacio(b.dataset.id));
         else if (a === 'nesp') espacioForm();
         else if (a === 'prefs') { await rpc('mi_perfil_guardar', { p_nombre: c.nombre, p_telefono: c.telefono, p_prefs: { limite_descanso_min: +el.querySelector('#p1').value || 60, pausa_cada: +el.querySelector('#p2').value || 0, cierre_noche: el.querySelector('#p3').checked } }); c.prefs = Object.assign({}, p, { limite_descanso_min: +el.querySelector('#p1').value || 60, pausa_cada: +el.querySelector('#p2').value || 0, cierre_noche: el.querySelector('#p3').checked }); toast('Guardado'); }

@@ -3,11 +3,11 @@
 
 Uso:  python3 nucleo/sincronizar.py /ruta/a/los/repos      (carpeta que contiene saas, emprendedor, barberia, …)
 Hace en cada repositorio:
-  1. Copia los scripts de JS (iconos, instalar, barra, auto, fotos, voz, respaldo, pagos) y tema.css a la carpeta que usa esa app.
+  1. Copia los scripts de JS (iconos, instalar, barra, auto, fotos, voz, respaldo, pagos, verificar) y tema.css a la carpeta que usa esa app.
   2. Enlaza tema.css en cada página (después del CSS propio) y los scripts al final del <body>, si faltan.
   3. Agrega los archivos a la lista del service worker (para que funcionen sin internet).
   4. Escribe nucleo.json con la versión del núcleo (el Centro de Mando la muestra en cada tarjeta).
-  5. SQL común (nucleo/sql/*.sql: pagos e inventario): lo pone entre las marcas "-- >>> CFX núcleo" y "-- <<< CFX núcleo"
+  5. SQL común (nucleo/sql/*.sql: pagos, administración e inventario): lo pone entre las marcas "-- >>> CFX núcleo" y "-- <<< CFX núcleo"
      de cada instalar.sql (BiciTaller: schema.sql y luego node supabase/generar.mjs). <CHK> = cómo exige ser admin cada app.
 No toca nada más: ni la base de datos, ni la lógica de cada app. Se puede correr las veces que quieras.
 """
@@ -35,7 +35,7 @@ SQL = {
 }
 INI, FIN = '-- >>> CFX núcleo (no editar aquí: se copia de saas/nucleo/sql con sincronizar.py)', '-- <<< CFX núcleo'
 TABLA = re.compile(r'create table (?:if not exists )?((?:public|privado)\.[a-z_]+)', re.I)
-JS = ('iconos.js', 'instalar.js', 'barra.js', 'auto.js', 'fotos.js', 'voz.js', 'respaldo.js', 'pagos.js')
+JS = ('iconos.js', 'instalar.js', 'barra.js', 'auto.js', 'fotos.js', 'voz.js', 'respaldo.js', 'pagos.js', 'verificar.js')
 SALTAR = re.compile(r'(^docs/|guia|legal|actualizar\.html)')
 
 
@@ -90,7 +90,7 @@ def sql_comun(repo, nombre):
         print('  ⚠️ ', nombre, 'no tiene las marcas del SQL común en', archivo)
         return
     i, j = s.index(INI), s.index(FIN)
-    comun = ''.join(open(os.path.join(AQUI, 'sql', f), encoding='utf-8').read() for f in ('pagos.sql', 'inventario.sql'))
+    comun = ''.join(open(os.path.join(AQUI, 'sql', f), encoding='utf-8').read() for f in ('pagos.sql', 'admin.sql', 'inventario.sql'))
     tablas = sorted(set(TABLA.findall(s[:i] + s[j:])) | set(TABLA.findall(comun)))
     comun = comun.replace('<CHK>', chk).replace('<LISTA>', "array['" + "', '".join(tablas) + "']")
     nuevo = s[:i] + INI + '\n' + comun + s[j:]

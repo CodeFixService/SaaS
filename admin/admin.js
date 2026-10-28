@@ -20,7 +20,7 @@
       d.querySelector('#mo').focus();
     });
   }
-  const show = App.pestanas((v) => ({ resumen, usuarios, pagos: () => window.PagosCentral.render(el('pagos')), planes, ajustes, registro, versiones, apps: () => window.MisApps.render(el('apps')) }[v] || (() => {}))());
+  const show = App.pestanas((v) => ({ resumen, usuarios, pagos: () => window.PagosCentral.render(el('pagos')), control: () => window.ControlApps.render(el('control')), planes, ajustes, registro, versiones, apps: () => window.MisApps.render(el('apps')) }[v] || (() => {}))());
   App.ponerIconos(); App.campana($('bCampana'));
 
   async function resumen() {
@@ -33,6 +33,26 @@
         '<div class="card"><h2>Servidor</h2><div class="barra"><i style="width:' + pc + '%;background:' + (pc > 80 ? 'var(--bad)' : 'var(--brand)') + '"></i></div><p class="sub">' + MB(u.db_bytes) + ' de ' + MB(u.limite_bytes) + ' (' + pc + '%) · ' + u.usuarios + ' cuentas · registro: ' + u.auditoria_filas + '/' + u.auditoria_max + ' filas</p>' +
         '<div class="hb-t">' + u.tablas.slice(0, 6).map((t) => '<div class="fila"><span class="tit">' + esc(t.tabla) + '</span><span class="sub">' + MB(t.bytes) + ' · ' + t.filas + ' filas</span></div>').join('') + '</div></div>';
     } catch (e) { el('resumen').innerHTML = '<p class="err">' + esc(e.message) + '</p>'; }
+    // Súper panel: lo que espera en las 6 apps (pagos, verificaciones y versiones por liberar), con un toque a cada sección.
+    el('resumen').insertAdjacentHTML('beforeend', '<div class="card" id="r6"><h2>Las 6 apps</h2><p class="sub">Revisando…</p></div>');
+    (async () => {
+      const M = window.MisApps; await M.preparar();
+      const con = M.APPS.filter((a) => (M.estado[a.id] || {}).conectado);
+      let pagos = 0, verif = 0; const lib = [];
+      await Promise.all(con.map(async (a) => {
+        const c = M.cliente(a);
+        try { pagos += (await M.rpcDe(c, 'cfx_pagos_lista', { p_estado: 'pendiente' })).length; } catch (x) { /* base sin actualizar */ }
+        try { verif += (await M.rpcDe(c, 'cfx_verif_lista', { p_estado: 'pendiente' })).length; } catch (x) { /* nada */ }
+        const e = M.estado[a.id]; if (e.pub && e.lib && App.versionMenor(e.lib, e.pub)) lib.push(a.nombre.split(' ·')[0]);
+      }));
+      const r6 = $('r6'); if (!r6) return;
+      r6.innerHTML = '<h2>Las 6 apps</h2><div class="stats">' +
+        [['Pagos por revisar', pagos, 'pagos'], ['Verificaciones', verif, 'control'], ['Por liberar', lib.length, 'apps'], ['Conectadas', con.length + '/' + M.APPS.length, 'apps']]
+          .map((x) => '<button type="button" class="card" data-ir="' + x[2] + '" style="text-align:left"><b>' + x[1] + '</b><span>' + x[0] + '</span></button>').join('') + '</div>' +
+        (lib.length ? '<p class="sub">Listas para liberar: ' + esc(lib.join(', ')) + '</p>' : '') +
+        (con.length < M.APPS.length ? '<p class="sub">Conecta las demás en Apps para verlas aquí.</p>' : '');
+      r6.onclick = (ev) => { const b = ev.target.closest('[data-ir]'); if (b) show(b.dataset.ir); };
+    })();
     // Aviso cuando hay una versión nueva publicada que falta instalar o liberar.
     try {
       const e = await estadoVersion();

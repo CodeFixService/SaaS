@@ -32,6 +32,7 @@ create table if not exists public.cfx_pagos (
   creado      timestamptz not null default now(),
   resuelto    timestamptz
 );
+alter table public.cfx_pagos add column if not exists cupon text;
 create index if not exists cfx_pagos_cuenta_idx on public.cfx_pagos (cuenta, creado desc);
 create index if not exists cfx_pagos_estado_idx on public.cfx_pagos (estado, creado);
 alter table public.cfx_pagos enable row level security;
@@ -56,22 +57,24 @@ begin
                where cuenta = (y ->> 'id')::uuid order by creado desc limit 1) x));
 end $$;
 
-create or replace function public.cfx_pago_pedir(p_periodo text, p_monto int, p_medio text, p_comprobante text, p_nota text default '') returns uuid
+drop function if exists public.cfx_pago_pedir(text, int, text, text, text);
+create or replace function public.cfx_pago_pedir(p_periodo text, p_monto int, p_medio text, p_comprobante text, p_nota text default '', p_cupon text default null) returns uuid
 language plpgsql security definer set search_path = '' as $$
-declare y jsonb := public.cfx_yo(); i uuid;
+declare y jsonb := public.cfx_yo(); i uuid; cup text := nullif(upper(trim(coalesce(p_cupon, ''))), '');
 begin
   if y is null or (y ->> 'id') is null then raise exception 'Inicia sesión'; end if;
   if y ->> 'rol' not in ('negocio', 'cliente') and p_periodo <> 'otro' then raise exception 'Pide al dueño de la cuenta que haga el pago'; end if;
   if p_periodo not in ('inicio', 'mensual', 'anual', 'otro') or p_medio not in ('link', 'transferencia') then raise exception 'Datos no válidos'; end if;
   if coalesce(p_monto, 0) < 1 then raise exception 'Escribe el monto que pagaste'; end if;
   if coalesce(length(p_comprobante), 0) < 200 then raise exception 'Sube la foto del comprobante'; end if;
+  if cup is not null then perform public.cfx_cupon_ver(cup); end if;
   if exists (select 1 from public.cfx_pagos where cuenta = (y ->> 'id')::uuid and estado = 'pendiente') then raise exception 'Ya tienes un pago en revisión. Te avisamos apenas se apruebe.'; end if;
   if (select count(*) from public.cfx_pagos where cuenta = (y ->> 'id')::uuid and creado > now() - interval '1 day') >= 5 then raise exception 'Demasiados intentos hoy. Escribe a soporte.'; end if;
-  insert into public.cfx_pagos (cuenta, email, nombre, rol, periodo, monto, medio, nota, comprobante)
+  insert into public.cfx_pagos (cuenta, email, nombre, rol, periodo, monto, medio, nota, comprobante, cupon)
   values ((y ->> 'id')::uuid, coalesce(y ->> 'email', ''), left(coalesce(y ->> 'nombre', ''), 80), case when y ->> 'rol' in ('negocio', 'cliente') then y ->> 'rol' else 'otro' end,
-          p_periodo, p_monto, p_medio, left(coalesce(p_nota, ''), 300), p_comprobante)
+          p_periodo, p_monto, p_medio, left(coalesce(p_nota, ''), 300), p_comprobante, cup)
   returning id into i;
-  perform public.cfx_avisar_admin('💳 Pago por revisar', coalesce(nullif(y ->> 'nombre', ''), y ->> 'email') || ' · $' || p_monto || ' (' || p_periodo || ')');
+  perform public.cfx_avisar_admin('💳 Pago por revisar', coalesce(nullif(y ->> 'nombre', ''), y ->> 'email') || ' · $' || p_monto || ' (' || p_periodo || ')' || coalesce(' · cupón ' || cup, ''));
   return i;
 end $$;
 
@@ -167,8 +170,8 @@ end $$;
 
 revoke all on function public.cfx_exento_email(text, boolean) from public, anon;
 grant execute on function public.cfx_exento_email(text, boolean) to authenticated;
-revoke all on function public.cfx_pago_estado(), public.cfx_pago_pedir(text, int, text, text, text), public.cfx_pagos_config(), public.cfx_pagos_config_guardar(jsonb),
+revoke all on function public.cfx_pago_estado(), public.cfx_pago_pedir(text, int, text, text, text, text), public.cfx_pagos_config(), public.cfx_pagos_config_guardar(jsonb),
   public.cfx_pagos_lista(text), public.cfx_pago_comprobante(uuid), public.cfx_pago_resolver(uuid, boolean, int, text), public.cfx_exento(uuid, boolean, text) from public, anon;
-grant execute on function public.cfx_pago_estado(), public.cfx_pago_pedir(text, int, text, text, text), public.cfx_pagos_config(), public.cfx_pagos_config_guardar(jsonb),
+grant execute on function public.cfx_pago_estado(), public.cfx_pago_pedir(text, int, text, text, text, text), public.cfx_pagos_config(), public.cfx_pagos_config_guardar(jsonb),
   public.cfx_pagos_lista(text), public.cfx_pago_comprobante(uuid), public.cfx_pago_resolver(uuid, boolean, int, text), public.cfx_exento(uuid, boolean, text) to authenticated;
 revoke all on function public.cfx_yo(), public.cfx_dar_premium(uuid, text, int), public.cfx_avisar(uuid, text, text), public.cfx_avisar_admin(text, text) from public, anon, authenticated;
