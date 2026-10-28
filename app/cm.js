@@ -479,7 +479,7 @@
     if (tipo === 'pedido') return CM.pedido(null, ini);
     anot.tipo = tipo || 'nota'; anot.auto = !tipo;
     const mas1h = () => { const d = new Date(Date.now() + 3600e3); return pad(d.getHours()) + ':00'; };
-    const d = modal('<h2>¿Qué anotas?</h2><div class="chips" id="aTip"></div><div class="cap-voz"><div id="aCue"></div>' + (vozOk ? '<button type="button" class="voz" id="aVoz" aria-label="Dictar">' + CM.ico('micro', 22) + '</button>' : '') + '</div>' +
+    const d = modal('<h2>¿Qué anotas?</h2><div class="chips" id="aTip"></div><div class="cap-voz" data-sin-voz><div id="aCue"></div>' + (vozOk ? '<button type="button" class="voz" id="aVoz" aria-label="Dictar">' + CM.ico('micro', 22) + '</button>' : '') + '</div>' +
       '<div id="aExt"></div><p class="sub" id="aAyu"></p><p class="err" id="aErr"></p><div class="btns"><button class="ghost" data-cerrar type="button">Cerrar</button><button id="aOk" type="button">Guardar</button></div>');
     d.classList.add('hoja-anotar');
     const $$ = (x) => d.querySelector('#' + x);
