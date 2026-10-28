@@ -24,6 +24,8 @@ async function entrar(t, p, email) {
     await p.waitForSelector('.cfx-boya', { timeout: 8000 });
     assert(/\d/.test(await p.locator('.cfx-boya i').innerText()), 'boya con pendientes');
     await p.click('.cfx-boya'); await p.waitForTimeout(400);
+    assert(await p.locator('dialog.cfx-ayuda [data-a=inicio]').count() === 1 && await p.locator('dialog.cfx-ayuda [data-a=salir]').count() === 1, 'menú ⋮ con Inicio y Cerrar sesión');
+    assert(await p.evaluate(() => !!document.querySelector('.cfx-boya').closest('header, .top, .cab')), '⋮ arriba en el encabezado');
     await p.click('dialog.cfx-ayuda [data-a=guia]'); await p.waitForTimeout(400);
     const g = await p.locator('dialog.cfx-ayuda').innerText();
     assert(/Te faltan 5 de 6/.test(g) && /Despacho o retiro/.test(g), 'guía con 5 de 6 pendientes');

@@ -24,7 +24,7 @@ async function entrar(t, p, email) {
     assert((await t.sim.su("select premium_hasta > now() + interval '29 days' ok from talleres"))[0].ok, 'taller Premium 30 días');
     await p.reload(); await p.waitForTimeout(3000); await t.sinModales();
     assert(await p.locator('dialog.cfx-pago').count() === 0, 'ya no bloqueado');
-    await p.goto(t.base + '/taller/#mas'); await p.waitForTimeout(1500); await t.sinModales(); await p.click('#mSeg [data-m=plan]'); await p.waitForTimeout(1500);
+    await p.goto(t.base + '/taller/#mas'); await p.waitForTimeout(1500); await t.sinModales(); await p.click('#mBody [data-m=plan]'); await p.waitForTimeout(1500);
     assert(/4\.900/.test(await p.locator('#mBody').innerText()), 'plan con precio central'); await t.foto('plan');
     const { page: q } = await t.nuevo();
     await entrar(t, q, 'cli@x.cl');

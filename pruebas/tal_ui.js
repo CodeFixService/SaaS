@@ -19,7 +19,7 @@ const assert = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('
     await t.foto('campana');
     await p.click('dialog [data-borrar]'); await p.waitForTimeout(300); await p.locator('dialog button', { hasText: 'Borrar' }).last().click(); await p.waitForTimeout(800);
     assert((await t.sim.su('select count(*)::int n from notificaciones where para=$1', [u.id]))[0].n === 0, 'borra todos');
-    await p.goto(t.base + '/taller/#mas'); await p.waitForTimeout(2000); await t.sinModales(); await p.click('[data-m=cuenta]'); await p.waitForTimeout(800);
+    await p.goto(t.base + '/taller/#mas'); await p.waitForTimeout(2000); await t.sinModales(); await p.click('#mBody [data-m=cuenta]'); await p.waitForTimeout(800);
     const [d] = await Promise.all([p.waitForEvent('download'), p.click('#uRespaldo')]);
     await d.saveAs('/tmp/claude-0/tal.xlsx'); assert(true, 'respaldo taller');
     assert(await t.anchoOk(), 'ancho cuenta'); await t.foto('cuenta');
