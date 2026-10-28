@@ -136,7 +136,7 @@ end $$;
 create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '3.6'::text $$;
+language sql immutable as $$ select '3.7'::text $$;
 create or replace function public.cfg_int(c text) returns int
 language sql stable security definer set search_path = '' as $$
   select (valor #>> '{}')::int from public.config where clave = c
@@ -232,7 +232,7 @@ create table if not exists public.items (
   espacio_id  uuid references public.espacios (id) on delete set null,
   padre       uuid references public.items (id) on delete cascade,
   tipo        text not null check (tipo in ('tarea', 'proyecto', 'meta', 'resultado', 'habito', 'check', 'idea', 'problema',
-                                           'solucion', 'nota', 'diario', 'logro', 'leccion', 'recordatorio', 'falta')),
+                                           'solucion', 'nota', 'diario', 'logro', 'leccion', 'recordatorio', 'falta', 'pedido')),
   titulo      text not null default '' check (length(titulo) <= 200),
   cuerpo      text not null default '' check (length(cuerpo) <= 4000),
   estado      text not null default 'abierto' check (length(estado) <= 20),
@@ -247,13 +247,15 @@ create table if not exists public.items (
   updated_at  timestamptz not null default now()
 );
 -- v3.6: "falta" = lo que hay que comprar o traer (Listas). titulo = qué; datos = { lista, cant, para }.
+-- v3.7: "pedido" = titulo (para quién), fecha (entrega), estado abierto → listo → hecho (entregado),
+--        datos = { tel, hora, abono, total, nota, items: [{ que, color, cant, nota, foto }] }. Las fotos quedan solo en el teléfono.
 do $$
 declare c text;
 begin
   for c in select conname from pg_constraint where conrelid = 'public.items'::regclass and contype = 'c' and pg_get_constraintdef(oid) like '%tipo%recordatorio%'
   loop execute 'alter table public.items drop constraint ' || quote_ident(c); end loop;
   alter table public.items add constraint items_tipo_check check (tipo in ('tarea', 'proyecto', 'meta', 'resultado', 'habito', 'check', 'idea', 'problema',
-    'solucion', 'nota', 'diario', 'logro', 'leccion', 'recordatorio', 'falta'));
+    'solucion', 'nota', 'diario', 'logro', 'leccion', 'recordatorio', 'falta', 'pedido'));
 end $$;
 create index if not exists items_owner_tipo_idx on public.items (owner, tipo, estado);
 create index if not exists items_owner_fecha_idx on public.items (owner, fecha) where fecha is not null;
@@ -553,7 +555,7 @@ begin
   if p_prefs is not null then
     if jsonb_typeof(p_prefs) <> 'object' or length(p_prefs::text) > 1500 then raise exception 'Datos no válidos'; end if;
     select coalesce(jsonb_object_agg(k, v), '{}') into f from jsonb_each(p_prefs) as t(k, v)
-    where k in ('tz', 'limite_descanso_min', 'limite_app_min', 'pausa_cada', 'resumen_manana', 'cierre_noche', 'avisos_horario', 'color', 'tema', 'avatar', 'guia', 'wip');
+    where k in ('tz', 'limite_descanso_min', 'limite_app_min', 'pausa_cada', 'resumen_manana', 'cierre_noche', 'avisos_horario', 'color', 'tema', 'avatar', 'guia', 'wip', 'cabeza', 'cabeza_h1', 'cabeza_h2', 'insistir', 'plan_semana');
   end if;
   update public.perfiles set nombre = left(trim(coalesce(p_nombre, nombre)), 80), telefono = left(trim(coalesce(p_telefono, telefono)), 30),
     prefs = case when f is null then prefs else prefs || f end
@@ -894,10 +896,10 @@ begin
   for r in select id, owner, titulo, cuerpo, repite, aviso_at from public.items
            where tipo = 'recordatorio' and estado = 'abierto' and aviso_at <= now() order by aviso_at limit 500 for update skip locked
   loop
-    perform public.avisar(r.owner, 'Recordatorio: ' || r.titulo, r.cuerpo, '/app/#hoy');
+    perform public.avisar(r.owner, 'Recordatorio: ' || r.titulo, r.cuerpo, '/app/#hoy?item=' || r.id);
     recs := recs + 1;
     if r.repite = '' then
-      update public.items set estado = 'hecho' where id = r.id;
+      update public.items set estado = 'avisado' where id = r.id;
     elsif r.repite = 'mensual' then
       update public.items set aviso_at = r.aviso_at + interval '1 month' * greatest(1, ceil(extract(epoch from now() - r.aviso_at) / 2592000.0)::int) where id = r.id;
     else
@@ -925,35 +927,56 @@ begin
       end if;
     end if;
 
-    -- v3.6: lo de mañana se avisa hoy a las 08:00, para organizarte con tiempo.
+    -- v3.6/3.7: lo de mañana (tareas, recordatorios y pedidos por entregar) se avisa hoy a las 08:00.
     if hm >= '08:00' and hm < '08:15' then
       select count(*), string_agg(t, ', ') into n1, top from (
-        select titulo as t from public.items where owner = r.id and estado not in ('hecho', 'resuelto')
-          and ((tipo = 'tarea' and fecha = hoy_l + 1) or (tipo = 'recordatorio' and (aviso_at at time zone r.tz)::date = hoy_l + 1))
+        select case when tipo = 'pedido' then 'entregar pedido de ' || titulo else titulo end as t from public.items
+        where owner = r.id and estado not in ('hecho', 'resuelto')
+          and ((tipo in ('tarea', 'pedido') and fecha = hoy_l + 1) or (tipo = 'recordatorio' and (aviso_at at time zone r.tz)::date = hoy_l + 1))
         order by coalesce(datos ->> 'hora', to_char(aviso_at at time zone r.tz, 'HH24:MI'), '99'), created_at limit 4) x;
       if n1 > 0 and public.marcar_aviso(r.id, hoy_l, 'manana_sig') then
         select count(*) into n2 from public.items where owner = r.id and estado not in ('hecho', 'resuelto')
-          and ((tipo = 'tarea' and fecha = hoy_l + 1) or (tipo = 'recordatorio' and (aviso_at at time zone r.tz)::date = hoy_l + 1));
+          and ((tipo in ('tarea', 'pedido') and fecha = hoy_l + 1) or (tipo = 'recordatorio' and (aviso_at at time zone r.tz)::date = hoy_l + 1));
         perform public.avisar(r.id, 'Mañana tienes ' || n2 || case when n2 = 1 then ' cosa' else ' cosas' end, top || case when n2 > 4 then '…' else '' end, '/app/#hoy');
         avisos := avisos + 1;
       end if;
     end if;
-    -- v3.6: lo de hoy con hora se avisa 1 hora antes (tareas con hora y recordatorios).
-    for e in select id, titulo, coalesce(datos ->> 'hora', to_char(aviso_at at time zone r.tz, 'HH24:MI')) as h from public.items
+    -- Lo de hoy con hora: 1 hora antes y, si no lo tachas, insiste a los 15 minutos y a la hora (con botones Listo / 1 hora más).
+    for e in select id, tipo, titulo, coalesce(datos ->> 'hora', to_char(aviso_at at time zone r.tz, 'HH24:MI')) as h from public.items
              where owner = r.id and estado not in ('hecho', 'resuelto')
-               and ((tipo = 'tarea' and fecha = hoy_l and datos ->> 'hora' ~ '^\d\d:\d\d$')
+               and ((tipo in ('tarea', 'pedido') and fecha = hoy_l and datos ->> 'hora' ~ '^\d\d:\d\d$')
                  or (tipo = 'recordatorio' and (aviso_at at time zone r.tz)::date = hoy_l))
     loop
-      if hm >= (e.h::time - interval '1 hour') and hm < e.h::time and e.h::time >= '01:00' then
-        if public.marcar_aviso(r.id, hoy_l, 'h1' || e.id) then
-          perform public.avisar(r.id, 'En 1 hora: ' || e.titulo, 'A las ' || e.h || '.', '/app/#hoy'); avisos := avisos + 1;
+      if hm < e.h::time and hm >= greatest('00:00'::time, e.h::time - interval '1 hour') and e.h::time - hm <= interval '1 hour' then
+        if public.marcar_aviso(r.id, hoy_l, 'h1' || e.id || e.h) then
+          perform public.avisar(r.id, case when e.tipo = 'pedido' then 'En 1 hora: entregar pedido de ' else 'En 1 hora: ' end || e.titulo, 'A las ' || e.h || '.', '/app/#hoy?item=' || e.id); avisos := avisos + 1;
         end if;
-      elsif e.h::time < '01:00' and hm < e.h::time then
-        if public.marcar_aviso(r.id, hoy_l, 'h1' || e.id) then
-          perform public.avisar(r.id, 'Pronto: ' || e.titulo, 'A las ' || e.h || '.', '/app/#hoy'); avisos := avisos + 1;
+      elsif coalesce(r.prefs ->> 'insistir', 'true') <> 'false' and hm >= e.h::time + interval '15 minutes' and hm < e.h::time + interval '1 hour' and e.h::time < '23:00' then
+        if public.marcar_aviso(r.id, hoy_l, 'i1' || e.id || e.h) then
+          perform public.avisar(r.id, '¿Lo hiciste? ' || e.titulo, 'Era a las ' || e.h || '. Tócalo como listo o dale 1 hora más.', '/app/#hoy?item=' || e.id); avisos := avisos + 1;
+        end if;
+      elsif coalesce(r.prefs ->> 'insistir', 'true') <> 'false' and hm >= e.h::time + interval '1 hour' and e.h::time < '22:45' then
+        if public.marcar_aviso(r.id, hoy_l, 'i2' || e.id || e.h) then
+          perform public.avisar(r.id, 'Sigue pendiente: ' || e.titulo, 'Era a las ' || e.h || '. Si ya está, márcalo como listo.', '/app/#hoy?item=' || e.id); avisos := avisos + 1;
         end if;
       end if;
     end loop;
+    -- "Vacía tu cabeza": 2 veces al día te pregunta si hay algo que anotar (abre directo el botón +).
+    if coalesce(r.prefs ->> 'cabeza', 'true') <> 'false' then
+      for top in select unnest(array[coalesce(nullif(r.prefs ->> 'cabeza_h1', ''), '13:00'), coalesce(nullif(r.prefs ->> 'cabeza_h2', ''), '20:30')]) loop
+        if top ~ '^\d\d:\d\d$' and hm >= top::time and hm < top::time + interval '15 minutes' and public.marcar_aviso(r.id, hoy_l, 'cab' || top) then
+          perform public.avisar(r.id, '¿Algo que anotar?', 'Un pedido, una idea, algo que te pidieron… Anótalo ahora y te lo recuerdo yo.', '/app/#nuevo'); avisos := avisos + 1;
+        end if;
+      end loop;
+    end if;
+    -- Plan de la semana: domingo 20:00.
+    if dow = 7 and hm >= '20:00' and hm < '20:15' and coalesce(r.prefs ->> 'plan_semana', 'true') <> 'false' and public.marcar_aviso(r.id, hoy_l, 'semana') then
+      select count(*) filter (where tipo = 'pedido'), count(*) filter (where tipo <> 'pedido') into n1, n2 from public.items
+        where owner = r.id and estado not in ('hecho', 'resuelto') and tipo in ('tarea', 'pedido') and fecha between hoy_l + 1 and hoy_l + 7;
+      if n1 + n2 > 0 then
+        perform public.avisar(r.id, 'Tu semana', n1 || ' pedidos por entregar y ' || n2 || ' tareas. Revisa Hoy → Próximos días y parte liviano el lunes.', '/app/#hoy'); avisos := avisos + 1;
+      end if;
+    end if;
 
     if coalesce(r.prefs ->> 'avisos_horario', 'true') <> 'false' then
       for e in select id, nombre, horario from public.espacios
@@ -1004,6 +1027,33 @@ begin
     end if;
   end if;
   return jsonb_build_object('recordatorios', recs, 'avisos', avisos);
+end $$;
+
+-- v3.7: botones de la notificación ("Listo" / "1 hora más"). La notificación es la llave: solo quien la recibió
+-- conoce su id, y solo sirve para el registro de esa misma persona y durante 3 días.
+create or replace function public.notif_accion(p_notif uuid, p_accion text) returns text
+language plpgsql security definer set search_path = '' as $$
+declare n record; it record; tz text; loc timestamp;
+begin
+  select * into n from public.notificaciones where id = p_notif and created_at > now() - interval '3 days';
+  if n.id is null or n.url !~ 'item=[0-9a-f-]{36}' then return 'no'; end if;
+  select * into it from public.items where id = substring(n.url from 'item=([0-9a-f-]{36})')::uuid and owner = n.para;
+  if it.id is null then return 'no'; end if;
+  update public.notificaciones set leida = true where id = n.id;
+  if p_accion = 'hecho' then
+    update public.items set estado = 'hecho' where id = it.id;
+    return 'hecho';
+  elsif p_accion = 'mas1h' then
+    select coalesce(prefs ->> 'tz', 'America/Santiago') into tz from public.perfiles where id = n.para;
+    loc := (now() + interval '1 hour') at time zone tz;
+    if it.tipo = 'recordatorio' then
+      update public.items set aviso_at = now() + interval '1 hour', estado = 'abierto' where id = it.id;
+    else
+      update public.items set fecha = loc::date, datos = datos || jsonb_build_object('hora', to_char(loc, 'HH24:MI')) where id = it.id;
+    end if;
+    return 'mas1h';
+  end if;
+  return 'no';
 end $$;
 
 -- ---------------------------------------------------------------------
@@ -1069,10 +1119,11 @@ begin
   end loop;
 end $$;
 grant execute on function public.config_publica() to anon;
+grant execute on function public.notif_accion(uuid, text) to anon;
 
 -- Al correr este SQL la versión queda liberada al tiro: todos ven "Actualizar" (al publicar una versión nueva, sube este número).
-insert into public.config (clave, valor) values ('version_liberada', '"4.3"') on conflict (clave) do update set valor = excluded.valor
+insert into public.config (clave, valor) values ('version_liberada', '"4.4"') on conflict (clave) do update set valor = excluded.valor
   where case when public.config.valor #>> '{}' ~ '^\d+(\.\d+)*$'
-    then string_to_array(public.config.valor #>> '{}', '.')::int[] < string_to_array('4.3', '.')::int[] else true end;
+    then string_to_array(public.config.valor #>> '{}', '.')::int[] < string_to_array('4.4', '.')::int[] else true end;
 
 select 'Centro de Mando instalado v' || public.db_version() as resultado;

@@ -5,7 +5,7 @@
 const ARCHIVOS = ['./', 'index.html', 'manifest.webmanifest', 'version.json', 'icons/icon-192.png', 'icons/icon-512.png',
   'shared/app.css', 'shared/app.js', 'shared/tema.css', 'shared/config.js', 'shared/vendor/supabase.js',
   'app/', 'app/index.html', 'app/cm.css', 'app/cm.js', 'app/estilo.js', 'app/m-hoy.js', 'app/m-tablero.js', 'app/m-metas.js', 'app/m-cerebro.js',
-  'app/m-insights.js', 'app/m-listas.js', 'app/m-panel.js', 'app/m-mas.js', 'admin/', 'admin/index.html', 'admin/admin.js', 'admin/apps.js', 'shared/iconos.js', 'shared/instalar.js'];
+  'app/m-insights.js', 'app/m-pedidos.js', 'shared/vendor/qrcode.js', 'app/m-panel.js', 'app/m-mas.js', 'admin/', 'admin/index.html', 'admin/admin.js', 'admin/apps.js', 'shared/iconos.js', 'shared/instalar.js'];
 const META = 'cm-meta';
 let reinstalando = null;
 // "?t=" evita copias viejas del CDN (GitHub guarda archivos hasta 10 minutos).
@@ -73,15 +73,32 @@ self.addEventListener('fetch', (e) => {
   })());
 });
 
+// v4.4: los avisos de algo con hora traen botones "Listo" y "1 hora más": funcionan sin abrir la app.
+self.window = self;
+try { importScripts('shared/config.js'); } catch (err) { /* sin conexión: los botones abren la app */ }
 self.addEventListener('push', (e) => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (err) { d = { title: e.data && e.data.text() }; }
+  const conItem = /item=[0-9a-f-]{36}/.test(d.url || '');
   e.waitUntil(self.registration.showNotification(d.title || 'Centro de Mando', {
-    body: d.body || '', icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: d.tag, data: { url: d.url || '/' }
+    body: d.body || '', icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: d.tag, data: { url: d.url || '/', id: d.tag },
+    renotify: true, requireInteraction: conItem, vibrate: [200, 100, 200],
+    actions: conItem ? [{ action: 'hecho', title: '✓ Listo' }, { action: 'mas1h', title: '⏰ 1 hora más' }] : /#nuevo/.test(d.url || '') ? [{ action: 'abrir', title: '✏️ Anotar' }] : []
   }));
 });
+async function accionAviso(id, accion) {
+  const c = self.BT_CONFIG;
+  if (!c || !id) throw new Error('sin datos');
+  const r = await fetch(c.SUPABASE_URL + '/rest/v1/rpc/notif_accion', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: c.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + c.SUPABASE_ANON_KEY }, body: JSON.stringify({ p_notif: id, p_accion: accion }) });
+  const t = await r.json();
+  if (t === 'no') throw new Error('no');
+  return self.registration.showNotification(accion === 'hecho' ? '✓ Marcado como listo' : '⏰ Te aviso en 1 hora', { body: '', icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: 'ok-' + id, silent: true })
+    .then(() => setTimeout(() => self.registration.getNotifications({ tag: 'ok-' + id }).then((l) => l.forEach((n) => n.close())), 4000));
+}
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
+  const dat = e.notification.data || {};
+  if (e.action === 'hecho' || e.action === 'mas1h') { e.waitUntil(accionAviso(dat.id, e.action).catch(() => self.clients.openWindow(new URL((dat.url || '/').replace(/^\//, ''), self.registration.scope).href))); return; }
   const url = new URL((e.notification.data && e.notification.data.url || '/').replace(/^\//, ''), self.registration.scope).href;
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((l) => {
     for (const c of l) { if (c.url.split('#')[0] === url.split('#')[0] && 'focus' in c) { c.navigate(url); return c.focus(); } }

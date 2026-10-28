@@ -21,6 +21,7 @@
       if (n >= WIP() && !(await A.confirmar('Ya tienes ' + n + ' cosas en curso. Terminar una antes de empezar otra evita el agobio. ¿Empezar igual?', 'Empezar igual'))) return;
     }
     if (it.tipo === 'proyecto' && it.estado === 'en_curso' && est === 'abierto') await pedirDonde(it);
+    if (est === 'hecho' && it.tipo === 'tarea' && it.datos && it.datos.rep) { await CM.completar(it); return; }
     await CM.upd(it.id, { estado: est });
     if (est === 'hecho') toast('Terminado. Date un respiro.');
   }

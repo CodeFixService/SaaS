@@ -66,7 +66,7 @@
   const PASOS = () => {
     const I = CM.items, p = pr();
     return [['Crea tu espacio de trabajo con horario', CM.espacios.some((e) => e.modo === 'trabajo' && !e.archivado), 'mas'], ['Anota tu primera tarea', I.some((i) => i.tipo === 'tarea'), 'hoy'],
-      ['Elige tu Top 3 del día', I.some((i) => i.tipo === 'tarea' && i.prioridad === 3), 'hoy'], ['Anota algo que falta en una lista (+ → Lo que falta)', I.some((i) => i.tipo === 'falta'), 'listas'],
+      ['Dicta algo con el micrófono del + (ej: "mañana a las 10 llamar a Maya")', I.some((i) => i.tipo === 'tarea' && i.datos && i.datos.hora), 'nuevo'], ['Crea tu primer pedido', I.some((i) => i.tipo === 'pedido'), 'pedidos'],
       ['Activa las notificaciones (Más → Notificaciones)', typeof Notification !== 'undefined' && Notification.permission === 'granted', 'mas'], ['Personaliza tu estilo (color e ícono)', !!(p.color || p.avatar), 'mas']];
   };
   CM.guiaCard = () => {
@@ -78,7 +78,7 @@
       '<div class="btns-s"><button type="button" class="small ghost" data-act="tour">¿Cómo funciona?</button><button type="button" class="small ghost" data-act="guiaX">Ocultar guía</button></div></div>';
   };
   CM.tour = () => {
-    const S = [['Anotar (+)', 'El botón + de abajo sirve en cualquier pantalla: nota, tarea con fecha y hora, lo que falta, recordatorio o idea.'], ['Hoy', 'Lo de hoy ordenado por hora, tu Top 3 y los próximos días. Te aviso un día antes (a las 8:00) y 1 hora antes.'], ['Listas', 'Lo que falta (qué, cuánto y para quién), agrupado por lista: Feria, Casa, Negocio… Descárgala en PDF, compártela por WhatsApp y elimínala al terminar.'], ['Tablero y Panel', 'Tablero: Por hacer → En curso → Hecho. Panel: cómo vas.'], ['Más (arriba)', 'Metas, Notas, Ideas, Problemas, Diario, Logros, espacios de trabajo y tu estilo.']];
+    const S = [['Anotar (+)', 'Escribe o dicta con el micrófono. La app entiende "mañana a las 10 llamar a Maya" (tarea con hora), "idea: …", "recuérdame…" o "pedido de María…".'], ['Hoy = lo que te falta', 'Todo lo pendiente ordenado: atrasado, hoy por hora, próximos días, ideas, problemas y notas. Tacha ahí mismo.'], ['Pedidos', 'Para quién, qué (color, cantidad, foto), entrega, abono y total. PDF de uno o de todos, compartir y avisar por WhatsApp cuando esté listo.'], ['Avisos que no se rinden', 'Lo de mañana a las 8:00 del día antes, lo de hoy 1 hora antes, y si no lo tachas insiste. Desde la notificación: Listo o 1 hora más.'], ['Más (arriba)', 'Metas, Notas, Ideas, Problemas, Diario, Logros, tu foto, tus avisos y tu estilo. La lupa busca en todo.']];
     let i = 0;
     const d = modal('<div id="tb"></div><div class="btns"><button class="ghost" data-cerrar type="button">Cerrar</button><button id="tn" type="button">Siguiente</button></div>');
     const pinta = () => { d.querySelector('#tb').innerHTML = '<h2>' + (i + 1) + '/' + S.length + ' · ' + esc(S[i][0]) + '</h2><p>' + esc(S[i][1]) + '</p>'; d.querySelector('#tn').textContent = i === S.length - 1 ? 'Listo' : 'Siguiente'; };

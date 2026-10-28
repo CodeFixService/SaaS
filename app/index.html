@@ -13,10 +13,10 @@
 <link rel="stylesheet" href="../shared/tema.css">
 </head>
 <body class="con-tabs">
-<header class="top"><h1 style="flex:1;margin:0"><span id="chipModo"></span></h1><button class="icon-btn" id="bMas" aria-label="Más opciones" style="position:relative"></button><button class="icon-btn" id="bCampana" aria-label="Avisos" style="position:relative"></button></header>
+<header class="top"><h1 style="flex:1;margin:0"><span id="chipModo"></span></h1><button class="icon-btn" id="bBuscar" aria-label="Buscar"></button><button class="icon-btn" id="bMas" aria-label="Más opciones" style="position:relative"></button><button class="icon-btn" id="bCampana" aria-label="Avisos" style="position:relative"></button></header>
 <main>
   <section class="view on" id="v-hoy"></section><section class="view" id="v-tablero"></section><section class="view" id="v-metas"></section>
-  <section class="view" id="v-cerebro"></section><section class="view" id="v-listas"></section><section class="view" id="v-panel"></section><section class="view" id="v-mas"></section>
+  <section class="view" id="v-cerebro"></section><section class="view" id="v-pedidos"></section><section class="view" id="v-panel"></section><section class="view" id="v-mas"></section>
 </main>
 <nav class="tabs" id="nav"></nav>
 <div id="toast" role="status"></div>
@@ -37,6 +37,7 @@
     : '<button type="button" data-v="' + t[0] + '"><span class="i">' + CM.ico(t[0], 22) + '</span>' + t[1] + '</button>').join('');
   nav.onclick = (e) => { const b = e.target.closest('button[data-v]'); if (b) CM.ir(b.dataset.v); };
   const bMas = document.getElementById('bMas'); bMas.innerHTML = CM.ico('mas', 20); bMas.onclick = () => CM.ir('mas');
+  const bBus = document.getElementById('bBuscar'); bBus.innerHTML = CM.ico('lupa', 20); bBus.onclick = CM.buscar; CM.pintarAvatar();
   App.campana(document.getElementById('bCampana'));
   CM.aplicarTema(); CM.primerTour(); CM.limpiarAnimo(); CM.chip(); setInterval(CM.chip, 60000);
   CM.iniciarLatido();
