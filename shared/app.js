@@ -172,6 +172,8 @@
       '\nCorreo: ' + d.email + '\nContraseña: ' + d.password + '\n\nCambia tu contraseña en "Mi cuenta" la primera vez que entres.';
   }
 
+  // Calidad de fotos según su uso: viene del núcleo (fotos.js); estos valores son el respaldo.
+  const FOTO = (k) => (global.CFX_FOTO && global.CFX_FOTO[k]) || { comprobante: { lado: 1000, calidad: 0.6, kb: 110 }, documento: { lado: 1400, calidad: 0.72, kb: 300 }, vitrina: { lado: 1080, calidad: 0.8, kb: 220 }, portada: { lado: 1280, calidad: 0.8, kb: 300 }, perfil: { lado: 400, calidad: 0.8, kb: 45 }, logo: { lado: 256, calidad: 0.85, kb: 30 } }[k];
   /* ---------- Imágenes (comprobantes y logo) ---------- */
   function achicar(file, lado, maxLargo, tipo) {
     return new Promise((ok, ko) => {
@@ -193,7 +195,7 @@
       img.src = URL.createObjectURL(file);
     });
   }
-  const comprimirComprobante = (file) => achicar(file, 1400, 580000);
+  const comprimirComprobante = (file) => achicar(file, FOTO('comprobante').lado, FOTO('comprobante').kb * 1400); // base64 ≈ 1,37 × bytes
   function descargar(dataUrl, nombre) {
     const a = document.createElement('a');
     a.href = dataUrl; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
