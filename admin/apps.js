@@ -13,19 +13,19 @@
     { id: 'cm', nombre: 'Centro de Mando', ico: 'diana', repo: 'SaaS', propia: true, worker: 'saas', sub: 'mando', admin: 'admin/',
       bd: { rpc: 'db_version' }, leer: { propia: true },
       liberar: (c, v) => c.rpc('admin_config_guardar', { p_clave: 'version_liberada', p_valor: v, p_motivo: 'Liberar desde Mis aplicaciones' }) },
-    { id: 'billetera', nombre: 'Billetera · Libreta de Cobros', ico: 'billetera', repo: 'Emprendedor', cfg: 'js/config.js', worker: 'emprendedor', sub: 'billetera', admin: 'admin/',
+    { id: 'billetera', nombre: 'Billetera · Libreta de Cobros', ico: 'billetera', clave: 'lc-auth', repo: 'Emprendedor', cfg: 'js/config.js', worker: 'emprendedor', sub: 'billetera', admin: 'admin/',
       bd: { rpc: 'config_publica', campo: 'version_bd' }, leer: { rpc: 'config_publica', campo: 'version_liberada' },
       liberar: (c, v) => c.rpc('admin_guardar_ajustes', { p: { version_liberada: v } }) },
-    { id: 'aplicaciones', nombre: 'CodeFix Apps · FichaPro y Caja', ico: 'bolsa', repo: 'Aplicaciones', cfg: 'shared/config.js', worker: 'aplicaciones', sub: 'apps', admin: 'apps/admin/',
+    { id: 'aplicaciones', nombre: 'Órbita · Tienda, caja y pedidos', ico: 'bolsa', clave: 'cfx-auth', repo: 'Aplicaciones', cfg: 'shared/config.js', worker: 'aplicaciones', sub: 'apps', admin: 'apps/admin/',
       bd: { rpc: 'db_version' }, leer: { rpc: 'public_settings', campo: 'version_liberada' },
       liberar: (c, v) => c.rpc('admin_set_setting', { p_key: 'version_liberada', p_value: v }) },
-    { id: 'barberia', nombre: 'Barbería', ico: 'tijeras', repo: 'Barberia', cfg: 'shared/config.js', worker: 'barberia', sub: 'barberia', admin: 'admin/',
+    { id: 'barberia', nombre: 'Barbería', ico: 'tijeras', clave: 'barb-auth', repo: 'Barberia', cfg: 'shared/config.js', worker: 'barberia', sub: 'barberia', admin: 'admin/',
       bd: { rpc: 'db_version' }, leer: { rpc: 'ajustes_publicos', campo: 'version_liberada' },
       liberar: async (c, v) => { const r = await c.rpc('admin_liberar', { p_version: v }); return r.error ? c.rpc('admin_ajuste', { p_key: 'version_liberada', p_value: v }) : r; } },
-    { id: 'bicitaller', nombre: 'BiciTaller', ico: 'bici', repo: 'Taller', cfg: 'shared/config.js', worker: 'taller', sub: 'bicitaller', admin: 'admin/',
+    { id: 'bicitaller', nombre: 'BiciTaller', ico: 'bici', clave: 'bt-auth', repo: 'Taller', cfg: 'shared/config.js', worker: 'taller', sub: 'bicitaller', admin: 'admin/',
       bd: { rpc: 'db_version' }, leer: { rpc: 'config_publica', campo: 'config.version_liberada' },
       liberar: (c, v) => c.rpc('admin_config_guardar', { p_clave: 'version_liberada', p_valor: v, p_motivo: 'Liberar desde Centro de Mando' }) },
-    { id: 'estaciona', nombre: 'Estaciona · Estacionamientos', ico: 'auto', repo: 'Estacionamiento', cfg: 'js/config.js', worker: 'estacionamiento', sub: 'estaciona', admin: '#/admin',
+    { id: 'estaciona', nombre: 'Estaciona · Estacionamientos', ico: 'auto', clave: 'est-auth', repo: 'Estacionamiento', cfg: 'js/config.js', worker: 'estacionamiento', sub: 'estaciona', admin: '#/admin',
       bd: { rpc: 'ajustes_publicos', campo: 'version_bd' }, leer: { rpc: 'ajustes_publicos', campo: 'textos.version_liberada' },
       liberar: (c, v) => c.rpc('admin_guardar_textos', { p: { version_liberada: v } }) }
   ];
@@ -55,6 +55,35 @@
     return e.sb;
   }
   const menor = (a, b) => A.versionMenor(String(a), String(b));
+  // Vincula la app con el Centro de Mando: sus avisos (pagos por revisar, mensajes de soporte) llegan aquí al tiro.
+  async function vincular(a) {
+    const c = cliente(a), e = E[a.id], est = await rpcDe(c, 'cfx_cm_estado');
+    if (!est.vinculado || est.url !== global.BT_CONFIG.SUPABASE_URL || est.app !== a.id) {
+      const sec = await A.rpc('cm_puente_secreto', { p_app: a.id });
+      await rpcDe(c, 'cfx_cm_vincular', { p_url: global.BT_CONFIG.SUPABASE_URL, p_key: global.BT_CONFIG.SUPABASE_ANON_KEY, p_secreto: sec, p_app: a.id });
+    }
+    e.vinculada = true;
+  }
+  // Sesión vinculada: al conectar se guarda una segunda sesión (solo en este teléfono) para abrir el panel de la app ya iniciado.
+  const ENTREGA = (a) => 'cm-entrega-' + a.id;
+  async function guardarEntrega(a, email, clave) {
+    try {
+      const c2 = global.supabase.createClient(E[a.id].url, E[a.id].key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'cm-tmp-' + a.id } });
+      const { data } = await c2.auth.signInWithPassword({ email, password: clave });
+      if (data && data.session) localStorage.setItem(ENTREGA(a), JSON.stringify({ rt: data.session.refresh_token, at: data.session.access_token }));
+    } catch (x) { /* sin entrega: el panel pide entrar una vez */ }
+  }
+  function abrirAdmin(a) {
+    let url = a.web + a.admin, d = null;
+    try { d = JSON.parse(localStorage.getItem(ENTREGA(a)) || 'null'); } catch (x) { d = null; }
+    if (d && a.clave) {
+      localStorage.removeItem(ENTREGA(a));  // de un solo uso: la app guarda su propia sesión
+      const v = btoa(unescape(encodeURIComponent(JSON.stringify({ k: a.clave, rt: d.rt, at: d.at })))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      const [base, hash] = url.split('#');
+      url = base + (base.includes('?') ? '&' : '?') + 'cfx-entrar=' + v + (hash ? '#' + hash : '');
+    }
+    global.open(url, '_blank', 'noopener');
+  }
 
   async function cargar(a) {
     const e = E[a.id] = Object.assign(E[a.id] || {}, { cargando: true, error: '' });
@@ -77,6 +106,7 @@
       if (a.bd) try { const d = await rpcDe(c, a.bd.rpc); e.bd = String(campo(d, a.bd.campo) ?? ''); } catch (x) { /* no publicada para esta cuenta */ }
       if (a.leer) try { e.lib = String((a.leer.propia ? ((await A.cargarPublica()).config || {}).version_liberada : campo(await rpcDe(c, a.leer.rpc), a.leer.campo)) || ''); } catch (x) { /* nada */ }
       if (e.conectado) try { e.resumen = await rpcDe(c, 'admin_resumen'); } catch (x) { e.error = 'Sin permiso de administrador en esta app (' + x.message + ').'; }
+      if (e.conectado && !a.propia && !e.vinculada) vincular(a).catch(() => { /* base aún sin el núcleo nuevo */ });
     } catch (x) { e.error = x.message; }
     e.cargando = false;
     pintarTarjeta(a); pintarCabecera();
@@ -117,7 +147,8 @@
       (e.conectado ? kpis(e.resumen) : '') + (e.error ? '<p class="sub warn">' + esc(e.error) + '</p>' : '') +
       '<div class="btns-s">' +
         '<a class="btn small ghost" href="' + esc(a.web) + '" target="_blank" rel="noopener">' + A.ico('abrir', 15) + ' Abrir app</a>' +
-        '<a class="btn small ghost" href="' + esc(a.web + a.admin) + '" target="_blank" rel="noopener">' + A.ico('abrir', 15) + ' Admin</a>' +
+        (a.propia ? '<a class="btn small ghost" href="' + esc(a.web + a.admin) + '" target="_blank" rel="noopener">' + A.ico('abrir', 15) + ' Admin</a>'
+          : '<button type="button" class="small ghost" data-a="adm">' + A.ico('abrir', 15) + ' Panel de la app</button>') +
         (a.liberar && e.conectado ? '<button type="button" class="small" data-a="lib"' + (s.lista ? '' : ' disabled') + '>' + (s.alDia ? A.ico('check', 15) + ' Liberada' : A.ico('cohete', 15) + ' Liberar v' + esc(e.pub || '?')) + '</button>' : '') +
         (!a.propia && e.url ? (e.conectado ? '<button type="button" class="small ghost" data-a="salir">Desconectar</button>' : '<button type="button" class="small" data-a="con">' + A.ico('enchufe', 15) + ' Conectar</button>') : '') +
         (e.conectado ? '<button type="button" class="small ghost" data-a="limp">' + A.ico('escoba', 15) + ' Respaldo y limpieza</button>' : '') +
@@ -203,12 +234,14 @@
     pintar();
   }
   function conectar(a, listo) {
-    const d = modal('<h2>Conectar ' + esc(a.nombre) + '</h2><p class="muted">Entra con tu cuenta de administrador de esta app (queda guardada solo en este teléfono).</p>' +
+    const d = modal('<h2>Conectar ' + esc(a.nombre) + '</h2><p class="muted">Entra una vez con tu cuenta de administrador de esta app (queda guardada solo en este teléfono). Después manejas todo desde aquí y su panel se abre ya iniciado.</p>' +
       '<label>Correo<input id="ce" type="email" autocomplete="username" value="' + esc((A.cuenta && A.cuenta.email) || '') + '"></label><label>Contraseña<input id="cp" type="password" autocomplete="current-password"></label>' +
       '<p class="err" id="cx"></p><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="cok" type="button">Conectar</button></div>');
     d.querySelector('#cok').onclick = async () => {
-      const { error } = await cliente(a).auth.signInWithPassword({ email: d.querySelector('#ce').value.trim().toLowerCase(), password: d.querySelector('#cp').value });
+      const em = d.querySelector('#ce').value.trim().toLowerCase(), pw = d.querySelector('#cp').value;
+      const { error } = await cliente(a).auth.signInWithPassword({ email: em, password: pw });
       if (error) { d.querySelector('#cx').textContent = /invalid/i.test(error.message) ? 'Correo o contraseña incorrectos' : error.message; return; }
+      await guardarEntrega(a, em, pw);
       d.close(); toast('Conectado a ' + a.nombre); await cargar(a); if (listo) listo();
     };
   }
@@ -226,11 +259,12 @@
       else if (act === 'salir') cliente(a).auth.signOut().then(() => cargar(a));
       else if (act === 'rec') cargar(a);
       else if (act === 'limp') limpieza(a);
+      else if (act === 'adm') abrirAdmin(a);
     };
     pintarCabecera();
     APPS.forEach(cargar);
   }
   // Para el panel de Pagos: deja listas (y conectadas, si ya entraste) las 6 apps sin pintar las tarjetas.
   const preparar = () => Promise.all(APPS.filter((a) => !E[a.id] || !E[a.id].url).map(cargar));
-  global.MisApps = { render, APPS, cliente, estado: E, preparar, conectar, rpcDe };
+  global.MisApps = { render, APPS, cliente, estado: E, preparar, conectar, rpcDe, abrirAdmin, vincular };
 })(window);

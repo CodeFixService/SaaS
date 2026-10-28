@@ -7,7 +7,8 @@
   const A = global.App, { esc, toast, modal, confirmar } = A;
   const M = () => global.MisApps;
   const pesos = (n) => '$' + Number(n || 0).toLocaleString('es-CL');
-  const PERIODO = { inicio: 'Primer pago', mensual: 'Mensual', anual: 'Anual', otro: 'Otro monto' };
+  const PERIODO = { inicio: 'Primer pago', mensual: 'Mensual', meses: 'Varios meses', anual: 'Anual', otro: 'Otro monto' };
+  const MEDIO = { link: 'link', transferencia: 'transferencia', tarjeta: 'tarjeta' };
   let raiz = null, cfg = null, filtro = 'pendiente';
 
   const conectadas = () => M().APPS.filter((a) => (M().estado[a.id] || {}).conectado);
@@ -17,7 +18,7 @@
     return '<label>' + t + '<input data-k="' + k + '" type="' + (tipo || 'text') + '" value="' + esc(v == null ? '' : v) + '"' + (tipo === 'number' ? ' inputmode="decimal"' : '') + '></label>' + (ayuda ? '<p class="sub" style="margin-top:-4px">' + ayuda + '</p>' : '');
   }
   function formulario() {
-    const c = cfg || {}, n = c.negocio || {}, cl = c.cliente || {}, t = c.transferencia || {};
+    const c = cfg || {}, n = c.negocio || {}, cl = c.cliente || {}, t = c.transferencia || {}, tj = c.tarjeta || {};
     return '<div class="card" id="pgCfg"><h2>Precios y formas de pago</h2><p class="sub">Iguales para las 6 apps. Al guardar se copian a todas las apps conectadas.</p>' +
       '<h3>Negocio (cuenta principal)</h3><div class="grid2">' + campo('negocio.inicio', 'Primer pago', n.inicio, 'number') + campo('negocio.inicio_dias', 'Días que da', n.inicio_dias, 'number') +
       campo('negocio.mensual', 'Premium mensual', n.mensual, 'number') + campo('negocio.anual', 'Premium anual', n.anual, 'number') + '</div>' +
@@ -25,7 +26,9 @@
       '<p class="sub">Solo para los que se registren desde que lo activas. Cuando vence, quedan en la versión gratis.</p>' +
       '<h3>Cliente</h3><div class="grid2">' + campo('cliente.mensual', 'Premium mensual', cl.mensual, 'number') + campo('cliente.anual', 'Premium anual', cl.anual, 'number') + '</div>' +
       '<h3>Link de pago</h3>' + campo('link', 'Link (sin monto: la persona escribe cuánto paga)', c.link, 'url') +
-      campo('comision_pct', 'Comisión del link (%)', c.comision_pct, 'number', 'Se suma al precio cuando pagan con el link. Por transferencia pagan el precio exacto.') +
+      campo('comision_pct', 'Cargo por pago online del link (%)', c.comision_pct, 'number', 'Se muestra como una línea aparte ("Cargo por pago online"), igual que un impuesto: transparente. Súbelo, bájalo o déjalo en 0. Por transferencia pagan el precio exacto.') +
+      '<h3>Tarjeta (opcional)</h3>' + campo('tarjeta.link', 'Link de pago con tarjeta (sin monto)', tj.link, 'url', 'Por ejemplo tu link de Mercado Pago, Flow o SumUp. Si lo dejas vacío, no aparece.') +
+      campo('tarjeta.comision_pct', 'Cargo por pago con tarjeta (%)', tj.comision_pct, 'number', 'Pon lo que te cobra la plataforma (más IVA) para no perder plata. Ej.: 3,5') +
       '<h3>Transferencia</h3><div class="grid2">' + campo('transferencia.banco', 'Banco', t.banco) + campo('transferencia.tipo', 'Tipo de cuenta', t.tipo) + campo('transferencia.numero', 'Número', t.numero) +
       campo('transferencia.rut', 'RUT', t.rut) + campo('transferencia.titular', 'Titular', t.titular) + campo('transferencia.correo', 'Correo', t.correo, 'email') + '</div>' +
       campo('whatsapp', 'WhatsApp para dudas de pago (con 56)', c.whatsapp, 'tel') +
@@ -44,6 +47,7 @@
   async function guardarTodas() {
     const p = leer(), res = raiz.querySelector('#pgRes'), out = [];
     if (p.link && !/^https:\/\//.test(p.link)) return toast('El link debe empezar con https://');
+    if (p.tarjeta && p.tarjeta.link && !/^https:\/\//.test(p.tarjeta.link)) return toast('El link de tarjeta debe empezar con https://');
     res.innerHTML = '<p class="sub">Guardando…</p>';
     for (const a of M().APPS) {
       const e = M().estado[a.id] || {};
@@ -68,7 +72,7 @@
       avisos.map((t) => '<p class="sub warn">' + esc(t) + '</p>').join('') +
       (filas.map((g, i) => '<div class="card"><div class="fila"><span class="pill info">' + esc(g.app.nombre.split(' ·')[0]) + '</span><span class="tit grow">' + esc(g.nombre || g.email) + '</span>' +
         '<span class="pill ' + (g.estado === 'aprobado' ? 'ok' : g.estado === 'rechazado' ? 'bad' : 'warn') + '">' + g.estado + '</span></div>' +
-        '<p class="sub">' + esc(g.email) + ' · ' + (g.rol === 'negocio' ? 'Negocio' : g.rol === 'cliente' ? 'Cliente' : 'Otro') + ' · ' + (PERIODO[g.periodo] || g.periodo) + ' · <b>' + pesos(g.monto) + '</b> por ' + (g.medio === 'link' ? 'link' : 'transferencia') +
+        '<p class="sub">' + esc(g.email) + ' · ' + (g.rol === 'negocio' ? 'Negocio' : g.rol === 'cliente' ? 'Cliente' : 'Otro') + ' · ' + (PERIODO[g.periodo] || g.periodo) + (g.meses ? ' (' + g.meses + ')' : '') + ' · <b>' + pesos(g.monto) + '</b> por ' + (MEDIO[g.medio] || g.medio) +
         ' · ' + A.hace(g.creado) + (g.aprobados ? ' · ya pagó ' + g.aprobados + ' vez/veces' : ' · primer pago') + (g.nota ? '<br>' + esc(g.nota) : '') + (g.motivo ? '<br>Motivo: ' + esc(g.motivo) : '') +
         (g.estado === 'aprobado' && g.dias ? '<br>' + g.dias + ' días de Premium' : '') + '</p>' +
         (g.estado === 'pendiente' ? '<div class="btns-s">' + (g.con_comprobante ? '<button type="button" class="small ghost" data-v="' + i + '">Ver comprobante</button>' : '') +
@@ -80,11 +84,11 @@
       try {
         if (b.dataset.v) A.verImagen(await M().rpcDe(c, 'cfx_pago_comprobante', { p_id: g.id }), 'Comprobante', 'comprobante.jpg');
         else if (b.dataset.ok) {
-          const sug = { inicio: (cfg && cfg.negocio && cfg.negocio.inicio_dias) || 30, mensual: 30, anual: 365 }[g.periodo] || 30;
-          const d = modal('<h2>Aprobar pago</h2><p class="muted">' + esc(g.nombre || g.email) + ' · ' + pesos(g.monto) + ' (' + (PERIODO[g.periodo] || '') + ')</p><label>Días de Premium que activa<input id="pd" type="number" value="' + sug + '"></label>' +
-            '<p class="sub">Revisa que el monto llegó a tu cuenta. 0 = solo registrar el pago.</p><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="pk" type="button">Aprobar</button></div>');
+          const sug = g.sugeridos != null ? g.sugeridos : ({ inicio: (cfg && cfg.negocio && cfg.negocio.inicio_dias) || 30, mensual: 30, anual: 365 }[g.periodo] || 30);
+          const d = modal('<h2>Aprobar pago</h2><p class="muted">' + esc(g.nombre || g.email) + ' · ' + pesos(g.monto) + ' (' + (PERIODO[g.periodo] || '') + (g.meses ? ', ' + g.meses + ' meses' : '') + ')</p><label>Días de Premium que activa<input id="pd" type="number" inputmode="numeric" step="1" value="' + sug + '"></label>' +
+            '<p class="sub">Calculado según lo que pagó (mensual 30, anual 365, cada mes 30; otro monto en proporción). Siempre días enteros. Revisa que el monto llegó a tu cuenta. 0 = solo registrar el pago.</p><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="pk" type="button">Aprobar</button></div>');
           d.querySelector('#pk').onclick = async () => {
-            try { const r = await M().rpcDe(c, 'cfx_pago_resolver', { p_id: g.id, p_aprobar: true, p_dias: +d.querySelector('#pd').value }); d.close(); toast('Aprobado' + (r.hasta ? ': Premium hasta ' + A.fCorta(String(r.hasta).slice(0, 10)) : '')); lista(); }
+            try { const r = await M().rpcDe(c, 'cfx_pago_resolver', { p_id: g.id, p_aprobar: true, p_dias: Math.max(0, Math.round(+d.querySelector('#pd').value || 0)) }); d.close(); toast('Aprobado' + (r.hasta ? ': Premium hasta ' + A.fCorta(String(r.hasta).slice(0, 10)) : '')); lista(); }
             catch (x) { toast(x.message); }
           };
         } else {
@@ -104,6 +108,23 @@
     catch (x) { toast(nf(x)); }
   }
 
+  // Liberar el registro N días (en una app o en todas): nadie queda bloqueado y las cuentas nuevas quedan en gratis sin primer pago.
+  async function liberar(dias) {
+    const id = raiz.querySelector('#lbApp').value, res = raiz.querySelector('#lbRes');
+    const apps = conectadas().filter((a) => id === 'todas' || a.id === id), out = [];
+    for (const a of apps) {
+      try { const r = await M().rpcDe(M().cliente(a), 'cfx_liberar', { p_dias: dias }); out.push([a, r.activo ? 'ok' : 'info', r.activo ? 'Liberada hasta el ' + A.fCorta(String(r.hasta).slice(0, 10)) : 'Cobro normal']); }
+      catch (x) { out.push([a, 'bad', nf(x)]); }
+    }
+    res.innerHTML = out.map((r) => '<div class="fila"><span class="grow">' + esc(r[0].nombre.split(' ·')[0]) + '</span><span class="pill ' + r[1] + '">' + esc(r[2]) + '</span></div>').join('') || '<p class="sub warn">Conecta la app en Apps.</p>';
+  }
+  async function verLiberar() {
+    const res = raiz.querySelector('#lbRes'); if (!res) return;
+    const out = await Promise.all(conectadas().map(async (a) => { try { const r = await M().rpcDe(M().cliente(a), 'cfx_liberar', {}); return r.activo ? esc(a.nombre.split(' ·')[0]) + ' hasta el ' + A.fCorta(String(r.hasta).slice(0, 10)) : ''; } catch (x) { return ''; } }));
+    const l = out.filter(Boolean);
+    res.innerHTML = l.length ? '<p class="sub">🎁 Liberadas ahora: ' + l.join(' · ') + '</p>' : '<p class="sub">Ninguna app liberada: se cobra normal.</p>';
+  }
+
   async function render(el) {
     raiz = el;
     el.innerHTML = '<div class="titulo-v"><h2>Pagos</h2><span class="sub">Las 6 apps</span></div><p class="sub">Cargando…</p>';
@@ -116,10 +137,17 @@
       '<div id="pgLista"></div>' + formulario() +
       '<div class="card"><h2>Cuentas sin primer pago</h2><p class="sub">Para cuentas de prueba o de regalo: entran sin pagar el primer pago.</p>' +
       '<label>App<select id="pgExApp">' + M().APPS.map((a) => '<option value="' + a.id + '">' + esc(a.nombre) + '</option>').join('') + '</select></label>' +
-      '<label>Correo de la cuenta<input id="pgEx" type="email"></label><div class="btns-s"><button type="button" class="small" id="pgExSi">Eximir</button><button type="button" class="small ghost" id="pgExNo">Quitar</button></div></div>';
+      '<label>Correo de la cuenta<input id="pgEx" type="email"></label><div class="btns-s"><button type="button" class="small" id="pgExSi">Eximir</button><button type="button" class="small ghost" id="pgExNo">Quitar</button></div></div>' +
+      '<div class="card"><h2>🎁 Liberar el registro</h2><p class="sub">Por los días que elijas nadie queda bloqueado por el primer pago, y las cuentas que se creen en ese tiempo quedan en la versión gratis (sin primer pago). Al terminar, vuelve el cobro normal para las nuevas.</p>' +
+      '<label>App<select id="lbApp"><option value="todas">Las 6 apps</option>' + M().APPS.map((a) => '<option value="' + a.id + '">' + esc(a.nombre) + '</option>').join('') + '</select></label>' +
+      '<label>Días<input id="lbDias" type="number" inputmode="numeric" min="1" max="90" value="7"></label>' +
+      '<div class="btns-s"><button type="button" class="small" id="lbSi">Liberar</button><button type="button" class="small ghost" id="lbNo">Terminar ahora</button></div><div id="lbRes"></div></div>';
     el.querySelector('#pgGuardar').onclick = guardarTodas;
     el.querySelector('#pgExSi').onclick = () => exento(true);
     el.querySelector('#pgExNo').onclick = () => exento(false);
+    el.querySelector('#lbSi').onclick = () => { const n = Math.round(+el.querySelector('#lbDias').value || 0); if (n < 1 || n > 90) return toast('De 1 a 90 días'); liberar(n); };
+    el.querySelector('#lbNo').onclick = () => liberar(0);
+    verLiberar();
     el.querySelectorAll('[data-f]').forEach((b) => { b.onclick = () => { filtro = b.dataset.f; render(el); }; });
     el.querySelectorAll('[data-con]').forEach((b) => { b.onclick = () => M().conectar(M().APPS.find((a) => a.id === b.dataset.con), () => render(el)); });
     lista();

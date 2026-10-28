@@ -29,7 +29,7 @@ const assert = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('
     await p.goto(t.base + '/app/#plan'); await p.waitForTimeout(2000); await t.sinModales();
     await t.foto('plan'); assert(/4\.900/.test(await p.locator('#vista').innerText()), 'plan muestra precio central');
     await p.click('button:has-text("Pagar Pro")'); await p.waitForTimeout(1000);
-    assert(await p.locator('dialog.cfx-pago .cp-plan').count() === 3, 'mensual, anual y otro');
+    assert(await p.locator('dialog.cfx-pago .cp-plan').count() === 4, 'mensual, varios meses, anual y otro');
   } catch (e) { console.log(e.message); await t.foto('error'); }
   console.log('ERRORES:', t.errores.join('\n') || 'ninguno');
   await t.cerrar();

@@ -45,6 +45,7 @@ async function abrir(repo, db, opts = {}) {
     const page = await ctx.newPage();
     page.on('console', (m) => { if (m.type() === 'error') errores.push('[consola] ' + m.text()); });
     page.on('pageerror', (e) => errores.push('[página] ' + e.message));
+    page.on('response', (r) => { if (r.status() === 404 && r.url().startsWith(base)) errores.push('[404] ' + r.url().split('?')[0]); });
     page.on('dialog', (d) => { (opts.dialogo || ((x) => x.accept()))(d); });
     return { ctx, page };
   };

@@ -14,6 +14,8 @@ const IMG = __dirname + '/comprobante.png';
     await q.waitForURL(/app/); await q.waitForTimeout(2500);
     assert(await q.locator('.cfx-pago').count() === 1, 'pantalla de activación');
     assert(await q.locator('.cfx-pago [data-x]').count() === 0, 'no se puede cerrar');
+    await q.click('.cfx-pago [data-m=link]'); await q.waitForTimeout(200);
+    assert(/Cargo por pago online/.test(await q.locator('#cpDesglose').innerText()), 'cargo online visible');
     assert(/5\.072/.test(await q.locator('#cpMonto').innerText()), 'monto con comisión 3,5% = $5.072 → ' + await q.locator('#cpMonto').innerText());
     await t.foto('gate', q); assert(await t.anchoOk(q), 'ancho gate');
     await q.click('.cfx-pago [data-m=transferencia]'); await q.waitForTimeout(200);

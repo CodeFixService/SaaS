@@ -131,3 +131,21 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
   entrar o crear cuenta y manda el token a Supabase (`gotrue_meta_security.captcha_token`). Se configura en CM → Control → 🤖 Humano (guardar en las 6) y después en cada
   Supabase: Authentication → Attack Protection → CAPTCHA → Turnstile con la secret key. Orden: primero la site key, después Supabase.
 - Pruebas: `CFX_SIN_HOLA` apaga el saludo en el navegador de prueba (h.js; `conHola: true` lo deja).
+
+## Ronda 2 (28/10/2026) — hecho
+- **Íconos galácticos** nuevos en las 6 apps (generador: SVG → PNG con Playwright; fondo espacio + nebulosa del color de cada app + glifo con brillo).
+- **FichaPro → Órbita** (marca de la app Aplicaciones; el módulo de fichas se llama "Fichas"). Archivos internos (fichapro.json) sin cambio.
+- **Abrir en la app**: manifiestos con launch_handler, handle_links y related_applications; instalar.js detecta la app instalada
+  (getInstalledRelatedApps) y ofrece "Abrir la app" (intent sin paquete: Android la abre en la app, sin elegir navegador).
+- **CM Hoy vs Tablero**: Hoy solo muestra lo con fecha (atrasado/hoy/próximos) + ideas/notas/hábitos; lo del tablero (sin fecha, en curso,
+  proyectos) queda en el Tablero y en Hoy solo hay un resumen con acceso.
+- **Núcleo 2.0**: `ayuda.js` + `sql/ayuda.sql` (🛟: guía para partir con `cfx_guia_app()` por app, chat de soporte `cfx_chat_*`,
+  términos por tipo de negocio, puente de avisos al CM `cfx_al_cm` → CM `cfx_aviso_externo` con secreto por app en `cm_puentes`).
+- **Pagos**: transferencia (sin cargo), link y tarjeta (cargo por pago online visible en línea aparte, % editable en CM), varios meses (2–11),
+  copiar cada dato, pasos 1-2-3-4, días sugeridos enteros (`cfx_dias_sugeridos`), liberar registro N días (`cfx_liberar`).
+- **CM**: vista Mensajes (bandeja de las 6), Pagos con tarjeta/liberar, "Panel de la app" abre el panel ya iniciado (sesión de entrega
+  guardada al conectar, `?cfx-entrar=` leído por humano.js).
+- **Órbita despacho por comuna**: `profiles.despacho`, `costo_despacho`, `guardar_despacho`, línea "🚚 Despacho a …" en el pedido; `shared/despacho.js`.
+- Pruebas nuevas: `apl_r2.sql`, `cm_r2.sql`, `r2_ui.js`.
+- Versiones: CM 4.13/BD 4.4 · Billetera 1.17/BD 17 · Órbita 5.15/BD 5.10 · Barbería 2.14 · BiciTaller 2.14/BD 2.6 · Estaciona 2.9/BD 11.
+- No hecho (decidido): renombrar repos (Cloudflare Pages queda ligado al nombre; los dominios no dependen del nombre del repo); comisión oculta (no: se cobra transparente).

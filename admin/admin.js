@@ -20,7 +20,7 @@
       d.querySelector('#mo').focus();
     });
   }
-  const show = App.pestanas((v) => ({ resumen, usuarios, pagos: () => window.PagosCentral.render(el('pagos')), control: () => window.ControlApps.render(el('control')), planes, ajustes, registro, versiones, apps: () => window.MisApps.render(el('apps')) }[v] || (() => {}))());
+  const show = App.pestanas((v) => ({ resumen, usuarios, pagos: () => window.PagosCentral.render(el('pagos')), mensajes: () => window.MensajesCentral.render(el('mensajes')), control: () => window.ControlApps.render(el('control')), planes, ajustes, registro, versiones, apps: () => window.MisApps.render(el('apps')) }[v] || (() => {}))());
   App.ponerIconos(); App.campana($('bCampana'));
 
   async function resumen() {
@@ -38,16 +38,17 @@
     (async () => {
       const M = window.MisApps; await M.preparar();
       const con = M.APPS.filter((a) => (M.estado[a.id] || {}).conectado);
-      let pagos = 0, verif = 0; const lib = [];
+      let pagos = 0, verif = 0, msjs = 0; const lib = [];
       await Promise.all(con.map(async (a) => {
         const c = M.cliente(a);
         try { pagos += (await M.rpcDe(c, 'cfx_pagos_lista', { p_estado: 'pendiente' })).length; } catch (x) { /* base sin actualizar */ }
         try { verif += (await M.rpcDe(c, 'cfx_verif_lista', { p_estado: 'pendiente' })).length; } catch (x) { /* nada */ }
+        try { msjs += (await M.rpcDe(c, 'cfx_chat_bandeja')).reduce((n, x) => n + (+x.sin_leer || 0), 0); } catch (x) { /* nada */ }
         const e = M.estado[a.id]; if (e.pub && e.lib && App.versionMenor(e.lib, e.pub)) lib.push(a.nombre.split(' ·')[0]);
       }));
       const r6 = $('r6'); if (!r6) return;
       r6.innerHTML = '<h2>Las 6 apps</h2><div class="stats">' +
-        [['Pagos por revisar', pagos, 'pagos'], ['Verificaciones', verif, 'control'], ['Por liberar', lib.length, 'apps'], ['Conectadas', con.length + '/' + M.APPS.length, 'apps']]
+        [['Pagos por revisar', pagos, 'pagos'], ['Mensajes sin leer', msjs, 'mensajes'], ['Verificaciones', verif, 'control'], ['Por liberar', lib.length, 'apps'], ['Conectadas', con.length + '/' + M.APPS.length, 'apps']]
           .map((x) => '<button type="button" class="card" data-ir="' + x[2] + '" style="text-align:left"><b>' + x[1] + '</b><span>' + x[0] + '</span></button>').join('') + '</div>' +
         (lib.length ? '<p class="sub">Listas para liberar: ' + esc(lib.join(', ')) + '</p>' : '') +
         (con.length < M.APPS.length ? '<p class="sub">Conecta las demás en Apps para verlas aquí.</p>' : '');

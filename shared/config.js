@@ -3,6 +3,6 @@
 window.BT_CONFIG = {
   SUPABASE_URL: 'https://vqevujjraisrcoirswuq.supabase.co',
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxZXZ1ampyYWlzcmNvaXJzd3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzMzk3NzMsImV4cCI6MjEwNzkxNTc3M30.XHeUtKmMJ5sSMCeGCzYnsYS3xQwPYrDwuylw3p7ICFk',
-  VERSION: '4.12',     // versión de la app (súbela en cada cambio y en version.json; la libera el admin en Versiones)
-  DB_VERSION: '4.3'   // versión que debe tener la base de datos (supabase/instalar.sql → db_version)
+  VERSION: '4.13',     // versión de la app (súbela en cada cambio y en version.json; la libera el admin en Versiones)
+  DB_VERSION: '4.4'   // versión que debe tener la base de datos (supabase/instalar.sql → db_version)
 };

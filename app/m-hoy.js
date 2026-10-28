@@ -1,5 +1,6 @@
-/* Centro de Mando · Hoy = "Lo que me falta": todo lo pendiente, ordenado por categoría y con casilla para tachar ahí mismo.
-   Atrasado · Hoy (por hora) · Próximos días · Sin fecha · Ideas · Problemas · Notas · Hábitos. Al tachar queda guardado en su sección (Más). */
+/* Centro de Mando · Hoy = "Lo que me falta": lo que tiene fecha, ordenado por categoría y con casilla para tachar ahí mismo.
+   Atrasado · Hoy (por hora) · Próximos días · Ideas · Problemas · Notas · Hábitos. Al tachar queda guardado en su sección (Más).
+   Lo del Tablero (tareas sin fecha, en curso y proyectos) se queda en el Tablero: aquí solo aparece un resumen con un acceso. */
 (function () {
   'use strict';
   const A = App, CM = window.CM, { esc, hoy, sumarDias, toast } = A;
@@ -38,14 +39,15 @@
     const I = CM.items.filter((i) => ABIERTO[i.tipo] && CM.enEsp(i));
     const conFecha = I.filter((i) => ['tarea', 'recordatorio', 'pedido'].includes(i.tipo));
     const atras = conFecha.filter((i) => pend(i) && diaDe(i) && diaDe(i) < h).sort((a, b) => diaDe(a).localeCompare(diaDe(b)) || orden(a, b));
-    const hoyL = conFecha.filter((i) => (pend(i) && (diaDe(i) === h || (i.tipo === 'tarea' && i.estado === 'en_curso' && !(diaDe(i) && diaDe(i) < h)))) || (!pend(i) && CM.diaDe(i.hecho_at) === h && (diaDe(i) <= h))).sort((a, b) => (!pend(a)) - (!pend(b)) || orden(a, b));
-    const prox = conFecha.filter((i) => pend(i) && diaDe(i) > h && diaDe(i) <= en7 && !(i.tipo === 'tarea' && i.estado === 'en_curso')).sort((a, b) => diaDe(a).localeCompare(diaDe(b)) || orden(a, b));
-    const sinF = I.filter((i) => i.tipo === 'tarea' && pend(i) && !i.fecha && i.estado !== 'en_curso').sort((a, b) => (b.prioridad || 0) - (a.prioridad || 0) || b.created_at.localeCompare(a.created_at));
+    const hoyL = conFecha.filter((i) => (pend(i) && diaDe(i) === h) || (!pend(i) && CM.diaDe(i.hecho_at) === h && (diaDe(i) <= h))).sort((a, b) => (!pend(a)) - (!pend(b)) || orden(a, b));
+    const prox = conFecha.filter((i) => pend(i) && diaDe(i) > h && diaDe(i) <= en7).sort((a, b) => diaDe(a).localeCompare(diaDe(b)) || orden(a, b));
+    const tab = CM.items.filter((i) => (i.tipo === 'tarea' || i.tipo === 'proyecto') && CM.enEsp(i) && !i.padre && !i.fecha && ['abierto', 'en_curso'].includes(i.estado));
+    const tabCurso = tab.filter((i) => i.estado === 'en_curso').length;
     const ideas = I.filter((i) => i.tipo === 'idea' && pend(i)).sort((a, b) => CM.scoreIdea(b) - CM.scoreIdea(a));
     const probs = I.filter((i) => i.tipo === 'problema' && pend(i)).sort((a, b) => b.created_at.localeCompare(a.created_at));
     const notas = I.filter((i) => i.tipo === 'nota' && pend(i)).sort((a, b) => b.created_at.localeCompare(a.created_at));
     const hab = CM.items.filter((i) => i.tipo === 'habito' && CM.programado(i, h) && CM.enEsp(i));
-    const total = atras.length + hoyL.filter(pend).length + prox.length + sinF.length + ideas.length + probs.length + notas.length;
+    const total = atras.length + hoyL.filter(pend).length + prox.length + ideas.length + probs.length + notas.length;
     const fecha = new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' });
     const hr = new Date().getHours(), saludo = hr < 12 ? 'Buenos días' : hr < 20 ? 'Buenas tardes' : 'Buenas noches';
 
@@ -60,7 +62,8 @@
     x += seccion('atras', 'Atrasado', 'alerta', atras, { clase: 'mal', pill: 'bad', conTipo: true });
     x += seccion('hoy', 'Hoy', 'hoy', hoyL, { conTipo: true, max: 20 });
     x += seccion('prox', 'Próximos días', 'reloj', prox, { max: 15, cuerpo: (L) => { let dp = ''; return L.map((i) => { const dd = diaDe(i), sep = dd !== dp ? '<p class="dia-sep">' + (dd === sumarDias(h, 1) ? 'Mañana' : A.fechaDe(dd).toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'short' })) + '</p>' : ''; dp = dd; return sep + fila(i, true); }).join(''); } });
-    x += seccion('sinf', 'Tareas sin fecha', 'tablero', sinF);
+    if (tab.length) x += '<div class="card sec-c"><button type="button" class="sec-t" data-ir="tablero" style="background:transparent;color:inherit;box-shadow:none;width:100%"><span class="ico-s">' + CM.ico('tablero', 17) + '</span><b>Tablero</b><span class="sub grow" style="text-align:left;margin-left:6px">' +
+      (tab.length - tabCurso) + ' por hacer · ' + tabCurso + ' en curso (sin fecha)</span><span class="flecha">' + CM.ico('der', 16) + '</span></button></div>';
     x += seccion('ideas', 'Ideas', 'cerebro', ideas, { max: 5 });
     x += seccion('probs', 'Problemas', 'alerta', probs, { max: 5 });
     x += seccion('notas', 'Notas', 'libro', notas, { max: 5 });

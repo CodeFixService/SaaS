@@ -13,4 +13,5 @@ correr Aplicaciones apl_ui; correr Aplicaciones apl_pagos
 for t in bar_ui bar_pagos; do $PSQL -d barberia_prueba -c "delete from cfx_exentos" >/dev/null; echo "### $t"; timeout 300 node $t.js 2>&1 | grep -vE "^ok|^url"; done
 correr taller tal_ui; correr taller tal_pagos
 correr estacionamiento est_ui; correr estacionamiento est_pagos
-for a in saas:cm_p1 emprendedor:emp_p1 Aplicaciones:apl_p1 taller:tal_p1 estacionamiento:est_p1; do r=${a%%:*}; ./base.sh $R/$r >/dev/null 2>&1; db=p_$(echo $r | tr A-Z a-z); echo "### ${a##*:}.sql"; $PSQL -d $db -f ${a##*:}.sql 2>&1 | grep -E "^f$|ERROR" | grep -v "ERROR:  La tabla tiene\|no está en la lista\|Solo el administrador" ; done
+./base.sh $R/Aplicaciones >/dev/null 2>&1; ./base.sh $R/saas >/dev/null 2>&1; echo "### r2_ui"; timeout 400 node r2_ui.js 2>&1 | grep -vE "^ok|^url"
+for a in saas:cm_p1 saas:cm_r2 emprendedor:emp_p1 Aplicaciones:apl_p1 Aplicaciones:apl_r2 taller:tal_p1 estacionamiento:est_p1; do r=${a%%:*}; ./base.sh $R/$r >/dev/null 2>&1; db=p_$(echo $r | tr A-Z a-z); echo "### ${a##*:}.sql"; $PSQL -d $db -f ${a##*:}.sql 2>&1 | grep -E "^f$|ERROR" | grep -v "ERROR:  La tabla tiene\|no está en la lista\|Solo el administrador" ; done
