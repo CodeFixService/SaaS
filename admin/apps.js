@@ -27,7 +27,10 @@
       liberar: (c, v) => c.rpc('admin_config_guardar', { p_clave: 'version_liberada', p_valor: v, p_motivo: 'Liberar desde Centro de Mando' }) },
     { id: 'estaciona', nombre: 'Estaciona · Estacionamientos', ico: 'auto', clave: 'est-auth', repo: 'Estacionamiento', cfg: 'js/config.js', worker: 'estacionamiento', sub: 'estaciona', admin: '#/admin',
       bd: { rpc: 'ajustes_publicos', campo: 'version_bd' }, leer: { rpc: 'ajustes_publicos', campo: 'textos.version_liberada' },
-      liberar: (c, v) => c.rpc('admin_guardar_textos', { p: { version_liberada: v } }) }
+      liberar: (c, v) => c.rpc('admin_guardar_textos', { p: { version_liberada: v } }) },
+    { id: 'contenido', nombre: 'Cerebro · Contenido para redes', ico: 'cerebro', clave: 'cc-auth', repo: 'Contenido', cfg: 'shared/config.js', worker: 'contenido', sub: 'cerebro', admin: 'app/#empresa',
+      bd: { rpc: 'db_version' }, leer: { rpc: 'config_publica', campo: 'config.version_liberada' },
+      liberar: (c, v) => c.rpc('admin_config_guardar', { p_clave: 'version_liberada', p_valor: v, p_motivo: 'Liberar desde Centro de Mando' }) }
   ];
   // Links que se arman solos según dónde se abre el Centro de Mando:
   //  · en Cloudflare Workers (saas.<cuenta>.workers.dev) → <worker>.<cuenta>.workers.dev

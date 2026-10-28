@@ -70,7 +70,8 @@
   if (recuperando) { ver('vNueva'); return; }
   try { const c = await App.refrescar(); if (c && !recuperando) { seguir(c); return; } } catch (e) { /* sin sesión */ }
   $('tR').onclick = () => ver('vRegistro');
-  if (new URLSearchParams(location.search).has('registro')) ver('vRegistro'); // link o QR de invitación $('aYa').onclick = (e) => { e.preventDefault(); ver('vEntrar'); };
+  if (new URLSearchParams(location.search).has('registro')) ver('vRegistro'); // link o QR de invitación
+  $('aYa').onclick = (e) => { e.preventDefault(); ver('vEntrar'); };
   $('fEntrar').onsubmit = async (e) => {
     e.preventDefault(); const b = $('bEntrar'); $('eErr').textContent = ''; b.disabled = true; b.textContent = 'Entrando…';
     try { seguir(await App.entrar($('eEmail').value, $('ePass').value)); } catch (err) { $('eErr').textContent = err.message; b.disabled = false; b.textContent = 'Entrar'; }

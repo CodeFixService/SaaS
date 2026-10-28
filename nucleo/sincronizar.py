@@ -23,6 +23,7 @@ APPS = {
     'barberia': ('shared', 'shared', 'sw.js'),
     'taller': ('shared', 'shared', 'sw.js'),
     'estacionamiento': ('js', 'css', 'sw.js'),
+    'contenido': ('shared', 'shared', 'sw.js'),
 }
 # repo → (archivo SQL donde va el bloque común, chequeo de administrador de esa app)
 SQL = {
@@ -32,6 +33,7 @@ SQL = {
     'barberia': ('supabase/instalar.sql', 'public.cfx_es_admin()'),
     'taller': ('supabase/schema.sql', 'public.admin_check()'),
     'estacionamiento': ('supabase/instalar.sql', 'public.cfx_es_admin()'),
+    'contenido': ('supabase/instalar.sql', 'public.super_check()'),
 }
 INI, FIN = '-- >>> CFX núcleo (no editar aquí: se copia de saas/nucleo/sql con sincronizar.py)', '-- <<< CFX núcleo'
 TABLA = re.compile(r'create table (?:if not exists )?((?:public|privado)\.[a-z_]+)', re.I)
@@ -85,7 +87,7 @@ def cachear(repo, js, css, sw):
     if not m:
         print('  ⚠️  revisar a mano la lista del service worker de', repo, '→ falta', falta)
         return
-    s = s[:m.end()] + ' ' + ', '.join("'" + x + "'," for x in falta) + s[m.end():]
+    s = s[:m.end()] + ' ' + ' '.join("'" + x + "'," for x in falta) + s[m.end():]
     open(p, 'w', encoding='utf-8').write(s)
 
 

@@ -168,3 +168,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Diseño**: en computador `main` centrado con ancho máx. 1040 px (sin el espacio vacío de Billetera); el + centrado en su círculo; micrófono proporcional al campo (18–30 px).
 - **Pruebas**: `pruebas/recorrido.js` (ANCHO=360|768|1280) entra como admin, negocio y cliente a las 6, abre cada pestaña, Ajustes y el menú de la foto; informe en `capturas/recorrido-<ancho>.txt`.
   Si npm no tiene red: módulo `pg` mínimo propio (NODE_PATH) — solo para pruebas locales.
+
+## v4.17 (base 4.6) · Cerebro, la 7ª app (28/10/2026)
+- **Cerebro · Contenido para redes** (repo Contenido, Supabase `vndqseptmymgqyxumbqy`, worker `contenido`): en CM → Apps (liberar con admin_config_guardar), en sincronizar.py (núcleo, chequeo super_check) y en el puente de avisos ('contenido' → Cerebro).
+- sincronizar.py: ya no deja comas dobles al agregar archivos a la lista del service worker.
+- Arreglado: "Ya tengo cuenta" en la entrada no hacía nada (el código quedaba dentro de un comentario).

@@ -144,7 +144,7 @@ end $$;
 create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '4.5'::text $$;
+language sql immutable as $$ select '4.6'::text $$;
 create or replace function public.cfg_int(c text) returns int
 language sql stable security definer set search_path = '' as $$
   select (valor #>> '{}')::int from public.config where clave = c
@@ -1228,7 +1228,7 @@ begin
   update public.cm_puentes set avisos = b.avisos + 1, ventana = b.ventana, ultimo = now() where app = p_app;
   perform public.avisar_staff(
     (case p_app when 'billetera' then 'Billetera' when 'aplicaciones' then 'Órbita' when 'barberia' then 'Barbería' when 'bicitaller' then 'BiciTaller'
-       when 'estaciona' then 'Estaciona' else p_app end) || ' · ' || left(coalesce(p_titulo, ''), 70),
+       when 'estaciona' then 'Estaciona' when 'contenido' then 'Cerebro' else p_app end) || ' · ' || left(coalesce(p_titulo, ''), 70),
     left(coalesce(p_cuerpo, ''), 240),
     case p_tipo when 'chat' then '/admin/#mensajes' when 'pago' then '/admin/#pagos' else '/admin/#apps' end);
   return true;
