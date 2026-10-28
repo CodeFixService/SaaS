@@ -45,31 +45,12 @@
       d.close(); toast('Descargado');
     };
   }
-  function pagar() {
-    const c = (A.publica && A.publica.config) || {}, pm = Number(c.pro_precio_mensual || 0), pa = Number(c.pro_precio_anual || 0);
-    const linkDe = (plan) => (plan === 'anual' ? c.pro_link_anual || c.pro_link : c.pro_link || c.pro_link_anual) || '';
-    const ahorro = pa && pm ? Math.round(100 - pa * 100 / (pm * 12)) : 0;
-    const d = modal('<h2>' + CM.ico('estrella', 18) + ' Pasar a Pro</h2><p class="muted">Más espacios, ideas y consejos ilimitados, revisión semanal.</p>' +
-      '<div class="planes-pro"><button type="button" class="plan-op" data-p="mensual"><span class="sub">Mensual</span><b>$' + pm.toLocaleString('es-CL') + '</b><span class="sub">al mes</span></button>' +
-      (pa ? '<button type="button" class="plan-op" data-p="anual"><span class="sub">Anual</span><b>$' + pa.toLocaleString('es-CL') + '</b><span class="sub">' + (ahorro > 0 ? 'ahorras ' + ahorro + '%' : 'al año') + '</span></button>' : '') + '</div>' +
-      '<div id="pl"></div><label>2. Sube tu comprobante<input id="pf" type="file" accept="image/*"></label><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="po" type="button">Enviar</button></div>');
-    let plan = pa ? 'anual' : 'mensual';
-    const marcar = () => {
-      d.querySelectorAll('.plan-op').forEach((b) => b.classList.toggle('on', b.dataset.p === plan));
-      const l = linkDe(plan);
-      d.querySelector('#pl').innerHTML = l ? '<a class="btn block" href="' + esc(l) + '" target="_blank" rel="noopener">1. Pagar el plan ' + plan + ' aquí</a>' : '<p class="sub">El administrador aún no configuró el link de pago.</p>';
-    };
-    d.querySelectorAll('.plan-op').forEach((b) => { b.onclick = () => { plan = b.dataset.p; marcar(); }; });
-    marcar();
-    d.querySelector('#po').onclick = async () => {
-      const f = d.querySelector('#pf').files[0]; if (!f) return toast('Sube la foto del comprobante');
-      try { await rpc('pro_pagar', { p_plan: plan, p_comprobante: await A.comprimirComprobante(f) }); d.close(); toast('Enviado. Te avisamos al aprobarlo.'); pago = await rpc('mi_pago_pendiente'); CM.pintar(); } catch (e) { toast(e.message); }
-    };
-  }
+  // Pagar Pro: módulo común del núcleo (precios, link y transferencia se editan en el Centro de Mando → Pagos).
+  const pagar = () => CFX_PAGOS.abrir({ rpc, alPagar: () => CM.pintar() });
   async function render(el) {
     const c = CM.cuenta, p = c.prefs || {}, ok = (v, d) => (v === undefined || v === null ? d : v);
     el.innerHTML = '<div class="titulo-v"><h2>Más</h2></div><p class="sub">Cargando…</p>';
-    try { [uso, pago] = await Promise.all([rpc('mi_uso'), rpc('mi_pago_pendiente')]); } catch (e) { /* sigue */ }
+    try { [uso, pago] = await Promise.all([rpc('mi_uso'), rpc('cfx_pago_estado').then((e) => e.ultimo)]); } catch (e) { /* sigue */ }
     const lim = uso ? uso.limite_items : 0, pc = uso && lim ? Math.min(100, Math.round(uso.items / lim * 100)) : 0;
     const hasta = c.premium_hasta ? A.fCorta(c.premium_hasta.slice(0, 10)) : '';
     let x = '<div class="titulo-v"><h2>Más</h2></div>';

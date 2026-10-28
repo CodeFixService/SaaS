@@ -202,14 +202,14 @@
     };
     pintar();
   }
-  function conectar(a) {
+  function conectar(a, listo) {
     const d = modal('<h2>Conectar ' + esc(a.nombre) + '</h2><p class="muted">Entra con tu cuenta de administrador de esta app (queda guardada solo en este teléfono).</p>' +
       '<label>Correo<input id="ce" type="email" autocomplete="username" value="' + esc((A.cuenta && A.cuenta.email) || '') + '"></label><label>Contraseña<input id="cp" type="password" autocomplete="current-password"></label>' +
       '<p class="err" id="cx"></p><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="cok" type="button">Conectar</button></div>');
     d.querySelector('#cok').onclick = async () => {
       const { error } = await cliente(a).auth.signInWithPassword({ email: d.querySelector('#ce').value.trim().toLowerCase(), password: d.querySelector('#cp').value });
       if (error) { d.querySelector('#cx').textContent = /invalid/i.test(error.message) ? 'Correo o contraseña incorrectos' : error.message; return; }
-      d.close(); toast('Conectado a ' + a.nombre); cargar(a);
+      d.close(); toast('Conectado a ' + a.nombre); await cargar(a); if (listo) listo();
     };
   }
   function render(el) {
@@ -230,5 +230,7 @@
     pintarCabecera();
     APPS.forEach(cargar);
   }
-  global.MisApps = { render, APPS };
+  // Para el panel de Pagos: deja listas (y conectadas, si ya entraste) las 6 apps sin pintar las tarjetas.
+  const preparar = () => Promise.all(APPS.filter((a) => !E[a.id] || !E[a.id].url).map(cargar));
+  global.MisApps = { render, APPS, cliente, estado: E, preparar, conectar, rpcDe };
 })(window);

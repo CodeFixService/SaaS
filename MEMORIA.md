@@ -71,7 +71,7 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Pruebas**: Postgres local + simulador de Supabase con Playwright (rutas *.supabase.co → rpc/REST sobre Postgres), revisar a 360 px, sin errores en consola.
 - **Pendientes (en orden)**:
   1. ✅ (ver "P1 hecho" abajo) Limpieza y respaldo: borrar chats y notificaciones (cualquier cuenta); borrado automático a los 30 días con aviso 2 días antes; respaldo descargable por empresa; el admin respalda y borra registros/comprobantes; recordar eliminar productos/servicios sin stock o que ya no se ofrecen; inventario de tablas/config sobrantes (borrar solo lo vacío o sin uso; lo que tenga datos, mostrar al dueño con respaldo y pedir "sí").
-  2. Pagos ordenados: mensual, anual y "otro pago" personalizado (admin y cada negocio).
+  2. ✅ (ver "P2 hecho") Pagos ordenados: mensual, anual y "otro pago" personalizado.
   3. Interruptores de funciones por plan (como Barbería) en las 6 + completar funciones de admin que faltan (textos editables, avisos masivos, socios, keys/cupones, registro, planes) + pasar a global las exclusivas que sirvan (verificación de identidad solo en Estaciona).
   4. Centro de Mando como súper panel (control rápido de cada app: liberar, avisar a todos, precios, textos).
   5. Cuentas de clientes con sensación Premium; verificación humana (Cloudflare Turnstile) cuando el dueño lo configure.
@@ -86,9 +86,25 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
   Respaldo Excel del negocio: `mi_respaldo()` (Billetera usa `exportar_datos`).
 - **API común del admin (igual en las 6, la usa CM → Apps)**: `cfx_respaldo()`, `cfx_limpieza()` → [{clave,titulo,detalle,filas}], `cfx_limpiar(clave)`,
   `cfx_inventario()` (tablas que no están en `cfx_tablas()`), `cfx_inventario_datos(tabla)`, `cfx_inventario_borrar(tabla, 'sí')`. Nada se borra solo.
-  Al crear tablas nuevas: regenerar el bloque con `python3 pruebas/inventario.py <repo> --sql "<chequeo admin>"` y verificar con `--verificar`.
+  El bloque común (pagos + inventario) vive en `nucleo/sql/` y lo reparte `sincronizar.py` (marcas "CFX núcleo"); verificar con `pruebas/inventario.py <repo> --verificar`.
 - **CM → Apps**: botón 🧹 Respaldo y limpieza por app (Excel, limpiezas con conteo, tablas sobrantes) y "Respaldar todas las apps conectadas".
 - **Arreglado**: CM borraba la tabla `pagos` en cada actualización (ahora solo si es la del sistema antiguo) y vaciaba invitaciones.
 - **BiciTaller**: `schema.sql`/`cron.sql` re-sincronizados con `instalar.sql`; editar schema.sql y correr `node supabase/generar.mjs`.
 - **Pruebas** (`saas/pruebas/`): `stub.sql` + `base.sh <repo>` (base local), `actualizar.sh <repo>` (main → nuevo), `sim.js` (Supabase simulado en Playwright: auth, rest, rpc, storage, functions, realtime),
   `h.js` (abrir app a 360 px y juntar errores), `*_p1.sql` y `*_ui.js` por app. `npm install` en esa carpeta; Postgres en /var/tmp/pgb:54329.
+
+## P2 hecho (28/10/2026) · Pagos desde un solo panel · núcleo 1.7
+- **Versiones en main**: CM 4.9 (base 4.0) · Billetera 1.14.0 (base 13) · CodeFix Apps 5.11 (base 5.6) · Barbería 2.10 · BiciTaller 2.10 (base 2.2) · Estaciona 2.6.0 (base 7).
+- **Decisiones del dueño**: precios iguales en las 6. Negocio: primer pago $4.900 = 30 días Premium; luego $4.900/mes o $49.900/año (o queda Free).
+  Cliente: $3.000/mes, $29.900/año. Negocios NUEVOS bloqueados hasta su primer pago (regla `exigir_inicio`, solo para los creados desde `inicio_desde`).
+  Link de pago SIN monto (la persona escribe el monto) + comisión % que se suma solo al pagar por link; o transferencia. "Otro monto" libre.
+- **SQL común** `nucleo/sql/pagos.sql` (tablas `cfx_config`, `cfx_pagos`, `cfx_exentos`; `cfx_pago_estado`, `cfx_pago_pedir`, `cfx_precios` (anon),
+  admin: `cfx_pagos_config(_guardar)`, `cfx_pagos_lista`, `cfx_pago_comprobante`, `cfx_pago_resolver(id, aprobar, dias, motivo)`, `cfx_exento(_email)`).
+  Ganchos por app (antes de las marcas "CFX núcleo"): `cfx_yo()`, `cfx_dar_premium(uuid, rol, dias)`, `cfx_avisar`, `cfx_avisar_admin`.
+  El comprobante (foto ~110 KB en la tabla) se borra al aprobar/rechazar.
+- **JS común** `nucleo/pagos.js`: `CFX_PAGOS.abrir({rpc})` (planes, link/transferencia, comprobante) y `CFX_PAGOS.revisar({rpc, salir})` (pantalla de activación, `<dialog>` siempre al frente).
+  Integrado en: CM (app y Más → Pasar a Pro), Billetera (inicio + Mi plan + portada con precios centrales), Apps (Mi plan, empresa y cliente), Barbería (Mi plan),
+  BiciTaller (taller y cliente), Estaciona (Premium; el primer pago se pide al publicar el primer estacionamiento, `comoNegocio`).
+- **CM → Pagos** (`admin/pagos.js`): formulario único "Guardar en las 6 apps", lista de comprobantes por revisar de todas las apps (aprobar con días / rechazar con motivo)
+  y "Cuentas sin primer pago" (eximir por correo). Usa las conexiones de Apps (`MisApps.preparar/cliente/conectar`).
+- Los pagos antiguos de cada app (sus tablas y paneles propios) quedan solo como historial.

@@ -144,7 +144,7 @@ end $$;
 create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '3.9'::text $$;
+language sql immutable as $$ select '4.0'::text $$;
 create or replace function public.cfg_int(c text) returns int
 language sql stable security definer set search_path = '' as $$
   select (valor #>> '{}')::int from public.config where clave = c
@@ -164,10 +164,10 @@ alter table public.planes enable row level security;
 
 -- Solo se borran ajustes del sistema anterior; los tuyos (precios, link, días, versión liberada) se conservan al actualizar.
 delete from public.config where clave not in ('vapid_publica', 'soporte_whatsapp', 'dias_aviso_vencimiento', 'dias_comprobantes', 'dias_prueba',
-  'pro_link', 'pro_link_anual', 'pro_precio_mensual', 'pro_precio_anual', 'limite_db_mb', 'auditoria_max', 'version_liberada', 'version_min');
+  'limite_db_mb', 'auditoria_max', 'version_liberada', 'version_min');
 insert into public.config (clave, valor) values
   ('dias_prueba', '7'), ('dias_aviso_vencimiento', '3'), ('dias_comprobantes', '30'), ('soporte_whatsapp', '""'),
-  ('vapid_publica', '""'), ('pro_link', '""'), ('pro_link_anual', '""'), ('pro_precio_mensual', '4900'), ('pro_precio_anual', '49000'),
+  ('vapid_publica', '""'),
   ('limite_db_mb', '500'), ('auditoria_max', '2000'), ('version_liberada', '"3.0"')
 on conflict (clave) do nothing;
 
@@ -673,24 +673,7 @@ end $$;
 -- ---------------------------------------------------------------------
 -- H. Plan Pro: pago por link + comprobante
 -- ---------------------------------------------------------------------
-create or replace function public.pro_pagar(p_plan text, p_comprobante text) returns void
-language plpgsql security definer set search_path = '' as $$
-declare m int;
-begin
-  if auth.uid() is null then raise exception 'Inicia sesión'; end if;
-  if p_plan not in ('mensual', 'anual') then raise exception 'Plan no válido'; end if;
-  if coalesce(length(p_comprobante), 0) < 100 or length(p_comprobante) > 600000 then raise exception 'Sube una foto del comprobante'; end if;
-  if exists (select 1 from public.pagos where usuario = auth.uid() and estado = 'pendiente') then raise exception 'Ya tienes un pago en revisión'; end if;
-  m := coalesce(public.cfg_int(case when p_plan = 'anual' then 'pro_precio_anual' else 'pro_precio_mensual' end), 0);
-  insert into public.pagos (usuario, plan, monto, comprobante) values (auth.uid(), p_plan, m, p_comprobante);
-  perform public.avisar_staff('Pago por revisar', 'Un usuario subió su comprobante de Pro.', '/admin/#pagos');
-end $$;
-
-create or replace function public.mi_pago_pendiente() returns jsonb
-language sql stable security definer set search_path = '' as $$
-  select (select to_jsonb(x) from (select id, plan, monto, estado, created_at from public.pagos
-          where usuario = auth.uid() order by created_at desc limit 1) x)
-$$;
+-- (v3.9) El pago del Pro ahora es el del núcleo: cfx_pago_estado / cfx_pago_pedir (más abajo). La tabla pagos queda como historial.
 
 -- ---------------------------------------------------------------------
 -- I. Panel de administración
@@ -703,12 +686,13 @@ begin
     'usuarios', (select count(*) from public.perfiles where rol = 'usuario'),
     'activos7', (select count(*) from public.perfiles where rol = 'usuario' and visto_at > now() - interval '7 days'),
     'nuevos7', (select count(*) from public.perfiles where rol = 'usuario' and created_at > now() - interval '7 days'),
-    'pro', (select count(*) from public.perfiles where rol = 'usuario' and premium_hasta > now() and exists
-              (select 1 from public.pagos g where g.usuario = perfiles.id and g.estado = 'aprobado')),
+    'pro', (select count(*) from public.perfiles where rol = 'usuario' and premium_hasta > now() and (exists
+              (select 1 from public.pagos g where g.usuario = perfiles.id and g.estado = 'aprobado') or exists (select 1 from public.cfx_pagos g where g.cuenta = perfiles.id and g.estado = 'aprobado'))),
     'prueba', (select count(*) from public.perfiles where rol = 'usuario' and premium_hasta > now() and not exists
-              (select 1 from public.pagos g where g.usuario = perfiles.id and g.estado = 'aprobado')),
-    'pagos_pendientes', (select count(*) from public.pagos where estado = 'pendiente'),
-    'ingresos_mes', (select coalesce(sum(monto), 0) from public.pagos where estado = 'aprobado' and resuelto_at >= date_trunc('month', now())),
+              (select 1 from public.pagos g where g.usuario = perfiles.id and g.estado = 'aprobado') and not exists (select 1 from public.cfx_pagos g where g.cuenta = perfiles.id and g.estado = 'aprobado')),
+    'pagos_pendientes', (select count(*) from public.cfx_pagos where estado = 'pendiente'),
+    'ingresos_mes', (select coalesce(sum(monto), 0) from public.pagos where estado = 'aprobado' and resuelto_at >= date_trunc('month', now()))
+                  + (select coalesce(sum(monto), 0) from public.cfx_pagos where estado = 'aprobado' and resuelto >= date_trunc('month', now())),
     'socios', (select count(*) from public.perfiles where rol = 'socio'));
 end $$;
 
@@ -748,41 +732,6 @@ begin
   perform public.auditar(case when p_suspender then 'suspender' else 'reactivar' end, nom, p_motivo);
 end $$;
 
-create or replace function public.admin_pagos(p_estado text default 'pendiente') returns jsonb
-language plpgsql stable security definer set search_path = '' as $$
-begin
-  perform public.admin_check();
-  return (select coalesce(jsonb_agg(x order by x.created_at desc), '[]') from (
-    select g.id, g.plan, g.monto, g.estado, g.created_at, g.resuelto_at, p.email, p.nombre
-    from public.pagos g join public.perfiles p on p.id = g.usuario
-    where p_estado = 'todos' or g.estado = p_estado order by g.created_at desc limit 100) x);
-end $$;
-
-create or replace function public.admin_pago_comprobante(p_id uuid) returns text
-language plpgsql stable security definer set search_path = '' as $$
-begin
-  perform public.admin_check();
-  return (select comprobante from public.pagos where id = p_id);
-end $$;
-
-create or replace function public.admin_pago_resolver(p_id uuid, p_aprobar boolean, p_motivo text default '') returns void
-language plpgsql security definer set search_path = '' as $$
-declare g public.pagos; dias int;
-begin
-  perform public.edit_check(p_motivo);
-  select * into g from public.pagos where id = p_id and estado = 'pendiente' for update;
-  if g.id is null then raise exception 'Pago no encontrado o ya resuelto'; end if;
-  update public.pagos set estado = case when p_aprobar then 'aprobado' else 'rechazado' end, resuelto_at = now(), comprobante = null where id = p_id;
-  if p_aprobar then
-    dias := case when g.plan = 'anual' then 365 else coalesce((select duracion_dias from public.planes where codigo = 'pro'), 30) end;
-    update public.perfiles set premium_hasta = greatest(coalesce(premium_hasta, now()), now()) + make_interval(days => dias) where id = g.usuario;
-    perform public.avisar(g.usuario, 'Pro activado', 'Gracias. Tu pago fue aprobado.', '/app/');
-  else
-    perform public.avisar(g.usuario, 'Pago rechazado', 'No pudimos validar tu comprobante. Súbelo de nuevo o escribe a soporte.', '/app/#mas');
-  end if;
-  perform public.auditar(case when p_aprobar then 'pago_aprobado' else 'pago_rechazado' end, p_id::text, p_motivo);
-end $$;
-
 create or replace function public.admin_plan_guardar(p_codigo text, p_nombre text, p_descripcion text, p_limites jsonb,
   p_beneficios jsonb, p_duracion int, p_motivo text default '') returns void
 language plpgsql security definer set search_path = '' as $$
@@ -800,13 +749,9 @@ create or replace function public.admin_config_guardar(p_clave text, p_valor jso
 language plpgsql security definer set search_path = '' as $$
 begin
   perform public.edit_check(p_motivo);
-  if p_clave not in ('dias_prueba', 'dias_aviso_vencimiento', 'dias_comprobantes', 'soporte_whatsapp', 'pro_link', 'pro_link_anual',
-                     'pro_precio_mensual', 'pro_precio_anual', 'limite_db_mb', 'auditoria_max', 'version_liberada', 'version_min') then
+  if p_clave not in ('dias_prueba', 'dias_aviso_vencimiento', 'dias_comprobantes', 'soporte_whatsapp',
+                     'limite_db_mb', 'auditoria_max', 'version_liberada', 'version_min') then
     raise exception 'Ajuste no válido';
-  end if;
-  -- Links de pago (mensual y anual): vacíos o con https://
-  if p_clave in ('pro_link', 'pro_link_anual') and coalesce(p_valor #>> '{}', '') <> '' and (p_valor #>> '{}') !~ '^https://[^ ]+$' then
-    raise exception 'El link de pago debe empezar con https://';
   end if;
   -- Liberar versiones (o exigir una mínima) solo lo hace el súper administrador, con formato 3.3 o 3.3.1.
   if p_clave in ('version_liberada', 'version_min') then
@@ -1162,13 +1107,231 @@ exception when others then
   raise notice 'Actualización automática no activada (%). Corre supabase/cron.sql y vuelve a correr este archivo.', sqlerrm;
 end $$;
 
+
+
+-- ---------------------------------------------------------------------
+-- K. Permisos de las funciones
+-- ---------------------------------------------------------------------
+do $$
+declare r record;
+begin
+  for r in select p.oid::regprocedure as f, p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.prokind = 'f' and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
+  loop
+    execute 'revoke execute on function ' || r.f || ' from public, anon, authenticated';
+    if r.proname in ('preparar_cuenta', 'cancelar_invitacion', 'preparar_borrado', 'push_pendientes', 'push_borrar_endpoint', 'auto_actualizar',
+                     'tareas_periodicas', 'marcar_aviso', 'avisar', 'avisar_staff', 'items_antes', 'espacios_antes', 'handle_new_user') then
+      if exists (select 1 from pg_roles where rolname = 'service_role') then execute 'grant execute on function ' || r.f || ' to service_role'; end if;
+    else
+      execute 'grant execute on function ' || r.f || ' to authenticated';
+      if exists (select 1 from pg_roles where rolname = 'service_role') then execute 'grant execute on function ' || r.f || ' to service_role'; end if;
+    end if;
+  end loop;
+end $$;
+grant execute on function public.config_publica() to anon;
+grant execute on function public.notif_accion(uuid, text) to anon;
+
+-- ---------------------------------------------------------------------
+-- L. Ganchos de esta app para el núcleo (pagos): quién soy, cómo se da el Premium y cómo se avisa.
+--    En el Centro de Mando la "cuenta principal" (negocio) es cada usuario.
+-- ---------------------------------------------------------------------
+create or replace function public.cfx_yo() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object('id', p.id, 'email', p.email, 'nombre', p.nombre, 'premium_hasta', p.premium_hasta, 'creado', p.created_at,
+    'rol', case when p.rol = 'usuario' then 'negocio' else 'admin' end) from public.perfiles p where p.id = auth.uid()
+$$;
+create or replace function public.cfx_dar_premium(p_cuenta uuid, p_rol text, p_dias int) returns timestamptz
+language sql security definer set search_path = '' as $$
+  update public.perfiles set premium_hasta = greatest(coalesce(premium_hasta, now()), now()) + make_interval(days => p_dias)
+  where id = p_cuenta returning premium_hasta
+$$;
+create or replace function public.cfx_avisar(p_cuenta uuid, p_titulo text, p_cuerpo text) returns void
+language sql security definer set search_path = '' as $$ select public.avisar(p_cuenta, p_titulo, p_cuerpo, '/app/#mas') $$;
+create or replace function public.cfx_avisar_admin(p_titulo text, p_cuerpo text) returns void
+language sql security definer set search_path = '' as $$ select public.avisar_staff(p_titulo, p_cuerpo, '/admin/#apps') $$;
+
+-- >>> CFX núcleo (no editar aquí: se copia de saas/nucleo/sql con sincronizar.py)
+-- ---------------------------------------------------------------------
+-- CodeFix · Pagos (igual en las 6 apps; lo reparte nucleo/sincronizar.py). Se administra desde el Centro de Mando → Pagos.
+--   Precios iguales en las 6: negocio (inicio, mensual, anual) y cliente (mensual, anual). Link de pago SIN monto (la persona
+--   escribe el monto; se le suma la comisión del link) o transferencia, y foto del comprobante. Tú apruebas y se activa el Premium.
+--   El comprobante se borra al aprobar o rechazar (ya no sirve). Negocios nuevos: bloqueados hasta su primer pago (si está activado).
+--   Cada app define antes: cfx_yo(), cfx_dar_premium(uuid, text, int), cfx_avisar(uuid, text, text) y cfx_avisar_admin(text, text).
+-- ---------------------------------------------------------------------
+create table if not exists public.cfx_config (clave text primary key, valor jsonb not null);
+alter table public.cfx_config enable row level security;
+insert into public.cfx_config (clave, valor) values ('pagos', jsonb_build_object(
+  'negocio', jsonb_build_object('inicio', 4900, 'inicio_dias', 30, 'mensual', 4900, 'anual', 49900, 'exigir_inicio', true),
+  'cliente', jsonb_build_object('mensual', 3000, 'anual', 29900),
+  'link', '', 'comision_pct', 0, 'whatsapp', '',
+  'transferencia', jsonb_build_object('banco', '', 'tipo', '', 'numero', '', 'rut', '', 'titular', '', 'correo', ''),
+  'inicio_desde', now()))
+on conflict (clave) do nothing;
+
+create table if not exists public.cfx_pagos (
+  id          uuid primary key default gen_random_uuid(),
+  cuenta      uuid not null,
+  email       text not null default '',
+  nombre      text not null default '',
+  rol         text not null check (rol in ('negocio', 'cliente', 'otro')),
+  periodo     text not null check (periodo in ('inicio', 'mensual', 'anual', 'otro')),
+  monto       int not null check (monto between 1 and 100000000),
+  medio       text not null check (medio in ('link', 'transferencia')),
+  nota        text not null default '' check (length(nota) <= 300),
+  comprobante text check (comprobante is null or (comprobante ~ '^data:image/(jpeg|png|webp);base64,' and length(comprobante) <= 400000)),
+  estado      text not null default 'pendiente' check (estado in ('pendiente', 'aprobado', 'rechazado')),
+  dias        int,
+  motivo      text not null default '',
+  creado      timestamptz not null default now(),
+  resuelto    timestamptz
+);
+create index if not exists cfx_pagos_cuenta_idx on public.cfx_pagos (cuenta, creado desc);
+create index if not exists cfx_pagos_estado_idx on public.cfx_pagos (estado, creado);
+alter table public.cfx_pagos enable row level security;
+create table if not exists public.cfx_exentos (cuenta uuid primary key, nota text not null default '', creado timestamptz not null default now());
+alter table public.cfx_exentos enable row level security;
+revoke all on public.cfx_config, public.cfx_pagos, public.cfx_exentos from anon, authenticated;
+
+-- ¿Cómo estoy? Precios, mi rol, si debo el primer pago y mi último pago.
+create or replace function public.cfx_pago_estado() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare c jsonb := (select valor from public.cfx_config where clave = 'pagos'); y jsonb := public.cfx_yo(); pagado boolean; debe boolean; bloq boolean;
+begin
+  if y is null or (y ->> 'id') is null then raise exception 'Inicia sesión'; end if;
+  pagado := exists (select 1 from public.cfx_pagos where cuenta = (y ->> 'id')::uuid and estado = 'aprobado')
+    or exists (select 1 from public.cfx_exentos where cuenta = (y ->> 'id')::uuid);
+  -- debe_inicio: cuenta nueva (desde que activaste la regla) sin primer pago. bloqueado: además es un negocio.
+  debe := coalesce((c #>> '{negocio,exigir_inicio}')::boolean, false) and not pagado
+     and (y ->> 'creado')::timestamptz > coalesce((c ->> 'inicio_desde')::timestamptz, now());
+  bloq := debe and y ->> 'rol' = 'negocio';
+  return jsonb_build_object('config', c - 'inicio_desde', 'yo', y, 'pagado', pagado, 'bloqueado', bloq, 'debe_inicio', debe,
+    'ultimo', (select to_jsonb(x) from (select id, periodo, monto, medio, estado, dias, motivo, creado, resuelto from public.cfx_pagos
+               where cuenta = (y ->> 'id')::uuid order by creado desc limit 1) x));
+end $$;
+
+create or replace function public.cfx_pago_pedir(p_periodo text, p_monto int, p_medio text, p_comprobante text, p_nota text default '') returns uuid
+language plpgsql security definer set search_path = '' as $$
+declare y jsonb := public.cfx_yo(); i uuid;
+begin
+  if y is null or (y ->> 'id') is null then raise exception 'Inicia sesión'; end if;
+  if y ->> 'rol' not in ('negocio', 'cliente') and p_periodo <> 'otro' then raise exception 'Pide al dueño de la cuenta que haga el pago'; end if;
+  if p_periodo not in ('inicio', 'mensual', 'anual', 'otro') or p_medio not in ('link', 'transferencia') then raise exception 'Datos no válidos'; end if;
+  if coalesce(p_monto, 0) < 1 then raise exception 'Escribe el monto que pagaste'; end if;
+  if coalesce(length(p_comprobante), 0) < 200 then raise exception 'Sube la foto del comprobante'; end if;
+  if exists (select 1 from public.cfx_pagos where cuenta = (y ->> 'id')::uuid and estado = 'pendiente') then raise exception 'Ya tienes un pago en revisión. Te avisamos apenas se apruebe.'; end if;
+  if (select count(*) from public.cfx_pagos where cuenta = (y ->> 'id')::uuid and creado > now() - interval '1 day') >= 5 then raise exception 'Demasiados intentos hoy. Escribe a soporte.'; end if;
+  insert into public.cfx_pagos (cuenta, email, nombre, rol, periodo, monto, medio, nota, comprobante)
+  values ((y ->> 'id')::uuid, coalesce(y ->> 'email', ''), left(coalesce(y ->> 'nombre', ''), 80), case when y ->> 'rol' in ('negocio', 'cliente') then y ->> 'rol' else 'otro' end,
+          p_periodo, p_monto, p_medio, left(coalesce(p_nota, ''), 300), p_comprobante)
+  returning id into i;
+  perform public.cfx_avisar_admin('💳 Pago por revisar', coalesce(nullif(y ->> 'nombre', ''), y ->> 'email') || ' · $' || p_monto || ' (' || p_periodo || ')');
+  return i;
+end $$;
+
+-- Precios públicos (para la portada, sin iniciar sesión).
+create or replace function public.cfx_precios() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object('negocio', valor -> 'negocio', 'cliente', valor -> 'cliente', 'comision_pct', valor -> 'comision_pct') from public.cfx_config where clave = 'pagos'
+$$;
+revoke all on function public.cfx_precios() from public;
+grant execute on function public.cfx_precios() to anon, authenticated;
+
+-- ---------- Administrador (lo llama el Centro de Mando) ----------
+create or replace function public.cfx_pagos_config() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  perform public.super_check();
+  return (select valor from public.cfx_config where clave = 'pagos');
+end $$;
+
+create or replace function public.cfx_pagos_config_guardar(p jsonb) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare v jsonb := (select valor from public.cfx_config where clave = 'pagos');
+begin
+  perform public.super_check();
+  if jsonb_typeof(p) <> 'object' then raise exception 'Datos no válidos'; end if;
+  if coalesce(p ->> 'link', '') <> '' and (p ->> 'link') !~ '^https://[^ ]+$' then raise exception 'El link de pago debe empezar con https://'; end if;
+  if coalesce((p ->> 'comision_pct')::numeric, 0) not between 0 and 20 then raise exception 'La comisión va de 0 a 20 %%'; end if;
+  -- Al activar "bloquear hasta el primer pago", solo aplica a los negocios que se registren desde ahora.
+  if coalesce((p #>> '{negocio,exigir_inicio}')::boolean, false) and not coalesce((v #>> '{negocio,exigir_inicio}')::boolean, false) then
+    p := p || jsonb_build_object('inicio_desde', now());
+  end if;
+  v := v || (p - 'inicio_desde') || case when p ? 'inicio_desde' then jsonb_build_object('inicio_desde', p -> 'inicio_desde') else '{}'::jsonb end;
+  update public.cfx_config set valor = v where clave = 'pagos';
+  return v;
+end $$;
+
+create or replace function public.cfx_pagos_lista(p_estado text default 'pendiente') returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  perform public.super_check();
+  return (select coalesce(jsonb_agg(x order by x.creado desc), '[]') from (
+    select id, cuenta, email, nombre, rol, periodo, monto, medio, nota, estado, dias, motivo, creado, resuelto, comprobante is not null as con_comprobante,
+      (select count(*) from public.cfx_pagos z where z.cuenta = g.cuenta and z.estado = 'aprobado') as aprobados
+    from public.cfx_pagos g where p_estado = 'todos' or estado = p_estado order by creado desc limit 200) x);
+end $$;
+
+create or replace function public.cfx_pago_comprobante(p_id uuid) returns text
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  perform public.super_check();
+  return (select comprobante from public.cfx_pagos where id = p_id);
+end $$;
+
+create or replace function public.cfx_pago_resolver(p_id uuid, p_aprobar boolean, p_dias int default null, p_motivo text default '') returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare g public.cfx_pagos; c jsonb := (select valor from public.cfx_config where clave = 'pagos'); d int; hasta timestamptz;
+begin
+  perform public.super_check();
+  select * into g from public.cfx_pagos where id = p_id and estado = 'pendiente' for update;
+  if g.id is null then raise exception 'Pago no encontrado o ya resuelto'; end if;
+  d := coalesce(p_dias, case g.periodo when 'inicio' then coalesce((c #>> '{negocio,inicio_dias}')::int, 30) when 'anual' then 365 when 'mensual' then 30 else 0 end);
+  if p_aprobar then
+    if d < 0 or d > 3660 then raise exception 'Días no válidos'; end if;
+    if d > 0 then hasta := public.cfx_dar_premium(g.cuenta, g.rol, d); end if;
+    update public.cfx_pagos set estado = 'aprobado', dias = d, motivo = left(coalesce(p_motivo, ''), 200), resuelto = now(), comprobante = null where id = p_id;
+    perform public.cfx_avisar(g.cuenta, '✅ Pago aprobado', case when hasta is not null then 'Premium activo hasta el ' || to_char(hasta at time zone 'America/Santiago', 'DD/MM/YYYY') || '. ¡Gracias!' else 'Gracias, tu pago quedó registrado.' end);
+  else
+    update public.cfx_pagos set estado = 'rechazado', motivo = left(coalesce(nullif(p_motivo, ''), 'No pudimos validar el comprobante'), 200), resuelto = now(), comprobante = null where id = p_id;
+    perform public.cfx_avisar(g.cuenta, '⚠️ Pago rechazado', left(coalesce(nullif(p_motivo, ''), 'No pudimos validar el comprobante'), 200) || '. Puedes subirlo de nuevo.');
+  end if;
+  return jsonb_build_object('estado', case when p_aprobar then 'aprobado' else 'rechazado' end, 'dias', d, 'hasta', hasta);
+end $$;
+
+-- Cuentas que no pagan el inicio (por ejemplo, las que creas tú de regalo).
+create or replace function public.cfx_exento(p_cuenta uuid, p_si boolean, p_nota text default '') returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  perform public.super_check();
+  if p_si then insert into public.cfx_exentos (cuenta, nota) values (p_cuenta, left(coalesce(p_nota, ''), 200)) on conflict (cuenta) do update set nota = excluded.nota;
+  else delete from public.cfx_exentos where cuenta = p_cuenta; end if;
+end $$;
+
+create or replace function public.cfx_exento_email(p_email text, p_si boolean) returns text
+language plpgsql security definer set search_path = '' as $$
+declare u uuid;
+begin
+  perform public.super_check();
+  select id into u from auth.users where lower(email) = lower(trim(coalesce(p_email, '')));
+  if u is null then raise exception 'No hay una cuenta con ese correo en esta app'; end if;
+  perform public.cfx_exento(u, p_si, 'Desde el Centro de Mando');
+  return lower(trim(p_email));
+end $$;
+
+revoke all on function public.cfx_exento_email(text, boolean) from public, anon;
+grant execute on function public.cfx_exento_email(text, boolean) to authenticated;
+revoke all on function public.cfx_pago_estado(), public.cfx_pago_pedir(text, int, text, text, text), public.cfx_pagos_config(), public.cfx_pagos_config_guardar(jsonb),
+  public.cfx_pagos_lista(text), public.cfx_pago_comprobante(uuid), public.cfx_pago_resolver(uuid, boolean, int, text), public.cfx_exento(uuid, boolean, text) from public, anon;
+grant execute on function public.cfx_pago_estado(), public.cfx_pago_pedir(text, int, text, text, text), public.cfx_pagos_config(), public.cfx_pagos_config_guardar(jsonb),
+  public.cfx_pagos_lista(text), public.cfx_pago_comprobante(uuid), public.cfx_pago_resolver(uuid, boolean, int, text), public.cfx_exento(uuid, boolean, text) to authenticated;
+revoke all on function public.cfx_yo(), public.cfx_dar_premium(uuid, text, int), public.cfx_avisar(uuid, text, text), public.cfx_avisar_admin(text, text) from public, anon, authenticated;
 -- ---------------------------------------------------------------------
 -- CodeFix · Inventario (igual en las 6 apps; lo usa el Centro de Mando → Apps → Respaldo y limpieza).
 --   Muestra las tablas que esta versión ya NO usa (restos de versiones antiguas) con cuántas filas tienen.
 --   Nada se borra solo: las vacías se borran con un toque; las que tienen datos piden descargar el respaldo y escribir "sí".
 --   cfx_tablas() = las tablas que crea este archivo (la revisa pruebas/inventario.py --verificar).
 -- ---------------------------------------------------------------------
-create or replace function public.cfx_tablas() returns text[] language sql immutable as $$ select array['public.auditoria', 'public.config', 'public.espacios', 'public.invitaciones', 'public.items', 'public.notificaciones', 'public.pagos', 'public.perfiles', 'public.planes', 'public.push_subs', 'public.secretos', 'public.textos', 'public.uso_dia'] $$;
+create or replace function public.cfx_tablas() returns text[] language sql immutable as $$ select array['public.auditoria', 'public.cfx_config', 'public.cfx_exentos', 'public.cfx_pagos', 'public.config', 'public.espacios', 'public.invitaciones', 'public.items', 'public.notificaciones', 'public.pagos', 'public.perfiles', 'public.planes', 'public.push_subs', 'public.secretos', 'public.textos', 'public.uso_dia'] $$;
 create or replace function public.cfx_inventario() returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare r record; n bigint; out jsonb := '[]'::jsonb;
@@ -1207,29 +1370,7 @@ begin
 end $$;
 revoke all on function public.cfx_tablas(), public.cfx_inventario(), public.cfx_inventario_datos(text), public.cfx_inventario_borrar(text, text) from public, anon;
 grant execute on function public.cfx_inventario(), public.cfx_inventario_datos(text), public.cfx_inventario_borrar(text, text) to authenticated;
-
-
--- ---------------------------------------------------------------------
--- K. Permisos de las funciones
--- ---------------------------------------------------------------------
-do $$
-declare r record;
-begin
-  for r in select p.oid::regprocedure as f, p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-           where n.nspname = 'public' and p.prokind = 'f' and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
-  loop
-    execute 'revoke execute on function ' || r.f || ' from public, anon, authenticated';
-    if r.proname in ('preparar_cuenta', 'cancelar_invitacion', 'preparar_borrado', 'push_pendientes', 'push_borrar_endpoint', 'auto_actualizar',
-                     'tareas_periodicas', 'marcar_aviso', 'avisar', 'avisar_staff', 'items_antes', 'espacios_antes', 'handle_new_user') then
-      if exists (select 1 from pg_roles where rolname = 'service_role') then execute 'grant execute on function ' || r.f || ' to service_role'; end if;
-    else
-      execute 'grant execute on function ' || r.f || ' to authenticated';
-      if exists (select 1 from pg_roles where rolname = 'service_role') then execute 'grant execute on function ' || r.f || ' to service_role'; end if;
-    end if;
-  end loop;
-end $$;
-grant execute on function public.config_publica() to anon;
-grant execute on function public.notif_accion(uuid, text) to anon;
+-- <<< CFX núcleo
 
 -- La versión de la app ya no se libera al correr este archivo: se libera desde el panel (Actualizar la app → Liberar).
 

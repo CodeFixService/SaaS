@@ -20,7 +20,7 @@
       d.querySelector('#mo').focus();
     });
   }
-  const show = App.pestanas((v) => ({ resumen, usuarios, pagos, planes, ajustes, registro, versiones, apps: () => window.MisApps.render(el('apps')) }[v] || (() => {}))());
+  const show = App.pestanas((v) => ({ resumen, usuarios, pagos: () => window.PagosCentral.render(el('pagos')), planes, ajustes, registro, versiones, apps: () => window.MisApps.render(el('apps')) }[v] || (() => {}))());
   App.ponerIconos(); App.campana($('bCampana'));
 
   async function resumen() {
@@ -130,21 +130,6 @@
     d.querySelector('#nk').onclick = async () => { try { await App.crearCuenta({ email: d.querySelector('#ne').value.trim(), nombre: d.querySelector('#nn').value.trim(), rol: d.querySelector('#nr').value }); d.close(); toast('Cuenta creada'); usuarios(); } catch (x) { err(x); } };
   }
 
-  async function pagos() {
-    try {
-      const L = await rpc('admin_pagos', { p_estado: 'todos' });
-      el('pagos').innerHTML = '<div class="titulo-v"><h2>Pagos</h2></div>' + (L.map((g) => '<div class="card"><div class="fila"><span class="tit">' + esc(g.nombre || g.email) + '</span><span class="pill ' + (g.estado === 'aprobado' ? 'ok' : g.estado === 'rechazado' ? 'bad' : 'warn') + '">' + g.estado + '</span></div><p class="sub">' + g.plan + ' · $' + Number(g.monto).toLocaleString('es-CL') + ' · ' + App.hace(g.created_at) + '</p>' +
-        '<div class="btns-s"><button class="small ghost" data-a="ver" data-id="' + g.id + '">Ver comprobante</button>' + (g.estado === 'pendiente' ? '<button class="small" data-a="ok" data-id="' + g.id + '">Aprobar</button><button class="small ghost" data-a="no" data-id="' + g.id + '">Rechazar</button>' : '') + '</div></div>').join('') || '<p class="empty">Sin pagos</p>');
-    } catch (e) { el('pagos').innerHTML = '<p class="err">' + esc(e.message) + '</p>'; }
-  }
-  el('pagos').onclick = async (e) => {
-    const b = e.target.closest('[data-a]'); if (!b) return;
-    try {
-      if (b.dataset.a === 'ver') App.verImagen(await rpc('admin_pago_comprobante', { p_id: b.dataset.id }), 'Comprobante', 'comprobante.jpg');
-      else { const m = await motivo(b.dataset.a === 'ok' ? 'Aprobar pago' : 'Rechazar pago'); if (m === null) return; await rpc('admin_pago_resolver', { p_id: b.dataset.id, p_aprobar: b.dataset.a === 'ok', p_motivo: m }); toast('Listo'); pagos(); }
-    } catch (x) { err(x); }
-  };
-
   function planes() {
     const P = pub.planes || {};
     el('planes').innerHTML = '<div class="titulo-v"><h2>Planes</h2></div>' + Object.keys(P).map((k) => { const p = P[k], l = p.limites || {}; return '<div class="card" data-k="' + k + '"><h3>' + esc(p.nombre) + ' <span class="sub">' + k + '</span></h3>' + [['espacios', 'Espacios'], ['items', 'Ítems'], ['recordatorios', 'Recordatorios'], ['insights', 'Insights'], ['descanso', 'Descanso']].map(([c, t]) => '<label>' + t + '<input data-l="' + c + '" type="number" value="' + (l[c] === undefined ? '' : l[c]) + '"></label>').join('') + '<label>Descripción<input data-d value="' + esc(p.descripcion || '') + '"></label><button type="button" data-g="' + k + '">Guardar</button></div>'; }).join('');
@@ -156,7 +141,8 @@
     try { await rpc('admin_plan_guardar', { p_codigo: k, p_nombre: p.nombre, p_descripcion: c.querySelector('[data-d]').value, p_limites: lim, p_beneficios: p.beneficios || [], p_duracion: p.duracion_dias || 30, p_motivo: m }); pub = await App.cargarPublica(); toast('Guardado'); } catch (x) { err(x); }
   };
 
-  const CFG = [['dias_prueba', 'Días de prueba Pro'], ['pro_precio_mensual', 'Precio mensual'], ['pro_precio_anual', 'Precio anual'], ['pro_link', 'Link de pago mensual', 1], ['pro_link_anual', 'Link de pago anual', 1], ['soporte_whatsapp', 'WhatsApp de soporte', 1], ['dias_comprobantes', 'Guardar comprobantes (días)'], ['limite_db_mb', 'Límite de base de datos (MB)'], ['auditoria_max', 'Máximo de filas del registro']];
+  // Precios, links y transferencia ya no van aquí: se editan una vez para las 6 apps en Pagos.
+  const CFG = [['dias_prueba', 'Días de prueba Pro'], ['soporte_whatsapp', 'WhatsApp de soporte', 1], ['dias_comprobantes', 'Guardar comprobantes (días)'], ['limite_db_mb', 'Límite de base de datos (MB)'], ['auditoria_max', 'Máximo de filas del registro']];
   function ajustes() {
     const c = pub.config || {}, k = c.vapid_publica;
     el('ajustes').innerHTML = '<div class="titulo-v"><h2>Ajustes</h2></div><button type="button" class="aviso-ver" id="bVer2">🔄 Actualizar la app<br><span class="sub">Base de datos, función del servidor, probar y liberar versiones</span></button><div class="card">' + CFG.map((f) => '<label>' + f[1] + '<input data-c="' + f[0] + '" data-t="' + (f[2] ? 's' : 'n') + '" value="' + esc(c[f[0]] === undefined ? '' : c[f[0]]) + '"></label>').join('') + '<button type="button" id="cg">Guardar ajustes</button></div>' +

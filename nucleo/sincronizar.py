@@ -3,10 +3,12 @@
 
 Uso:  python3 nucleo/sincronizar.py /ruta/a/los/repos      (carpeta que contiene saas, emprendedor, barberia, …)
 Hace en cada repositorio:
-  1. Copia los scripts de JS (iconos, instalar, barra, auto, fotos, voz, respaldo) y tema.css a la carpeta que usa esa app.
+  1. Copia los scripts de JS (iconos, instalar, barra, auto, fotos, voz, respaldo, pagos) y tema.css a la carpeta que usa esa app.
   2. Enlaza tema.css en cada página (después del CSS propio) y los scripts al final del <body>, si faltan.
   3. Agrega los archivos a la lista del service worker (para que funcionen sin internet).
   4. Escribe nucleo.json con la versión del núcleo (el Centro de Mando la muestra en cada tarjeta).
+  5. SQL común (nucleo/sql/*.sql: pagos e inventario): lo pone entre las marcas "-- >>> CFX núcleo" y "-- <<< CFX núcleo"
+     de cada instalar.sql (BiciTaller: schema.sql y luego node supabase/generar.mjs). <CHK> = cómo exige ser admin cada app.
 No toca nada más: ni la base de datos, ni la lógica de cada app. Se puede correr las veces que quieras.
 """
 import json, os, re, shutil, subprocess, sys
@@ -22,7 +24,18 @@ APPS = {
     'taller': ('shared', 'shared', 'sw.js'),
     'estacionamiento': ('js', 'css', 'sw.js'),
 }
-JS = ('iconos.js', 'instalar.js', 'barra.js', 'auto.js', 'fotos.js', 'voz.js', 'respaldo.js')
+# repo → (archivo SQL donde va el bloque común, chequeo de administrador de esa app)
+SQL = {
+    'saas': ('supabase/instalar.sql', 'public.super_check()'),
+    'emprendedor': ('supabase/instalar.sql', 'privado.solo_admin()'),
+    'Aplicaciones': ('supabase/instalar.sql', 'public.cfx_es_admin()'),
+    'barberia': ('supabase/instalar.sql', 'public.cfx_es_admin()'),
+    'taller': ('supabase/schema.sql', 'public.admin_check()'),
+    'estacionamiento': ('supabase/instalar.sql', 'public.cfx_es_admin()'),
+}
+INI, FIN = '-- >>> CFX núcleo (no editar aquí: se copia de saas/nucleo/sql con sincronizar.py)', '-- <<< CFX núcleo'
+TABLA = re.compile(r'create table (?:if not exists )?((?:public|privado)\.[a-z_]+)', re.I)
+JS = ('iconos.js', 'instalar.js', 'barra.js', 'auto.js', 'fotos.js', 'voz.js', 'respaldo.js', 'pagos.js')
 SALTAR = re.compile(r'(^docs/|guia|legal|actualizar\.html)')
 
 
@@ -69,6 +82,24 @@ def cachear(repo, js, css, sw):
     open(p, 'w', encoding='utf-8').write(s)
 
 
+def sql_comun(repo, nombre):
+    archivo, chk = SQL[nombre]
+    p = os.path.join(repo, archivo)
+    s = open(p, encoding='utf-8').read()
+    if INI not in s:
+        print('  ⚠️ ', nombre, 'no tiene las marcas del SQL común en', archivo)
+        return
+    i, j = s.index(INI), s.index(FIN)
+    comun = ''.join(open(os.path.join(AQUI, 'sql', f), encoding='utf-8').read() for f in ('pagos.sql', 'inventario.sql'))
+    tablas = sorted(set(TABLA.findall(s[:i] + s[j:])) | set(TABLA.findall(comun)))
+    comun = comun.replace('<CHK>', chk).replace('<LISTA>', "array['" + "', '".join(tablas) + "']")
+    nuevo = s[:i] + INI + '\n' + comun + s[j:]
+    if nuevo != s:
+        open(p, 'w', encoding='utf-8').write(nuevo)
+    if nombre == 'taller':
+        subprocess.check_call(['node', os.path.join(repo, 'supabase', 'generar.mjs')], stdout=subprocess.DEVNULL)
+
+
 def main():
     base = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(AQUI))
     for repo, (js, css, sw) in APPS.items():
@@ -85,6 +116,7 @@ def main():
         shutil.copy(os.path.join(AQUI, 'tema.css'), os.path.join(r, css, 'tema.css'))
         enlazar(r, js, css)
         cachear(r, js, css, sw)
+        sql_comun(r, repo)
         json.dump({'nucleo': VERSION}, open(os.path.join(r, 'nucleo.json'), 'w'))
         print('✓', repo, '· núcleo', VERSION)
 

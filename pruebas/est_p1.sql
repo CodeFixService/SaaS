@@ -6,6 +6,7 @@ insert into public.mensajes (conv, autor, texto, creado) values ('00000000-0000-
 insert into public.estacionamientos (dueno, titulo, direccion, lat, lng, estado, actualizado) values ('00000000-0000-0000-0000-0000000000b1', 'Est 1', 'Calle 1', -33.4, -70.6, 'pausado', now() - interval '40 days');
 select public.limpieza();
 select count(*) = 2 as dos_avisos from public.notificaciones where titulo = '🧹 Limpieza automática';
+alter table public.estacionamientos disable trigger user; update public.estacionamientos set actualizado = now() - interval '40 days'; alter table public.estacionamientos enable trigger user;
 select public.recordar_pausados() = 1 as recuerda;
 set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000b1';
 set role authenticated;

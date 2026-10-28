@@ -46,13 +46,15 @@ async function abrir(repo, db, opts = {}) {
     return { ctx, page };
   };
   const { ctx, page } = await nuevo();
+  // Las pruebas que no son de pagos no exigen el primer pago (opts.conCobro lo deja como en producción).
+  await sim.su("update public.cfx_config set valor = jsonb_set(valor, '{negocio,exigir_inicio}', $1) where clave = 'pagos'", [opts.conCobro ? 'true' : 'false']).catch(() => {});
   const capt = path.join(__dirname, 'capturas', path.basename(repo));
   fs.mkdirSync(capt, { recursive: true });
   return {
     base, page, ctx, sim, errores, browser, nuevo,
     foto: (nombre, p) => (p || page).screenshot({ path: path.join(capt, nombre + '.png'), fullPage: true }),
     // Cierra los diálogos abiertos (p. ej. "Activa las notificaciones", que en el navegador de prueba siempre aparece).
-    sinModales: (p) => (p || page).evaluate(() => { document.querySelectorAll('dialog[open]').forEach((d) => d.close()); document.querySelectorAll('.cfx-hoja').forEach((d) => d.remove()); document.querySelectorAll('.sheet .cerrar').forEach((b) => b.click()); }),
+    sinModales: (p) => (p || page).evaluate(() => { document.querySelectorAll('dialog[open]:not(.cfx-pago)').forEach((d) => d.close()); document.querySelectorAll('.cfx-hoja').forEach((d) => d.remove()); document.querySelectorAll('.sheet .cerrar').forEach((b) => b.click()); }),
     anchoOk: async (p) => (p || page).evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
     async cerrar() { await browser.close(); servidor.close(); await sim.cerrar(); },
   };

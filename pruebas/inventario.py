@@ -5,7 +5,6 @@ repo = sys.argv[1]
 modo = sys.argv[2] if len(sys.argv) > 2 else ''
 
 sql = open(os.path.join(repo, 'supabase/instalar.sql'), encoding='utf-8').read()
-BLOQUE = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'inventario.sql'), encoding='utf-8').read()
 tablas = sorted(set(re.findall(r'create table (?:if not exists )?((?:public|privado)\.[a-z_]+)', sql, re.I)))
 codigo = subprocess.check_output(['git', '-C', repo, 'ls-files', '*.js', '*.html', '*.ts']).decode().split()
 txt = ''
@@ -14,10 +13,6 @@ for f in codigo:
     txt += open(os.path.join(repo, f), encoding='utf-8', errors='ignore').read()
 if modo == '--lista':  # arreglo SQL con las tablas que crea instalar.sql (para cfx_inventario)
     print("array['" + "', '".join(tablas) + "']")
-    sys.exit(0)
-if modo == '--sql':  # bloque SQL común (sys.argv[3] = cómo se exige ser administrador en esta app)
-    chk = sys.argv[3]
-    print(BLOQUE.replace('<CHK>', chk).replace('<LISTA>', "array['" + "', '".join(tablas) + "']"))
     sys.exit(0)
 if modo == '--verificar':  # la lista dentro de cfx_inventario debe ser igual a las tablas que se crean
     m = re.search(r"cfx_tablas\(\) returns text\[\][^$]*\$\$\s*select (array\[[^\]]*\])", sql)

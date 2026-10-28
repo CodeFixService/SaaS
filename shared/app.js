@@ -172,30 +172,6 @@
       '\nCorreo: ' + d.email + '\nContraseña: ' + d.password + '\n\nCambia tu contraseña en "Mi cuenta" la primera vez que entres.';
   }
 
-  // Calidad de fotos según su uso: viene del núcleo (fotos.js); estos valores son el respaldo.
-  const FOTO = (k) => (global.CFX_FOTO && global.CFX_FOTO[k]) || { comprobante: { lado: 1000, calidad: 0.6, kb: 110 }, documento: { lado: 1400, calidad: 0.72, kb: 300 }, vitrina: { lado: 1080, calidad: 0.8, kb: 220 }, portada: { lado: 1280, calidad: 0.8, kb: 300 }, perfil: { lado: 400, calidad: 0.8, kb: 45 }, logo: { lado: 256, calidad: 0.85, kb: 30 } }[k];
-  /* ---------- Imágenes (comprobantes y logo) ---------- */
-  function achicar(file, lado, maxLargo, tipo) {
-    return new Promise((ok, ko) => {
-      const img = new Image();
-      img.onload = () => {
-        const k = Math.min(1, lado / Math.max(img.width, img.height));
-        const c = document.createElement('canvas');
-        c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
-        const g = c.getContext('2d');
-        g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
-        g.drawImage(img, 0, 0, c.width, c.height);
-        URL.revokeObjectURL(img.src);
-        let qa = 0.82, d = c.toDataURL(tipo || 'image/jpeg', qa);
-        while (d.length > maxLargo && qa > 0.3) { qa -= 0.1; d = c.toDataURL('image/jpeg', qa); }
-        if (d.length > maxLargo) { ko(new Error('La imagen es muy pesada')); return; }
-        ok(d);
-      };
-      img.onerror = () => ko(new Error('No se pudo leer la imagen'));
-      img.src = URL.createObjectURL(file);
-    });
-  }
-  const comprimirComprobante = (file) => achicar(file, FOTO('comprobante').lado, FOTO('comprobante').kb * 1400); // base64 ≈ 1,37 × bytes
   function descargar(dataUrl, nombre) {
     const a = document.createElement('a');
     a.href = dataUrl; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
@@ -477,7 +453,7 @@
   global.App = {
     sb, ROOT, $, esc, plata, numero, iso, fechaDe, sumarDias, hoy, fCorta, fLarga, fHora, hace, DIAS, telNorm, wa, estrellas, nota,
     toast, modal, confirmar, friendly, rpc, q, cargarPublica, txt, refrescar, requerir, entrar, salir, crearCuenta, registrar,
-    clave, mensajeAcceso, comprimirComprobante, descargar, verImagen, campana, irA, activarPush, ofrecerPush,
+    clave, mensajeAcceso, descargar, verImagen, campana, irA, activarPush, ofrecerPush,
     pushSoportado, registrarSW, pedirInstalar, pie, pestanas, ico, ponerIconos, destino, revisarVersion, actualizar, repararApp, versionMenor, borrarCuenta, borrarMiCuenta,
     get cuenta() { return cuenta; },
     get publica() { return publica; }
