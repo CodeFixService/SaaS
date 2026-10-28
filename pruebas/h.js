@@ -32,7 +32,7 @@ async function abrir(repo, db, opts = {}) {
   const sim = crear({ db, funciones: opts.funciones, log: (m) => errores.push(m) });
   const browser = await chromium.launch();
   const nuevo = async () => {
-    const ctx = await browser.newContext({ viewport: { width: 360, height: 740 }, serviceWorkers: 'block', locale: 'es-CL', timezoneId: 'America/Santiago', acceptDownloads: true });
+    const ctx = await browser.newContext({ viewport: { width: Number(process.env.ANCHO) || 360, height: Number(process.env.ALTO) || 740 }, serviceWorkers: 'block', locale: 'es-CL', timezoneId: 'America/Santiago', acceptDownloads: true });
     await ctx.route(/fonts\.(googleapis|gstatic)\.com|cdn\.jsdelivr\.net|unpkg\.com|tile|openstreetmap|cartocdn|challenges\.cloudflare/, (r) => {
       const u = r.request().url();
       // Turnstile simulado: entrega un token al tiro.
@@ -56,7 +56,7 @@ async function abrir(repo, db, opts = {}) {
   fs.mkdirSync(capt, { recursive: true });
   return {
     base, page, ctx, sim, errores, browser, nuevo,
-    foto: (nombre, p) => (p || page).screenshot({ path: path.join(capt, nombre + '.png'), fullPage: true }),
+    foto: (nombre, p) => (p || page).screenshot({ path: path.join(capt, nombre + '.png'), fullPage: !process.env.ANCHO }),
     // Cierra los diálogos abiertos (p. ej. "Activa las notificaciones", que en el navegador de prueba siempre aparece).
     sinModales: (p) => (p || page).evaluate(() => { document.querySelectorAll('dialog[open]:not(.cfx-pago)').forEach((d) => d.close()); document.querySelectorAll('.cfx-hoja').forEach((d) => d.remove()); document.querySelectorAll('.sheet .cerrar').forEach((b) => b.click()); }),
     anchoOk: async (p) => (p || page).evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
