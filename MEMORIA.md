@@ -173,3 +173,18 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Cerebro · Contenido para redes** (repo Contenido, Supabase `vndqseptmymgqyxumbqy`, worker `contenido`): en CM → Apps (liberar con admin_config_guardar), en sincronizar.py (núcleo, chequeo super_check) y en el puente de avisos ('contenido' → Cerebro).
 - sincronizar.py: ya no deja comas dobles al agregar archivos a la lista del service worker.
 - Arreglado: "Ya tengo cuenta" en la entrada no hacía nada (el código quedaba dentro de un comentario).
+
+## Etapa final · detalles (28/10/2026, noche) · núcleo 2.3
+- **Versiones en main**: CM 4.18 (base 4.7) · Billetera 1.19.0 (base 19) · Órbita 5.19 (base 5.12) · Barbería 2.18 · BiciTaller 2.18 (base 2.7) · Estaciona 2.11.0 (base 12).
+  (Cerebro/Contenido se trabaja en otro chat: aquí no se toca; sincronizar.py lo salta si no está en /home/user.)
+- **CM Panel ⇄ App**: `CFX_AYUDA.iniciar({ atajo: { ir, t } })` pone un botón fijo en la cabecera (en celulares chicos solo el ícono).
+- **Barra**: siempre 2 a cada lado del + (si sobran, el 4º lugar es "Más"; con 3 botones queda un espacio vacío `.cfx-vacio`). La barra no se muestra hasta estar ordenada (`html.cfx-barra-lista`).
+- **Tiras deslizables** (.seg, .chips, .subtabs, .tabs…): `barra.js` recuerda su posición al redibujarse y solo se mueve lo justo para mostrar la opción elegida (`CodeFixTiras.ajustar`). Billetera `centrarActivos` y Estaciona `centrarSeg` ya no centran.
+- **Flechas**: botones con solo ‹ › ← → pasan a SVG centrado (ayuda.js). ‹ sin etiqueta = "Anterior" (no dispara el "volver").
+- **Registro**: `cfx_registro_borrar(dias)` (0 = todo; borra cfx_registro y la tabla `auditoria` de la app) + `CFX_AJUSTES.registro(el, rpc, { lista })` con 2 botones. En Billetera, Barbería, BiciTaller, Estaciona (sección nueva) y CM → Control → Registro (cualquier app).
+- **CM → Control → 🔔 Notificaciones**: muestra si cada app tiene claves push y las crea desde ahí (una vez por app).
+- **Órbita textos editables**: tabla `textos` (login y registro de negocios), elementos `data-texto`; se editan en CM → Control → Textos.
+- **Chats**: Barbería admin sin Mensajes (consejos van por `cfx_chat_iniciar` al 🛟 de la barbería); BiciTaller y Órbita sin chat arriba (va en Más con su número).
+- **Pagos**: el comprobante se achica hasta caber (≤ ~290 KB) aunque la foto sea enorme.
+- **Diseño**: fondo con brillo suave, íconos de Ajustes en cuadro con brillo, entrada animada de tarjetas al bajar, listas de 4+ tarjetas cortas que se apilan (`.cfx-apilar`, solo celular/tablet; `data-sin-pila` lo apaga).
+- **Pruebas nuevas**: `final_ui.js` (en todo.sh) y el chequeo "+ al centro" en `recorrido.js`.

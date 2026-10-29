@@ -74,6 +74,11 @@ const APPS = {
           await login(t, p, c.url, c.email, c.pass, c.sel);
           await foto('0inicio');
           if (!(await t.anchoOk(p))) malos.push('se sale del ancho: inicio');
+          // El + al medio de la barra (celular y tablet).
+          if (ANCHO < 900) {
+            const cx = await p.evaluate(() => { const m = document.querySelector('nav.cfx-barra > .cfx-mas'); if (!m) return null; const r = m.getBoundingClientRect(); return Math.round(r.left + r.width / 2 - innerWidth / 2); });
+            if (cx !== null && Math.abs(cx) > 3) malos.push('+ corrido ' + cx + 'px');
+          }
           // Cada pestaña de la barra (también las de "Más").
           const n = await p.locator('nav.cfx-barra > :not(.cfx-menu):not(.cfx-mas)').count();
           for (let i = 0; i < n; i++) {

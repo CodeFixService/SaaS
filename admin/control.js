@@ -6,7 +6,7 @@
   const A = global.App, { esc, toast, modal, confirmar } = A;
   const M = () => global.MisApps;
   let raiz = null, actual = 'cm', seccion = 'avisar';
-  const SECC = [['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['registro', '📜 Registro']];
+  const SECC = [['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['push', '🔔 Notificaciones'], ['registro', '📜 Registro']];
   // Nombres legibles de las claves de los planes (las demás se muestran tal cual).
   const NOMBRE = { productos: 'Productos', clientes: 'Clientes', fichas: 'Fichas publicadas', equipo: 'Equipo', pedidos_mes: 'Pedidos al mes', respuestas: 'Respuestas rápidas',
     contactos: 'Contactos', favoritos: 'Favoritos', mensajes_seguidos: 'Mensajes seguidos', barberos: 'Barberos', servicios: 'Servicios', ofertas: 'Ofertas',
@@ -61,7 +61,7 @@
   async function textos() {
     let L;
     try { L = await rpc('cfx_textos'); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
-    caja().innerHTML = L.length ? L.map((t) => '<div class="card"><label>' + esc(nom(t.clave)) + '<textarea data-t="' + esc(t.clave) + '" rows="' + Math.min(6, Math.max(2, Math.ceil(String(t.valor).length / 40))) + '">' + esc(t.valor) + '</textarea></label>' +
+    caja().innerHTML = L.length ? L.map((t) => '<div class="card"><label>' + esc(t.nombre || nom(t.clave)) + '<textarea data-t="' + esc(t.clave) + '" rows="' + Math.min(6, Math.max(2, Math.ceil(String(t.valor).length / 40))) + '">' + esc(t.valor) + '</textarea></label>' +
       '<button type="button" class="small" data-g="' + esc(t.clave) + '">Guardar</button></div>').join('') : '<p class="empty">Esta app no tiene textos editables.</p>';
     caja().onclick = async (ev) => {
       const b = ev.target.closest('[data-g]'); if (!b) return;
@@ -157,10 +157,47 @@
   async function registro() {
     let L = [];
     try { L = await rpc('cfx_registro_lista', { p_limite: 200 }); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
+    setTimeout(() => window.CFX_AJUSTES && window.CFX_AJUSTES.registro(caja(), rpc, { recargar: registro }), 0);
     caja().innerHTML = '<div class="card"><h2>Lo que se hizo en ' + esc(app().nombre) + '</h2>' + (L.map((r) => '<div style="padding:4px 0;border-top:1px solid var(--line)"><b>' + esc(r.accion) + '</b> <span class="sub">' + esc(r.quien) + ' · ' + A.hace(r.creado) + '</span><div class="sub">' + esc(r.detalle) + '</div></div>').join('') || '<p class="empty">Sin registros</p>') + '</div>';
   }
 
-  const F = { avisar, planes, textos, keys, cupones, verif, humano, registro };
+  // 🔔 Notificaciones: revisa en cada app si tiene las claves push y, si faltan, las crea desde aquí (una sola vez por app).
+  const b64u = (u) => btoa(String.fromCharCode.apply(null, new Uint8Array(u))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const PUSH = {
+    cm: { leer: (c) => M().rpcDe(c, 'config_publica').then((r) => (r.config || {}).vapid_publica), crear: (c, pu, pr) => M().rpcDe(c, 'admin_push_claves', { p_publica: pu, p_privada: pr }) },
+    billetera: { leer: (c) => M().rpcDe(c, 'config_publica').then((r) => r.vapid_public),
+      crear: async (c, pu, pr) => { await M().rpcDe(c, 'admin_set_secret', { p_nombre: 'vapid_private', p_valor: pr }); await M().rpcDe(c, 'admin_set_secret', { p_nombre: 'vapid_public', p_valor: pu }); } },
+    aplicaciones: { leer: (c) => M().rpcDe(c, 'public_config').then((r) => r.vapid_public),
+      crear: async (c, pu, pr) => { await M().rpcDe(c, 'admin_set_secret', { p_name: 'vapid_private', p_value: pr }); await M().rpcDe(c, 'admin_set_secret', { p_name: 'vapid_public', p_value: pu }); } },
+    barberia: { leer: (c) => M().rpcDe(c, 'config_publica').then((r) => r.vapid_public),
+      crear: async (c, pu, pr) => { await M().rpcDe(c, 'admin_secreto', { p_name: 'vapid_private', p_value: pr }); await M().rpcDe(c, 'admin_secreto', { p_name: 'vapid_public', p_value: pu }); } },
+    bicitaller: { leer: (c) => M().rpcDe(c, 'config_publica').then((r) => (r.config || {}).vapid_publica), crear: (c, pu, pr) => M().rpcDe(c, 'admin_push_claves', { p_publica: pu, p_privada: pr }) },
+    estaciona: { leer: (c) => M().rpcDe(c, 'ajustes_publicos').then((r) => r.vapid_public), crear: (c, pu, pr) => M().rpcDe(c, 'admin_guardar_ajustes', { p: { vapid_public: pu, vapid_private: pr } }) }
+  };
+  async function push() {
+    const L = M().APPS.filter((a) => PUSH[a.id]);
+    caja().innerHTML = '<div class="card"><h2>🔔 Notificaciones de las apps</h2><p class="sub">Cada app necesita sus claves push una sola vez. Si a alguien le sale "el administrador aún no activa las notificaciones", es porque a esa app le faltan: créalas aquí.</p><div id="puL"><p class="sub">Revisando…</p></div></div>';
+    const filas = await Promise.all(L.map(async (a) => {
+      if (!conectada(a)) return [a, null, 'sin conectar'];
+      try { return [a, !!(await PUSH[a.id].leer(M().cliente(a))), '']; } catch (x) { return [a, null, nf(x)]; }
+    }));
+    const el = raiz.querySelector('#puL'); if (!el) return;
+    el.innerHTML = filas.map(([a, ok, err]) => '<div class="fila" style="padding:8px 0;border-top:1px solid var(--line);gap:8px"><span class="tit" style="flex:1">' + esc(a.nombre.split(' ·')[0]) + '</span>' +
+      (ok === true ? '<span class="pill ok">✅ Listas</span>' : ok === false ? '<button type="button" class="small" data-pu="' + a.id + '">Crear claves</button>' : '<span class="sub">' + esc(err) + '</span>') + '</div>').join('');
+    el.onclick = async (ev) => {
+      const b = ev.target.closest('[data-pu]'); if (!b) return;
+      const a = M().APPS.find((x) => x.id === b.dataset.pu);
+      b.disabled = true; b.textContent = 'Creando…';
+      try {
+        const kp = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+        const pu = b64u(await crypto.subtle.exportKey('raw', kp.publicKey)), pr = (await crypto.subtle.exportKey('jwk', kp.privateKey)).d;
+        await PUSH[a.id].crear(M().cliente(a), pu, pr);
+        toast('🔔 Claves creadas en ' + a.nombre.split(' ·')[0]); push();
+      } catch (x) { b.disabled = false; b.textContent = 'Crear claves'; toast(nf(x)); }
+    };
+  }
+
+  const F = { avisar, planes, textos, keys, cupones, verif, humano, push, registro };
   async function render(el) {
     raiz = el;
     el.innerHTML = '<div class="titulo-v"><h2>Control</h2><span class="sub">Las 6 apps</span></div><p class="sub">Cargando…</p>';

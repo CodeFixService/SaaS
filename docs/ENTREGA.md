@@ -97,5 +97,6 @@ select 'Estaciona instalada v' || (select valor #>> '{}' from public.config wher
 - **Cliente**: igual, con su plan FREE o PREMIUM arriba y el chat de soporte en el menú de la foto.
 
 ## Al terminar esta etapa
-- No hay que pegar ninguna consulta: las bases se actualizan solas en máximo 10 minutos (CM base 4.5, Billetera 18, Órbita 5.11).
-- Libera en CM → Apps (o Ajustes → Versión del CM): CM 4.16 · Billetera 1.18.0 · Órbita 5.18 · Barbería 2.17 · BiciTaller 2.17 · Estaciona 2.10.0.
+- No hay que pegar ninguna consulta: las bases se actualizan solas en máximo 10 minutos (CM base 4.7, Billetera 19, Órbita 5.12, Barbería 2.18, BiciTaller 2.7, Estaciona 12).
+- Libera en CM → Apps (o Ajustes → Versión del CM): CM 4.18 · Billetera 1.19.0 · Órbita 5.19 · Barbería 2.18 · BiciTaller 2.18 · Estaciona 2.11.0.
+- Si a alguien le sale "el administrador aún no activa las notificaciones": CM → Control → 🔔 Notificaciones → "Crear claves" en esa app.

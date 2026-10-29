@@ -132,6 +132,23 @@ begin
   return i;
 end $$;
 
+-- El administrador escribe primero a una cuenta (consejos o recomendaciones): queda en su chat de soporte (🛟) y en CM → Mensajes.
+create or replace function public.cfx_chat_iniciar(p_cuenta uuid, p_texto text, p_email text default '', p_nombre text default '', p_rol text default 'negocio') returns bigint
+language plpgsql security definer set search_path = '' as $$
+declare t text := trim(coalesce(p_texto, '')); i bigint; o public.cfx_chat;
+begin
+  perform <CHK>;
+  if t = '' or length(t) > 1000 then raise exception 'Escribe el mensaje (máx. 1000 letras)'; end if;
+  select * into o from public.cfx_chat where cuenta = p_cuenta order by id desc limit 1;
+  insert into public.cfx_chat (cuenta, email, nombre, rol, de, texto, leido)
+  values (p_cuenta, coalesce(o.email, left(coalesce(p_email, ''), 200)), coalesce(o.nombre, left(coalesce(p_nombre, ''), 120)), coalesce(o.rol, left(coalesce(p_rol, 'negocio'), 20)), 'soporte', t, false)
+  returning id into i;
+  perform public.cfx_avisar(p_cuenta, '💬 Soporte te escribió', left(t, 200));
+  return i;
+end $$;
+revoke all on function public.cfx_chat_iniciar(uuid, text, text, text, text) from public, anon;
+grant execute on function public.cfx_chat_iniciar(uuid, text, text, text, text) to authenticated;
+
 -- ---------- 3) Guía para partir ----------
 -- Pendientes de configuración del negocio (los arma cada app) + verificar identidad. Solo para negocios.
 create or replace function public.cfx_guia() returns jsonb

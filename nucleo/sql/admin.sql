@@ -36,6 +36,25 @@ begin
 end $$;
 
 -- ---------- Planes: [{grupo, clave, free, premium}] (números o sí/no) ----------
+-- Borrar el registro de cambios (el común y el propio de la app, si tiene): lo de más de N días, o todo con 0. Solo el administrador.
+create or replace function public.cfx_registro_borrar(p_dias int default 30) returns int
+language plpgsql security definer set search_path = '' as $$
+declare n int := 0; k int; col text; desde timestamptz := case when coalesce(p_dias, 0) <= 0 then 'infinity'::timestamptz else now() - make_interval(days => p_dias) end;
+begin
+  perform <CHK>;
+  delete from public.cfx_registro where creado < desde; get diagnostics n = row_count;
+  if to_regclass('public.auditoria') is not null then
+    select c.column_name into col from information_schema.columns c where c.table_schema = 'public' and c.table_name = 'auditoria'
+      and c.column_name in ('created_at', 'at', 'creado', 'fecha') and c.data_type like 'timestamp%' order by c.ordinal_position limit 1;
+    if col is not null then execute format('delete from public.auditoria where %I < $1', col) using desde; get diagnostics k = row_count; n := n + k; end if;
+  end if;
+  insert into public.cfx_registro (quien, accion, detalle) values (coalesce((select email from auth.users where id = auth.uid()), 'sistema'), 'registro borrado',
+    case when coalesce(p_dias, 0) <= 0 then 'todo' else 'más de ' || p_dias || ' días' end || ' (' || n || ' filas)');
+  return n;
+end $$;
+revoke all on function public.cfx_registro_borrar(int) from public, anon;
+grant execute on function public.cfx_registro_borrar(int) to authenticated;
+
 create or replace function public.cfx_planes() returns jsonb
 language plpgsql stable security definer set search_path = '' as $$
 begin

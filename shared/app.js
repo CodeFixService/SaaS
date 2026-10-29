@@ -129,7 +129,9 @@
     const enAdmin = /\/admin\//.test(location.pathname);
     window.CFX_AYUDA_PEND = Object.assign(window.CFX_AYUDA_PEND || {}, { rpc, app: 'mando', admin: c.rol !== 'usuario', premium: !!c.premium, id: c.id, hasta: c.premium_hasta,
       nombre: c.nombre, email: c.email, salir, quitar: 'a[href="../app/"]',
-      cuenta: enAdmin ? ROOT + 'app/#mas' : () => window.CM && window.CM.ir('mas'), panel: c.rol !== 'usuario' && !enAdmin ? ROOT + 'admin/' : null });
+      cuenta: enAdmin ? ROOT + 'app/#mas' : () => window.CM && window.CM.ir('mas'), panel: c.rol !== 'usuario' && !enAdmin ? ROOT + 'admin/' : null,
+      // Panel ⇄ App: botón fijo arriba para pasar de uno al otro (admin y socio).
+      atajo: c.rol === 'usuario' ? null : enAdmin ? { ir: ROOT + 'app/', t: 'App' } : { ir: ROOT + 'admin/', t: 'Panel' } });
     if (window.CFX_AYUDA) window.CFX_AYUDA.iniciar(window.CFX_AYUDA_PEND);
     return c;
   }
