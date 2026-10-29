@@ -130,7 +130,7 @@
 
   async function usuarios(q) {
     const cont = el('usuarios');
-    if (!cont.dataset.ok) { cont.dataset.ok = 1; cont.innerHTML = '<div class="titulo-v"><h2>Usuarios</h2><button class="small" id="uN" type="button">+ Cuenta</button></div><input id="uQ" type="search" placeholder="Buscar por nombre o correo"><div id="uL"></div>'; $('uQ').oninput = () => { clearTimeout(cont.t); cont.t = setTimeout(() => usuarios($('uQ').value), 300); }; $('uN').onclick = nueva; }
+    if (!cont.dataset.ok) { cont.dataset.ok = 1; cont.innerHTML = '<div class="titulo-v"><h2>Usuarios</h2><button class="small" id="uN" type="button">+ Cuenta</button></div><input id="uQ" type="search" placeholder="Buscar por nombre o correo" style="margin-bottom:14px"><div id="uL"></div>'; $('uQ').oninput = () => { clearTimeout(cont.t); cont.t = setTimeout(() => usuarios($('uQ').value), 300); }; $('uN').onclick = nueva; }
     try {
       const L = await rpc('admin_usuarios', { p_buscar: q || '' });
       $('uL').innerHTML = L.map((u) => '<div class="card"><div class="fila"><span class="tit">' + esc(u.nombre || u.email) + '</span><span class="pill ' + (u.rol === 'admin' ? 'dark' : u.rol === 'socio' ? 'info' : '') + '">' + u.rol + '</span>' + (u.suspendido ? '<span class="pill bad">suspendido</span>' : '') + '</div>' +

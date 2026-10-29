@@ -199,3 +199,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Arreglos de revisión**: micrófono que quedaba suelto (voz.js se esconde si el campo ya no tiene el foco), correo largo en el menú de la foto (admin sin nombre = "Administrador"), Órbita sin PRO repetido en Fichas y sin el cuadro del logo junto a "‹" en celular,
   Billetera "＋ Cliente" (no se confunde con el + de la barra), BiciTaller "¿Tienes un taller?" pasa de botón flotante a Cuenta, Cerebro "✅ Publicada" sin cortarse.
 - **Pruebas**: recorrido.js revisa el ⇄ Panel (solo admin, va al CM). sim.js acepta `columns` con comillas (insert de varias filas de supabase-js).
+
+## Detalles (29/10/2026) · núcleo 2.5
+- **Versiones en main**: CM 4.20 · Billetera 1.20.1 · Órbita 5.21 · Barbería 2.20 · BiciTaller 2.20 · Estaciona 2.12.1 · Cerebro 1.4 (bases sin cambios salvo db_version de Barbería 2.20).
+- **Menú de la foto (ayuda.js)**: sesión del admin (`CFG.admin` y no `CFG.socio`) → solo "Cerrar sesión" (con confirmación), sin botón Cerrar (afuera/Esc). **instalar.js** no ofrece notificaciones si la página ya tiene un aviso propio `[data-cfx-push]` (Barbería admin y avisos.js lo marcan).
+- **Barbería admin**: 4º botón 👥 Usuarios (`v-usuarios`: Clientes/Barberos, reusa pintarBarberias); Barberías queda solo con barberías. CM Usuarios: buscador con margen de 14px.
