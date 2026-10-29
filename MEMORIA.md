@@ -203,4 +203,5 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 ## Detalles (29/10/2026) · núcleo 2.5
 - **Versiones en main**: CM 4.20 · Billetera 1.20.1 · Órbita 5.21 · Barbería 2.20 · BiciTaller 2.20 · Estaciona 2.12.1 · Cerebro 1.4 (bases sin cambios salvo db_version de Barbería 2.20).
 - **Menú de la foto (ayuda.js)**: sesión del admin (`CFG.admin` y no `CFG.socio`) → solo "Cerrar sesión" (con confirmación), sin botón Cerrar (afuera/Esc). **instalar.js** no ofrece notificaciones si la página ya tiene un aviso propio `[data-cfx-push]` (Barbería admin y avisos.js lo marcan).
+- **Órbita 5.22**: tienda t/ con Productos · Ofertas · Pedido en una fila (`.seg` nowrap, solo en t/index.html).
 - **Barbería admin**: 4º botón 👥 Usuarios (`v-usuarios`: Clientes/Barberos, reusa pintarBarberias); Barberías queda solo con barberías. CM Usuarios: buscador con margen de 14px.
