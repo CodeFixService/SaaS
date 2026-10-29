@@ -7,7 +7,7 @@
   const A = global.App, { esc, toast, modal, confirmar } = A;
   const M = () => global.MisApps;
   const pesos = (n) => '$' + Number(n || 0).toLocaleString('es-CL');
-  const PERIODO = { inicio: 'Primer pago', mensual: 'Mensual', meses: 'Varios meses', anual: 'Anual', otro: 'Otro monto' };
+  const PERIODO = { inicio: 'Primer pago', mensual: 'Mensual', meses: 'Varios meses', anual: 'Anual', otro: 'Otro monto', conexiones: 'Conexiones extra' };
   const MEDIO = { link: 'link', transferencia: 'transferencia', tarjeta: 'tarjeta' };
   let raiz = null, cfg = null, filtro = 'pendiente';
 
@@ -71,6 +71,13 @@
     await Promise.all(conectadas().map(async (a) => {
       try { (await M().rpcDe(M().cliente(a), 'cfx_pagos_lista', { p_estado: filtro })).forEach((g) => filas.push(Object.assign(g, { app: a }))); }
       catch (x) { avisos.push(a.nombre + ': ' + nf(x)); }
+      // Billetera: las conexiones extra se piden aparte (solicitudes_pago) y también se revisan aquí.
+      if (a.id === 'billetera') try {
+        const est = { pendiente: 'pendiente', aprobada: 'aprobado', rechazada: 'rechazado' };
+        (await M().rpcDe(M().cliente(a), 'admin_pagos')).filter((s) => s.tipo === 'conexiones' && (filtro === 'todos' || est[s.estado] === filtro)).forEach((s) => filas.push({
+          id: s.id, conexiones: true, nombre: s.negocio_nombre, email: (s.paquetes || '') + ' paquete(s) de conexiones extra', rol: 'negocio', periodo: 'conexiones', monto: s.monto, medio: 'transferencia',
+          creado: s.creado, nota: s.nota, motivo: s.motivo, estado: est[s.estado] || s.estado, con_comprobante: !!s.comprobante_path, path: s.comprobante_path, aprobados: 1, app: a }));
+      } catch (x) { /* Billetera sin conexiones extra */ }
     }));
     const faltan = M().APPS.length - conectadas().length;
     filas.sort((x, y) => String(y.creado).localeCompare(String(x.creado)));
@@ -88,8 +95,12 @@
       const b = ev.target.closest('[data-v],[data-ok],[data-no]'); if (!b) return;
       const g = filas[+(b.dataset.v || b.dataset.ok || b.dataset.no)], c = M().cliente(g.app);
       try {
-        if (b.dataset.v) A.verImagen(await M().rpcDe(c, 'cfx_pago_comprobante', { p_id: g.id }), 'Comprobante', 'comprobante.jpg');
-        else if (b.dataset.ok) {
+        if (b.dataset.v && g.conexiones) { const { data: u } = await c.storage.from('pagos').createSignedUrl(g.path, 600); if (u) A.verImagen(u.signedUrl, 'Comprobante', 'comprobante.jpg'); }
+        else if (b.dataset.v) A.verImagen(await M().rpcDe(c, 'cfx_pago_comprobante', { p_id: g.id }), 'Comprobante', 'comprobante.jpg');
+        else if (b.dataset.ok && g.conexiones) {
+          const d = modal('<h2>Aprobar conexiones extra</h2><p class="muted">' + esc(g.nombre) + ' · ' + pesos(g.monto) + '</p><p class="sub">Revisa que el monto llegó a tu cuenta. Se suman las conexiones y se le avisa al negocio.</p><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="pk" type="button">Aprobar</button></div>');
+          d.querySelector('#pk').onclick = async () => { try { await M().rpcDe(c, 'admin_resolver_pago', { p_id: g.id, p_aprobar: true, p_motivo: null }); d.close(); toast('Conexiones sumadas'); lista(); } catch (x) { toast(x.message); } };
+        } else if (b.dataset.ok) {
           const sug = g.sugeridos != null ? g.sugeridos : ({ inicio: (cfg && cfg.negocio && cfg.negocio.inicio_dias) || 30, mensual: 30, anual: 365 }[g.periodo] || 30);
           const d = modal('<h2>Aprobar pago</h2><p class="muted">' + esc(g.nombre || g.email) + ' · ' + pesos(g.monto) + ' (' + (PERIODO[g.periodo] || '') + (g.meses ? ', ' + g.meses + ' meses' : '') + ')</p><label>Días de Premium que activa<input id="pd" type="number" inputmode="numeric" step="1" value="' + sug + '"></label>' +
             '<p class="sub">Calculado según lo que pagó (mensual 30, anual 365, cada mes 30; otro monto en proporción). Siempre días enteros. Revisa que el monto llegó a tu cuenta. 0 = solo registrar el pago.</p><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="pk" type="button">Aprobar</button></div>');
@@ -100,7 +111,7 @@
         } else {
           const d = modal('<h2>Rechazar pago</h2><label>Motivo (le llega a la persona)<input id="pm" maxlength="200" value="No encontramos el pago en la cuenta"></label><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="pk" type="button">Rechazar</button></div>');
           d.querySelector('#pk').onclick = async () => {
-            try { await M().rpcDe(c, 'cfx_pago_resolver', { p_id: g.id, p_aprobar: false, p_motivo: d.querySelector('#pm').value }); d.close(); toast('Rechazado'); lista(); } catch (x) { toast(x.message); }
+            try { await (g.conexiones ? M().rpcDe(c, 'admin_resolver_pago', { p_id: g.id, p_aprobar: false, p_motivo: d.querySelector('#pm').value }) : M().rpcDe(c, 'cfx_pago_resolver', { p_id: g.id, p_aprobar: false, p_motivo: d.querySelector('#pm').value })); d.close(); toast('Rechazado'); lista(); } catch (x) { toast(x.message); }
           };
         }
       } catch (x) { toast(x.message); }

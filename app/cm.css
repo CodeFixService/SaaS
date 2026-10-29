@@ -119,3 +119,6 @@ nav.tabs button.nuevo .ic{width:28px;height:28px}nav.tabs button.nuevo.on{backgr
 .busca-r .res .grow{flex:1;min-width:0;overflow-wrap:anywhere}.qr-inv{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.qr-inv img{width:140px;height:140px;border-radius:12px;background:#fff;padding:6px}
 .suma{margin:6px 0 4px;font-size:15px}.suma .warn,.ped .warn,.ped-it small.warn{color:var(--warn,#d97706);font-weight:600}.ped .pr,.ped-it small.pr{color:var(--brand);font-weight:700}
 .ped-it .grow{cursor:pointer}.ped-it small{display:block}
+/* Resumen → Empresas: tarjeta por app y detalle con gráficos */
+.emp{cursor:pointer}.emp:hover{border-color:var(--brand)}.emp .app-kpis{margin-bottom:0}
+.emp-g{width:100%;height:auto;display:block}.emp-g g:hover path{opacity:1}

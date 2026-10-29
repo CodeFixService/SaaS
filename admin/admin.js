@@ -57,12 +57,62 @@
         (con.length < M.APPS.length ? '<p class="sub">Conecta las demás en Apps para verlas aquí.</p>' : '');
       r6.onclick = (ev) => { const b = ev.target.closest('[data-ir]'); if (b) show(b.dataset.ir); };
     })();
+    empresas();
     // Aviso cuando hay una versión nueva publicada que falta instalar o liberar.
     try {
       const e = await estadoVersion();
       if (e.pendiente) el('resumen').insertAdjacentHTML('afterbegin', '<button type="button" class="aviso-ver" id="bVer">🚀 Hay una versión nueva lista (v' + esc(e.pub.version) + ').<br><span class="sub">Pruébala en tu teléfono y libérala para todos.</span></button>');
       if ($('bVer')) $('bVer').onclick = () => irAjuste('version');
     } catch (x) { /* sin internet */ }
+  }
+
+  /* ---------- Empresas: una tarjeta por app con lo importante; al tocarla, el detalle con gráficos ---------- */
+  async function empresas() {
+    el('resumen').insertAdjacentHTML('beforeend', '<div id="rEmp"><div class="titulo-v"><h2>Empresas</h2><span class="sub">Toca una para ver el detalle</span></div><div class="emp-l"><p class="sub">Revisando…</p></div></div>');
+    const M = window.MisApps; await M.preparar();
+    const z = $('rEmp') && $('rEmp').querySelector('.emp-l'); if (!z) return;
+    const L = M.APPS.filter((a) => !a.propia);
+    z.innerHTML = L.map((a) => { const e = M.estado[a.id] || {};
+      return '<div class="card emp" data-emp="' + a.id + '" role="button" tabindex="0"><div class="fila"><span class="app-ico">' + App.ico(a.ico, 22) + '</span><h3 class="grow" style="margin:0">' + esc(a.nombre.split(' ·')[0]) + '</h3>' +
+        '<a class="btn small ghost" href="' + esc(a.web) + '" target="_blank" rel="noopener" data-ver>' + App.ico('abrir', 14) + ' Ver app</a></div>' +
+        (e.conectado && e.resumen ? M.kpis(e.resumen, 4) : '<p class="sub">' + (e.conectado ? 'Sin datos todavía.' : 'Conéctala en Apps para ver sus números.') + '</p>') + '</div>'; }).join('');
+    z.onclick = (ev) => { if (ev.target.closest('[data-ver]')) return; const c = ev.target.closest('[data-emp]'); if (c) detalleEmpresa(L.find((a) => a.id === c.dataset.emp)); };
+    z.onkeydown = (ev) => { if (ev.key === 'Enter') { const c = ev.target.closest('[data-emp]'); if (c) c.click(); } };
+  }
+  // Barras por mes (una sola serie por gráfico: sin leyenda, el título la nombra). Valor al pasar el dedo; el último mes rotulado.
+  function barras(datos, k, plata) {
+    const W = 300, H = 120, n = datos.length, max = Math.max(1, ...datos.map((d) => +d[k] || 0)), bw = Math.min(28, (W - 8) / n - 8);
+    const fmt = (v) => (plata ? '$' : '') + Math.round(v).toLocaleString('es-CL');
+    const mes = (m) => ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][+m.slice(5, 7) - 1];
+    return '<svg viewBox="0 0 ' + W + ' ' + (H + 34) + '" class="emp-g" role="img" aria-label="' + esc(datos.map((d) => mes(d.mes) + ' ' + fmt(d[k] || 0)).join(', ')) + '">' +
+      '<line x1="0" x2="' + W + '" y1="' + (H + 10) + '" y2="' + (H + 10) + '" stroke="var(--line)" stroke-width="1"/>' +
+      datos.map((d, i) => { const v = +d[k] || 0, h = Math.max(v ? 3 : 0, v / max * H), x = 4 + i * ((W - 8) / n) + ((W - 8) / n - bw) / 2, y = H + 10 - h, ult = i === n - 1;
+        return '<g><title>' + mes(d.mes) + ': ' + fmt(v) + '</title><rect x="' + (x - 4) + '" y="0" width="' + (bw + 8) + '" height="' + (H + 30) + '" fill="transparent"/>' +
+          (h ? '<path d="M' + x + ',' + (H + 10) + 'V' + (y + Math.min(4, h)) + 'q0,-' + Math.min(4, h) + ' ' + Math.min(4, h) + ',-' + Math.min(4, h) + 'H' + (x + bw - Math.min(4, h)) + 'q' + Math.min(4, h) + ',0 ' + Math.min(4, h) + ',' + Math.min(4, h) + 'V' + (H + 10) + 'z" fill="var(--brand)" opacity="' + (ult ? 1 : 0.55) + '"/>' : '') +
+          (ult ? '<text x="' + (x + bw / 2) + '" y="' + Math.max(10, y - 5) + '" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text)">' + fmt(v) + '</text>' : '') +
+          '<text x="' + (x + bw / 2) + '" y="' + (H + 26) + '" text-anchor="middle" font-size="10.5" fill="var(--muted)">' + mes(d.mes) + '</text></g>'; }).join('') + '</svg>';
+  }
+  async function detalleEmpresa(a) {
+    const M = window.MisApps, e = M.estado[a.id] || {};
+    const d = modal('<div class="fila" style="align-items:center"><span class="app-ico">' + App.ico(a.ico, 22) + '</span><h2 class="grow" style="margin:0">' + esc(a.nombre.split(' ·')[0]) + '</h2><button type="button" class="small ghost" data-cerrar aria-label="Cerrar">✕</button></div>' +
+      '<div id="empD"><p class="sub">Cargando…</p></div><div class="btns"><a class="btn" href="' + esc(a.web) + '" target="_blank" rel="noopener">' + App.ico('abrir', 15) + ' Ver app</a></div>');
+    const z = d.querySelector('#empD');
+    if (!e.conectado) { z.innerHTML = '<p class="sub">Conéctala en Apps para ver su detalle.</p>'; return; }
+    let s = null; try { s = await M.rpcDe(M.cliente(a), 'cfx_series', { p_meses: 6 }); } catch (x) { /* base aún sin actualizar */ }
+    // Base sin cfx_series todavía: los ingresos se calculan con los pagos aprobados (las cuentas nuevas llegan con la próxima base).
+    if (!s) try {
+      const pg = await M.rpcDe(M.cliente(a), 'cfx_pagos_lista', { p_estado: 'aprobado' }), h = new Date();
+      s = Array.from({ length: 6 }, (_, i) => { const f = new Date(h.getFullYear(), h.getMonth() - 5 + i, 1); return { mes: f.getFullYear() + '-' + String(f.getMonth() + 1).padStart(2, '0'), cuentas: null, pagos: 0, ingresos: 0 }; });
+      pg.forEach((g) => { const x = s.find((m) => String(g.creado).slice(0, 7) === m.mes); if (x) { x.pagos++; x.ingresos += +g.monto || 0; } });
+    } catch (x) { s = null; }
+    const cambio = (k) => { if (!s || s.length < 2) return ''; const a1 = +s[s.length - 1][k] || 0, a0 = +s[s.length - 2][k] || 0; if (!a0 && !a1) return '';
+      const p = a0 ? Math.round((a1 - a0) / a0 * 100) : 100; return ' <span class="pill ' + (p >= 0 ? 'ok' : 'bad') + '">' + (p >= 0 ? '▲ ' : '▼ ') + Math.abs(p) + '% vs mes anterior</span>'; };
+    z.innerHTML = M.kpis(e.resumen, 12) +
+      (s && s.length ? (s[0].cuentas == null ? '' : '<h3 style="margin:14px 0 4px">Cuentas nuevas por mes' + cambio('cuentas') + '</h3>' + barras(s, 'cuentas')) +
+        '<h3 style="margin:14px 0 4px">Ingresos por mes' + cambio('ingresos') + '</h3>' + barras(s, 'ingresos', true) +
+        '<details style="margin-top:10px"><summary class="sub">Ver tabla</summary><table class="tabla" style="width:100%;font-size:13px"><tr><th>Mes</th><th>Cuentas</th><th>Pagos</th><th>Ingresos</th></tr>' +
+        s.map((x) => '<tr><td>' + esc(x.mes) + '</td><td>' + (x.cuentas == null ? '—' : x.cuentas) + '</td><td>' + x.pagos + '</td><td>$' + Number(x.ingresos).toLocaleString('es-CL') + '</td></tr>').join('') + '</table></details>'
+        : '<p class="sub">Los gráficos aparecen cuando la base de esta app se actualice (máximo 10 minutos).</p>');
   }
 
   /* ---------- Versiones: asistente de actualización en 4 pasos ----------

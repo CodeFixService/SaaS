@@ -205,3 +205,11 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Menú de la foto (ayuda.js)**: sesión del admin (`CFG.admin` y no `CFG.socio`) → solo "Cerrar sesión" (con confirmación), sin botón Cerrar (afuera/Esc). **instalar.js** no ofrece notificaciones si la página ya tiene un aviso propio `[data-cfx-push]` (Barbería admin y avisos.js lo marcan).
 - **Órbita 5.22**: tienda t/ con Productos · Ofertas · Pedido en una fila (`.seg` nowrap, solo en t/index.html).
 - **Barbería admin**: 4º botón 👥 Usuarios (`v-usuarios`: Clientes/Barberos, reusa pintarBarberias); Barberías queda solo con barberías. CM Usuarios: buscador con margen de 14px.
+
+## Paquete grande (29/10/2026) · núcleo 2.6
+- **Versiones en main**: CM 4.21 · Billetera 1.20.2 · Órbita 5.23 · Barbería 2.21 · BiciTaller 2.21 · Estaciona 2.13.0 · Cerebro 1.5 (bases sin cambio de versión salvo db_version Barbería 2.21).
+- **Núcleo**: login con tira "otras apps CodeFix" (ayuda.js `otrasApps`, sin CM ni Cerebro; `data-sin-apps` la apaga); admin/socio ven ADMIN/SOCIO en la cabecera y en el menú (no PRO/FREE); `cfx_series(meses)` en sql/admin.sql (llega con la próxima base de cada app).
+- **CM**: Resumen → Empresas (tarjeta por app + ventana con gráficos de cuentas e ingresos; sin cfx_series usa cfx_pagos_lista aprobados); Apps ya no muestra números; Pagos revisa también las conexiones extra de Billetera (admin_pagos / admin_resolver_pago).
+- **Estaciona**: avisos en ventana; Más como BiciTaller (íconos de línea, ← volver); admin con barra propia (Resumen · Lugares · + · Usuarios · Ajustes), Verificaciones/Denuncias en el Resumen, sin números de plata; arrendatario sin tareas de dueño.
+- **Otros**: Billetera admin sin Pagos (4º botón Registro); Cerebro "Borrar todos mis datos"; Órbita un solo aviso de notificaciones y nombre sin cortarse; BiciTaller "Administración" y ❓ que se esconde al bajar; Billetera sin "›" suelta.
+- **Pendiente (turnos propios)**: socios en Billetera/Órbita/Estaciona, sacar números de plata de los paneles de Barbería/Billetera/Órbita/BiciTaller, referidos (núcleo + CM), cuentas vinculadas y compartir en la app de anotar, equipo en Estaciona. Funciones viejas de Barbería (pagos/keys/planes) se quedan: las usan sus pruebas.

@@ -118,9 +118,9 @@
   const PRIORIDAD = [/ingreso|mrr/, /^(usuarios|negocios|talleres|barberias|estacionamientos|empresas|cuentas)$/, /premium|^pro$/, /nuevo/, /activo/, /prueba/, /pago/];
   const peso = (k) => { const i = PRIORIDAD.findIndex((r) => r.test(k)); return i < 0 ? 99 : i; };
   const valor = (k, v) => (/ingreso|mrr|monto|plata/.test(k) ? '$' : '') + Number(v).toLocaleString('es-CL');
-  function kpis(r) {
+  function kpis(r, max) {
     if (!r || typeof r !== 'object') return '';
-    const l = Object.keys(r).filter((k) => typeof r[k] === 'number' && !/bytes|_mb$|limite|max|cola/.test(k)).sort((x, y) => peso(x) - peso(y)).slice(0, 8);
+    const l = Object.keys(r).filter((k) => typeof r[k] === 'number' && !/bytes|_mb$|limite|max|cola/.test(k)).sort((x, y) => peso(x) - peso(y)).slice(0, max || 8);
     return l.length ? '<div class="app-kpis">' + l.map((k) => '<div><b>' + esc(valor(k, r[k])) + '</b><span>' + esc(nombre(k)) + '</span></div>').join('') + '</div>' : '';
   }
 
@@ -136,7 +136,7 @@
       ' · Base de datos ' + (e.bd ? 'v' + esc(e.bd) : '—') + (e.bdPide && e.bd && s.faltaBd ? ' (pide v' + esc(e.bdPide) + ')' : '') +
       ' · Núcleo ' + (e.nucleo ? 'v' + esc(e.nucleo) : '—') + (e.nucleo && NUCLEO && e.nucleo !== NUCLEO ? ' <span class="pill warn">falta sincronizar</span>' : '') + '</p></div></div>' +
       '<div style="margin:8px 0">' + est + '</div>' +
-      (e.conectado ? kpis(e.resumen) : '') + (e.error ? '<p class="sub warn">' + esc(e.error) + '</p>' : '') +
+      (e.error ? '<p class="sub warn">' + esc(e.error) + '</p>' : '') +
       '<div class="btns-s">' +
         '<a class="btn small ghost" href="' + esc(a.web) + '" target="_blank" rel="noopener">' + A.ico('abrir', 15) + ' Abrir app</a>' +
         (a.propia ? '<a class="btn small ghost" href="' + esc(a.web + a.admin) + '" target="_blank" rel="noopener">' + A.ico('abrir', 15) + ' Admin</a>'
@@ -258,5 +258,5 @@
   }
   // Para el panel de Pagos: deja listas (y conectadas, si ya entraste) las 6 apps sin pintar las tarjetas.
   const preparar = () => Promise.all(APPS.filter((a) => !E[a.id] || !E[a.id].url).map(cargar));
-  global.MisApps = { render, APPS, cliente, estado: E, preparar, conectar, rpcDe, abrirAdmin, vincular };
+  global.MisApps = { render, APPS, cliente, estado: E, preparar, conectar, rpcDe, abrirAdmin, vincular, kpis, nombre, valor, peso };
 })(window);
