@@ -1,8 +1,8 @@
-# Entrega · CodeFix (28/10/2026 · etapa final)
+# Entrega · CodeFix (29/10/2026 · etapa final, 7 apps)
 
 ## Qué hace cada app (para explicárselo a tus clientes)
 
-Todas: arriba a la derecha la campana, el plan (FREE o PRO) y tu foto; al tocar la foto: inicio, mi cuenta, guía para partir, chat con soporte, términos, Premium y cerrar sesión.
+Todas: arriba a la derecha (para ti, el administrador, también el botón ⇄ Panel que te lleva al Centro de Mando) la campana, el plan (FREE o PRO) y tu foto; al tocar la foto: inicio, mi cuenta, guía para partir, chat con soporte, términos, Premium y cerrar sesión.
 Los Ajustes se ven como tarjetas. Todas se instalan en el celular como una app (sin tienda), avisan con notificaciones, funcionan con plan **Gratis** y **Premium**,
 se pagan con transferencia, link o tarjeta y permiten descargar un **respaldo en Excel**. Los datos de cada persona solo los ve ella.
 
@@ -25,6 +25,9 @@ antes/después. El ciclista sigue su bici desde el celular, ve su historial y le
 
 **6. Estaciona** — Mapa de estacionamientos en Santiago para arrendar o publicar, con personas verificadas (RUT y cédula), reserva con
 comprobante, chat seguro, calificaciones y ubicación exacta solo al aceptar el arriendo.
+
+**7. Cerebro · Contenido para redes** — Ideas para tus redes que no se repiten: base de contenido por empresa, semana armada sola,
+pedidos de grabación por WhatsApp, calendario y métricas importadas de Meta y TikTok. Varias empresas con Pro.
 
 ## Las 6 consultas (pegar UNA vez en el SQL Editor de cada Supabase, en este orden)
 Después cada base se actualiza sola cada 10 minutos.
@@ -97,6 +100,15 @@ select 'Estaciona instalada v' || (select valor #>> '{}' from public.config wher
 - **Cliente**: igual, con su plan FREE o PREMIUM arriba y el chat de soporte en el menú de la foto.
 
 ## Al terminar esta etapa
-- No hay que pegar ninguna consulta: las bases se actualizan solas en máximo 10 minutos (CM base 4.7, Billetera 19, Órbita 5.12, Barbería 2.18, BiciTaller 2.7, Estaciona 12).
-- Libera en CM → Apps (o Ajustes → Versión del CM): CM 4.18 · Billetera 1.19.0 · Órbita 5.19 · Barbería 2.18 · BiciTaller 2.18 · Estaciona 2.11.0.
-- Si a alguien le sale "el administrador aún no activa las notificaciones": CM → Control → 🔔 Notificaciones → "Crear claves" en esa app.
+- Supabase: **solo Cerebro** si aún no le pegaste su consulta (una vez, Supabase `vndqseptmymgqyxumbqy`); después todas las bases se actualizan solas en máximo 10 minutos
+  (CM 4.7, Billetera 19, Órbita 5.12, Barbería 2.19, BiciTaller 2.7, Estaciona 12, Cerebro 1.3).
+```sql
+create extension if not exists http with schema extensions;
+do $$ begin
+  execute (select content from extensions.http_get('https://raw.githubusercontent.com/CodeFixService/Contenido/main/supabase/instalar.sql?t=' || extract(epoch from now())::bigint));
+end $$;
+select 'Cerebro instalado v' || public.db_version() as resultado;
+```
+- Libera en CM → Apps (o "Liberar todo"): CM 4.19 · Billetera 1.20.0 · Órbita 5.20 · Barbería 2.19 · BiciTaller 2.19 · Estaciona 2.12.0 · Cerebro 1.3.
+- Notificaciones: CM → Control → 🔔 Notificaciones → "Crear claves" en cada app que diga que faltan (ahora también Cerebro). Mientras falten, las apps ya no muestran el error al cliente.
+- El ícono chico de las notificaciones (barra del celular) ahora es el de cada app; se ve al liberar la versión nueva (el celular toma el sw.js nuevo).

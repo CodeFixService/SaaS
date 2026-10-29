@@ -32,19 +32,8 @@
       bd: { rpc: 'db_version' }, leer: { rpc: 'config_publica', campo: 'config.version_liberada' },
       liberar: (c, v) => c.rpc('admin_config_guardar', { p_clave: 'version_liberada', p_valor: v, p_motivo: 'Liberar desde Centro de Mando' }) }
   ];
-  // Links que se arman solos según dónde se abre el Centro de Mando:
-  //  · en Cloudflare Workers (saas.<cuenta>.workers.dev) → <worker>.<cuenta>.workers.dev
-  //  · en tu dominio (mando.codefix.app)                → <sub>.codefix.app   (billetera, apps, barberia, bicitaller, estaciona)
-  //  · en pruebas o GitHub Pages                         → los Workers de tu cuenta de Cloudflare
-  const CUENTA_WORKERS = 'juanjosuecastilloloyola.workers.dev';
-  function webDe(a) {
-    const h = location.hostname, partes = h.split('.');
-    if (/\.workers\.dev$/.test(h) && partes.length >= 4) return 'https://' + a.worker + '.' + partes.slice(1).join('.') + '/';
-    if (/^(localhost|127\.|\d+\.\d+\.\d+\.\d+$)|github\.io$|pages\.dev$/.test(h) || partes.length < 2) return 'https://' + a.worker + '.' + CUENTA_WORKERS + '/';
-    const base = partes.length >= 3 ? partes.slice(1).join('.') : h; // mando.codefix.app → codefix.app; codefix.app → codefix.app
-    return 'https://' + a.sub + '.' + base + '/';
-  }
-  APPS.forEach((a) => { a.web = webDe(a); });
+  // Link de cada app: lo arma el núcleo (CFX_AYUDA.web) según dónde se abre el Centro de Mando.
+  APPS.forEach((a) => { Object.defineProperty(a, 'web', { get: () => global.CFX_AYUDA.web(a.worker, a.sub) }); });
   let NUCLEO = ''; // versión del núcleo del Centro de Mando (la que se reparte a todas)
   fetch(A.ROOT + 'nucleo.json', { cache: 'no-store' }).then((r) => r.json()).then((j) => { NUCLEO = String(j.nucleo || ''); }).catch(() => {});
   const E = {}; // estado de cada app

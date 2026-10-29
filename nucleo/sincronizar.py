@@ -6,12 +6,15 @@ Hace en cada repositorio:
   1. Copia los scripts de JS (humano en el <head>; iconos, instalar, barra, auto, fotos, voz, respaldo, pagos, verificar, premium) y tema.css a la carpeta que usa esa app.
   2. Enlaza tema.css en cada página (después del CSS propio) y los scripts al final del <body>, si faltan.
   3. Agrega los archivos a la lista del service worker (para que funcionen sin internet).
-  4. Escribe nucleo.json con la versión del núcleo (el Centro de Mando la muestra en cada tarjeta).
-  5. SQL común (nucleo/sql/*.sql: pagos, administración e inventario): lo pone entre las marcas "-- >>> CFX núcleo" y "-- <<< CFX núcleo"
+  4. Crea icons/badge.png (ícono chico de las notificaciones de Android, insignia.py) si falta o cambió el ícono.
+  5. Escribe nucleo.json con la versión del núcleo (el Centro de Mando la muestra en cada tarjeta).
+  6. SQL común (nucleo/sql/*.sql: pagos, administración e inventario): lo pone entre las marcas "-- >>> CFX núcleo" y "-- <<< CFX núcleo"
      de cada instalar.sql (BiciTaller: schema.sql y luego node supabase/generar.mjs). <CHK> = cómo exige ser admin cada app.
 No toca nada más: ni la base de datos, ni la lógica de cada app. Se puede correr las veces que quieras.
 """
 import json, os, re, shutil, subprocess, sys
+sys.dont_write_bytecode = True  # sin __pycache__ en el repo
+from insignia import insignia
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 VERSION = json.load(open(os.path.join(AQUI, 'nucleo.json')))['nucleo']
@@ -126,6 +129,7 @@ def main():
         enlazar(r, js, css)
         cachear(r, js, css, sw)
         sql_comun(r, repo)
+        insignia(r)
         json.dump({'nucleo': VERSION}, open(os.path.join(r, 'nucleo.json'), 'w'))
         print('✓', repo, '· núcleo', VERSION)
 

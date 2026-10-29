@@ -188,3 +188,14 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Pagos**: el comprobante se achica hasta caber (≤ ~290 KB) aunque la foto sea enorme.
 - **Diseño**: fondo con brillo suave, íconos de Ajustes en cuadro con brillo, entrada animada de tarjetas al bajar, listas de 4+ tarjetas cortas que se apilan (`.cfx-apilar`, solo celular/tablet; `data-sin-pila` lo apaga).
 - **Pruebas nuevas**: `final_ui.js` (en todo.sh) y el chequeo "+ al centro" en `recorrido.js`.
+
+## Etapa final · 7 apps (29/10/2026) · núcleo 2.4
+- **Versiones en main**: CM 4.19 (base 4.7) · Billetera 1.20.0 (base 19) · Órbita 5.20 (base 5.12) · Barbería 2.19 · BiciTaller 2.19 (base 2.7) · Estaciona 2.12.0 (base 12) · Cerebro 1.3 (base 1.3).
+- **⇄ Panel en todas**: `ayuda.js` pone solo el atajo para el admin con sesión iniciada (`CFG.admin` y no `CFG.socio`; Barbería, BiciTaller y Cerebro pasan `socio`) en las 6 apps → `CFX_AYUDA.panelCM()` (panel del CM). El CM pasa su `atajo` (Panel ⇄ App); `atajo: null` lo apaga.
+  Direcciones en un solo lugar: `CFX_AYUDA.web(worker, sub)` (cuenta `juanjosuecastilloloyola.workers.dev`); admin/apps.js la usa (`a.web`).
+- **Ícono de las notificaciones**: `nucleo/insignia.py` (lo llama sincronizar.py) saca la silueta blanca de icons/icon-512.png → `icons/badge.png` (Android pinta el badge solo con la transparencia; antes salía un cuadrado blanco). Los sw.js usan `badge: 'icons/badge.png'`.
+- **Notificaciones sin claves**: instalar.js ya no muestra "el administrador aún no activa las notificaciones": cierra la ventana y vuelve a ofrecer en 1 día. Claves: CM → Control → 🔔 (Cerebro incluido).
+- **Cerebro (Contenido) completo**: núcleo 2.4, Empresa en cuadrícula de Ajustes (Perfil, Otra empresa, Mi cuenta, Espacio; admin: Notificaciones y Registro con botones para borrar), sin tarjetas apiladas, en recorrido.js (`sh` propio) y todo.sh (guia.js).
+- **Arreglos de revisión**: micrófono que quedaba suelto (voz.js se esconde si el campo ya no tiene el foco), correo largo en el menú de la foto (admin sin nombre = "Administrador"), Órbita sin PRO repetido en Fichas y sin el cuadro del logo junto a "‹" en celular,
+  Billetera "＋ Cliente" (no se confunde con el + de la barra), BiciTaller "¿Tienes un taller?" pasa de botón flotante a Cuenta, Cerebro "✅ Publicada" sin cortarse.
+- **Pruebas**: recorrido.js revisa el ⇄ Panel (solo admin, va al CM). sim.js acepta `columns` con comillas (insert de varias filas de supabase-js).

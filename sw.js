@@ -81,7 +81,7 @@ self.addEventListener('push', (e) => {
   try { d = e.data ? e.data.json() : {}; } catch (err) { d = { title: e.data && e.data.text() }; }
   const conItem = /item=[0-9a-f-]{36}/.test(d.url || '');
   e.waitUntil(self.registration.showNotification(d.title || 'Centro de Mando', {
-    body: d.body || '', icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: d.tag, data: { url: d.url || '/', id: d.tag },
+    body: d.body || '', icon: 'icons/icon-192.png', badge: 'icons/badge.png', tag: d.tag, data: { url: d.url || '/', id: d.tag },
     renotify: true, requireInteraction: conItem, vibrate: [200, 100, 200],
     actions: conItem ? [{ action: 'hecho', title: '✓ Listo' }, { action: 'mas1h', title: '⏰ 1 hora más' }] : /#nuevo/.test(d.url || '') ? [{ action: 'abrir', title: '✏️ Anotar' }] : []
   }));
@@ -92,7 +92,7 @@ async function accionAviso(id, accion) {
   const r = await fetch(c.SUPABASE_URL + '/rest/v1/rpc/notif_accion', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: c.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + c.SUPABASE_ANON_KEY }, body: JSON.stringify({ p_notif: id, p_accion: accion }) });
   const t = await r.json();
   if (t === 'no') throw new Error('no');
-  return self.registration.showNotification(accion === 'hecho' ? '✓ Marcado como listo' : '⏰ Te aviso en 1 hora', { body: '', icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: 'ok-' + id, silent: true })
+  return self.registration.showNotification(accion === 'hecho' ? '✓ Marcado como listo' : '⏰ Te aviso en 1 hora', { body: '', icon: 'icons/icon-192.png', badge: 'icons/badge.png', tag: 'ok-' + id, silent: true })
     .then(() => setTimeout(() => self.registration.getNotifications({ tag: 'ok-' + id }).then((l) => l.forEach((n) => n.close())), 4000));
 }
 self.addEventListener('notificationclick', (e) => {

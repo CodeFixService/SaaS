@@ -1,4 +1,4 @@
-// Recorrido de venta: entra a cada app como admin, negocio y cliente, abre cada pestaña de la barra, la cabecera (avatar) y Ajustes,
+// Recorrido de venta: entra a cada app (las 7) como admin, negocio y cliente, abre cada pestaña de la barra, la cabecera (avatar) y Ajustes,
 // saca capturas y revisa errores de consola y que nada se salga del ancho.  ANCHO=360|768|1280 node recorrido.js [app…]
 const { abrir } = require('./h');
 const fs = require('fs');
@@ -38,7 +38,7 @@ const APPS = {
     await t.sim.su("insert into auth.claves values ($1, 'admin123') on conflict (email) do update set pass = excluded.pass", [ADM]);
     await t.sim.su('update public.profiles set clave_temporal = false where true').catch(() => {});
     await t.sim.su("delete from cfx_exentos").catch(() => {});
-    return [{ rol: 'admin', url: '/', email: ADM, pass: 'admin123' }, { rol: 'negocio', url: '/', email: 'dueno@test.cl', pass: 'clave123' }, { rol: 'cliente', url: '/', email: 'carlos@test.cl', pass: 'clave123' }];
+    return [{ rol: 'admin', url: '/', email: ADM, pass: 'admin123' }, { rol: 'negocio', url: '/', email: 'dueno@test.cl', pass: 'clave123' }, { rol: 'cliente', url: '/', email: 'carlos@test.cl', pass: 'clave123' }, { rol: 'socio', url: '/', email: 'socio@test.cl', pass: 'clave123' }];
   } },
   taller: { repo: 'taller', db: 'p_taller', async cuentas(t) {
     await t.sim.crearUsuario(ADM, 'admin123');
@@ -56,6 +56,12 @@ const APPS = {
     const e = { url: '/#/mas', sel: 'button[data-t=in]' };
     return [{ rol: 'admin', email: ADM, pass: 'admin123', ...e }, { rol: 'negocio', email: 'b@x.cl', pass: 'clave123', ...e }, { rol: 'cliente', email: 'c@x.cl', pass: 'clave123', ...e }];
   } },
+  contenido: { repo: 'contenido', db: 'p_contenido', sh: '/home/user/contenido/pruebas/base.sh', async cuentas(t) {
+    await t.sim.crearUsuario(ADM, 'admin123'); const u = await t.sim.crearUsuario('redes@x.cl', 'clave123');
+    await t.sim.su('alter table public.empresas disable trigger empresas_antes'); await t.sim.su("insert into public.empresas (owner, nombre) values ($1, 'Bici Ana')", [u.id]); await t.sim.su('alter table public.empresas enable trigger empresas_antes');
+    await t.sim.su(`update public.perfiles set prefs = coalesce(prefs, '{}') || '{"guia":{"n":9}}'`).catch(() => {});
+    return [{ rol: 'admin', url: '/', email: ADM, pass: 'admin123' }, { rol: 'negocio', url: '/', email: 'redes@x.cl', pass: 'clave123' }];
+  } },
 };
 
 (async () => {
@@ -63,7 +69,7 @@ const APPS = {
   const informe = [];
   for (const [nombre, A] of Object.entries(APPS)) {
     if (pedidas.length && !pedidas.includes(nombre)) continue;
-    if (A.base !== false) require('child_process').execSync(__dirname + '/base.sh /home/user/' + A.repo, { stdio: 'ignore' });
+    if (A.base !== false) require('child_process').execSync(A.sh || __dirname + '/base.sh /home/user/' + A.repo, { stdio: 'ignore' });
     const t = await abrir('/home/user/' + A.repo, A.db);
     try {
       for (const c of await A.cuentas(t)) {
@@ -74,6 +80,11 @@ const APPS = {
           await login(t, p, c.url, c.email, c.pass, c.sel);
           await foto('0inicio');
           if (!(await t.anchoOk(p))) malos.push('se sale del ancho: inicio');
+          // ⇄ Panel: solo el admin; en las apps lleva al panel del Centro de Mando, en el CM cambia Panel ⇄ App.
+          const at = await p.evaluate(() => { const a = document.querySelector('.cfx-atajo'); return a && !a.classList.contains('cfx-oc') && a.getBoundingClientRect().width ? a.href : null; });
+          if (c.rol === 'admin' && !at) malos.push('falta el botón ⇄ Panel');
+          if (c.rol === 'admin' && at && nombre !== 'saas' && !/^https:\/\/saas\.[^/]+\/admin\/$/.test(at)) malos.push('⇄ Panel no va al CM: ' + at);
+          if (c.rol !== 'admin' && at && nombre !== 'saas') malos.push('⇄ Panel visible para ' + c.rol);
           // El + al medio de la barra (celular y tablet).
           if (ANCHO < 900) {
             const cx = await p.evaluate(() => { const m = document.querySelector('nav.cfx-barra > .cfx-mas'); if (!m) return null; const r = m.getBoundingClientRect(); return Math.round(r.left + r.width / 2 - innerWidth / 2); });
@@ -88,7 +99,7 @@ const APPS = {
             await foto('1-' + i + '-' + tx);
             if (!(await t.anchoOk(p))) malos.push('se sale del ancho: ' + tx);
             const aj = p.locator('.cfx-aj:visible > button');
-            if (/ajustes|mas|más|control|cuenta/i.test(tx) && await aj.count()) {
+            if (/ajustes|mas|más|control|cuenta|empresa/i.test(tx) && await aj.count()) {
               const k = await aj.count();
               for (let j = 0; j < k; j++) {
                 await p.locator('.cfx-aj:visible > button').nth(j).click(); await p.waitForTimeout(900); await t.sinModales(p);
@@ -101,12 +112,12 @@ const APPS = {
           // Cabecera común
           const campanas = await p.locator('header .cfx-cab [data-cfx-campana]:visible').count();
           if (campanas > 1) malos.push('campanas: ' + campanas);
-          const av = p.locator('.cfx-av:visible');
+          await p.waitForTimeout(1000); await t.sinModales(p); const av = p.locator('.cfx-av:visible');
           if (await av.count() !== 1) malos.push('avatar visibles: ' + await av.count());
           else { await av.click(); await p.waitForTimeout(500); await foto('9-menu'); }
           const plan = await p.locator('.cfx-plan:visible').first().textContent().catch(() => '');
           informe.push(nombre + ' · ' + c.rol + ' · plan ' + (plan || '—') + (malos.length ? ' · ⚠️ ' + malos.join(' | ') : ' · ok'));
-        } catch (e) { informe.push(nombre + ' · ' + c.rol + ' · FALLA ' + e.message.split('\n')[0]); }
+        } catch (e) { informe.push(nombre + ' · ' + c.rol + ' · FALLA ' + e.message.split('\n').slice(0, 6).join(' ')); await foto('error').catch(() => {}); }
         await ctx.close();
       }
     } finally {

@@ -169,7 +169,7 @@ function crear(opts) {
     if (metodo === 'POST') {
       const filas = Array.isArray(body) ? body : [body];
       if (!filas.length) return { status: 201, rows: [] };
-      const cols = params.get('columns') ? params.get('columns').split(',') : [...new Set(filas.flatMap((f) => Object.keys(f)))].filter((k) => k in tipos);
+      const cols = params.get('columns') ? params.get('columns').split(',').map((k) => k.replace(/"/g, '')) : [...new Set(filas.flatMap((f) => Object.keys(f)))].filter((k) => k in tipos);
       vals.push(JSON.stringify(filas));
       const lista = cols.map(qi).join(', ');
       sql = `insert into ${rel} (${lista}) select ${lista} from json_populate_recordset(null::${rel}, $1)`;

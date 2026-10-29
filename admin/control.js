@@ -172,6 +172,7 @@
     barberia: { leer: (c) => M().rpcDe(c, 'config_publica').then((r) => r.vapid_public),
       crear: async (c, pu, pr) => { await M().rpcDe(c, 'admin_secreto', { p_name: 'vapid_private', p_value: pr }); await M().rpcDe(c, 'admin_secreto', { p_name: 'vapid_public', p_value: pu }); } },
     bicitaller: { leer: (c) => M().rpcDe(c, 'config_publica').then((r) => (r.config || {}).vapid_publica), crear: (c, pu, pr) => M().rpcDe(c, 'admin_push_claves', { p_publica: pu, p_privada: pr }) },
+    contenido: { leer: (c) => M().rpcDe(c, 'config_publica').then((r) => (r.config || {}).vapid_publica), crear: (c, pu, pr) => M().rpcDe(c, 'admin_push_claves', { p_publica: pu, p_privada: pr }) },
     estaciona: { leer: (c) => M().rpcDe(c, 'ajustes_publicos').then((r) => r.vapid_public), crear: (c, pu, pr) => M().rpcDe(c, 'admin_guardar_ajustes', { p: { vapid_public: pu, vapid_private: pr } }) }
   };
   async function push() {
