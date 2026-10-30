@@ -42,6 +42,7 @@ async function abrir(repo, db, opts = {}) {
     });
     await sim.conectar(ctx);
     if (!opts.conHola) await ctx.addInitScript(() => { window.CFX_SIN_HOLA = true; });
+    if (!opts.conAvisos) await ctx.addInitScript(() => { window.CFX_SIN_OBLIGAR = true; });
     const page = await ctx.newPage();
     page.on('console', (m) => { if (m.type() === 'error') errores.push('[consola] ' + m.text()); });
     page.on('pageerror', (e) => errores.push('[página] ' + e.message));
@@ -58,7 +59,7 @@ async function abrir(repo, db, opts = {}) {
     base, page, ctx, sim, errores, browser, nuevo,
     foto: (nombre, p) => (p || page).screenshot({ path: path.join(capt, nombre + '.png'), fullPage: !process.env.ANCHO }),
     // Cierra los diálogos abiertos (p. ej. "Activa las notificaciones", que en el navegador de prueba siempre aparece).
-    sinModales: (p) => (p || page).evaluate(() => { document.querySelectorAll('dialog[open]:not(.cfx-pago)').forEach((d) => d.close()); document.querySelectorAll('.cfx-hoja').forEach((d) => d.remove()); document.querySelectorAll('.sheet .cerrar').forEach((b) => b.click()); }),
+    sinModales: (p) => (p || page).evaluate(() => { document.querySelectorAll('dialog[open]:not(.cfx-pago)').forEach((d) => d.close()); document.querySelectorAll('.cfx-hoja, .cfx-hoja-velo').forEach((d) => d.remove()); document.querySelectorAll('.sheet .cerrar').forEach((b) => b.click()); }),
     anchoOk: async (p) => (p || page).evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
     async cerrar() { await browser.close(); servidor.close(); await sim.cerrar(); },
   };
