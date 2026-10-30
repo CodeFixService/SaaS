@@ -239,6 +239,7 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - + del centro: tema.css oculta su texto aunque la barra aún no se arme (`nav :is(.cfx-mas,.nuevo,.nav-mas,.mas-grande)`), y barra.js le quita texto y etiquetas (queda aria-label).
 
 ## Pago, menú y chat (30/10/2026) · núcleo 2.11
-- **Versiones en main**: CM 4.26 · Billetera 1.21.4 · Órbita 5.28 · Barbería 2.26 · BiciTaller 2.26 · Estaciona 2.14.4 · Cerebro 1.10 (bases sin cambio salvo db_version Barbería 2.26).
+- **Versiones en main**: CM 4.26 · Billetera 1.21.4 · Órbita 5.28 · Barbería 2.26 · BiciTaller 2.26 · Estaciona 2.14.5 · Cerebro 1.10 (bases sin cambio salvo db_version Barbería 2.26).
 - **pagos.js**: solo 3 planes 1 mes · 3 meses (`meses` m=3, link `link_3meses` en CM → Pagos) · 1 año (sin "Otro monto" ni selector de meses); activación = 1 mes (30 días) + 3 meses + 1 año. Banco y Tipo de cuenta sin "Copiar". Pestañas con ícono arriba (Transferencia sin cortarse). Registro dice "tu primer pago te da 30 días" (ya no 7 días).
 - **ayuda.js**: ventanas se ajustan a `visualViewport` (chat sobre el teclado en iPhone); menú sin anillo de foco cortado. **tema.css**: `.cfx-grilla` tarjetas del mismo alto (112px, filas 1fr) e `.ic-caja` 40px. Órbita: el logo ya no reemplaza la foto/iniciales del menú.
+- **Estaciona 2.14.5**: Ajustes del admin sin el spinner de carga que quedaba girando bajo la cuadrícula (admin.js limpia C antes de montar).
