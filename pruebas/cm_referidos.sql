@@ -1,0 +1,31 @@
+-- Prueba: referidos del núcleo (en el Centro de Mando).
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-000000000001', 'juanjosuecastilloloyola@gmail.com'),
+  ('00000000-0000-0000-0000-0000000000a1', 'pedro@x.cl'), ('00000000-0000-0000-0000-0000000000b2', 'lucia@x.cl');
+update public.perfiles set nombre = 'Pedro' where email = 'pedro@x.cl';
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000a1';
+select set_config('t.cod', public.cfx_ref_mio() ->> 'codigo', false) ~ '^PEDRO[0-9]{4}$' as codigo_pedro;
+select (public.cfx_ref_mio() ->> 'codigo') = current_setting('t.cod') as mismo_codigo;
+select not public.cfx_ref_registrar(current_setting('t.cod')) as no_se_invita_solo;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000b2';
+select public.cfx_ref_registrar(lower(current_setting('t.cod'))) as lucia_registrada;
+select not public.cfx_ref_registrar(current_setting('t.cod')) as una_sola_vez;
+do $$ begin perform public.cfx_ref_lista(); raise exception 'debía fallar'; exception when others then if sqlerrm = 'debía fallar' then raise; end if; end $$;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000a1';
+select (public.cfx_ref_mio() ->> 'invitados')::int = 1 as pedro_ve_1_invitado;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000001';
+select public.cfx_ref_mio() is null as admin_sin_codigo;
+select (public.cfx_ref_lista() -> 'filas' -> 0 ->> 'invito_email') = 'pedro@x.cl' as panel_muestra_quien_invito;
+select (public.cfx_ref_premiar('00000000-0000-0000-0000-0000000000a1', 15, '🏆 ¡Vas muy bien!') ->> 'dias')::int = 15 as premio_a_mano;
+select (public.cfx_ref_config_guardar(30) ->> 'dias_auto')::int = 30 as auto_30;
+reset role;
+select premium_hasta > now() + interval '14 days' as pedro_tiene_15_dias from public.perfiles where email = 'pedro@x.cl';
+select count(*) = 1 as sticker_llega from public.notificaciones where para = '00000000-0000-0000-0000-0000000000a1' and titulo = '🏆 ¡Vas muy bien!';
+insert into public.cfx_pagos (id, cuenta, email, rol, periodo, monto, medio) values ('00000000-0000-0000-0000-00000000aaaa', '00000000-0000-0000-0000-0000000000b2', 'lucia@x.cl', 'negocio', 'mensual', 4900, 'transferencia');
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000001';
+select (public.cfx_pago_resolver('00000000-0000-0000-0000-00000000aaaa', true, 30) ->> 'estado') = 'aprobado' as pago_aprobado;
+reset role;
+select premium_hasta > now() + interval '44 days' as pedro_gana_30_mas from public.perfiles where email = 'pedro@x.cl';
+select premiado from public.cfx_referidos where invitado = '00000000-0000-0000-0000-0000000000b2';
+select count(*) = 1 as aviso_premio_auto from public.notificaciones where para = '00000000-0000-0000-0000-0000000000a1' and titulo like '🎁 ¡Ganaste 30 días%';

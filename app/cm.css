@@ -17,7 +17,7 @@ header.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg
 .chk.on{background:var(--ok);border-color:var(--ok)}.chk2{display:flex;align-items:center;gap:8px}.chk2 input{width:auto}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}.kpis>div{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px}
 .kpis b{display:block;font-size:20px}.kpis span{font-size:12px;color:var(--muted)}
-.cols{display:grid;gap:12px}@media(min-width:760px){.cols{grid-template-columns:repeat(3,1fr)}main{max-width:1000px}}
+.cols{display:grid;gap:12px}@media(min-width:760px){.cols{grid-template-columns:repeat(4,1fr)}main{max-width:1100px}}
 .col{background:color-mix(in srgb,var(--card) 60%,transparent);border:1px dashed var(--line);border-radius:var(--r);padding:10px;min-height:80px}.col h3{margin:0 0 8px;font-size:14px;display:flex;gap:8px;align-items:center}
 .tk{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:8px}.tk .meta,.meta-c .meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}
 .tk .mv{display:flex;justify-content:space-between;margin-top:6px}.x{width:32px;height:32px;border-radius:9px;border:0;background:var(--field);color:var(--text);display:grid;place-items:center;padding:0;min-height:0;box-shadow:none}
@@ -122,3 +122,7 @@ nav.tabs button.nuevo .ic{width:28px;height:28px}nav.tabs button.nuevo.on{backgr
 /* Resumen → Empresas: tarjeta por app y detalle con gráficos */
 .emp{cursor:pointer}.emp:hover{border-color:var(--brand)}.emp .app-kpis{margin-bottom:0}
 .emp-g{width:100%;height:auto;display:block}.emp-g g:hover path{opacity:1}
+
+/* Compartir */
+.comp{margin:10px 0}.comp summary{cursor:pointer;display:flex;align-items:center;gap:6px}.comp .chips{margin-top:8px}.comp-log{margin:8px 0 0;padding-left:18px;font-size:13px}.comp-log li{margin:2px 0}
+.ped-it.nohay .tx b{text-decoration:line-through;opacity:.6}.ped-it .marca{font-size:12px;font-weight:700}

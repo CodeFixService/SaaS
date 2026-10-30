@@ -6,7 +6,7 @@
   const A = global.App, { esc, toast, modal, confirmar } = A;
   const M = () => global.MisApps;
   let raiz = null, actual = 'cm', seccion = 'avisar';
-  const SECC = [['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['push', '🔔 Notificaciones'], ['registro', '📜 Registro']];
+  const SECC = [['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['push', '🔔 Notificaciones'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['registro', '📜 Registro']];
   // Nombres legibles de las claves de los planes (las demás se muestran tal cual).
   const NOMBRE = { productos: 'Productos', clientes: 'Clientes', fichas: 'Fichas publicadas', equipo: 'Equipo', pedidos_mes: 'Pedidos al mes', respuestas: 'Respuestas rápidas',
     contactos: 'Contactos', favoritos: 'Favoritos', mensajes_seguidos: 'Mensajes seguidos', barberos: 'Barberos', servicios: 'Servicios', ofertas: 'Ofertas',
@@ -198,7 +198,57 @@
     };
   }
 
-  const F = { avisar, planes, textos, keys, cupones, verif, humano, push, registro };
+  const F = { avisar, planes, textos, keys, cupones, verif, humano, push, referidos, socios, registro };
+  // Referidos: quién invitó a quién (con qué cuenta), ranking, premio automático y premio a mano (días + sticker).
+  const STICKERS = ['🏆 ¡Eres un crack invitando!', '🚀 ¡Vas volando! Gracias por recomendarnos', '💪 ¡Sigue así, vas muy bien!', '🌟 ¡Gracias por correr la voz!'];
+  async function referidos() {
+    let r;
+    try { r = await rpc('cfx_ref_lista'); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
+    const F2 = r.filas || [], rk = {};
+    F2.forEach((f) => { const k = f.invito; rk[k] = rk[k] || { id: k, email: f.invito_email || '—', n: 0, pagaron: 0, dias: 0 }; rk[k].n++; if (f.pago) rk[k].pagaron++; rk[k].dias += f.dias_dados || 0; });
+    const R = Object.values(rk).sort((a, b) => b.n - a.n || b.pagaron - a.pagaron);
+    caja().innerHTML = '<div class="card"><h3 style="margin-top:0">Premio automático</h3><p class="sub">Cuando un invitado paga su primer Premium, quien lo invitó recibe estos días (0 = apagado).</p>' +
+        '<div class="fila"><input id="rfDias" type="number" inputmode="numeric" min="0" max="365" style="max-width:110px" value="' + ((r.config || {}).dias_auto || 0) + '"><button type="button" class="small" id="rfGuardar">Guardar</button></div></div>' +
+      '<h3>Ranking de embajadores</h3>' + (R.length ? R.map((x, i) => '<div class="card"><div class="fila"><span class="tit grow">' + (i < 3 ? ['🥇', '🥈', '🥉'][i] + ' ' : '') + esc(x.email) + '</span><span class="pill info">' + x.n + ' invitado' + (x.n > 1 ? 's' : '') + '</span></div>' +
+          '<p class="sub">' + x.pagaron + ' ya pagaron · ' + x.dias + ' días regalados</p><div class="btns-s"><button type="button" class="small" data-premio="' + esc(x.id) + '" data-em="' + esc(x.email) + '">🎁 Dar días o sticker</button></div></div>').join('')
+        : '<p class="empty">Aún nadie se registró con un código.</p>') +
+      (F2.length ? '<h3>Registros con código</h3><div class="card">' + F2.map((f) => '<div class="fila"><span class="grow"><b>' + esc(f.nombre || f.email) + '</b> <span class="sub">' + esc(f.email) + '</span><br><span class="sub">invitado por ' + esc(f.invito_email || '—') + ' · código ' + esc(f.codigo) + ' · ' + A.hace(f.creado) + '</span></span>' +
+        (f.pago ? '<span class="pill ok">pagó</span>' : '<span class="pill">gratis</span>') + '</div>').join('') + '</div>' : '');
+    caja().querySelector('#rfGuardar').onclick = async () => { try { await rpc('cfx_ref_config_guardar', { p_dias_auto: +caja().querySelector('#rfDias').value || 0 }); toast('Guardado en ' + app().nombre.split(' ·')[0]); } catch (x) { toast(nf(x)); } };
+    caja().onclick = (ev) => {
+      const b = ev.target.closest('[data-premio]'); if (!b) return;
+      const d = modal('<h2>🎁 Premiar a ' + esc(b.dataset.em) + '</h2><label>Días de Premium de regalo (0 = solo el sticker)<input id="rpD" type="number" inputmode="numeric" min="0" max="365" value="15"></label>' +
+        '<label>Sticker o mensaje</label><div class="chips" id="rpS">' + STICKERS.map((t, i) => '<button type="button" class="chip' + (i ? '' : ' on') + '" data-t="' + esc(t) + '">' + esc(t) + '</button>').join('') + '</div>' +
+        '<input id="rpM" maxlength="90" value="' + esc(STICKERS[0]) + '"><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="rpOk" type="button">Enviar</button></div>');
+      d.querySelector('#rpS').onclick = (e) => { const t = e.target.closest('[data-t]'); if (!t) return; d.querySelectorAll('#rpS .chip').forEach((x) => x.classList.toggle('on', x === t)); d.querySelector('#rpM').value = t.dataset.t; };
+      d.querySelector('#rpOk').onclick = async () => {
+        try { const x = await rpc('cfx_ref_premiar', { p_cuenta: b.dataset.premio, p_dias: +d.querySelector('#rpD').value || 0, p_mensaje: d.querySelector('#rpM').value }); d.close(); toast(x.dias ? 'Listo: ' + x.dias + ' días + sticker enviados' : 'Sticker enviado'); referidos(); }
+        catch (er) { toast(nf(er)); }
+      };
+    };
+  }
+
+  // Socios comunes (Billetera, Órbita y Estaciona): administran igual que tú, pero solo tú agregas o quitas socios.
+  const CON_SOCIOS = ['billetera', 'aplicaciones', 'estaciona'];
+  async function socios() {
+    if (!CON_SOCIOS.includes(actual)) { caja().innerHTML = '<p class="sub">' + esc(app().nombre.split(' ·')[0]) + ' maneja sus socios en su propio panel (Ajustes → Socios).</p>'; return; }
+    let L;
+    try { L = await rpc('cfx_socios_lista'); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
+    caja().innerHTML = '<p class="sub">El socio entra a ' + esc(app().nombre.split(' ·')[0]) + ' con su correo y administra igual que tú (se le ve SOCIO). No puede agregar ni quitar socios. Lo que hace queda en el Registro.</p>' +
+      '<div class="card"><label>Correo del socio<input id="soE" type="email" maxlength="120" placeholder="socio@correo.cl"></label><label>Nombre (opcional)<input id="soN" maxlength="60"></label><button type="button" id="soOk">Agregar socio</button></div>' +
+      (L.length ? L.map((x) => '<div class="card"><div class="fila"><span class="tit grow">' + esc(x.nombre || x.email) + '</span>' + (x.tiene_cuenta ? '<span class="pill ok">con cuenta</span>' : '<span class="pill warn">aún sin cuenta</span>') + '</div>' +
+        '<p class="sub">' + esc(x.email) + ' · desde ' + A.hace(x.creado) + '</p><div class="btns-s"><button type="button" class="small ghost" data-quitar="' + esc(x.email) + '">Quitar</button></div></div>').join('') : '<p class="empty">Sin socios todavía.</p>');
+    caja().querySelector('#soOk').onclick = async () => {
+      const e = caja().querySelector('#soE').value.trim(); if (!/^\S+@\S+\.\S+$/.test(e)) { toast('Escribe un correo válido'); return; }
+      try { await rpc('cfx_socio_guardar', { p_email: e, p_nombre: caja().querySelector('#soN').value, p_si: true }); toast('Socio agregado: que cree su cuenta con ese correo (o entre si ya la tiene)'); socios(); } catch (x) { toast(nf(x)); }
+    };
+    caja().onclick = async (ev) => {
+      const b = ev.target.closest('[data-quitar]'); if (!b) return;
+      if (!(await confirmar('¿Quitar a ' + b.dataset.quitar + ' como socio?', 'Quitar'))) return;
+      try { await rpc('cfx_socio_guardar', { p_email: b.dataset.quitar, p_si: false }); toast('Quitado'); socios(); } catch (x) { toast(nf(x)); }
+    };
+  }
+
   async function render(el) {
     raiz = el;
     el.innerHTML = '<div class="titulo-v"><h2>Control</h2><span class="sub">Las 6 apps</span></div><p class="sub">Cargando…</p>';

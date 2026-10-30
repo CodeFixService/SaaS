@@ -68,10 +68,16 @@
 
   /* ---------- Empresas: una tarjeta por app con lo importante; al tocarla, el detalle con gráficos ---------- */
   async function empresas() {
-    el('resumen').insertAdjacentHTML('beforeend', '<div id="rEmp"><div class="titulo-v"><h2>Empresas</h2><span class="sub">Toca una para ver el detalle</span></div><div class="emp-l"><p class="sub">Revisando…</p></div></div>');
-    const M = window.MisApps; await M.preparar();
+    el('resumen').insertAdjacentHTML('beforeend', '<div id="rEmp"><div class="titulo-v"><h2>Empresas</h2><button type="button" class="small ghost" id="resTodo">' + App.ico('bajar', 15) + ' Respaldar todas</button></div><p class="sub">Toca una para ver el detalle.</p><div class="emp-l"><p class="sub">Revisando…</p></div></div>');
+    const M = window.MisApps;
+    $('resTodo').onclick = async () => {
+      const con = M.APPS.filter((a) => (M.estado[a.id] || {}).conectado);
+      let n = 0; for (const a of con) { if (await M.respaldar(a)) n++; await new Promise((r) => setTimeout(r, 700)); }
+      toast(n + ' de ' + con.length + ' respaldos descargados' + (con.length < M.APPS.length ? ' (conecta las demás en Apps)' : ''));
+    };
+    await M.preparar();
     const z = $('rEmp') && $('rEmp').querySelector('.emp-l'); if (!z) return;
-    const L = M.APPS.filter((a) => !a.propia);
+    const L = M.APPS;
     z.innerHTML = L.map((a) => { const e = M.estado[a.id] || {};
       return '<div class="card emp" data-emp="' + a.id + '" role="button" tabindex="0"><div class="fila"><span class="app-ico">' + App.ico(a.ico, 22) + '</span><h3 class="grow" style="margin:0">' + esc(a.nombre.split(' ·')[0]) + '</h3>' +
         '<a class="btn small ghost" href="' + esc(a.web) + '" target="_blank" rel="noopener" data-ver>' + App.ico('abrir', 14) + ' Ver app</a></div>' +
@@ -95,7 +101,10 @@
   async function detalleEmpresa(a) {
     const M = window.MisApps, e = M.estado[a.id] || {};
     const d = modal('<div class="fila" style="align-items:center"><span class="app-ico">' + App.ico(a.ico, 22) + '</span><h2 class="grow" style="margin:0">' + esc(a.nombre.split(' ·')[0]) + '</h2><button type="button" class="small ghost" data-cerrar aria-label="Cerrar">✕</button></div>' +
-      '<div id="empD"><p class="sub">Cargando…</p></div><div class="btns"><a class="btn" href="' + esc(a.web) + '" target="_blank" rel="noopener">' + App.ico('abrir', 15) + ' Ver app</a></div>');
+      '<div id="empD"><p class="sub">Cargando…</p></div><div class="btns"><a class="btn" href="' + esc(a.web) + '" target="_blank" rel="noopener">' + App.ico('abrir', 15) + ' Ver app</a>' +
+      (e.conectado && !a.propia ? '<button type="button" class="ghost" data-adm>' + App.ico('abrir', 15) + ' Panel de la app</button>' : '') + (e.conectado ? '<button type="button" class="ghost" data-limp>' + App.ico('escoba', 15) + ' Respaldo y limpieza</button>' : '') + '</div>');
+    if (d.querySelector('[data-adm]')) d.querySelector('[data-adm]').onclick = () => M.abrirAdmin(a);
+    if (d.querySelector('[data-limp]')) d.querySelector('[data-limp]').onclick = () => { d.close(); M.limpieza(a); };
     const z = d.querySelector('#empD');
     if (!e.conectado) { z.innerHTML = '<p class="sub">Conéctala en Apps para ver su detalle.</p>'; return; }
     let s = null; try { s = await M.rpcDe(M.cliente(a), 'cfx_series', { p_meses: 6 }); } catch (x) { /* base aún sin actualizar */ }

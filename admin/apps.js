@@ -1,5 +1,5 @@
-/* Centro de Mando · Mis aplicaciones: una tarjeta por app con su versión, base de datos, rendimiento
-   y botones para abrirla, copiar el SQL de actualización y liberar la versión nueva, todo desde aquí.
+/* Centro de Mando · Mis aplicaciones: solo para liberar. Una tarjeta por app con su versión, base de datos y núcleo,
+   conectar y liberar. Abrir la app, su panel, respaldo y números están en Resumen → Empresas.
    La versión y la configuración pública (URL y clave anon de Supabase) se leen del repositorio en GitHub;
    para ver el rendimiento y liberar te conectas una vez con tu cuenta de administrador de cada app. */
 (function (global) {
@@ -138,12 +138,8 @@
       '<div style="margin:8px 0">' + est + '</div>' +
       (e.error ? '<p class="sub warn">' + esc(e.error) + '</p>' : '') +
       '<div class="btns-s">' +
-        '<a class="btn small ghost" href="' + esc(a.web) + '" target="_blank" rel="noopener">' + A.ico('abrir', 15) + ' Abrir app</a>' +
-        (a.propia ? '<a class="btn small ghost" href="' + esc(a.web + a.admin) + '" target="_blank" rel="noopener">' + A.ico('abrir', 15) + ' Admin</a>'
-          : '<button type="button" class="small ghost" data-a="adm">' + A.ico('abrir', 15) + ' Panel de la app</button>') +
         (a.liberar && e.conectado ? '<button type="button" class="small" data-a="lib"' + (s.lista ? '' : ' disabled') + '>' + (s.alDia ? A.ico('check', 15) + ' Liberada' : A.ico('cohete', 15) + ' Liberar v' + esc(e.pub || '?')) + '</button>' : '') +
         (!a.propia && e.url ? (e.conectado ? '<button type="button" class="small ghost" data-a="salir">Desconectar</button>' : '<button type="button" class="small" data-a="con">' + A.ico('enchufe', 15) + ' Conectar</button>') : '') +
-        (e.conectado ? '<button type="button" class="small ghost" data-a="limp">' + A.ico('escoba', 15) + ' Respaldo y limpieza</button>' : '') +
         '<button type="button" class="small ghost" data-a="rec" aria-label="Revisar">' + A.ico('refrescar', 15) + '</button>' +
       '</div>';
   }
@@ -152,13 +148,7 @@
     const listas = APPS.filter((a) => estadoDe(a).lista), bd = APPS.filter((a) => estadoDe(a).faltaBd), ok = APPS.filter((a) => estadoDe(a).alDia || (!a.liberar && E[a.id] && E[a.id].pub));
     h.innerHTML = '<div class="stats"><div class="card"><b>' + APPS.length + '</b><span>Aplicaciones</span></div><div class="card"><b class="ok">' + ok.length + '</b><span>Al día</span></div>' +
       '<div class="card"><b class="warn">' + listas.length + '</b><span>Listas para liberar</span></div><div class="card"><b class="bad">' + bd.length + '</b><span>Falta base de datos</span></div></div>' +
-      (listas.length ? '<button type="button" class="block" id="libTodo">' + A.ico('cohete', 18) + ' Liberar todo lo que está listo (' + listas.length + ')</button>' : '') +
-      '<button type="button" class="block ghost" id="resTodo" style="margin-top:8px">' + A.ico('bajar', 18) + ' Respaldar todas las apps conectadas (Excel)</button>';
-    h.querySelector('#resTodo').onclick = async () => {
-      const con = APPS.filter((a) => E[a.id] && E[a.id].conectado);
-      let n = 0; for (const a of con) { if (await respaldar(a)) n++; await new Promise((r) => setTimeout(r, 700)); }
-      toast(n + ' de ' + con.length + ' respaldos descargados' + (con.length < APPS.length ? ' (conecta las demás para respaldarlas)' : ''));
-    };
+      (listas.length ? '<button type="button" class="block" id="libTodo">' + A.ico('cohete', 18) + ' Liberar todo lo que está listo (' + listas.length + ')</button>' : '');
     const b = h.querySelector('#libTodo');
     if (b) b.onclick = async () => {
       if (!(await confirmar('Se liberan ' + listas.map((a) => a.nombre + ' v' + E[a.id].pub).join(', ') + '. A sus usuarios les aparece el botón Actualizar.', 'Liberar todo'))) return;
@@ -258,5 +248,5 @@
   }
   // Para el panel de Pagos: deja listas (y conectadas, si ya entraste) las 6 apps sin pintar las tarjetas.
   const preparar = () => Promise.all(APPS.filter((a) => !E[a.id] || !E[a.id].url).map(cargar));
-  global.MisApps = { render, APPS, cliente, estado: E, preparar, conectar, rpcDe, abrirAdmin, vincular, kpis, nombre, valor, peso };
+  global.MisApps = { render, APPS, cliente, estado: E, preparar, conectar, rpcDe, abrirAdmin, vincular, kpis, nombre, valor, peso, respaldar, limpieza };
 })(window);

@@ -213,3 +213,12 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Estaciona**: avisos en ventana; Más como BiciTaller (íconos de línea, ← volver); admin con barra propia (Resumen · Lugares · + · Usuarios · Ajustes), Verificaciones/Denuncias en el Resumen, sin números de plata; arrendatario sin tareas de dueño.
 - **Otros**: Billetera admin sin Pagos (4º botón Registro); Cerebro "Borrar todos mis datos"; Órbita un solo aviso de notificaciones y nombre sin cortarse; BiciTaller "Administración" y ❓ que se esconde al bajar; Billetera sin "›" suelta.
 - **Pendiente (turnos propios)**: socios en Billetera/Órbita/Estaciona, sacar números de plata de los paneles de Barbería/Billetera/Órbita/BiciTaller, referidos (núcleo + CM), cuentas vinculadas y compartir en la app de anotar, equipo en Estaciona. Funciones viejas de Barbería (pagos/keys/planes) se quedan: las usan sus pruebas.
+
+## Compartir, referidos y socios (30/10/2026) · núcleo 2.7
+- **Versiones en main**: CM 4.22 (base 4.8) · Billetera 1.21.0 (base 20) · Órbita 5.24 (base 5.13) · Barbería 2.22 · BiciTaller 2.22 (base 2.8) · Estaciona 2.14.0 (base 13) · Cerebro 1.6 (base 1.4). Las bases se actualizan solas.
+- **+**: solo el botón del centro lleva + (ayuda.js `sinMas` quita "+ " y el ícono + de otros botones); el + del centro es oscuro (`--cfx-mas-ink: #111827`).
+- **CM Apps** solo libera/conecta; Ver app, Panel, Respaldo y limpieza (también del CM) y Respaldar todas están en Resumen → Empresas.
+- **Compartir (app de anotar)**: vincular con código (Más → Cuentas vinculadas, `vinculo_codigo/vincular/mis_vinculos/desvincular`), `compartir(item, con)`, lo ajeno se lee por RLS (`compartido_conmigo`) y se cambia con `compartido_guardar` (pedido: no cambia qué/cantidad; ✓, "No hay" tachado y reemplazo aparte). Estados tarea/proyecto: Pendiente · Haciendo · En revisión · Listo. Trigger `compartido_aviso` avisa y guarda historial.
+- **Referidos (núcleo, sql/referidos.sql)**: `?ref=CODIGO` → `cfx_ref_registrar` al entrar; menú "🎁 Invita y gana" (no admin, no CM/Cerebro); CM → Control → 🎁 Referidos (ranking, dar días + sticker, premio automático `dias_auto` al primer pago aprobado del invitado).
+- **Socios comunes (núcleo, sql/socios.sql)**: Billetera/Órbita/Estaciona aceptan `cfx_es_socio()` en su función de admin; solo el dueño los agrega/quita en CM → Control → 🤝 Socios; ayuda.js pregunta `cfx_es_socio` para mostrar SOCIO.
+- **Pruebas nuevas**: cm_compartir.sql, cm_compartir_ui.js, cm_referidos.sql, socios_est.sql (en todo.sh).

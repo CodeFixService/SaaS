@@ -9,8 +9,9 @@ const assert = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('
     await p.goto(t.base + '/');
     await p.fill('input[type=email]', 'juanjosuecastilloloyola@gmail.com'); await p.fill('input[type=password]', 'admin123'); await p.press('input[type=password]', 'Enter');
     await p.waitForURL(/admin/); await p.waitForTimeout(1000); await t.sinModales();
-    await p.goto(t.base + '/admin/#apps'); await p.waitForTimeout(4000); await t.sinModales();
-    await p.click('[data-app=cm] [data-a=limp]'); await p.waitForTimeout(1500);
+    await p.goto(t.base + '/admin/#resumen'); await p.waitForTimeout(4000); await t.sinModales();
+    await p.click('[data-emp=cm]'); await p.waitForTimeout(1200);
+    await p.click('dialog [data-limp]'); await p.waitForTimeout(1500);
     assert(await p.locator('dialog [data-c]').count() === 4, '4 limpiezas');
     assert(await p.locator('dialog [data-tb]').count() === 2, '2 tablas sobrantes');
     await t.foto('limpieza');

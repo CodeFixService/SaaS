@@ -61,9 +61,10 @@
     const r = await Promise.all([
       q(sb.from('items').select('*').order('created_at', { ascending: true }).limit(5000)),
       q(sb.from('espacios').select('*').order('orden')),
-      q(sb.from('uso_dia').select('*').gte('dia', desde))
+      q(sb.from('uso_dia').select('*').gte('dia', desde)),
+      A.rpc('compartidos_info').catch(() => null)
     ]);
-    CM.items = r[0]; CM.espacios = r[1]; CM.uso = r[2]; CM.sync = Date.now();
+    CM.items = r[0]; CM.espacios = r[1]; CM.uso = r[2]; CM.comp = r[3] || { mios: {}, conmigo: {} }; CM.sync = Date.now();
   };
   CM.emit = () => { cancelAnimationFrame(CM._raf); CM._raf = requestAnimationFrame(() => { if (CM.pintar) CM.pintar(); }); };
   CM.add = async (tipo, o) => {
@@ -73,6 +74,10 @@
     if (error) throw new Error(A.friendly(error));
     CM.items.push(data); CM.emit(); return data;
   };
+  // Compartido: lo que otra cuenta vinculada me compartió (lo veo y lo cambio, pero no lo borro).
+  CM.ajeno = (it) => !!(it && CM.cuenta && it.owner && it.owner !== CM.cuenta.id);
+  CM.dueno = (it) => (CM.comp && CM.comp.conmigo && CM.comp.conmigo[it.id]) || '';
+  CM.compartidoCon = (it) => (CM.comp && CM.comp.mios && CM.comp.mios[it.id]) || [];
   CM.upd = async (id, campos) => {
     const it = CM.get(id); if (!it) return;
     const prev = Object.assign({}, it);
@@ -80,11 +85,13 @@
     if (campos.estado) it.hecho_at = ['hecho', 'resuelto', 'lograda', 'descartada'].includes(campos.estado) ? new Date().toISOString() : null;
     it.updated_at = new Date().toISOString();
     CM.emit();
-    const { error } = await sb.from('items').update(campos).eq('id', id);
+    const c = {}; ['estado', 'titulo', 'cuerpo', 'datos'].forEach((k) => { if (k in campos) c[k] = campos[k]; });
+    const { error } = CM.ajeno(it) ? await sb.rpc('compartido_guardar', { p_item: id, p_campos: c }) : await sb.from('items').update(campos).eq('id', id);
     if (error) { Object.assign(it, prev); CM.emit(); throw new Error(A.friendly(error)); }
   };
   CM.datos = (id, parcial) => { const it = CM.get(id); return CM.upd(id, { datos: Object.assign({}, it.datos, parcial) }); };
   CM.del = async (id) => {
+    if (CM.ajeno(CM.get(id))) { toast('Solo quien lo creó lo puede borrar'); return; }
     const quitar = new Set([id]);
     let cambio = true;
     while (cambio) { cambio = false; CM.items.forEach((i) => { if (i.padre && quitar.has(i.padre) && !quitar.has(i.id)) { quitar.add(i.id); cambio = true; } }); }
@@ -147,7 +154,7 @@
     logro: ['titulo', 'cuerpo', 'fecha', 'espacio'], leccion: ['titulo', 'cuerpo'], recordatorio: ['titulo', 'cuerpo', 'aviso', 'repite']
   };
   const ESTADOS = {
-    tarea: [['abierto', 'Por hacer'], ['en_curso', 'En curso'], ['hecho', 'Hecho']], proyecto: [['abierto', 'Por hacer'], ['en_curso', 'En curso'], ['hecho', 'Hecho']],
+    tarea: [['abierto', 'Pendiente'], ['en_curso', 'Haciendo'], ['revision', 'En revisión'], ['hecho', 'Listo']], proyecto: [['abierto', 'Pendiente'], ['en_curso', 'Haciendo'], ['revision', 'En revisión'], ['hecho', 'Listo']],
     meta: [['abierto', 'Activa'], ['lograda', 'Lograda'], ['descartada', 'Descartada']], idea: [['nueva', 'Nueva'], ['elegida', 'Elegida'], ['descartada', 'Descartada']],
     problema: [['abierto', 'Abierto'], ['resuelto', 'Resuelto']]
   };
@@ -166,7 +173,7 @@
     const o = it || Object.assign({ tipo, titulo: '', cuerpo: '', estado: DEF[tipo] || 'abierto', prioridad: 0, fecha: null, repite: '', etiquetas: [], datos: {}, aviso_at: null }, ini || {});
     const dt = o.datos || {};
     const f = CAMPOS[tipo] || ['titulo', 'cuerpo'];
-    let h = '<h2>' + (it ? 'Editar' : 'Nuevo') + ' · ' + esc(NOMBRE[tipo] || tipo) + '</h2>';
+    let h = '<h2>' + (it ? 'Editar' : 'Nuevo') + ' · ' + esc(NOMBRE[tipo] || tipo) + '</h2>' + (CM.ajeno(it) ? '<p class="pill info">📤 Compartido por ' + esc(CM.dueno(it) || 'otra cuenta') + '</p>' : '');
     h += '<label for="fTit">' + (tipo === 'nota' || tipo === 'idea' || tipo === 'problema' ? 'Título' : 'Qué es') + '</label><input id="fTit" maxlength="200" value="' + esc(o.titulo) + '">';
     if (f.includes('cuerpo')) h += '<label for="fCue">Detalle</label><textarea id="fCue" maxlength="4000">' + esc(o.cuerpo) + '</textarea>';
     h += '<div class="row">';
@@ -189,13 +196,15 @@
     if (it && HIJOS[tipo]) {
       h += '<div class="hijos" id="fHijos"></div>';
     }
-    h += '<p class="err" id="fErr"></p><div class="btns">' + (it ? '<button class="danger" id="fDel" type="button">' + CM.ico('basura', 16) + ' Borrar</button>' : '') + '<button class="ghost" data-cerrar type="button">Cancelar</button><button id="fOk" type="button">Guardar</button></div>';
+    if (it) h += CM.bloqueCompartir(it);
+    h += '<p class="err" id="fErr"></p><div class="btns">' + (it && !CM.ajeno(it) ? '<button class="danger" id="fDel" type="button">' + CM.ico('basura', 16) + ' Borrar</button>' : '') + '<button class="ghost" data-cerrar type="button">Cancelar</button><button id="fOk" type="button">Guardar</button></div>';
     const d = modal(h, (dlg) => {
       const $$ = (x) => dlg.querySelector('#' + x);
       if (it && HIJOS[tipo]) pintarHijos(dlg, it);
       const r2 = $$('fRep2'); if (r2) r2.onclick = (e) => { const b = e.target.closest('[data-d]'); if (b) b.classList.toggle('on'); };
       const ch = $$('fDias'); if (ch) ch.onclick = (e) => { const b = e.target.closest('[data-d]'); if (b) b.classList.toggle('on'); };
-      if (it) $$('fDel').onclick = async () => { if (await A.confirmar('¿Borrar "' + (it.titulo || NOMBRE[tipo]) + '" y lo que depende de él?', 'Sí, borrar')) { dlg.close(); CM.del(it.id); } };
+      if (it) CM.activarCompartir(dlg, it);
+      if (it && $$('fDel')) $$('fDel').onclick = async () => { if (await A.confirmar('¿Borrar "' + (it.titulo || NOMBRE[tipo]) + '" y lo que depende de él?', 'Sí, borrar')) { dlg.close(); CM.del(it.id); } };
       $$('fOk').onclick = async () => {
         const v = (x) => { const e = $$(x); return e ? e.value : undefined; };
         const campos = {};
@@ -228,6 +237,42 @@
     });
     return d;
   };
+  /* ---------- Compartir con cuentas vinculadas ---------- */
+  const SE_COMPARTE = ['pedido', 'tarea', 'proyecto', 'nota', 'idea', 'problema', 'meta'];
+  CM.vinculos = async (forzar) => { if (!CM._vinc || forzar) CM._vinc = await A.rpc('mis_vinculos').catch(() => []); return CM._vinc; };
+  CM.bloqueCompartir = (it) => {
+    if (!it || !SE_COMPARTE.includes(it.tipo)) return '';
+    if (CM.ajeno(it)) return '<details class="comp"><summary class="sub">' + CM.ico('compartir', 14) + ' Historial</summary><div class="comp-h"></div></details>';
+    return '<details class="comp"' + (CM.compartidoCon(it).length ? ' open' : '') + '><summary class="sub">' + CM.ico('compartir', 14) + ' Compartir' + (CM.compartidoCon(it).length ? ' (' + CM.compartidoCon(it).length + ')' : '') + '</summary>' +
+      '<div class="chips comp-l"><span class="sub">Cargando…</span></div><div class="comp-h"></div></details>';
+  };
+  CM.activarCompartir = (dlg, it) => {
+    const caja = dlg.querySelector('details.comp'); if (!caja) return;
+    const hist = async () => {
+      const L = await A.rpc('compartido_historial', { p_item: it.id }).catch(() => []);
+      caja.querySelector('.comp-h').innerHTML = L.length ? '<ul class="comp-log">' + L.map((x) => '<li><b>' + esc(x.quien || '') + '</b> ' + esc(x.accion) + ' <span class="sub">' + A.hace(x.creado) + '</span></li>').join('') + '</ul>' : '';
+    };
+    const pintar = async () => {
+      if (CM.ajeno(it)) return hist();
+      const V = await CM.vinculos(true), con = CM.compartidoCon(it);
+      caja.querySelector('.comp-l').innerHTML = V.length ? V.map((v) => '<button type="button" class="chip' + (con.includes(v.id) ? ' on' : '') + '" data-con="' + v.id + '">' + (con.includes(v.id) ? '✓ ' : '') + esc(v.nombre) + '</button>').join('')
+        : '<span class="sub">Vincula una cuenta en Más → Cuentas vinculadas para compartirle cosas.</span>';
+      hist();
+    };
+    caja.addEventListener('toggle', () => { if (caja.open) pintar(); });
+    if (caja.open) pintar();
+    caja.onclick = async (e) => {
+      const b = e.target.closest('[data-con]'); if (!b) return;
+      const si = !CM.compartidoCon(it).includes(b.dataset.con);
+      try {
+        await A.rpc('compartir', { p_item: it.id, p_con: b.dataset.con, p_si: si });
+        const m = CM.comp.mios; m[it.id] = si ? CM.compartidoCon(it).concat(b.dataset.con) : CM.compartidoCon(it).filter((x) => x !== b.dataset.con);
+        toast(si ? 'Compartido: le llegó un aviso' : 'Dejaste de compartirlo'); pintar(); CM.emit();
+      } catch (er) { toast(er.message); }
+    };
+  };
+  CM.pillCompartido = (it) => CM.ajeno(it) ? '<span class="pill info">de ' + esc(CM.dueno(it) || 'otra cuenta') + '</span>' : CM.compartidoCon(it).length ? '<span class="pill">' + CM.ico('compartir', 12) + ' compartido</span>' : '';
+
   function pintarHijos(dlg, it) {
     const cont = dlg.querySelector('#fHijos'); if (!cont) return;
     const tipos = HIJOS[it.tipo];
@@ -359,6 +404,8 @@
     if (n === 'listas') n = 'pedidos';
     if (n === 'nuevo') { if (!CM.actual) CM.ir('hoy'); CM.anotar(); return; }
     if (!VISTAS.includes(n)) n = 'hoy';
+    // Al cambiar de sección, si pasaron más de 20 s se traen los datos (así aparece al tiro lo que te compartieron).
+    if (Date.now() - (CM.sync || 0) > 20000) CM.cargar().then(() => CM.emit()).catch(() => {});
     document.querySelectorAll('.view').forEach((v) => v.classList.toggle('on', v.id === 'v-' + n));
     document.querySelectorAll('nav.tabs button[data-v]').forEach((b) => b.classList.toggle('on', b.dataset.v === n));
     if (location.hash !== '#' + n) history.replaceState(null, '', '#' + n);

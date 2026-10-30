@@ -47,6 +47,15 @@
   }
   // Pagar Pro: módulo común del núcleo (precios, link y transferencia se editan en el Centro de Mando → Pagos).
   const pagar = () => CFX_PAGOS.abrir({ rpc, alPagar: () => CM.pintar() });
+  async function pintarVinc(el) {
+    const cod = el.querySelector('#vCod'); if (!cod) return;
+    try {
+      const [c, V] = await Promise.all([rpc('vinculo_codigo'), CM.vinculos()]);
+      cod.textContent = c;
+      el.querySelector('#vL').innerHTML = V.length ? V.map((v) => '<div class="fila"><span class="tit grow">' + esc(v.nombre) + ' <span class="sub">' + esc(v.email) + '</span></span><button type="button" class="small ghost" data-act="desv" data-id="' + v.id + '" data-n="' + esc(v.nombre) + '">Desvincular</button></div>').join('')
+        : 'Aún no te vinculas con nadie.';
+    } catch (e) { el.querySelector('#vL').textContent = e.message; }
+  }
   async function render(el) {
     const c = CM.cuenta, p = c.prefs || {}, ok = (v, d) => (v === undefined || v === null ? d : v);
     el.innerHTML = '<div class="titulo-v"><h2>Más</h2></div><p class="sub">Cargando…</p>';
@@ -63,6 +72,11 @@
       ['cerebro', 'diario', 'luna', 'Diario'], ['cerebro', 'logros', 'estrella', 'Logros']];
     x += '<div class="card"><h3>Secciones</h3><div class="secs">' + sec.map((s) => '<button type="button" class="ghost" data-act="sec" data-v="' + s[0] + '" data-s="' + s[1] + '">' + CM.ico(s[2], 18) + ' ' + s[3] + '</button>').join('') +
       '<button type="button" class="ghost" data-act="aterrizar">' + CM.ico('ancla', 18) + ' Aterrizar</button></div></div>';
+    // Cuentas vinculadas: con quién comparto pedidos, tareas y notas (cada uno ingresa el código del otro una vez).
+    x += '<div class="card" id="vinc"><h3>' + CM.ico('compartir', 18) + ' Cuentas vinculadas</h3><p class="sub">Comparte pedidos, tareas y notas con alguien que trabaja contigo. Nadie ve lo tuyo hasta que se vinculan con un código.</p>' +
+      '<p>Tu código: <b id="vCod">…</b> <button type="button" class="small ghost" data-act="vcopiar">Copiar</button></p>' +
+      '<div style="display:flex;gap:8px;align-items:center"><input id="vIn" style="flex:1;min-width:0;margin:0" maxlength="12" placeholder="Código (ej. ANA-1234)" autocapitalize="characters"><button type="button" data-act="vincular" style="flex:none">Vincular</button></div>' +
+      '<div id="vL" class="sub">Cargando…</div></div>';
     const pf = c.prefs || {};
     x += '<div class="card"><h3>Mi estilo</h3><label>Nombre<input id="sN" maxlength="60" value="' + esc(c.nombre || '') + '"></label><p class="sub">Color</p><div class="pal">' + CM.COLORES.map((k) => '<button type="button" data-act="col" data-c="' + k + '" class="' + ((pf.color || CM.COLORES[0]) === k ? 'on' : '') + '" style="background:' + k + '" aria-label="' + k + '"></button>').join('') + '</div>' +
       '<p class="sub">Ícono</p><div class="avs">' + CM.AVATARES.map((a) => '<button type="button" data-act="av" data-a="' + a + '" class="' + ((pf.avatar || '🙂') === a ? 'on' : '') + '">' + a + '</button>').join('') + '</div>' +
@@ -87,6 +101,7 @@
     x += '<div class="card">' + (A.pedirInstalar ? '<button type="button" class="ghost" data-act="inst">Instalar en el teléfono</button> ' : '') + '<button type="button" class="ghost" data-act="salir">Cerrar sesión</button> <button type="button" class="ghost" data-act="reparar">Reparar la app</button><p class="sub">Versión ' + esc(BT_CONFIG.VERSION) + '. Reparar vuelve a descargar la app en este teléfono; no borra tus datos.</p></div>';
     x += '<div class="card peligro"><h3>Zona de riesgo</h3><button type="button" class="small ghost" data-act="borrar">Borrar todos mis datos</button> <button type="button" class="small ghost" data-act="cuenta">Eliminar mi cuenta</button></div>';
     el.innerHTML = x;
+    pintarVinc(el);
     // La foto de perfil queda solo en este teléfono (no ocupa el servidor).
     CM.fotoPerfil().then((f) => { const av = el.querySelector('.avatar.con-foto'); if (f && av) { av.style.backgroundImage = 'url(' + f + ')'; av.classList.add('tiene'); } });
     el.querySelector('#fPerfil').onchange = async (e) => { const f = e.target.files[0]; if (!f) return; try { const id = await CM.fotos.guardar(f, 320); const vieja = localStorage.getItem('cm:fotoPerfil'); localStorage.setItem('cm:fotoPerfil', id); if (vieja) CM.fotos.borrar(vieja); toast('Foto actualizada'); render(el); CM.pintarAvatar(); } catch (er) { toast(er.message); } };
@@ -102,6 +117,9 @@
         else if (a === 'tema') { await CM.guardarPrefs({ tema: b.dataset.t }); render(el); }
         else if (a === 'nom') { c.nombre = el.querySelector('#sN').value.trim() || c.nombre; await rpc('mi_perfil_guardar', { p_nombre: c.nombre, p_telefono: c.telefono }); toast('Guardado'); }
         else if (a === 'tour') CM.tour();
+        else if (a === 'vcopiar') { await navigator.clipboard.writeText(el.querySelector('#vCod').textContent); toast('Código copiado'); }
+        else if (a === 'vincular') { const r = await rpc('vincular', { p_codigo: el.querySelector('#vIn').value }); toast('Vinculado con ' + r.nombre); await CM.vinculos(true); pintarVinc(el); }
+        else if (a === 'desv') { if (await A.confirmar('¿Desvincular a ' + b.dataset.n + '? Dejan de ver lo que se compartieron.', 'Desvincular')) { await rpc('desvincular', { p_otro: b.dataset.id }); await CM.vinculos(true); await CM.cargar(); pintarVinc(el); } }
         else if (a === 'delck') { await CM.del(b.dataset.id); render(el); }
         else if (a === 'pro') pagar();
         else if (a === 'verif') CFX_VERIFICAR.abrir({ rpc });

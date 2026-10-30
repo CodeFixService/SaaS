@@ -144,7 +144,7 @@ end $$;
 create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '4.7'::text $$;
+language sql immutable as $$ select '4.8'::text $$;
 create or replace function public.cfg_int(c text) returns int
 language sql stable security definer set search_path = '' as $$
   select (valor #>> '{}')::int from public.config where clave = c
@@ -1237,6 +1237,169 @@ revoke all on function public.cm_puente_secreto(text), public.cfx_aviso_externo(
 grant execute on function public.cm_puente_secreto(text) to authenticated;
 grant execute on function public.cfx_aviso_externo(text, text, text, text, text) to anon, authenticated;
 
+-- ---------------------------------------------------------------------
+-- v4.8 · Cuentas vinculadas y cosas compartidas (pedidos, tareas, proyectos, notas, ideas, problemas y metas).
+--   Nadie ve lo de otro hasta vincularse con un código (en los dos sentidos; se puede desvincular).
+--   El dueño comparte cada cosa con una cuenta vinculada. El otro la ve en sus listas, cambia el estado y edita,
+--   pero no la borra ni la deja de compartir; en un pedido no cambia el producto ni la cantidad: marca ✓, "No hay"
+--   (queda tachado) o agrega un reemplazo aparte. Cada cambio de estado avisa al otro y queda en el historial.
+-- ---------------------------------------------------------------------
+alter table public.perfiles add column if not exists codigo_vinculo text unique check (codigo_vinculo is null or codigo_vinculo ~ '^[A-Z]{2,6}-[0-9]{4}$');
+create table if not exists public.vinculos (
+  a uuid not null references public.perfiles (id) on delete cascade,
+  b uuid not null references public.perfiles (id) on delete cascade,
+  creado timestamptz not null default now(),
+  primary key (a, b), check (a < b));
+create table if not exists public.compartidos (
+  item uuid not null references public.items (id) on delete cascade,
+  con  uuid not null references public.perfiles (id) on delete cascade,
+  de   uuid not null references public.perfiles (id) on delete cascade,
+  creado timestamptz not null default now(),
+  primary key (item, con));
+create index if not exists compartidos_con_idx on public.compartidos (con);
+create table if not exists public.compartido_log (
+  id bigserial primary key, item uuid not null references public.items (id) on delete cascade,
+  quien uuid, accion text not null check (length(accion) <= 160), creado timestamptz not null default now());
+create index if not exists compartido_log_item_idx on public.compartido_log (item, id desc);
+alter table public.vinculos enable row level security;
+alter table public.compartidos enable row level security;
+alter table public.compartido_log enable row level security;
+revoke all on public.vinculos, public.compartidos, public.compartido_log from anon, authenticated;
+-- Lo compartido conmigo se puede leer (los cambios van por las funciones de abajo).
+create or replace function public.compartido_conmigo(p_item uuid) returns boolean
+language sql stable security definer set search_path = '' as $$ select exists (select 1 from public.compartidos c where c.item = p_item and c.con = auth.uid()) $$;
+drop policy if exists "compartido conmigo" on public.items;
+create policy "compartido conmigo" on public.items for select to authenticated using (public.compartido_conmigo(id));
+
+create or replace function public.vinculado(p_otro uuid) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.vinculos where a = least(auth.uid(), p_otro) and b = greatest(auth.uid(), p_otro))
+$$;
+-- Mi código para vincular (se crea la primera vez): letras del nombre + 4 números, ej. JUAN-4821.
+create or replace function public.vinculo_codigo(p_nuevo boolean default false) returns text
+language plpgsql security definer set search_path = '' as $$
+declare c text; base text; i int := 0;
+begin
+  if auth.uid() is null then raise exception 'Inicia sesión'; end if;
+  select codigo_vinculo into c from public.perfiles where id = auth.uid();
+  if c is not null and not coalesce(p_nuevo, false) then return c; end if;
+  select upper(left(regexp_replace(translate(coalesce(nullif(nombre, ''), split_part(email, '@', 1)), 'áéíóúñÁÉÍÓÚÑ', 'aeiounAEIOUN'), '[^A-Za-z]', '', 'g'), 6)) into base from public.perfiles where id = auth.uid();
+  if length(coalesce(base, '')) < 2 then base := 'CM'; end if;
+  loop
+    c := base || '-' || lpad((floor(random() * 10000))::int::text, 4, '0'); i := i + 1;
+    exit when not exists (select 1 from public.perfiles where codigo_vinculo = c) or i > 20;
+  end loop;
+  update public.perfiles set codigo_vinculo = c where id = auth.uid();
+  return c;
+end $$;
+create or replace function public.vincular(p_codigo text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare o record; yo text;
+begin
+  if auth.uid() is null then raise exception 'Inicia sesión'; end if;
+  select id, nombre, email into o from public.perfiles where codigo_vinculo = upper(trim(p_codigo)) and not suspendido;
+  if o.id is null then raise exception 'Ese código no existe. Revisa que esté bien escrito.'; end if;
+  if o.id = auth.uid() then raise exception 'Ese es tu propio código'; end if;
+  insert into public.vinculos (a, b) values (least(auth.uid(), o.id), greatest(auth.uid(), o.id)) on conflict do nothing;
+  select coalesce(nullif(nombre, ''), email) into yo from public.perfiles where id = auth.uid();
+  perform public.avisar(o.id, '🔗 ' || yo || ' se vinculó contigo', 'Ahora pueden compartirse pedidos, tareas y notas.', '#mas');
+  return jsonb_build_object('id', o.id, 'nombre', coalesce(nullif(o.nombre, ''), o.email));
+end $$;
+create or replace function public.mis_vinculos() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object('id', p.id, 'nombre', coalesce(nullif(p.nombre, ''), split_part(p.email, '@', 1)), 'email', p.email, 'desde', v.creado) order by v.creado), '[]')
+  from public.vinculos v join public.perfiles p on p.id = case when v.a = auth.uid() then v.b else v.a end
+  where auth.uid() in (v.a, v.b)
+$$;
+create or replace function public.desvincular(p_otro uuid) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  delete from public.vinculos where a = least(auth.uid(), p_otro) and b = greatest(auth.uid(), p_otro);
+  delete from public.compartidos where (de = auth.uid() and con = p_otro) or (de = p_otro and con = auth.uid());
+end $$;
+-- Con quién está compartida cada cosa mía, y quién me compartió lo que veo.
+create or replace function public.compartidos_info() returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object(
+    'mios', coalesce((select jsonb_object_agg(item, cons) from (select c.item, jsonb_agg(c.con) cons from public.compartidos c where c.de = auth.uid() group by c.item) x), '{}'),
+    'conmigo', coalesce((select jsonb_object_agg(c.item, coalesce(nullif(p.nombre, ''), split_part(p.email, '@', 1))) from public.compartidos c join public.perfiles p on p.id = c.de where c.con = auth.uid()), '{}'))
+$$;
+create or replace function public.compartir(p_item uuid, p_con uuid, p_si boolean default true) returns void
+language plpgsql security definer set search_path = '' as $$
+declare it record; yo text;
+begin
+  select id, owner, tipo, titulo into it from public.items where id = p_item;
+  if it.owner is distinct from auth.uid() then raise exception 'Solo el dueño la puede compartir'; end if;
+  if it.tipo not in ('pedido', 'tarea', 'proyecto', 'nota', 'idea', 'problema', 'meta') then raise exception 'Esto no se puede compartir'; end if;
+  if not public.vinculado(p_con) then raise exception 'Primero vincúlense con su código (Más → Cuentas vinculadas)'; end if;
+  if coalesce(p_si, true) then
+    insert into public.compartidos (item, con, de) values (p_item, p_con, auth.uid()) on conflict do nothing;
+    if found then
+      select coalesce(nullif(nombre, ''), split_part(email, '@', 1)) into yo from public.perfiles where id = auth.uid();
+      perform public.avisar(p_con, '📤 ' || yo || ' te compartió: ' || coalesce(nullif(it.titulo, ''), it.tipo), 'Ábrelo para verlo y cambiar su estado.', '#' || case when it.tipo = 'pedido' then 'pedidos' else 'tablero' end);
+      insert into public.compartido_log (item, quien, accion) values (p_item, auth.uid(), 'compartió con ' || (select coalesce(nullif(nombre, ''), email) from public.perfiles where id = p_con));
+    end if;
+  else
+    delete from public.compartidos where item = p_item and con = p_con;
+  end if;
+end $$;
+-- Guardar un cambio en algo compartido conmigo: estado, título/detalle y datos. En pedidos se respeta cada línea
+-- original (qué y cantidad): solo se marca ✓ / "No hay", se pone precio o nota, y se agregan líneas al final.
+create or replace function public.compartido_guardar(p_item uuid, p_campos jsonb) returns void
+language plpgsql security definer set search_path = '' as $$
+declare it public.items; c jsonb := coalesce(p_campos, '{}'); ni jsonb; oi jsonb; i int;
+begin
+  select * into it from public.items where id = p_item;
+  if it.id is null or not exists (select 1 from public.compartidos where item = p_item and con = auth.uid()) then raise exception 'No tienes acceso a esto'; end if;
+  if c ? 'datos' and it.tipo = 'pedido' then
+    oi := coalesce(it.datos -> 'items', '[]'); ni := coalesce(c -> 'datos' -> 'items', '[]');
+    if jsonb_array_length(ni) < jsonb_array_length(oi) then raise exception 'No se pueden quitar productos del pedido'; end if;
+    for i in 0 .. jsonb_array_length(oi) - 1 loop
+      if coalesce(ni -> i ->> 'que', '') <> coalesce(oi -> i ->> 'que', '') or coalesce(ni -> i ->> 'cant', '') <> coalesce(oi -> i ->> 'cant', '') then
+        raise exception 'El producto y la cantidad los pone quien hizo el pedido: marca "No hay" y agrega un reemplazo'; end if;
+    end loop;
+  end if;
+  update public.items set
+    estado = coalesce(left(c ->> 'estado', 20), estado),
+    titulo = case when it.tipo = 'pedido' then titulo else coalesce(left(c ->> 'titulo', 200), titulo) end,
+    cuerpo = coalesce(left(c ->> 'cuerpo', 4000), cuerpo),
+    datos = case when c ? 'datos' then c -> 'datos' else datos end,
+    hecho_at = case when c ? 'estado' then (case when c ->> 'estado' in ('hecho', 'resuelto', 'lograda', 'descartada') then now() end) else hecho_at end,
+    updated_at = now()
+  where id = p_item;
+end $$;
+-- Historial de lo compartido (lo ven el dueño y con quien se compartió).
+create or replace function public.compartido_historial(p_item uuid) returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object('quien', coalesce(nullif(p.nombre, ''), split_part(p.email, '@', 1)), 'accion', l.accion, 'creado', l.creado) order by l.id desc), '[]')
+  from (select * from public.compartido_log where item = p_item order by id desc limit 50) l left join public.perfiles p on p.id = l.quien
+  where exists (select 1 from public.items i where i.id = p_item and i.owner = auth.uid()) or exists (select 1 from public.compartidos c where c.item = p_item and c.con = auth.uid())
+$$;
+-- Al cambiar el estado de algo compartido: queda en el historial y le avisa a los demás (dueño y con quienes se compartió).
+create or replace function public.compartido_aviso() returns trigger
+language plpgsql security definer set search_path = '' as $$
+declare yo text; nom text; dest uuid;
+begin
+  if new.estado is not distinct from old.estado or not exists (select 1 from public.compartidos where item = new.id) then return new; end if;
+  nom := case new.estado when 'abierto' then 'Pendiente' when 'en_curso' then 'Haciendo' when 'revision' then 'En revisión' when 'hecho' then 'Listo'
+    when 'listo' then 'Listo para entregar' when 'resuelto' then 'Resuelto' when 'lograda' then 'Lograda' else new.estado end;
+  select coalesce(nullif(nombre, ''), split_part(email, '@', 1)) into yo from public.perfiles where id = auth.uid();
+  insert into public.compartido_log (item, quien, accion) values (new.id, auth.uid(), 'pasó a ' || nom);
+  for dest in select new.owner union select con from public.compartidos where item = new.id loop
+    if dest is distinct from auth.uid() then
+      perform public.avisar(dest, '🔄 ' || coalesce(yo, 'Alguien') || ' pasó "' || left(coalesce(nullif(new.titulo, ''), new.tipo), 50) || '" a ' || nom, '', '#' || case when new.tipo = 'pedido' then 'pedidos' else 'tablero' end);
+    end if;
+  end loop;
+  return new;
+end $$;
+drop trigger if exists compartido_aviso on public.items;
+create trigger compartido_aviso after update of estado on public.items for each row execute function public.compartido_aviso();
+revoke all on function public.compartido_aviso() from public, anon, authenticated;
+revoke all on function public.vinculo_codigo(boolean), public.vincular(text), public.mis_vinculos(), public.desvincular(uuid), public.compartidos_info(),
+  public.compartir(uuid, uuid, boolean), public.compartido_guardar(uuid, jsonb), public.compartido_historial(uuid), public.vinculado(uuid), public.compartido_conmigo(uuid) from public, anon;
+grant execute on function public.vinculo_codigo(boolean), public.vincular(text), public.mis_vinculos(), public.desvincular(uuid), public.compartidos_info(),
+  public.compartir(uuid, uuid, boolean), public.compartido_guardar(uuid, jsonb), public.compartido_historial(uuid), public.vinculado(uuid), public.compartido_conmigo(uuid) to authenticated;
+
 -- >>> CFX núcleo (no editar aquí: se copia de saas/nucleo/sql con sincronizar.py)
 -- ---------------------------------------------------------------------
 -- CodeFix · Pagos (igual en las 6 apps; lo reparte nucleo/sincronizar.py). Se administra desde el Centro de Mando → Pagos.
@@ -1941,12 +2104,155 @@ grant execute on function public.cfx_cm_vincular(text, text, text, text), public
   public.cfx_chat_bandeja(), public.cfx_chat_hilo(uuid), public.cfx_chat_responder(uuid, text), public.cfx_guia() to authenticated;
 revoke all on function public.cfx_guia_app() from public, anon, authenticated;
 -- ---------------------------------------------------------------------
+-- CodeFix · Referidos (igual en las 7 apps; lo reparte nucleo/sincronizar.py). Se administra desde CM → Control → Referidos.
+--   Cada usuario (negocio o cliente, nunca el admin) tiene su código. Quien se registra con él queda asociado a esa cuenta.
+--   El admin ve quién invitó a quién, da días de Premium o manda un sticker de ánimo. Premio automático (opcional):
+--   cuando el invitado paga su primer Premium, quien lo invitó recibe N días (cfx_config 'referidos' → dias_auto; 0 = apagado).
+--   Usa lo que cada app define para los pagos: cfx_yo(), cfx_dar_premium(uuid, text, int) y cfx_avisar(uuid, text, text).
+-- ---------------------------------------------------------------------
+create table if not exists public.cfx_ref_codigos (cuenta uuid primary key, codigo text not null unique check (codigo ~ '^[A-Z0-9]{4,12}$'), creado timestamptz not null default now());
+create table if not exists public.cfx_referidos (
+  invitado uuid primary key, invito uuid not null, codigo text not null, email text not null default '', nombre text not null default '',
+  creado timestamptz not null default now(), premiado boolean not null default false, dias_dados int not null default 0, stickers int not null default 0);
+create index if not exists cfx_referidos_invito_idx on public.cfx_referidos (invito);
+alter table public.cfx_ref_codigos enable row level security;
+alter table public.cfx_referidos enable row level security;
+revoke all on public.cfx_ref_codigos, public.cfx_referidos from anon, authenticated;
+insert into public.cfx_config (clave, valor) values ('referidos', '{"dias_auto": 0}') on conflict (clave) do nothing;
+
+-- Mi código para invitar (y cuántos se registraron con él). El admin no tiene.
+create or replace function public.cfx_ref_mio() returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare y jsonb := public.cfx_yo(); c text; i int := 0;
+begin
+  if y is null or y ->> 'rol' = 'admin' then return null; end if;
+  select codigo into c from public.cfx_ref_codigos where cuenta = (y ->> 'id')::uuid;
+  while c is null and i < 20 loop
+    c := upper(left(regexp_replace(translate(coalesce(nullif(y ->> 'nombre', ''), split_part(y ->> 'email', '@', 1)), 'áéíóúñÁÉÍÓÚÑ', 'aeiounAEIOUN'), '[^A-Za-z]', '', 'g'), 6));
+    c := (case when length(c) < 2 then 'CF' else c end) || lpad((floor(random() * 10000))::int::text, 4, '0'); i := i + 1;
+    begin insert into public.cfx_ref_codigos (cuenta, codigo) values ((y ->> 'id')::uuid, c); exception when unique_violation then c := null; end;
+  end loop;
+  return jsonb_build_object('codigo', c, 'invitados', (select count(*) from public.cfx_referidos where invito = (y ->> 'id')::uuid),
+    'pagaron', (select count(*) from public.cfx_referidos r where r.invito = (y ->> 'id')::uuid and r.premiado));
+end $$;
+-- La cuenta nueva que llegó con un código queda asociada (una sola vez, solo en sus primeros 3 días, nunca consigo misma).
+create or replace function public.cfx_ref_registrar(p_codigo text) returns boolean
+language plpgsql security definer set search_path = '' as $$
+declare y jsonb := public.cfx_yo(); o uuid; quien text;
+begin
+  if y is null or y ->> 'rol' = 'admin' then return false; end if;
+  if (select created_at from auth.users where id = (y ->> 'id')::uuid) < now() - interval '3 days' then return false; end if;
+  select cuenta into o from public.cfx_ref_codigos where codigo = upper(trim(p_codigo));
+  if o is null or o = (y ->> 'id')::uuid then return false; end if;
+  insert into public.cfx_referidos (invitado, invito, codigo, email, nombre) values ((y ->> 'id')::uuid, o, upper(trim(p_codigo)), coalesce(y ->> 'email', ''), coalesce(y ->> 'nombre', ''))
+    on conflict (invitado) do nothing;
+  if not found then return false; end if;
+  quien := coalesce(nullif(y ->> 'nombre', ''), split_part(y ->> 'email', '@', 1));
+  perform public.cfx_avisar(o, '🎉 ' || quien || ' se registró con tu código', 'Gracias por recomendarnos. ¡Sigue invitando!');
+  return true;
+end $$;
+-- Panel: quién invitó a quién (con correo de ambos), si el invitado ya pagó y lo que se le ha dado a quien invitó.
+create or replace function public.cfx_ref_lista() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  perform public.super_check();
+  return jsonb_build_object('config', (select valor from public.cfx_config where clave = 'referidos'), 'filas', coalesce((select jsonb_agg(x order by x.creado desc) from (
+    select r.invitado, r.email, r.nombre, r.creado, r.codigo, r.invito, u.email invito_email, r.premiado, r.dias_dados, r.stickers,
+      exists (select 1 from public.cfx_pagos g where g.cuenta = r.invitado and g.estado = 'aprobado') pago
+    from public.cfx_referidos r left join auth.users u on u.id = r.invito limit 1000) x), '[]'));
+end $$;
+-- Dar días de Premium y/o mandar un sticker (mensaje de ánimo) a quien invita.
+create or replace function public.cfx_ref_premiar(p_cuenta uuid, p_dias int default 0, p_mensaje text default '') returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare hasta timestamptz; d int := greatest(0, least(coalesce(p_dias, 0), 365)); n int;
+begin
+  perform public.super_check();
+  select count(*) into n from public.cfx_referidos where invito = p_cuenta;
+  if n = 0 then raise exception 'Esa cuenta no ha invitado a nadie'; end if;
+  if d > 0 then
+    hasta := public.cfx_dar_premium(p_cuenta, 'otro', d);
+    update public.cfx_referidos set dias_dados = dias_dados + d where invitado = (select invitado from public.cfx_referidos where invito = p_cuenta order by creado desc limit 1);
+  end if;
+  if coalesce(trim(p_mensaje), '') <> '' or d > 0 then
+    perform public.cfx_avisar(p_cuenta, left(coalesce(nullif(trim(p_mensaje), ''), '🏆 ¡Gracias por invitar!'), 90),
+      case when d > 0 then '🎁 Te regalamos ' || d || ' días de Premium por recomendarnos (' || n || ' invitado' || case when n > 1 then 's' else '' end || ').' else 'Vas en ' || n || ' invitado' || case when n > 1 then 's' else '' end || '. ¡Sigue así!' end);
+    update public.cfx_referidos set stickers = stickers + 1 where invitado = (select invitado from public.cfx_referidos where invito = p_cuenta order by creado desc limit 1);
+  end if;
+  perform public.cfx_anotar('referido', 'premio a ' || coalesce((select email from auth.users where id = p_cuenta), p_cuenta::text) || ': ' || d || ' días');
+  return jsonb_build_object('dias', d, 'hasta', hasta);
+end $$;
+create or replace function public.cfx_ref_config_guardar(p_dias_auto int) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+begin
+  perform public.super_check();
+  insert into public.cfx_config (clave, valor) values ('referidos', jsonb_build_object('dias_auto', greatest(0, least(coalesce(p_dias_auto, 0), 365))))
+    on conflict (clave) do update set valor = excluded.valor;
+  return (select valor from public.cfx_config where clave = 'referidos');
+end $$;
+-- Premio automático: al aprobarse el primer pago del invitado, quien lo invitó recibe dias_auto días (una sola vez por invitado).
+create or replace function public.cfx_ref_al_pagar() returns trigger
+language plpgsql security definer set search_path = '' as $$
+declare r public.cfx_referidos; d int := coalesce(((select valor from public.cfx_config where clave = 'referidos') ->> 'dias_auto')::int, 0);
+begin
+  if new.estado <> 'aprobado' or old.estado = 'aprobado' then return new; end if;
+  select * into r from public.cfx_referidos where invitado = new.cuenta and not premiado for update;
+  if r.invitado is null then return new; end if;
+  update public.cfx_referidos set premiado = true, dias_dados = dias_dados + case when d > 0 then d else 0 end where invitado = r.invitado;
+  if d > 0 then
+    perform public.cfx_dar_premium(r.invito, 'otro', d);
+    perform public.cfx_avisar(r.invito, '🎁 ¡Ganaste ' || d || ' días de Premium!', coalesce(nullif(r.nombre, ''), split_part(r.email, '@', 1)) || ' pagó su Premium gracias a tu invitación.');
+  end if;
+  return new;
+end $$;
+drop trigger if exists cfx_ref_al_pagar on public.cfx_pagos;
+create trigger cfx_ref_al_pagar after update of estado on public.cfx_pagos for each row execute function public.cfx_ref_al_pagar();
+revoke all on function public.cfx_ref_al_pagar() from public, anon, authenticated;
+revoke all on function public.cfx_ref_mio(), public.cfx_ref_registrar(text), public.cfx_ref_lista(), public.cfx_ref_premiar(uuid, int, text), public.cfx_ref_config_guardar(int) from public, anon;
+grant execute on function public.cfx_ref_mio(), public.cfx_ref_registrar(text), public.cfx_ref_lista(), public.cfx_ref_premiar(uuid, int, text), public.cfx_ref_config_guardar(int) to authenticated;
+
+-- ---------------------------------------------------------------------
+-- CodeFix · Socios comunes (lo reparte nucleo/sincronizar.py). Los usan Billetera, Órbita y Estaciona (las otras apps tienen
+-- sus propios socios). El socio entra con su correo y administra igual que el admin (cada app lo reconoce en su función de
+-- administrador), pero solo el administrador dueño agrega o quita socios (CM → Control → 🤝 Socios). Lo que hace queda en el registro.
+-- ---------------------------------------------------------------------
+create table if not exists public.cfx_socios (email text primary key check (email = lower(email) and email ~ '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
+  nombre text not null default '' check (length(nombre) <= 60), creado timestamptz not null default now());
+alter table public.cfx_socios enable row level security;
+revoke all on public.cfx_socios from anon, authenticated;
+create or replace function public.cfx_es_socio() returns boolean
+language sql stable security definer set search_path = '' as $$
+  select auth.uid() is not null and exists (select 1 from public.cfx_socios s join auth.users u on lower(u.email) = s.email where u.id = auth.uid())
+$$;
+create or replace function public.cfx_socios_lista() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  perform public.super_check();
+  return coalesce((select jsonb_agg(jsonb_build_object('email', s.email, 'nombre', s.nombre, 'creado', s.creado, 'tiene_cuenta', exists (select 1 from auth.users u where lower(u.email) = s.email)) order by s.creado) from public.cfx_socios s), '[]');
+end $$;
+create or replace function public.cfx_socio_guardar(p_email text, p_nombre text default '', p_si boolean default true) returns void
+language plpgsql security definer set search_path = '' as $$
+declare e text := lower(trim(p_email));
+begin
+  perform public.super_check();
+  if public.cfx_es_socio() then raise exception 'Solo el administrador agrega o quita socios'; end if;
+  if coalesce(p_si, true) then
+    insert into public.cfx_socios (email, nombre) values (e, left(coalesce(trim(p_nombre), ''), 60)) on conflict (email) do update set nombre = excluded.nombre;
+    perform public.cfx_anotar('socio', 'agregó a ' || e);
+  else
+    delete from public.cfx_socios where email = e;
+    perform public.cfx_anotar('socio', 'quitó a ' || e);
+  end if;
+end $$;
+revoke all on function public.cfx_es_socio(), public.cfx_socios_lista(), public.cfx_socio_guardar(text, text, boolean) from public, anon;
+grant execute on function public.cfx_es_socio(), public.cfx_socios_lista(), public.cfx_socio_guardar(text, text, boolean) to authenticated;
+
+-- ---------------------------------------------------------------------
 -- CodeFix · Inventario (igual en las 6 apps; lo usa el Centro de Mando → Apps → Respaldo y limpieza).
 --   Muestra las tablas que esta versión ya NO usa (restos de versiones antiguas) con cuántas filas tienen.
 --   Nada se borra solo: las vacías se borran con un toque; las que tienen datos piden descargar el respaldo y escribir "sí".
 --   cfx_tablas() = las tablas que crea este archivo (la revisa pruebas/inventario.py --verificar).
 -- ---------------------------------------------------------------------
-create or replace function public.cfx_tablas() returns text[] language sql immutable as $$ select array['public.auditoria', 'public.cfx_chat', 'public.cfx_config', 'public.cfx_cupones', 'public.cfx_exentos', 'public.cfx_keys', 'public.cfx_pagos', 'public.cfx_registro', 'public.cfx_verificaciones', 'public.cm_puentes', 'public.config', 'public.espacios', 'public.invitaciones', 'public.items', 'public.notificaciones', 'public.pagos', 'public.perfiles', 'public.planes', 'public.push_subs', 'public.secretos', 'public.textos', 'public.uso_dia'] $$;
+create or replace function public.cfx_tablas() returns text[] language sql immutable as $$ select array['public.auditoria', 'public.cfx_chat', 'public.cfx_config', 'public.cfx_cupones', 'public.cfx_exentos', 'public.cfx_keys', 'public.cfx_pagos', 'public.cfx_ref_codigos', 'public.cfx_referidos', 'public.cfx_registro', 'public.cfx_socios', 'public.cfx_verificaciones', 'public.cm_puentes', 'public.compartido_log', 'public.compartidos', 'public.config', 'public.espacios', 'public.invitaciones', 'public.items', 'public.notificaciones', 'public.pagos', 'public.perfiles', 'public.planes', 'public.push_subs', 'public.secretos', 'public.textos', 'public.uso_dia', 'public.vinculos'] $$;
 create or replace function public.cfx_inventario() returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare r record; n bigint; out jsonb := '[]'::jsonb;

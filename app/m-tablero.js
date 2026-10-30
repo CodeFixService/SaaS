@@ -1,9 +1,9 @@
-/* Centro de Mando · Tablero: tareas y proyectos en columnas (Por hacer / En curso / Hecho). */
+/* Centro de Mando · Tablero: tareas y proyectos en columnas (Pendiente / Haciendo / En revisión / Listo). */
 (function () {
   'use strict';
   const A = App, CM = window.CM, { esc, hoy, toast, modal } = A;
   const ui = { f: 'todo', tipo: 'tarea' };
-  const COLS = [['abierto', 'Por hacer'], ['en_curso', 'En curso'], ['hecho', 'Hecho']];
+  const COLS = [['abierto', 'Pendiente'], ['en_curso', 'Haciendo'], ['revision', 'En revisión'], ['hecho', 'Listo']];
   const WIP = () => Number((CM.cuenta.prefs || {}).wip) || 3;
 
   function pedirDonde(it) {
@@ -29,12 +29,12 @@
     const e = CM.espacio(i.espacio_id), h = hoy(), sub = CM.hijos(i.id, 'tarea'), sh = sub.filter((s) => s.estado === 'hecho').length;
     const idx = COLS.findIndex((c) => c[0] === i.estado);
     return '<div class="tk" draggable="true" data-id="' + i.id + '"><button type="button" class="tit" data-act="ficha" data-id="' + i.id + '">' + esc(i.titulo) + '</button>' +
-      '<div class="meta">' + (i.tipo === 'proyecto' ? '<span class="pill info">proyecto</span>' : '') + (e ? '<span class="pt"><i style="background:' + esc(e.color) + '"></i>' + esc(e.nombre) + '</span>' : '') +
+      '<div class="meta">' + (i.tipo === 'proyecto' ? '<span class="pill info">proyecto</span>' : '') + CM.pillCompartido(i) + (e ? '<span class="pt"><i style="background:' + esc(e.color) + '"></i>' + esc(e.nombre) + '</span>' : '') +
       (i.prioridad === 3 ? '<span class="pill warn">Top</span>' : i.prioridad === 2 ? '<span class="pill bad">urgente</span>' : '') +
       (i.fecha ? '<span class="pill' + (i.fecha < h && i.estado !== 'hecho' ? ' bad' : '') + '">' + A.fCorta(i.fecha) + '</span>' : '') + (sub.length ? '<span class="pill">' + sh + '/' + sub.length + '</span>' : '') + '</div>' +
       (i.tipo === 'proyecto' && i.datos.donde ? '<p class="donde">' + CM.ico('flecha', 13) + ' ' + esc(i.datos.donde) + '</p>' : '') +
       '<div class="mv">' + (idx > 0 ? '<button type="button" class="x" data-mv="' + COLS[idx - 1][0] + '" data-id="' + i.id + '" aria-label="Mover atrás">' + CM.ico('izq', 16) + '</button>' : '<span></span>') +
-      (idx < 2 ? '<button type="button" class="x" data-mv="' + COLS[idx + 1][0] + '" data-id="' + i.id + '" aria-label="Mover adelante">' + CM.ico('der', 16) + '</button>' : '') + '</div></div>';
+      (idx < COLS.length - 1 ? '<button type="button" class="x" data-mv="' + COLS[idx + 1][0] + '" data-id="' + i.id + '" aria-label="Mover adelante">' + CM.ico('der', 16) + '</button>' : '') + '</div></div>';
   }
   function render(el) {
     const h = hoy(), lim = WIP();

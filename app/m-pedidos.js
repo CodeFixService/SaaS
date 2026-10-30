@@ -161,9 +161,43 @@
     window.open('https://wa.me/' + n + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
   }
 
+  /* ---------- Pedido que me compartieron: marco ✓ / "No hay", agrego reemplazos u otras cosas y cambio el estado ---------- */
+  function compartido(p) {
+    const d = JSON.parse(JSON.stringify(p.datos || {})); d.items = d.items || [];
+    let est = p.estado;
+    const dlg = modal('<h2>Pedido de ' + esc(p.titulo) + '</h2><p class="pill info">📤 Compartido por ' + esc(CM.dueno(p) || 'otra cuenta') + '</p>' +
+      '<p class="sub">Marca lo que compras. Si algo no hay, márcalo "No hay" (queda tachado) y agrega el reemplazo.</p><div id="cpL"></div>' +
+      '<div class="card add-item"><label for="cpQ">Agregar otra cosa</label><div class="row"><div><input id="cpQ" maxlength="60" placeholder="Qué"></div><div><input id="cpN" maxlength="15" inputmode="numeric" placeholder="Cantidad"></div></div>' +
+      '<select id="cpR" aria-label="Reemplazo"><option value="">No reemplaza a nada</option></select><button type="button" class="block" id="cpAdd">Agregar</button></div>' +
+      '<label>Estado</label><div class="chips" id="cpE">' + EST.map((e) => '<button type="button" class="chip" data-e="' + e[0] + '">' + e[1] + '</button>').join('') + '</div>' +
+      CM.bloqueCompartir(p) + '<p class="err" id="cpErr"></p><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="cpOk" type="button">Guardar</button></div>');
+    dlg.classList.add('hoja-pedido');
+    CM.activarCompartir(dlg, p);
+    const $$ = (x) => dlg.querySelector('#' + x);
+    const pintar = () => {
+      $$('cpL').innerHTML = d.items.map((x, k) => '<div class="ped-it' + (x.nohay ? ' nohay' : '') + '"><div class="grow tx"><b>' + esc(x.que) + '</b>' + marca(x, d.items) + '<small>' + esc([x.color, x.cant ? 'x' + x.cant : '', x.nota].filter(Boolean).join(' · ')) + '</small></div>' +
+        '<button type="button" class="small' + (x.ok ? '' : ' ghost') + '" data-ok="' + k + '" aria-label="Comprado">✓</button><button type="button" class="small' + (x.nohay ? ' danger' : ' ghost') + '" data-no="' + k + '">No hay</button></div>').join('');
+      $$('cpR').innerHTML = '<option value="">No reemplaza a nada</option>' + d.items.map((x, k) => x.nohay ? '<option value="' + k + '">Reemplaza a: ' + esc(x.que) + '</option>' : '').join('');
+      dlg.querySelectorAll('#cpE [data-e]').forEach((b) => b.classList.toggle('on', b.dataset.e === est));
+    };
+    $$('cpL').onclick = (e) => { const a = e.target.closest('[data-ok]'), b = e.target.closest('[data-no]'); if (a) { const x = d.items[+a.dataset.ok]; x.ok = !x.ok; if (x.ok) delete x.nohay; } if (b) { const x = d.items[+b.dataset.no]; x.nohay = !x.nohay; if (x.nohay) delete x.ok; } pintar(); };
+    $$('cpE').onclick = (e) => { const b = e.target.closest('[data-e]'); if (b) { est = b.dataset.e; pintar(); } };
+    $$('cpAdd').onclick = () => {
+      const que = $$('cpQ').value.trim(); if (!que) { $$('cpQ').focus(); return; }
+      const it = { que, cant: $$('cpN').value.trim(), agregado: true }; if ($$('cpR').value !== '') it.reemplazo = +$$('cpR').value;
+      d.items.push(it); $$('cpQ').value = ''; $$('cpN').value = ''; pintar();
+    };
+    $$('cpOk').onclick = async () => {
+      try { await CM.upd(p.id, { estado: est, datos: d }); dlg.close(); toast('Guardado: le llegó un aviso a ' + (CM.dueno(p) || 'quien lo creó')); } catch (er) { $$('cpErr').textContent = er.message; }
+    };
+    pintar();
+    return dlg;
+  }
+
   /* ---------- Formulario del pedido ---------- */
   async function form(id, ini) {
     const p = id ? CM.get(id) : null;
+    if (p && CM.ajeno(p)) return compartido(p);
     ini = ini || {};
     const d = JSON.parse(JSON.stringify((p && p.datos) || {}));
     d.items = d.items || [];
@@ -184,8 +218,10 @@
       '<p class="suma" id="pSum"></p>' +
       '<label for="pA">Abono</label><input id="pA" inputmode="numeric" value="' + esc(d.abono ? plata(d.abono) : '') + '" placeholder="$0">' +
       '<label for="pN">Nota del pedido (opcional)</label><textarea id="pN" maxlength="300" rows="2">' + esc(d.nota || '') + '</textarea>' +
+      (p ? CM.bloqueCompartir(p) : '') +
       '<p class="err" id="pErr"></p><div class="btns">' + (p ? '<button class="danger" id="pDel" type="button">' + CM.ico('basura', 16) + '</button>' : '') + '<button class="ghost" data-cerrar type="button">Cancelar</button><button id="pOk" type="button">Guardar pedido</button></div>');
     dlg.classList.add('hoja-pedido');
+    if (p) CM.activarCompartir(dlg, p);
     const $$ = (x) => dlg.querySelector('#' + x);
     let foto = null, editando = null;
     function pintarSuma() {
@@ -194,7 +230,7 @@
     }
     async function pintarItems() {
       pintarSuma();
-      $$('pItems').innerHTML = d.items.length ? d.items.map((x, k) => '<div class="ped-it"><span class="ft" data-f="' + esc(x.foto || '') + '">' + (x.foto ? '' : CM.ico('pedidos', 16)) + '</span><div class="grow" data-ed="' + k + '"><b>' + esc(x.que) + '</b><small>' + esc([x.color, x.cant ? 'x' + x.cant : '', x.nota].filter(Boolean).join(' · ')) + '</small>' + (precioTxt(x) ? '<small class="' + (x.verificar ? 'warn' : 'pr') + '">' + esc(precioTxt(x)) + '</small>' : '') + '</div><button type="button" class="x" data-x="' + k + '" aria-label="Quitar">' + CM.ico('x', 14) + '</button></div>').join('')
+      $$('pItems').innerHTML = d.items.length ? d.items.map((x, k) => '<div class="ped-it' + (x.nohay ? ' nohay' : '') + '"><span class="ft" data-f="' + esc(x.foto || '') + '">' + (x.foto ? '' : CM.ico('pedidos', 16)) + '</span><div class="grow tx" data-ed="' + k + '"><b>' + esc(x.que) + '</b>' + marca(x, d.items) + '<small>' + esc([x.color, x.cant ? 'x' + x.cant : '', x.nota].filter(Boolean).join(' · ')) + '</small>' + (precioTxt(x) ? '<small class="' + (x.verificar ? 'warn' : 'pr') + '">' + esc(precioTxt(x)) + '</small>' : '') + '</div><button type="button" class="x" data-x="' + k + '" aria-label="Quitar">' + CM.ico('x', 14) + '</button></div>').join('')
         : '<p class="sub">Aún no agregas nada. Llena "Qué" abajo y toca Agregar.</p>';
       for (const el of $$('pItems').querySelectorAll('.ft[data-f]')) { if (!el.dataset.f) continue; const f = await CM.fotos.get(el.dataset.f); if (f) el.style.backgroundImage = 'url(' + f.d + ')'; }
     }
@@ -269,15 +305,19 @@
     if (error) { toast(A.friendly(error)); await CM.cargar(); CM.emit(); }
   }
 
+  // Marcas de un pedido compartido: ✓ comprado, "No hay" (queda tachado, no se borra) y reemplazo de otra línea.
+  const marca = (x, L) => (x.ok ? ' <span class="marca ok">✓ comprado</span>' : '') + (x.nohay ? ' <span class="marca bad">No hay</span>' : '') +
+    (x.reemplazo != null && L[x.reemplazo] ? ' <span class="marca">↪ reemplazo de ' + esc(L[x.reemplazo].que) + '</span>' : '');
+
   /* ---------- Pantalla ---------- */
   function tarjeta(p) {
     const d = p.datos || {}, h = hoy(), venc = p.fecha && p.fecha < h && p.estado !== 'hecho', items = d.items || [];
     const sig = p.estado === 'abierto' ? ['listo', 'Marcar listo'] : p.estado === 'listo' ? ['hecho', 'Entregado'] : ['abierto', 'Reabrir'];
-    return '<div class="card ped' + (venc ? ' venc' : '') + '"><div class="cab"><button type="button" class="tit" data-act="editar" data-id="' + p.id + '">' + esc(p.titulo) + '</button>' +
+    return '<div class="card ped' + (venc ? ' venc' : '') + '"><div class="cab"><button type="button" class="tit" data-act="editar" data-id="' + p.id + '">' + esc(p.titulo) + '</button>' + CM.pillCompartido(p) +
       '<div class="acc"><button type="button" data-act="pdf" data-id="' + p.id + '" aria-label="PDF" title="Descargar PDF">' + CM.ico('pdf', 18) + '</button><button type="button" data-act="share" data-id="' + p.id + '" aria-label="Compartir" title="Compartir">' + CM.ico('compartir', 18) + '</button>' +
       (d.tel ? '<button type="button" data-act="wsp" data-id="' + p.id + '" aria-label="WhatsApp al cliente" title="Avisar por WhatsApp">' + CM.ico('wsp', 18) + '</button>' : '') + '</div></div>' +
       '<p class="sub">' + CM.ico('reloj', 13) + ' ' + esc(fEnt(p)) + (venc ? ' <span class="pill bad">atrasado</span>' : p.fecha === h ? ' <span class="pill warn">hoy</span>' : p.fecha === sumarDias(h, 1) ? ' <span class="pill info">mañana</span>' : '') + '</p>' +
-      items.map((x) => '<p class="it-l"><b>' + esc(x.que) + '</b> ' + esc([x.color, x.cant ? 'x' + x.cant : ''].filter(Boolean).join(' · ')) + (x.nota ? ' <span class="sub">— ' + esc(x.nota) + '</span>' : '') + (x.foto ? ' ' + CM.ico('camara', 13) : '') + (precioTxt(x) ? ' <span class="' + (x.verificar ? 'warn' : 'pr') + '">' + esc(x.verificar ? '⚠ verificar precio' : plata(linea(x))) + '</span>' : '') + '</p>').join('') +
+      items.map((x) => '<p class="it-l' + (x.nohay ? ' nohay' : '') + '"><b>' + esc(x.que) + '</b>' + marca(x, items) + ' ' + esc([x.color, x.cant ? 'x' + x.cant : ''].filter(Boolean).join(' · ')) + (x.nota ? ' <span class="sub">— ' + esc(x.nota) + '</span>' : '') + (x.foto ? ' ' + CM.ico('camara', 13) : '') + (precioTxt(x) ? ' <span class="' + (x.verificar ? 'warn' : 'pr') + '">' + esc(x.verificar ? '⚠ verificar precio' : plata(linea(x))) + '</span>' : '') + '</p>').join('') +
       (totalDe(d) ? '<p class="tot">Total <b>' + plata(totalDe(d)) + '</b>' + (porVerificar(d) ? ' <span class="warn">(+' + porVerificar(d) + ' por verificar)</span>' : '') + ' · Abono <b>' + plata(d.abono) + '</b> · Saldo <b class="' + (saldo(d) ? 'debe' : 'ok') + '">' + plata(saldo(d)) + '</b></p>'
         : num(d.abono) || porVerificar(d) ? '<p class="tot">' + (num(d.abono) ? 'Abono <b>' + plata(d.abono) + '</b>' : '') + (porVerificar(d) ? ' <span class="warn">' + porVerificar(d) + ' por verificar</span>' : '') + '</p>' : '') +
       '<div class="btns-s"><button type="button" class="small' + (sig[0] === 'abierto' ? ' ghost' : '') + '" data-act="estado" data-e="' + sig[0] + '" data-id="' + p.id + '">' + CM.ico(sig[0] === 'abierto' ? 'izq' : 'check', 15) + ' ' + sig[1] + '</button></div></div>';
