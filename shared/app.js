@@ -374,7 +374,7 @@
     const forzada = !!(min && versionMenor(cfg.VERSION, min));
     if (!forzada && !(lib && versionMenor(cfg.VERSION, lib))) return;
     avisada = true;
-    if (!forzada) { actualizarSola(); return; }
+    if (!forzada) { actualizarSola(lib); return; }
     const d = modal('<h2>' + (forzada ? '⚠️ Actualiza la app' : '✨ Hay una versión nueva') + '</h2><p class="muted" style="margin-top:0">' +
       (forzada ? 'Tu versión (v' + esc(cfg.VERSION) + ') ya no funciona bien. Actualízala para seguir.' : 'Tienes la v' + esc(cfg.VERSION) + ' y ya está disponible la v' + esc(lib) + '. Actualiza para tener las últimas mejoras.') +
       '</p><p class="err" id="btMsg" style="margin:0 0 10px"></p><div class="btns">' + (forzada ? '' : '<button class="ghost" data-cerrar>Después</button>') +
@@ -384,13 +384,19 @@
   }
   // v4.3: la versión liberada se instala sola, sin preguntar. Se descarga completa en segundo plano y la app se recarga
   // apenas no estés escribiendo ni con una ventana abierta. Si Cloudflare aún no termina de publicarla, lo reintenta más tarde.
-  function actualizarSola() {
+  // Sin bucle: si lo publicado todavía es más viejo que lo liberado (el hosting aún no termina de publicar), no se recarga;
+  // se vuelve a intentar en 5 minutos. Y nunca más de 2 recargas por la misma versión en 30 minutos.
+  function actualizarSola(lib) {
     if (!('serviceWorker' in navigator)) { avisada = false; return; }
+    const kI = 'bt:intentos:' + lib; let I = [];
+    try { I = JSON.parse(localStorage.getItem(kI) || '[]').filter((t) => Date.now() - t < 30 * 60 * 1000); } catch (er) { I = []; }
+    if (I.length >= 2) { setTimeout(() => { avisada = false; }, 10 * 60 * 1000); return; }
     navigator.serviceWorker.ready.then((reg) => {
       const sw = reg.active; if (!sw) { avisada = false; return; }
       const ch = new MessageChannel();
       ch.port1.onmessage = (e) => {
-        if (!(e.data && e.data.ok)) { setTimeout(() => { avisada = false; }, 5 * 60 * 1000); return; }
+        if (!(e.data && e.data.ok) || (lib && e.data.version && versionMenor(e.data.version, lib))) { setTimeout(() => { avisada = false; }, 5 * 60 * 1000); return; }
+        try { I.push(Date.now()); localStorage.setItem(kI, JSON.stringify(I)); } catch (er) { /* sin storage */ }
         const libre = () => !document.querySelector('dialog[open]') && !(document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName));
         const recargar = () => { if (libre()) { try { sessionStorage.setItem('bt:actualizada', e.data.version || ''); } catch (er) { /* sin storage */ } location.reload(); } else setTimeout(recargar, 4000); };
         recargar();

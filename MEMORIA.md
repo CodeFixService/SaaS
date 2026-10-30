@@ -227,3 +227,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Versiones en main**: CM 4.23 · Billetera 1.21.1 · Órbita 5.25 · Barbería 2.23 · BiciTaller 2.23 · Estaciona 2.14.1 · Cerebro 1.7 (bases sin cambio).
 - **Apilar**: barra.js revisa cada vez (si la lista se redibujó o la sección estaba escondida), también al tocar pestañas/hash; antes quedaba sin apilar al volver.
 - **Animaciones (tema.css, solo transform/opacity, apagadas con "reducir movimiento")**: entrada de sección (`.view.on`), tarjetas escalonadas, ventanas que suben (zoom en escritorio), botones que se hunden, ícono de la barra que salta, insignias con pulso.
+
+## Arreglo bucle y Billetera pegada (30/10/2026) · núcleo 2.9
+- **Versiones en main**: CM 4.24 · Billetera 1.21.2 · Órbita 5.26 · Barbería 2.24 · BiciTaller 2.24 · Estaciona 2.14.2 · Cerebro 1.8.
+- **Sin bucle de actualización**: CM `actualizarSola(lib)` no recarga si lo bajado es más viejo que lo liberado (hosting aún publicando) y máx. 2 recargas por versión en 30 min; núcleo auto.js igual (máx. 2 intentos por versión / 30 min). Liberar solo cuando el hosting ya tenga la versión.
+- **Billetera en computador**: `.app.con-nav` con 28px a cada lado (el núcleo le quitaba el padding y quedaba pegado al menú lateral).
