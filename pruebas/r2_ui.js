@@ -26,19 +26,22 @@ async function entrar(t, p, email) {
     assert(await p.locator('header .cfx-cab [data-cfx-campana]').count() === 1, 'una sola campana');
     assert(/^(PRO|FREE)$/.test(await p.locator('.cfx-plan').innerText()), 'insignia del plan');
     await p.click('.cfx-av'); await p.waitForTimeout(400);
-    assert(await p.locator('dialog.cfx-ayuda [data-a=inicio]').count() === 1 && await p.locator('dialog.cfx-ayuda [data-a=salir]').count() === 1, 'menú de la foto con Inicio y Cerrar sesión');
+    assert(await p.locator('dialog.cfx-ayuda .ca-op').count() === 1 && await p.locator('dialog.cfx-ayuda [data-a=salir]').count() === 1, 'menú de la foto: solo Cerrar sesión');
     assert(await p.evaluate(() => !!document.querySelector('.cfx-cab').closest('header, .top, .cab')), 'cabecera arriba en el encabezado');
     await p.click('dialog.cfx-ayuda [data-a=salir]'); await p.waitForTimeout(300);
     assert(/¿Cerrar sesión\?/.test(await p.locator('dialog.cfx-ayuda').innerText()), 'cerrar sesión pide confirmar');
-    await p.click('dialog.cfx-ayuda [data-cerrar]'); await p.click('.cfx-av'); await p.waitForTimeout(300);
-    await p.click('dialog.cfx-ayuda [data-a=guia]'); await p.waitForTimeout(400);
+    await p.click('dialog.cfx-ayuda [data-cerrar]');
+    // Cuenta y ayuda (guía, soporte, términos…) ahora está en Más.
+    await p.locator('nav.cfx-barra > *', { hasText: 'Más' }).first().click(); await p.waitForTimeout(1200); await t.sinModales();
+    assert(await p.locator('.cfx-cuenta-g [data-cfx-a=chat]').count() === 1, 'Cuenta y ayuda en Más'); await t.foto('r2-mas-cuenta');
+    await p.click('.cfx-cuenta-g [data-cfx-a=guia]'); await p.waitForTimeout(400);
     const g = await p.locator('dialog.cfx-ayuda').innerText();
     assert(/Te faltan 5 de 6/.test(g) && /Despacho o retiro/.test(g), 'guía con 5 de 6 pendientes');
     await t.foto('r2-guia'); assert(await t.anchoOk(), 'ancho guía');
-    await p.click('dialog.cfx-ayuda [data-cerrar]'); await p.click('.cfx-av'); await p.click('dialog.cfx-ayuda [data-a=terminos]'); await p.waitForTimeout(300);
+    await p.click('dialog.cfx-ayuda [data-cerrar]'); await p.click('.cfx-cuenta-g [data-cfx-a=terminos]'); await p.waitForTimeout(300);
     assert(/19\.496/.test(await p.locator('dialog.cfx-ayuda').innerText()) && /despacho/i.test(await p.locator('dialog.cfx-ayuda').innerText()), 'términos de tienda');
     await t.foto('r2-terminos');
-    await p.click('dialog.cfx-ayuda [data-cerrar]'); await p.click('.cfx-av'); await p.click('dialog.cfx-ayuda [data-a=chat]'); await p.waitForTimeout(800);
+    await p.click('dialog.cfx-ayuda [data-cerrar]'); await p.click('.cfx-cuenta-g [data-cfx-a=chat]'); await p.waitForTimeout(800);
     await p.fill('dialog.cfx-ayuda textarea', '¿Cómo pongo mi link?'); await p.click('dialog.cfx-ayuda [data-enviar]'); await p.waitForTimeout(1000);
     assert((await t.sim.su("select count(*)::int n from public.cfx_chat where de = 'persona'"))[0].n === 1, 'mensaje de soporte guardado');
     assert(await p.locator('dialog.cfx-ayuda .ca-m.yo').count() === 1, 'mensaje en pantalla');

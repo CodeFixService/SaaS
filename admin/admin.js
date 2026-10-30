@@ -29,18 +29,19 @@
   async function resumen() {
     el('resumen').innerHTML = '<p class="sub">Cargando…</p>';
     try {
-      const [r, u] = await Promise.all([rpc('admin_resumen'), rpc('admin_uso')]);
-      const pc = Math.min(100, Math.round(u.db_bytes / u.limite_bytes * 100));
+      const r = await rpc('admin_resumen');
       el('resumen').innerHTML = '<div class="titulo-v"><h2>Resumen</h2><span class="sub">' + (SUPER ? 'Administrador' : 'Socio') + '</span></div><div class="stats">' +
         [['Usuarios', r.usuarios], ['Activos 7 d', r.activos7], ['Nuevos 7 d', r.nuevos7], ['Pro', r.pro], ['En prueba', r.prueba], ['Pagos por revisar', r.pagos_pendientes], ['Ingresos del mes', '$' + Number(r.ingresos_mes).toLocaleString('es-CL')], ['Socios', r.socios]].map((x) => '<div class="card"><b>' + x[1] + '</b><span>' + x[0] + '</span></div>').join('') + '</div>' +
-        '<div class="card"><h2>Servidor</h2><div class="barra"><i style="width:' + pc + '%;background:' + (pc > 80 ? 'var(--bad)' : 'var(--brand)') + '"></i></div><p class="sub">' + MB(u.db_bytes) + ' de ' + MB(u.limite_bytes) + ' (' + pc + '%) · ' + u.usuarios + ' cuentas · registro: ' + u.auditoria_filas + '/' + u.auditoria_max + ' filas</p>' +
-        '<div class="hb-t">' + u.tablas.slice(0, 6).map((t) => '<div class="fila"><span class="tit">' + esc(t.tabla) + '</span><span class="sub">' + MB(t.bytes) + ' · ' + t.filas + ' filas</span></div>').join('') + '</div></div>';
+        '<div id="rSrv"><p class="sub">Revisando servidores…</p></div>';
     } catch (e) { el('resumen').innerHTML = '<p class="err">' + esc(e.message) + '</p>'; }
     // Súper panel: lo que espera en las 6 apps (pagos, verificaciones y versiones por liberar), con un toque a cada sección.
     el('resumen').insertAdjacentHTML('beforeend', '<div class="card" id="r6"><h2>Las 6 apps</h2><p class="sub">Revisando…</p></div>');
     (async () => {
       const M = window.MisApps; await M.preparar();
       const con = M.APPS.filter((a) => (M.estado[a.id] || {}).conectado);
+      // Servidores en carrusel (núcleo): el del Centro de Mando y el de cada app conectada.
+      if ($('rSrv') && window.CFX_SERVIDORES) window.CFX_SERVIDORES.montar($('rSrv'), [{ nombre: 'Centro de Mando', cargar: () => rpc('cfx_servidor') }]
+        .concat(con.filter((a) => a.id !== 'cm').map((a) => ({ nombre: a.nombre.split(' ·')[0], cargar: () => M.rpcDe(M.cliente(a), 'cfx_servidor') }))));
       let pagos = 0, verif = 0, msjs = 0; const lib = [];
       await Promise.all(con.map(async (a) => {
         const c = M.cliente(a);
