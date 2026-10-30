@@ -222,3 +222,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Referidos (núcleo, sql/referidos.sql)**: `?ref=CODIGO` → `cfx_ref_registrar` al entrar; menú "🎁 Invita y gana" (no admin, no CM/Cerebro); CM → Control → 🎁 Referidos (ranking, dar días + sticker, premio automático `dias_auto` al primer pago aprobado del invitado).
 - **Socios comunes (núcleo, sql/socios.sql)**: Billetera/Órbita/Estaciona aceptan `cfx_es_socio()` en su función de admin; solo el dueño los agrega/quita en CM → Control → 🤝 Socios; ayuda.js pregunta `cfx_es_socio` para mostrar SOCIO.
 - **Pruebas nuevas**: cm_compartir.sql, cm_compartir_ui.js, cm_referidos.sql, socios_est.sql (en todo.sh).
+
+## Animaciones (30/10/2026) · núcleo 2.8
+- **Versiones en main**: CM 4.23 · Billetera 1.21.1 · Órbita 5.25 · Barbería 2.23 · BiciTaller 2.23 · Estaciona 2.14.1 · Cerebro 1.7 (bases sin cambio).
+- **Apilar**: barra.js revisa cada vez (si la lista se redibujó o la sección estaba escondida), también al tocar pestañas/hash; antes quedaba sin apilar al volver.
+- **Animaciones (tema.css, solo transform/opacity, apagadas con "reducir movimiento")**: entrada de sección (`.view.on`), tarjetas escalonadas, ventanas que suben (zoom en escritorio), botones que se hunden, ícono de la barra que salta, insignias con pulso.
