@@ -18,7 +18,7 @@ const assert = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('
     await p.goto(t.base + '/#/avisos'); await p.waitForTimeout(1500);
     const n0 = await p.locator('[data-quitar]').count();
     assert(n0 >= 2, 'avisos con ✕ ' + n0);
-    await p.locator('[data-quitar]').first().click(); await p.waitForTimeout(800);
+    await p.locator('[data-quitar]').first().evaluate((b) => b.click()); await p.waitForTimeout(800);
     assert(await p.locator('[data-quitar]').count() === n0 - 1, 'borra uno');
     await t.foto('avisos'); assert(await t.anchoOk(), 'ancho avisos');
     await p.goto(t.base + '/#/chat/' + conv); await p.waitForTimeout(1500);

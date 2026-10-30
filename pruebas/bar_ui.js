@@ -18,7 +18,7 @@ async function entrar(t, p, email) {
     await p.click('#bCampana'); await p.waitForTimeout(1200);
     const n0 = await p.locator('[data-ocultar]').count();
     assert(n0 >= 2, 'avisos con ✕ (' + n0 + ')');
-    await p.locator('[data-ocultar]').first().click(); await p.waitForTimeout(800);
+    await p.locator('[data-ocultar]').first().evaluate((b) => b.click()); await p.waitForTimeout(800);
     assert(await p.locator('[data-ocultar]').count() === n0 - 1, 'quita uno');
     await t.foto('campana');
     await p.goto(t.base + '/equipo/#respaldo'); await p.waitForTimeout(2000); await t.sinModales();

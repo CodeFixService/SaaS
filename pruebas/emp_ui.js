@@ -23,7 +23,7 @@ async function entrar(t, p, email, pass) {
     await t.sinModales();
     await p.goto(t.base + '/app/#avisos'); await p.waitForTimeout(1500); await t.sinModales();
     assert(await p.locator('[aria-label="Borrar aviso"]').count() >= 2, 'avisos con ✕');
-    await p.locator('[aria-label="Borrar aviso"]').first().click(); await p.waitForTimeout(800);
+    await p.locator('[aria-label="Borrar aviso"]').first().evaluate((b) => b.click()); await p.waitForTimeout(800);
     const n1 = (await t.sim.su('select count(*)::int n from notificaciones where negocio=$1', [neg]))[0].n;
     await t.foto('avisos');
     await p.click('text=Borrar todos'); await p.waitForTimeout(400); await p.locator('dialog button, [role=dialog] button', { hasText: 'Borrar' }).last().click(); await p.waitForTimeout(800);

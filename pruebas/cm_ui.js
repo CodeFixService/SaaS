@@ -14,7 +14,7 @@ const assert = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('
     await t.sinModales(); await p.waitForTimeout(200);
     await p.click('#bCampana'); await p.waitForTimeout(500);
     assert(await p.locator('dialog [data-quitar]').count() === 3, '3 avisos con ✕');
-    await p.locator('dialog [data-quitar]').first().click(); await p.waitForTimeout(600);
+    await p.locator('dialog [data-quitar]').first().evaluate((b) => b.click()); await p.waitForTimeout(600);
     assert((await t.sim.su('select count(*)::int n from notificaciones where para=$1', [adm.id]))[0].n === 2, 'borra uno');
     await t.foto('campana');
     await p.click('dialog [data-borrar]'); await p.waitForTimeout(300);

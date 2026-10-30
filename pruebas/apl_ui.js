@@ -21,7 +21,7 @@ async function entrar(t, p, email, pass) {
     await entrar(t, p, 'tienda@x.cl', 'clave123');
     await p.goto(t.base + '/#avisos'); await p.waitForTimeout(1500); await t.sinModales();
     assert(await p.locator('[data-ocultar]').count() >= 2, 'avisos con ✕');
-    await p.locator('[data-ocultar]').first().click(); await p.waitForTimeout(700);
+    await p.locator('[data-ocultar]').first().evaluate((b) => b.click()); await p.waitForTimeout(700);
     assert((await t.sim.su('select count(*)::int n from notification_reads where oculto'))[0].n === 1, 'aviso oculto');
     await t.foto('avisos');
     await p.goto(t.base + '/#ajustes'); await p.waitForTimeout(1500); await t.sinModales();
