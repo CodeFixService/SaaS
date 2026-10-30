@@ -232,3 +232,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Versiones en main**: CM 4.24 · Billetera 1.21.2 · Órbita 5.26 · Barbería 2.24 · BiciTaller 2.24 · Estaciona 2.14.2 · Cerebro 1.8.
 - **Sin bucle de actualización**: CM `actualizarSola(lib)` no recarga si lo bajado es más viejo que lo liberado (hosting aún publicando) y máx. 2 recargas por versión en 30 min; núcleo auto.js igual (máx. 2 intentos por versión / 30 min). Liberar solo cuando el hosting ya tenga la versión.
 - **Billetera en computador**: `.app.con-nav` con 28px a cada lado (el núcleo le quitaba el padding y quedaba pegado al menú lateral).
+
+## Cabecera CM y + sin texto (30/10/2026) · núcleo 2.10
+- **Versiones en main**: CM 4.25 · Billetera 1.21.3 · Órbita 5.27 · Barbería 2.25 · BiciTaller 2.25 · Estaciona 2.14.3 · Cerebro 1.9.
+- CM app sin lupa en la cabecera (Buscar en Más → Secciones) y chip Trabajo/Descanso más chico en celular.
+- + del centro: tema.css oculta su texto aunque la barra aún no se arme (`nav :is(.cfx-mas,.nuevo,.nav-mas,.mas-grande)`), y barra.js le quita texto y etiquetas (queda aria-label).

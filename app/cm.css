@@ -126,3 +126,6 @@ nav.tabs button.nuevo .ic{width:28px;height:28px}nav.tabs button.nuevo.on{backgr
 /* Compartir */
 .comp{margin:10px 0}.comp summary{cursor:pointer;display:flex;align-items:center;gap:6px}.comp .chips{margin-top:8px}.comp-log{margin:8px 0 0;padding-left:18px;font-size:13px}.comp-log li{margin:2px 0}
 .ped-it.nohay .tx b{text-decoration:line-through;opacity:.6}.ped-it .marca{font-size:12px;font-weight:700}
+
+/* Cabecera en celular: el chip Trabajo/Descanso más compacto (sin lupa; Buscar está en Más) */
+@media (max-width:480px){.chip-modo{padding:4px 9px;font-size:11px;gap:4px}.chip-modo svg{width:13px;height:13px}}

@@ -71,7 +71,7 @@
     const sec = [['panel', '', 'panel', 'Panel'], ['metas', '', 'metas', 'Metas'], ['cerebro', 'notas', 'libro', 'Notas'], ['cerebro', 'ideas', 'cerebro', 'Ideas'], ['cerebro', 'problemas', 'alerta', 'Problemas'],
       ['cerebro', 'diario', 'luna', 'Diario'], ['cerebro', 'logros', 'estrella', 'Logros']];
     x += '<div class="card"><h3>Secciones</h3><div class="secs">' + sec.map((s) => '<button type="button" class="ghost" data-act="sec" data-v="' + s[0] + '" data-s="' + s[1] + '">' + CM.ico(s[2], 18) + ' ' + s[3] + '</button>').join('') +
-      '<button type="button" class="ghost" data-act="aterrizar">' + CM.ico('ancla', 18) + ' Aterrizar</button></div></div>';
+      '<button type="button" class="ghost" data-act="aterrizar">' + CM.ico('ancla', 18) + ' Aterrizar</button><button type="button" class="ghost" data-act="buscar">' + CM.ico('lupa', 18) + ' Buscar</button></div></div>';
     // Cuentas vinculadas: con quién comparto pedidos, tareas y notas (cada uno ingresa el código del otro una vez).
     x += '<div class="card" id="vinc"><h3>' + CM.ico('compartir', 18) + ' Cuentas vinculadas</h3><p class="sub">Comparte pedidos, tareas y notas con alguien que trabaja contigo. Nadie ve lo tuyo hasta que se vinculan con un código.</p>' +
       '<p>Tu código: <b id="vCod">…</b> <button type="button" class="small ghost" data-act="vcopiar">Copiar</button></p>' +
@@ -117,6 +117,7 @@
         else if (a === 'tema') { await CM.guardarPrefs({ tema: b.dataset.t }); render(el); }
         else if (a === 'nom') { c.nombre = el.querySelector('#sN').value.trim() || c.nombre; await rpc('mi_perfil_guardar', { p_nombre: c.nombre, p_telefono: c.telefono }); toast('Guardado'); }
         else if (a === 'tour') CM.tour();
+        else if (a === 'buscar') CM.buscar();
         else if (a === 'vcopiar') { await navigator.clipboard.writeText(el.querySelector('#vCod').textContent); toast('Código copiado'); }
         else if (a === 'vincular') { const r = await rpc('vincular', { p_codigo: el.querySelector('#vIn').value }); toast('Vinculado con ' + r.nombre); await CM.vinculos(true); pintarVinc(el); }
         else if (a === 'desv') { if (await A.confirmar('¿Desvincular a ' + b.dataset.n + '? Dejan de ver lo que se compartieron.', 'Desvincular')) { await rpc('desvincular', { p_otro: b.dataset.id }); await CM.vinculos(true); await CM.cargar(); pintarVinc(el); } }
