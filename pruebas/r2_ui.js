@@ -47,10 +47,11 @@ async function entrar(t, p, email) {
     // Hoja de pago nueva
     await p.evaluate(() => CFX_PAGOS.abrir({ rpc: (f, a) => Cuenta.rpc(f, a) })); await p.waitForTimeout(1200);
     assert(await p.locator('dialog.cfx-pago .cp-tabs button').count() === 3, 'tres formas de pago');
-    assert(await p.locator('dialog.cfx-pago [data-d]').count() === 6, 'copiar cada dato (6)');
-    await p.click('dialog.cfx-pago [data-d="2"]'); await p.waitForTimeout(200);
-    assert(/Copiado/.test(await p.locator('dialog.cfx-pago [data-d="2"]').innerText()), 'dato copiado');
-    await p.click('dialog.cfx-pago .cp-plan:has-text("Varios meses")'); await p.selectOption('#cpMeses', '3'); await p.waitForTimeout(300);
+    assert(await p.locator('dialog.cfx-pago [data-d]').count() === 4, 'copiar cada dato (4: banco y tipo de cuenta sin copiar)');
+    assert(await p.locator('dialog.cfx-pago .cp-plan').count() === 3, 'solo 1 mes, 3 meses y 1 año');
+    await p.click('dialog.cfx-pago [data-d="0"]'); await p.waitForTimeout(200);
+    assert(/Copiado/.test(await p.locator('dialog.cfx-pago [data-d="0"]').innerText()), 'dato copiado');
+    await p.click('dialog.cfx-pago .cp-plan:has-text("3 meses")'); await p.waitForTimeout(300);
     assert(/14\.700/.test(await p.locator('#cpMonto').innerText()), '3 meses = 14.700 por transferencia');
     await p.click('dialog.cfx-pago [data-m=link]'); await p.waitForTimeout(300);
     const d = await p.locator('#cpDesglose').innerText();

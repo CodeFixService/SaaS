@@ -27,8 +27,10 @@
       '<h3>Cliente</h3><div class="grid2">' + campo('cliente.mensual', 'Premium mensual', cl.mensual, 'number') + campo('cliente.anual', 'Premium anual', cl.anual, 'number') + '</div>' +
       '<h3>Links por plan (con monto fijo)</h3><p class="sub">Crea cada link con el monto que se indica (precio + cargo online). Si dejas uno vacío, ese plan usa el link general.</p>' +
       campo('negocio.link_mensual', 'Negocio · mensual (y primer pago) · ' + pesos(Math.ceil((n.mensual || 0) * (1 + (Number(c.comision_pct) || 0) / 100))), n.link_mensual, 'url') +
+      campo('negocio.link_3meses', 'Negocio · 3 meses · ' + pesos(Math.ceil((n.mensual || 0) * 3 * (1 + (Number(c.comision_pct) || 0) / 100))), n.link_3meses, 'url') +
       campo('negocio.link_anual', 'Negocio · anual · ' + pesos(Math.ceil((n.anual || 0) * (1 + (Number(c.comision_pct) || 0) / 100))), n.link_anual, 'url') +
       campo('cliente.link_mensual', 'Cliente · mensual · ' + pesos(Math.ceil((cl.mensual || 0) * (1 + (Number(c.comision_pct) || 0) / 100))), cl.link_mensual, 'url') +
+      campo('cliente.link_3meses', 'Cliente · 3 meses · ' + pesos(Math.ceil((cl.mensual || 0) * 3 * (1 + (Number(c.comision_pct) || 0) / 100))), cl.link_3meses, 'url') +
       campo('cliente.link_anual', 'Cliente · anual · ' + pesos(Math.ceil((cl.anual || 0) * (1 + (Number(c.comision_pct) || 0) / 100))), cl.link_anual, 'url') +
       '<h3>Link general</h3>' + campo('link', 'Link (sin monto: la persona escribe cuánto paga)', c.link, 'url') +
       campo('comision_pct', 'Cargo por pago online del link (%)', c.comision_pct, 'number', 'Se muestra como una línea aparte ("Cargo por pago online"), igual que un impuesto: transparente. Súbelo, bájalo o déjalo en 0. Por transferencia pagan el precio exacto.') +
@@ -53,7 +55,7 @@
     const p = leer(), res = raiz.querySelector('#pgRes'), out = [];
     if (p.link && !/^https:\/\//.test(p.link)) return toast('El link debe empezar con https://');
     if (p.tarjeta && p.tarjeta.link && !/^https:\/\//.test(p.tarjeta.link)) return toast('El link de tarjeta debe empezar con https://');
-    for (const g of ['negocio', 'cliente']) for (const k of ['link_mensual', 'link_anual']) if (p[g] && p[g][k] && !/^https:\/\//.test(p[g][k])) return toast('Los links deben empezar con https://');
+    for (const g of ['negocio', 'cliente']) for (const k of ['link_mensual', 'link_3meses', 'link_anual']) if (p[g] && p[g][k] && !/^https:\/\//.test(p[g][k])) return toast('Los links deben empezar con https://');
     res.innerHTML = '<p class="sub">Guardando…</p>';
     for (const a of M().APPS) {
       const e = M().estado[a.id] || {};
