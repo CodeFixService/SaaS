@@ -13,7 +13,27 @@
     CM.aplicarTema();
     await rpc('mi_perfil_guardar', { p_nombre: CM.cuenta.nombre, p_telefono: CM.cuenta.telefono, p_prefs: parcial });
   };
-  CM.aplicarTema = () => {
+  // Perfil común del núcleo (ayuda.js → CFX_PERFIL): aquí solo cómo guarda el Centro de Mando.
+  const pf = () => CM.cuenta.prefs || {};
+  window.CFX_PERFIL_APP = {
+    __proto__: App.perfil,
+    foto: () => CM.fotoPerfil(),
+    // La foto de perfil queda solo en este teléfono (no ocupa el servidor).
+    guardarFoto: async (f) => {
+      const vieja = localStorage.getItem('cm:fotoPerfil');
+      if (f) localStorage.setItem('cm:fotoPerfil', await CM.fotos.guardar(f, 320)); else localStorage.removeItem('cm:fotoPerfil');
+      if (vieja) CM.fotos.borrar(vieja);
+      CM.pintarAvatar();
+    },
+    iconos: CM.AVATARES, icono: () => pf().avatar || '🙂',
+    guardar: async (d) => {
+      CM.cuenta.nombre = d.nombre || CM.cuenta.nombre;
+      if (d.icono && d.icono !== pf().avatar) await CM.guardarPrefs({ avatar: d.icono });
+      else await rpc('mi_perfil_guardar', { p_nombre: CM.cuenta.nombre, p_telefono: CM.cuenta.telefono });
+    },
+    colores: CM.COLORES, libre: false, color: () => pf().color || CM.COLORES[0], guardarColor: (c) => CM.guardarPrefs({ color: c }),
+    modo: () => pf().tema || 'auto', guardarModo: (m) => CM.guardarPrefs({ tema: m })
+  };  CM.aplicarTema = () => {
     const p = pr(), r = document.documentElement;
     if (/^#[0-9a-f]{6}$/i.test(p.color || '')) { r.style.setProperty('--brand', p.color); r.style.setProperty('--c1', p.color); const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = p.tema === 'claro' ? '#f3f5fa' : '#0a0e17'; }
     if (p.tema === 'claro' || p.tema === 'oscuro') r.dataset.theme = p.tema === 'claro' ? 'light' : 'dark'; else delete r.dataset.theme;

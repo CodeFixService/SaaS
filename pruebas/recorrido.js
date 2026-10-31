@@ -114,7 +114,23 @@ const APPS = {
           if (campanas > 1) malos.push('campanas: ' + campanas);
           await p.waitForTimeout(1000); await t.sinModales(p); const av = p.locator('.cfx-av:visible');
           if (await av.count() !== 1) malos.push('avatar visibles: ' + await av.count());
-          else { await av.click(); await p.waitForTimeout(500); await foto('9-menu'); }
+          else {
+            await av.click(); await p.waitForTimeout(500); await foto('9-menu');
+            // Perfil común (núcleo): Mi perfil en el menú de la foto, con sus secciones.
+            const mp = p.locator('dialog [data-a=perfil]');
+            if (!(await mp.count())) malos.push('menú sin Mi perfil');
+            else {
+              await mp.click(); await p.waitForTimeout(800);
+              const k = await p.locator('dialog .cfx-aj > button').count();
+              if (k < 3) malos.push('perfil con ' + k + ' secciones');
+              for (let j = 0; j < k; j++) {
+                await p.locator('dialog .cfx-aj > button').nth(j).click(); await p.waitForTimeout(700);
+                await foto('9-perfil-' + j);
+                if (!(await t.anchoOk(p))) malos.push('se sale del ancho: perfil ' + j);
+                await p.locator('dialog .cfx-aj-volver').click(); await p.waitForTimeout(300);
+              }
+            }
+          }
           const plan = await p.locator('.cfx-plan:visible').first().textContent().catch(() => '');
           informe.push(nombre + ' · ' + c.rol + ' · plan ' + (plan || '—') + (malos.length ? ' · ⚠️ ' + malos.join(' | ') : ' · ok'));
         } catch (e) { informe.push(nombre + ' · ' + c.rol + ' · FALLA ' + e.message.split('\n').slice(0, 6).join(' ')); await foto('error').catch(() => {}); }
