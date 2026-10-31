@@ -255,7 +255,7 @@
     await M().preparar();
     const a = app();
     el.innerHTML = '<div class="titulo-v"><h2>Control</h2><span class="sub">Las 7 apps</span></div>' +
-      '<div class="seg">' + M().APPS.map((x) => '<button type="button" data-app="' + x.id + '" class="' + (x.id === actual ? 'on' : '') + '">' + esc(x.nombre.split(' ·')[0]) + (conectada(x) ? '' : ' 🔌') + '</button>').join('') + '</div>' +
+      '<div class="seg" style="display:flex;flex-wrap:wrap;gap:8px">' + M().APPS.map((x) => '<button type="button" data-app="' + x.id + '" class="' + (x.id === actual ? 'on' : '') + '">' + esc(x.nombre.split(' ·')[0]) + (conectada(x) ? '' : ' 🔌') + '</button>').join('') + '</div>' +
       '<div class="chips">' + SECC.map((s) => '<button type="button" class="chip' + (s[0] === seccion ? ' on' : '') + '" data-s="' + s[0] + '">' + s[1] + '</button>').join('') + '</div><div id="ctlCuerpo"></div>';
     el.querySelectorAll('[data-app]').forEach((b) => { b.onclick = () => { actual = b.dataset.app; render(el); }; });
     el.querySelectorAll('[data-s]').forEach((b) => { b.onclick = () => { seccion = b.dataset.s; render(el); }; });

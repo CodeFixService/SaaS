@@ -80,7 +80,7 @@
       '<label class="chk2"><input id="p3" type="checkbox"' + (p.cierre_noche === false ? '' : ' checked') + '> Aviso de cierre del día</label><button type="button" data-act="prefs">Guardar</button><p class="sub">Solo mido el tiempo dentro de esta app, no el uso total del teléfono.</p>'; },
     datos: () => { const lim = uso ? uso.limite_items : 0, pc = uso && lim ? Math.min(100, Math.round(uso.items / lim * 100)) : 0;
       return (uso ? '<div class="barra"><i style="width:' + pc + '%"></i></div><p class="sub">' + uso.items + ' de ' + lim + ' registros · ' + mb(uso.bytes) + '</p>' : '') +
-        '<button type="button" class="small ghost" data-act="bajar">' + CM.ico('bajar', 15) + ' Descargar mis datos</button> <button type="button" class="small ghost" data-act="depurar">Limpiar antiguos</button><p class="sub">Descarga primero; limpiar borra hábitos y tareas hechas con más de 90 días.</p>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:10px;margin:8px 0"><button type="button" class="small ghost" data-act="bajar">' + CM.ico('bajar', 15) + ' Descargar mis datos</button><button type="button" class="small ghost" data-act="depurar">Limpiar antiguos</button></div><p class="sub">Descarga primero; limpiar borra hábitos y tareas hechas con más de 90 días.</p>' +
         '<div class="card peligro" style="margin-top:14px"><h3>Zona de riesgo</h3><button type="button" class="small ghost" data-act="borrar">Borrar todos mis datos</button></div>'; }
   };
   // Dibuja una opción en su hoja (z) y le da sus botones; volver a dibujar = mismo z (la hoja no se cierra).

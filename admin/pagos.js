@@ -151,7 +151,7 @@
     try { cfg = await A.rpc('cfx_pagos_config'); } catch (x) { cfg = null; }
     const sin = M().APPS.filter((a) => !(M().estado[a.id] || {}).conectado);
     el.innerHTML = '<div class="titulo-v"><h2>Pagos</h2><span class="sub">Las 7 apps</span></div>' +
-      (sin.length ? '<div class="card"><p class="sub">Para ver y aprobar sus pagos, conecta: ' + sin.map((a) => '<button type="button" class="small ghost" data-con="' + a.id + '">' + esc(a.nombre.split(' ·')[0]) + '</button>').join(' ') + '</p></div>' : '') +
+      (sin.length ? '<div class="card"><p class="sub" style="margin:0 0 10px">Para ver y aprobar sus pagos, conecta:</p><div class="apps-con" style="display:flex;flex-wrap:wrap;gap:8px">' + sin.map((a) => '<button type="button" class="small ghost" data-con="' + a.id + '">' + esc(a.nombre.split(' ·')[0]) + '</button>').join('') + '</div></div>' : '') +
       '<div class="seg chips"><button type="button" class="chip' + (filtro === 'pendiente' ? ' on' : '') + '" data-f="pendiente">Por revisar</button><button type="button" class="chip' + (filtro === 'todos' ? ' on' : '') + '" data-f="todos">Todos</button></div>' +
       '<div id="pgLista"></div>' + formulario() +
       '<div class="card"><h2>Cuentas sin primer pago</h2><p class="sub">Para cuentas de prueba o de regalo: entran sin pagar el primer pago.</p>' +
