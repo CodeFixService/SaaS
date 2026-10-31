@@ -314,3 +314,5 @@ begin
   return jsonb_build_object('db_bytes', pg_database_size(current_database()), 'limite_bytes', 500 * 1024 * 1024,
     'cuentas', (select count(*) from auth.users), 'tablas', tb, 'tareas', t, 'hora', now());
 end $$;
+revoke all on function public.cfx_servidor() from public, anon;
+grant execute on function public.cfx_servidor() to authenticated;
