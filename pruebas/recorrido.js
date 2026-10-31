@@ -105,6 +105,15 @@ const APPS = {
                 await p.locator('.cfx-aj:visible > button').nth(j).click(); await p.waitForTimeout(900); await t.sinModales(p);
                 await foto('2-' + tx + '-' + j);
                 if (!(await t.anchoOk(p))) malos.push('se sale del ancho: ' + tx + ' sección ' + j);
+                // Cuadrícula dentro de la sección (Mi perfil): una sola flecha, que vuelve paso a paso.
+                const den = p.locator('.cfx-aj-zona .cfx-aj:visible > button');
+                if (await den.count()) {
+                  await den.nth(1).click(); await p.waitForTimeout(600);
+                  const fl = await p.locator('.cfx-aj-volver:visible').count();
+                  if (fl !== 1) malos.push('flechas visibles ' + fl + ': ' + tx + ' sección ' + j);
+                  await p.locator('.cfx-aj-volver:visible').first().click(); await p.waitForTimeout(400);
+                  if (!(await p.locator('.cfx-aj-zona .cfx-aj:visible > button').count())) malos.push('la flecha no volvió un paso: ' + tx + ' sección ' + j);
+                }
                 const v = p.locator('.cfx-aj-volver:visible'); if (await v.count()) { await v.first().click(); await p.waitForTimeout(400); }
               }
             }

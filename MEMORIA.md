@@ -272,3 +272,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Versiones en main**: CM 4.33 · Billetera 1.21.11 · Órbita 5.35 · Barbería 2.33 · BiciTaller 2.33 · Estaciona 2.14.12 · Cerebro 1.16 (bases sin cambio salvo db_version Barbería 2.33).
 - **CFX_AJUSTES/CFX_PERFIL sin saltos**: ya no hay `scrollTo(0,0)`; `aLaVista(w)` solo mueve si la sección quedó fuera de la vista. Toda opción del perfil pasa por `quieto()` (guarda y repone scroll de la página y de la ventana aunque la app repinte). Color/modo se marcan en su lugar, sin redibujar. Botones de modo: grilla de 3 con ícono arriba y estilo propio (no heredan el botón de la app).
 - **Estaciona**: cambiar el modo ya no recarga la página: `Mapa.repintar()` cambia solo las teselas (también al cambiar el modo del sistema). Prueba nueva: pruebas/perfil_quieto.js (CM y Estaciona).
+
+## Perfil galáctico, arriba y una sola flecha (31/10/2026) · núcleo 2.17
+- **Versiones en main**: CM 4.34 · Billetera 1.21.12 · Órbita 5.36 · Barbería 2.34 · BiciTaller 2.34 · Estaciona 2.14.13 · Cerebro 1.17 (bases sin cambio salvo db_version Barbería 2.34).
+- **Diseño propio del perfil** (`.cfx-pf-w`, `--pf`/`--pf2` = color de la app y degradado): campos, botones (48px, borde 1.5px, radio 14), Guardar y modo elegido con degradado y brillo, foto con anillo; no hereda nada de la app. **Perfil siempre arriba** (CM Más sin la tarjeta de foto repetida; Órbita antes de Más; BiciTaller cliente antes de Mi cuenta). CM conserva el perfil abierto aunque Más se repinte.
+- **Una sola flecha** (CFX_AJUSTES anidado): al abrir una sección de adentro se esconde la flecha de afuera; cada flecha vuelve un paso. recorrido.js lo revisa.

@@ -59,13 +59,16 @@
   }
   async function render(el) {
     const c = CM.cuenta, p = c.prefs || {}, ok = (v, d) => (v === undefined || v === null ? d : v);
-    el.innerHTML = '<div class="titulo-v"><h2>Más</h2></div><p class="sub">Cargando…</p>';
+    const pfAbierto = el.querySelector('#miPerfil[data-pf]');
+    if (!pfAbierto) el.innerHTML = '<div class="titulo-v"><h2>Más</h2></div><p class="sub">Cargando…</p>';
     try { [uso, pago] = await Promise.all([rpc('mi_uso'), rpc('cfx_pago_estado').then((e) => e.ultimo)]); } catch (e) { /* sigue */ }
     const lim = uso ? uso.limite_items : 0, pc = uso && lim ? Math.min(100, Math.round(uso.items / lim * 100)) : 0;
     const hasta = c.premium_hasta ? A.fCorta(c.premium_hasta.slice(0, 10)) : '';
     let x = '<div class="titulo-v"><h2>Más</h2></div>';
     const ed = CM.estadoDia(A.hoy());
-    x += '<div class="card"><div class="fila"><button type="button" class="avatar con-foto" data-act="perfil" aria-label="Mi perfil" title="Mi perfil">' + esc((c.prefs || {}).avatar || '🙂') + '<span class="cam">' + CM.ico('camara', 13) + '</span></button><h3 style="margin:0">' + esc(c.nombre || c.email) + '</h3></div><p class="sub">' + esc(c.email) + ' · ' + (c.rol === 'admin' ? 'Administrador' : c.rol === 'socio' ? 'Socio' : c.premium ? 'Plan Pro' + (hasta ? ' hasta ' + hasta : '') : 'Plan gratis') + '</p>' +
+    // Perfil común arriba de todo (foto, nombre, color, modo y avanzado); abajo, el plan.
+    x += '<div class="card" id="miPerfil"></div>';
+    x += '<div class="card"><p class="sub" style="margin-top:0">' + (c.rol === 'admin' ? 'Administrador' : c.rol === 'socio' ? 'Socio' : c.premium ? 'Plan Pro' + (hasta ? ' hasta ' + hasta : '') : 'Plan gratis') + '</p>' +
       (c.rol === 'usuario' && !c.premium ? (pago && pago.estado === 'pendiente' ? '<p class="pill warn">Pago en revisión</p>' : '<button type="button" data-act="pro">' + CM.ico('estrella', 16) + ' Pasar a Pro</button>') : '') +
       (c.rol === 'usuario' ? ' <button type="button" class="ghost" data-act="verif">🪪 Verificar identidad</button>' : '') +
       (c.rol !== 'usuario' ? '<a class="btn" href="../admin/">Panel de administración</a>' : '') + ' <button type="button" class="ghost" data-act="tour">Ver guía</button></div>';
@@ -78,7 +81,6 @@
       '<p>Tu código: <b id="vCod">…</b> <button type="button" class="small ghost" data-act="vcopiar">Copiar</button></p>' +
       '<div style="display:flex;gap:8px;align-items:center"><input id="vIn" style="flex:1;min-width:0;margin:0" maxlength="12" placeholder="Código (ej. ANA-1234)" autocapitalize="characters"><button type="button" data-act="vincular" style="flex:none">Vincular</button></div>' +
       '<div id="vL" class="sub">Cargando…</div></div>';
-    x += '<div class="card" id="miPerfil"></div>';
     const ck = CM.items.filter((i) => i.tipo === 'diario' && i.datos && (i.datos.animo || i.datos.energia)).sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
     x += '<div class="card"><h3>Registros de ánimo <span class="sub">(se borran solos a los 7 días)</span></h3>' + (ck.length ? ck.map((i) => '<div class="fila"><span class="grow">' + A.fCorta(i.fecha) + ' · ' + (CM.ANIMO[i.datos.animo || 0][0] || '') + ' ' + (CM.ENERGIA[i.datos.energia || 0][0] || '') + '</span><button type="button" class="x" data-act="delck" data-id="' + i.id + '" aria-label="Borrar">' + CM.ico('basura', 15) + '</button></div>').join('') : '<p class="sub">Sin registros manuales. El ánimo se calcula solo.</p>') + '</div>';
     x += '<div class="card"><h3>Espacios</h3>' + CM.espacios.filter((e) => !e.archivado).map((e) => '<div class="fila"><i class="dot" style="background:' + esc(e.color) + '"></i><span>' + esc(e.nombre) + ' <span class="sub">' + (e.modo === 'trabajo' ? 'trabajo ' + esc((e.horario || {}).desde || '') + '–' + esc((e.horario || {}).hasta || '') : 'personal') + '</span></span><button type="button" class="x" data-act="esp" data-id="' + e.id + '" aria-label="Editar">' + CM.ico('lapiz', 16) + '</button></div>').join('') +
@@ -98,12 +100,12 @@
     x += '<div class="card peligro"><h3>Zona de riesgo</h3><button type="button" class="small ghost" data-act="borrar">Borrar todos mis datos</button></div>';
     el.innerHTML = x;
     pintarVinc(el);
-    CM.fotoPerfil().then((f) => { const av = el.querySelector('.avatar.con-foto'); if (f && av) { av.style.backgroundImage = 'url(' + f + ')'; av.classList.add('tiene'); } });
-    if (window.CFX_PERFIL) window.CFX_PERFIL.montar(el.querySelector('#miPerfil'));
+    // Si Más se vuelve a dibujar (sincronización), el perfil queda tal cual (misma sección abierta).
+    if (pfAbierto) el.querySelector('#miPerfil').replaceWith(pfAbierto);
+    else if (window.CFX_PERFIL) { const m = el.querySelector('#miPerfil'); m.dataset.pf = '1'; window.CFX_PERFIL.montar(m); }
     el.onclick = async (e) => {
       const b = e.target.closest('[data-act]'); if (!b) return; const a = b.dataset.act;
       try {
-        if (a === 'perfil') { window.CFX_PERFIL.abrir('yo'); return; }
         if (a === 'avisos') { await CM.guardarPrefs({ insistir: el.querySelector('#v1').checked, cabeza: el.querySelector('#v2').checked, cabeza_h1: el.querySelector('#v3').value || '13:00', cabeza_h2: el.querySelector('#v4').value || '20:30', plan_semana: el.querySelector('#v5').checked }); toast('Avisos guardados'); return; }
         if (a === 'sec') { CM.ui.sub = b.dataset.s || null; CM.ir(b.dataset.v); }
         else if (a === 'aterrizar') CM.aterrizar();
