@@ -64,7 +64,7 @@
     const n = L.reduce((s, x) => s + (+x.sin_leer || 0), 0);
     el.innerHTML = '<div class="titulo-v"><h2>Mensajes</h2><span class="sub">' + (n ? n + ' sin leer' : 'Todo leído') + '</span></div>' +
       '<p class="sub">Lo que te escriben desde el botón 🛟 de cada app. Te llega un aviso apenas escriben.</p>' +
-      (sin.length ? '<div class="card"><p class="sub">Para ver sus mensajes, conecta: ' + sin.map((a) => '<button type="button" class="small ghost" data-con="' + a.id + '">' + esc(corto(a)) + '</button>').join(' ') + '</p></div>' : '') +
+      (sin.length ? '<div class="card"><p class="sub" style="margin:0 0 10px">Para ver sus mensajes, conecta:</p><div class="apps-con" style="display:flex;flex-wrap:wrap;gap:8px">' + sin.map((a) => '<button type="button" class="small ghost" data-con="' + a.id + '">' + esc(corto(a)) + '</button>').join('') + '</div></div>' : '') +
       avisos.map((t) => '<p class="sub warn">' + esc(t) + '</p>').join('') +
       (L.map((x, i) => '<button type="button" class="card" data-i="' + i + '" style="display:block;width:100%;text-align:left">' +
         '<div class="fila"><span class="pill info">' + esc(corto(x.app)) + '</span><span class="tit grow">' + esc(x.nombre || x.email) + '</span>' +

@@ -84,7 +84,7 @@
       const [vj, conf] = await Promise.all([
         fetch(RAW(a.repo, 'version.json'), { cache: 'no-store' }).then((r) => r.json()).catch(() => ({})),
         a.propia ? Promise.resolve('') : fetch(RAW(a.repo, a.cfg), { cache: 'no-store' }).then((r) => r.text()).catch(() => '')]);
-      e.pub = String(vj.version || '');
+      e.pub = String(vj.version || ''); e.notas = String(vj.notas || '');
       e.nucleo = await fetch(RAW(a.repo, 'nucleo.json'), { cache: 'no-store' }).then((r) => r.json()).then((j) => String(j.nucleo || '')).catch(() => '');
       e.bdPide = vj.bd != null ? String(vj.bd) : a.propia ? String(global.BT_CONFIG.DB_VERSION || '') : ((conf.match(/DB_VERSION\s*:\s*'([^']+)'/) || [])[1] || '');
       if (a.propia) e.url = global.BT_CONFIG.SUPABASE_URL;
@@ -157,11 +157,32 @@
     };
   }
 
+  // Liberar: queda para todos y les llega "🚀 Nueva versión disponible" (push) con una línea de novedades
+  // (la de version.json → "notas", que se puede cambiar antes de liberar). El aviso sale una sola vez por versión.
+  const corto = (a) => a.nombre.split(' · ')[0];
+  function pedirNotas(a, e) {
+    return new Promise((ok) => {
+      let r = null;
+      const d = modal('<h2 style="margin:0 0 6px">' + A.ico('cohete', 20) + ' Liberar ' + esc(corto(a)) + ' v' + esc(e.pub) + '</h2>' +
+        '<p class="sub" style="margin:0 0 10px">A todos les llega "Nueva versión disponible". Escribe en una línea lo nuevo (opcional).</p>' +
+        '<input id="libNotas" maxlength="140" placeholder="Ej: Agenda más rápida y avisos de pago">' +
+        '<div class="btns" style="margin-top:12px"><button class="ghost" data-no type="button">Cancelar</button><button data-si type="button">Liberar</button></div>');
+      d.querySelector('#libNotas').value = e.notas || '';
+      d.querySelector('[data-no]').onclick = () => d.close();
+      d.querySelector('[data-si]').onclick = () => { r = d.querySelector('#libNotas').value.trim(); d.close(); };
+      d.addEventListener('close', () => ok(r));
+    });
+  }
   async function liberar(a, sinPreguntar) {
     const e = E[a.id];
-    if (!sinPreguntar && !(await confirmar('¿Liberar ' + a.nombre + ' v' + e.pub + '? A sus usuarios les aparece el botón Actualizar.', 'Liberar'))) return;
-    try { const { error } = await a.liberar(cliente(a), e.pub); if (error) throw new Error(error.message); if (!sinPreguntar) toast(a.nombre + ' v' + e.pub + ' liberada'); }
-    catch (x) { toast(a.nombre + ': ' + x.message); }
+    const notas = sinPreguntar ? (e.notas || '') : await pedirNotas(a, e);
+    if (notas === null) return;
+    try {
+      const { error } = await a.liberar(cliente(a), e.pub); if (error) throw new Error(error.message);
+      let n = 0;
+      try { const r = await cliente(a).rpc('cfx_avisar_version', { p_version: e.pub, p_notas: notas, p_app: corto(a) }); if (!r.error) n = r.data || 0; } catch (x) { /* base aún sin la función: se avisa la próxima */ }
+      if (!sinPreguntar) toast(corto(a) + ' v' + e.pub + ' liberada' + (n ? ' · aviso a ' + n : ''));
+    } catch (x) { toast(a.nombre + ': ' + x.message); }
     await cargar(a);
   }
   // Respaldo y limpieza (funciones cfx_*, iguales en las 7 apps): Excel del admin, lo que se puede borrar y tablas sobrantes.

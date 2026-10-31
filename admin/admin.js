@@ -132,7 +132,7 @@
   const PROYECTO = new URL(BT_CONFIG.SUPABASE_URL).hostname.split('.')[0];
   async function estadoVersion() {
     const j = await (await fetch(App.ROOT + 'version.json?t=' + Date.now(), { cache: 'no-store' })).json();
-    const pub = { version: String(j.version || ''), bd: String(j.bd || ''), funcion: String(j.funcion || '') };
+    const pub = { version: String(j.version || ''), bd: String(j.bd || ''), funcion: String(j.funcion || ''), notas: String(j.notas || '') };
     pub_ = pub;
     const [bd, fn] = await Promise.all([rpc('db_version').catch(() => ''),
       App.sb.functions.invoke('servidor', { body: { accion: 'ping' } }).then((r) => (r.data && r.data.version ? String(r.data.version) : '')).catch(() => '')]);
@@ -175,7 +175,8 @@
       else if (a === 'rep') { if (await confirmar('Se vuelve a descargar la app en este teléfono. No se borra ningún dato.', 'Reparar')) App.repararApp(); }
       else if (a === 'lib') {
         if (!(await confirmar('¿Liberar la v' + e.pub.version + '? A todos les aparecerá "Hay una versión nueva" con el botón Actualizar.', 'Liberar'))) return;
-        try { await rpc('admin_config_guardar', { p_clave: 'version_liberada', p_valor: e.pub.version, p_motivo: 'Liberar v' + e.pub.version }); toast('v' + e.pub.version + ' liberada para todos'); if (!e.okCel) App.actualizar(); else versiones(v); } catch (x) { err(x); }
+        try { await rpc('admin_config_guardar', { p_clave: 'version_liberada', p_valor: e.pub.version, p_motivo: 'Liberar v' + e.pub.version }); toast('v' + e.pub.version + ' liberada para todos');
+          rpc('cfx_avisar_version', { p_version: e.pub.version, p_notas: e.pub.notas || '', p_app: 'Centro de Mando' }).catch(() => {}); if (!e.okCel) App.actualizar(); else versiones(v); } catch (x) { err(x); }
       }
     };
   }

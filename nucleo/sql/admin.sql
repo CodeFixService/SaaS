@@ -101,6 +101,28 @@ begin
   return n;
 end $$;
 
+-- ---------- Nueva versión disponible: push a todos al liberar (una sola vez por versión) ----------
+-- La llama el Centro de Mando después de liberar (Apps → Liberar) con las notas que se escriben ahí.
+create table if not exists public.cfx_versiones (version text primary key, notas text not null default '', avisados int not null default 0, creado timestamptz not null default now());
+alter table public.cfx_versiones enable row level security;
+create or replace function public.cfx_avisar_version(p_version text, p_notas text default '', p_app text default '') returns int
+language plpgsql security definer set search_path = '' as $$
+declare u uuid; n int := 0; v text := trim(coalesce(p_version, '')); nt text := left(trim(coalesce(p_notas, '')), 140);
+begin
+  perform <CHK>;
+  if v !~ '^[0-9]+(\.[0-9]+){0,3}$' then raise exception 'Versión no válida'; end if;
+  if exists (select 1 from public.cfx_versiones where version = v) then return 0; end if;
+  for u in select * from public.cfx_destinatarios('todos') loop
+    perform public.cfx_avisar(u, '🚀 Nueva versión disponible', left(coalesce(nullif(trim(p_app), '') || ' ', '') || 'v' || v || case when nt <> '' then ' · ' || nt else '' end || '. Se actualiza sola al abrirla.', 240));
+    n := n + 1;
+  end loop;
+  insert into public.cfx_versiones (version, notas, avisados) values (v, nt, n);
+  perform public.cfx_anotar('version', 'v' || v || ' avisada a ' || n);
+  return n;
+end $$;
+revoke execute on function public.cfx_avisar_version(text, text, text) from public, anon;
+grant execute on function public.cfx_avisar_version(text, text, text) to authenticated;
+
 -- ---------- Keys de Premium (de un solo uso). Se guardan cifradas: el código completo solo se ve al crearlas. ----------
 create or replace function public.cfx_keys_crear(p_n int, p_rol text, p_dias int, p_nota text default '') returns jsonb
 language plpgsql security definer set search_path = '' as $$

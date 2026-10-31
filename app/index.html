@@ -12,9 +12,10 @@
 <link rel="stylesheet" href="cm.css">
 <link rel="stylesheet" href="../shared/tema.css">
 <script src="../shared/humano.js"></script>
+<style>.cab-logo,.cab-nom{display:none}@media(min-width:900px){.cab-logo{display:block;width:32px;height:32px;border-radius:50%;object-fit:cover;flex:none}.cab-nom{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}</style>
 </head>
 <body class="con-tabs">
-<header class="top"><h1 style="flex:1;margin:0"><span id="chipModo"></span></h1><button class="icon-btn" id="bCampana" aria-label="Avisos" style="position:relative"></button></header>
+<header class="top"><h1 style="flex:1;margin:0;display:flex;align-items:center;gap:10px;min-width:0"><img class="cab-logo" src="../icons/icon-192.png" alt="" width="32" height="32"><b class="cab-nom">Centro de Mando</b><span id="chipModo"></span></h1><button class="icon-btn" id="bCampana" aria-label="Avisos" style="position:relative"></button></header>
 <main>
   <section class="view on" id="v-hoy"></section><section class="view" id="v-tablero"></section><section class="view" id="v-metas"></section>
   <section class="view" id="v-cerebro"></section><section class="view" id="v-pedidos"></section><section class="view" id="v-panel"></section><section class="view" id="v-mas"></section>
