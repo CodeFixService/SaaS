@@ -32,28 +32,30 @@ const APPS = {
       await p.fill('input[type=email]:visible', email); await p.fill('input[type=password]:visible', 'clave123'); await p.press('input[type=password]:visible', 'Enter');
       await p.waitForTimeout(3000); await t.sinModales(p);
       const menu = async () => { await t.sinModales(p); await p.locator('.cfx-av:visible').first().click(); await p.waitForTimeout(500); await p.click('dialog [data-a=perfil]'); await p.waitForTimeout(700); };
-      const seccion = async (n) => { await p.locator('dialog .cfx-aj > button').nth(n).click(); await p.waitForTimeout(500); };
-      await menu(); assert(await p.locator('dialog .cfx-aj > button').count() >= 3, app + ': perfil con sus 3 secciones');
+      // Mi perfil abre una hoja con la lista; cada sección abre otra hoja encima (la de arriba es la última).
+      const seccion = async (n) => { await p.locator('.cfx-hoja-m').first().locator('.cfx-aj > .cfx-fila').nth(n).evaluate((b) => b.click()); await p.waitForTimeout(600); };
+      const volver = async () => { await p.locator('.cfx-hoja-m').last().locator('.cfx-hm-x').click(); await p.waitForTimeout(400); };
+      await menu(); assert(await p.locator('.cfx-hoja-m .cfx-aj > .cfx-fila').count() >= 3, app + ': perfil con sus 3 secciones');
       // Foto y nombre
       await seccion(0);
-      const nom = p.locator('dialog [data-k=nombre]');
-      if (A.nombre) { await nom.fill('Ana Prueba'); await p.click('dialog [data-pf=guardar]'); await p.waitForTimeout(1200); assert(await A.nombre(t) === 'Ana Prueba', app + ': nombre guardado'); }
+      const nom = p.locator('.cfx-hoja-m [data-k=nombre]');
+      if (A.nombre) { await nom.fill('Ana Prueba'); await p.click('.cfx-hoja-m [data-pf=guardar]'); await p.waitForTimeout(1200); assert(await A.nombre(t) === 'Ana Prueba', app + ': nombre guardado'); }
       else assert(await nom.getAttribute('readonly') !== null, app + ': nombre solo se lee (se cambia en Ajustes)');
       await t.foto(app + '-perfil-yo');
       // Color y modo
-      await p.click('dialog .cfx-aj-volver'); await p.waitForTimeout(300); await seccion(1);
-      const col = p.locator('dialog .cfx-pf-cols > button:not(.on):not(.cfx-pf-lock)').nth(1), c = await col.getAttribute('data-c');
+      await volver(); await seccion(1);
+      const col = p.locator('.cfx-hoja-m .cfx-pf-cols > button:not(.on):not(.cfx-pf-lock)').nth(1), c = await col.getAttribute('data-c');
       await col.click(); await p.waitForTimeout(1200);
       assert(String(await A.color(t)).toLowerCase() === c.toLowerCase(), app + ': color guardado ' + c);
-      await p.click('dialog [data-m=oscuro]'); await p.waitForTimeout(1000);
+      await p.click('.cfx-hoja-m [data-m=oscuro]'); await p.waitForTimeout(1000);
       assert(await p.evaluate(() => document.documentElement.dataset.theme) === 'dark', app + ': modo oscuro aplicado');
       assert(/oscuro|dark/.test(await A.modo(t, p)), app + ': modo guardado');
       await t.foto(app + '-perfil-estilo');
-      await p.click('dialog [data-m=auto]'); await p.waitForTimeout(800);
+      await p.click('.cfx-hoja-m [data-m=auto]'); await p.waitForTimeout(800);
       // Avanzado: contraseña
-      await p.click('dialog .cfx-aj-volver'); await p.waitForTimeout(300); await seccion(2);
-      assert(/Activas|Apagadas/.test(await p.locator('dialog [data-push]').textContent()), app + ': estado de notificaciones');
-      await p.fill('dialog [data-c1]', 'NuevaClave9'); await p.fill('dialog [data-c2]', 'NuevaClave9'); await p.click('dialog [data-pf=clave]'); await p.waitForTimeout(1000);
+      await volver(); await seccion(2);
+      assert(/Activas|Apagadas/.test(await p.locator('.cfx-hoja-m [data-push]').textContent()), app + ': estado de notificaciones');
+      await p.fill('.cfx-hoja-m [data-c1]', 'NuevaClave9'); await p.fill('.cfx-hoja-m [data-c2]', 'NuevaClave9'); await p.click('.cfx-hoja-m [data-pf=clave]'); await p.waitForTimeout(1000);
       assert((await t.sim.su('select pass from auth.claves where email = $1', [email]))[0].pass === 'NuevaClave9', app + ': contraseña cambiada');
       await t.foto(app + '-perfil-avanzado');
       assert(await t.anchoOk(p), app + ': ancho');

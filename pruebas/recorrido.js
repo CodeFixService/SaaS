@@ -98,23 +98,25 @@ const APPS = {
             await b.evaluate((x) => x.click()); await p.waitForTimeout(1300); await t.sinModales(p);
             await foto('1-' + i + '-' + tx);
             if (!(await t.anchoOk(p))) malos.push('se sale del ancho: ' + tx);
-            const aj = p.locator('.cfx-aj:visible > button');
+            // Ajustes / Más en lista (núcleo): cada opción que se abre en hoja; adentro puede haber otra lista (p. ej. Mi perfil) que abre una segunda hoja encima.
+            const aj = p.locator('.cfx-aj:visible > .cfx-fila[data-tipo=hoja]');
             if (/ajustes|mas|más|control|cuenta|empresa/i.test(tx) && await aj.count()) {
               const k = await aj.count();
               for (let j = 0; j < k; j++) {
-                await p.locator('.cfx-aj:visible > button').nth(j).click(); await p.waitForTimeout(900); await t.sinModales(p);
+                await p.locator('.cfx-aj:visible > .cfx-fila[data-tipo=hoja]').nth(j).evaluate((b) => b.click()); await p.waitForTimeout(900);
+                if (await p.locator('.cfx-hoja-m').count() !== 1) malos.push('hojas al abrir ' + tx + ' ' + j + ': ' + await p.locator('.cfx-hoja-m').count());
+                else { await p.waitForTimeout(900); if (await p.$eval('.cfx-hoja-m .cfx-hm-zona', (z) => !z.textContent.trim() && !z.querySelector('img,canvas,input,button'))) malos.push('hoja vacía: ' + tx + ' sección ' + j); }
+                if (await p.locator('dialog[open], .sheet, .velo, .modal:not([hidden])').count()) malos.push('se abrió otra ventana encima: ' + tx + ' sección ' + j);
                 await foto('2-' + tx + '-' + j);
                 if (!(await t.anchoOk(p))) malos.push('se sale del ancho: ' + tx + ' sección ' + j);
-                // Cuadrícula dentro de la sección (Mi perfil): una sola flecha, que vuelve paso a paso.
-                const den = p.locator('.cfx-aj-zona .cfx-aj:visible > button');
+                const den = p.locator('.cfx-hoja-m .cfx-aj > .cfx-fila[data-tipo=hoja]');
                 if (await den.count()) {
-                  await den.nth(1).click(); await p.waitForTimeout(600);
-                  const fl = await p.locator('.cfx-aj-volver:visible').count();
-                  if (fl !== 1) malos.push('flechas visibles ' + fl + ': ' + tx + ' sección ' + j);
-                  await p.locator('.cfx-aj-volver:visible').first().click(); await p.waitForTimeout(400);
-                  if (!(await p.locator('.cfx-aj-zona .cfx-aj:visible > button').count())) malos.push('la flecha no volvió un paso: ' + tx + ' sección ' + j);
+                  await den.first().evaluate((b) => b.click()); await p.waitForTimeout(700);
+                  if (await p.locator('.cfx-hoja-m').count() !== 2) malos.push('hoja de adentro no se apiló: ' + tx + ' sección ' + j);
+                  await p.locator('.cfx-hoja-m').last().locator('.cfx-hm-x').click(); await p.waitForTimeout(400);
+                  if (await p.locator('.cfx-hoja-m').count() !== 1) malos.push('✕ no volvió un paso: ' + tx + ' sección ' + j);
                 }
-                const v = p.locator('.cfx-aj-volver:visible'); if (await v.count()) { await v.first().click(); await p.waitForTimeout(400); }
+                while (await p.locator('.cfx-hoja-m').count()) { await p.locator('.cfx-hoja-m').last().locator('.cfx-hm-x').click(); await p.waitForTimeout(400); }
               }
             }
           }
@@ -130,14 +132,16 @@ const APPS = {
             if (!(await mp.count())) malos.push('menú sin Mi perfil');
             else {
               await mp.click(); await p.waitForTimeout(800);
-              const k = await p.locator('dialog .cfx-aj > button').count();
+              const filas = p.locator('.cfx-hoja-m .cfx-aj > .cfx-fila');
+              const k = await filas.count();
               if (k < 3) malos.push('perfil con ' + k + ' secciones');
               for (let j = 0; j < k; j++) {
-                await p.locator('dialog .cfx-aj > button').nth(j).click(); await p.waitForTimeout(700);
+                await p.locator('.cfx-hoja-m').first().locator('.cfx-aj > .cfx-fila').nth(j).evaluate((b) => b.click()); await p.waitForTimeout(700);
                 await foto('9-perfil-' + j);
                 if (!(await t.anchoOk(p))) malos.push('se sale del ancho: perfil ' + j);
-                await p.locator('dialog .cfx-aj-volver').click(); await p.waitForTimeout(300);
+                await p.locator('.cfx-hoja-m').last().locator('.cfx-hm-x').click(); await p.waitForTimeout(400);
               }
+              while (await p.locator('.cfx-hoja-m').count()) { await p.locator('.cfx-hoja-m').last().locator('.cfx-hm-x').click(); await p.waitForTimeout(400); }
             }
           }
           const plan = await p.locator('.cfx-plan:visible').first().textContent().catch(() => '');

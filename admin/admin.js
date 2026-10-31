@@ -222,7 +222,7 @@
       { k: 'generales', ico: '⚙️', t: 'Ajustes generales', d: 'Prueba Pro, soporte y límites', abrir: generales },
       { k: 'push', ico: '🔔', t: 'Notificaciones', d: 'Claves push y servidor', abrir: push },
       { k: 'registro', ico: '📜', t: 'Registro de cambios', d: 'Quién cambió qué y por qué', abrir: registro },
-      { k: 'cuenta', ico: '👤', t: 'Mi cuenta', d: 'Foto, nombre y clave', abrir: () => { location.href = App.ROOT + 'app/#mas'; } }
+      { k: 'cuenta', ico: '👤', t: 'Mi cuenta', d: 'Foto, nombre y clave', abrir: (z) => window.CFX_PERFIL.montar(z) }
     ], { arriba: '<div class="titulo-v"><h2>Ajustes</h2></div><p class="sub">Precios, planes, textos, keys, cupones y avisos de las 7 apps están en Pagos y Control.</p>' });
   }
   function generales(z) {

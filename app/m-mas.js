@@ -57,77 +57,82 @@
         : 'Aún no te vinculas con nadie.';
     } catch (e) { el.querySelector('#vL').textContent = e.message; }
   }
-  async function render(el) {
-    const c = CM.cuenta, p = c.prefs || {}, ok = (v, d) => (v === undefined || v === null ? d : v);
-    const pfAbierto = el.querySelector('#miPerfil[data-pf]');
-    if (!pfAbierto) el.innerHTML = '<div class="titulo-v"><h2>Más</h2></div><p class="sub">Cargando…</p>';
-    try { [uso, pago] = await Promise.all([rpc('mi_uso'), rpc('cfx_pago_estado').then((e) => e.ultimo)]); } catch (e) { /* sigue */ }
-    const lim = uso ? uso.limite_items : 0, pc = uso && lim ? Math.min(100, Math.round(uso.items / lim * 100)) : 0;
-    const hasta = c.premium_hasta ? A.fCorta(c.premium_hasta.slice(0, 10)) : '';
-    let x = '<div class="titulo-v"><h2>Más</h2></div>';
-    const ed = CM.estadoDia(A.hoy());
-    // Perfil común arriba de todo (foto, nombre, color, modo y avanzado); abajo, el plan.
-    x += '<div class="card" id="miPerfil"></div>';
-    x += '<div class="card"><p class="sub" style="margin-top:0">' + (c.rol === 'admin' ? 'Administrador' : c.rol === 'socio' ? 'Socio' : c.premium ? 'Plan Pro' + (hasta ? ' hasta ' + hasta : '') : 'Plan gratis') + '</p>' +
-      (c.rol === 'usuario' && !c.premium ? (pago && pago.estado === 'pendiente' ? '<p class="pill warn">Pago en revisión</p>' : '<button type="button" data-act="pro">' + CM.ico('estrella', 16) + ' Pasar a Pro</button>') : '') +
-      (c.rol === 'usuario' ? ' <button type="button" class="ghost" data-act="verif">🪪 Verificar identidad</button>' : '') +
-      (c.rol !== 'usuario' ? '<a class="btn" href="../admin/">Panel de administración</a>' : '') + ' <button type="button" class="ghost" data-act="tour">Ver guía</button></div>';
-    const sec = [['panel', '', 'panel', 'Panel'], ['metas', '', 'metas', 'Metas'], ['cerebro', 'notas', 'libro', 'Notas'], ['cerebro', 'ideas', 'cerebro', 'Ideas'], ['cerebro', 'problemas', 'alerta', 'Problemas'],
-      ['cerebro', 'diario', 'luna', 'Diario'], ['cerebro', 'logros', 'estrella', 'Logros']];
-    x += '<div class="card"><h3>Secciones</h3><div class="secs">' + sec.map((s) => '<button type="button" class="ghost" data-act="sec" data-v="' + s[0] + '" data-s="' + s[1] + '">' + CM.ico(s[2], 18) + ' ' + s[3] + '</button>').join('') +
-      '<button type="button" class="ghost" data-act="aterrizar">' + CM.ico('ancla', 18) + ' Aterrizar</button><button type="button" class="ghost" data-act="buscar">' + CM.ico('lupa', 18) + ' Buscar</button></div></div>';
-    // Cuentas vinculadas: con quién comparto pedidos, tareas y notas (cada uno ingresa el código del otro una vez).
-    x += '<div class="card" id="vinc"><h3>' + CM.ico('compartir', 18) + ' Cuentas vinculadas</h3><p class="sub">Comparte pedidos, tareas y notas con alguien que trabaja contigo. Nadie ve lo tuyo hasta que se vinculan con un código.</p>' +
+  // ---------- Más: menú común del núcleo (CFX_MENU, lista + hoja desde abajo). Aquí solo qué dibuja cada opción y sus botones (data-act). ----------
+  const okv = (v, d) => (v === undefined || v === null ? d : v);
+  const H = {
+    vinc: () => '<p class="sub" style="margin-top:0">Comparte pedidos, tareas y notas con alguien que trabaja contigo. Nadie ve lo tuyo hasta que se vinculan con un código.</p>' +
       '<p>Tu código: <b id="vCod">…</b> <button type="button" class="small ghost" data-act="vcopiar">Copiar</button></p>' +
       '<div style="display:flex;gap:8px;align-items:center"><input id="vIn" style="flex:1;min-width:0;margin:0" maxlength="12" placeholder="Código (ej. ANA-1234)" autocapitalize="characters"><button type="button" data-act="vincular" style="flex:none">Vincular</button></div>' +
-      '<div id="vL" class="sub">Cargando…</div></div>';
-    const ck = CM.items.filter((i) => i.tipo === 'diario' && i.datos && (i.datos.animo || i.datos.energia)).sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
-    x += '<div class="card"><h3>Registros de ánimo <span class="sub">(se borran solos a los 7 días)</span></h3>' + (ck.length ? ck.map((i) => '<div class="fila"><span class="grow">' + A.fCorta(i.fecha) + ' · ' + (CM.ANIMO[i.datos.animo || 0][0] || '') + ' ' + (CM.ENERGIA[i.datos.energia || 0][0] || '') + '</span><button type="button" class="x" data-act="delck" data-id="' + i.id + '" aria-label="Borrar">' + CM.ico('basura', 15) + '</button></div>').join('') : '<p class="sub">Sin registros manuales. El ánimo se calcula solo.</p>') + '</div>';
-    x += '<div class="card"><h3>Espacios</h3>' + CM.espacios.filter((e) => !e.archivado).map((e) => '<div class="fila"><i class="dot" style="background:' + esc(e.color) + '"></i><span>' + esc(e.nombre) + ' <span class="sub">' + (e.modo === 'trabajo' ? 'trabajo ' + esc((e.horario || {}).desde || '') + '–' + esc((e.horario || {}).hasta || '') : 'personal') + '</span></span><button type="button" class="x" data-act="esp" data-id="' + e.id + '" aria-label="Editar">' + CM.ico('lapiz', 16) + '</button></div>').join('') +
-      '<button type="button" class="small ghost" data-act="nesp">+ Espacio</button></div>';
-    x += '<div class="card"><h3>' + CM.ico('bell', 17) + ' Avisos para no olvidar nada</h3>' +
-      '<label class="chk2"><input id="v1" type="checkbox"' + (p.insistir === false ? '' : ' checked') + '> Insistir si no tacho algo con hora (a los 15 min y a la hora)</label>' +
+      '<div id="vL" class="sub">Cargando…</div>',
+    animo: () => {
+      const ck = CM.items.filter((i) => i.tipo === 'diario' && i.datos && (i.datos.animo || i.datos.energia)).sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+      return '<p class="sub" style="margin-top:0">Se borran solos a los 7 días.</p>' + (ck.length ? ck.map((i) => '<div class="fila"><span class="grow">' + A.fCorta(i.fecha) + ' · ' + (CM.ANIMO[i.datos.animo || 0][0] || '') + ' ' + (CM.ENERGIA[i.datos.energia || 0][0] || '') + '</span><button type="button" class="x" data-act="delck" data-id="' + i.id + '" aria-label="Borrar">' + CM.ico('basura', 15) + '</button></div>').join('') : '<p class="sub">Sin registros manuales. El ánimo se calcula solo.</p>');
+    },
+    espacios: () => CM.espacios.filter((e) => !e.archivado).map((e) => '<div class="fila"><i class="dot" style="background:' + esc(e.color) + '"></i><span>' + esc(e.nombre) + ' <span class="sub">' + (e.modo === 'trabajo' ? 'trabajo ' + esc((e.horario || {}).desde || '') + '–' + esc((e.horario || {}).hasta || '') : 'personal') + '</span></span><button type="button" class="x" data-act="esp" data-id="' + e.id + '" aria-label="Editar">' + CM.ico('lapiz', 16) + '</button></div>').join('') +
+      '<button type="button" class="small ghost" data-act="nesp">+ Espacio</button>',
+    avisos: () => { const p = CM.cuenta.prefs || {}; return '<label class="chk2"><input id="v1" type="checkbox"' + (p.insistir === false ? '' : ' checked') + '> Insistir si no tacho algo con hora (a los 15 min y a la hora)</label>' +
       '<label class="chk2"><input id="v2" type="checkbox"' + (p.cabeza === false ? '' : ' checked') + '> Preguntarme "¿Algo que anotar?" 2 veces al día</label>' +
       '<div class="dos"><label>1ª vez<input id="v3" type="time" value="' + esc(p.cabeza_h1 || '13:00') + '"></label><label>2ª vez<input id="v4" type="time" value="' + esc(p.cabeza_h2 || '20:30') + '"></label></div>' +
       '<label class="chk2"><input id="v5" type="checkbox"' + (p.plan_semana === false ? '' : ' checked') + '> Plan de la semana (domingo 20:00)</label>' +
       '<p class="sub">Siempre: lo de mañana a las 08:00 del día antes y lo de hoy 1 hora antes. Desde la notificación puedes tocar <b>Listo</b> o <b>1 hora más</b>.</p>' +
-      '<button type="button" data-act="avisos">Guardar avisos</button></div>';
-    x += '<div class="card"><h3>Descanso</h3><label>Aviso si usas la app fuera de horario más de (min/día)<input id="p1" type="number" min="10" max="600" value="' + ok(p.limite_descanso_min, 60) + '"></label><label>Recordarme pausar cada (min)<input id="p2" type="number" min="0" max="180" value="' + ok(p.pausa_cada, 50) + '"></label>' +
-      '<label class="chk2"><input id="p3" type="checkbox"' + (p.cierre_noche === false ? '' : ' checked') + '> Aviso de cierre del día</label><button type="button" data-act="prefs">Guardar</button><p class="sub">Solo mido el tiempo dentro de esta app, no el uso total del teléfono.</p></div>';
-    if (uso) x += '<div class="card"><h3>Espacio usado</h3><div class="barra"><i style="width:' + pc + '%"></i></div><p class="sub">' + uso.items + ' de ' + lim + ' registros · ' + mb(uso.bytes) + '</p>' +
-      '<button type="button" class="small ghost" data-act="bajar">' + CM.ico('bajar', 15) + ' Descargar mis datos</button> <button type="button" class="small ghost" data-act="depurar">Limpiar antiguos</button><p class="sub">Descarga primero; limpiar borra hábitos y tareas hechas con más de 90 días.</p></div>';
-    x += '<div class="card">' + (A.pedirInstalar ? '<button type="button" class="ghost" data-act="inst">Instalar en el teléfono</button> ' : '') + '<button type="button" class="ghost" data-act="salir">Cerrar sesión</button> <button type="button" class="ghost" data-act="reparar">Reparar la app</button><p class="sub">Versión ' + esc(BT_CONFIG.VERSION) + '. Reparar vuelve a descargar la app en este teléfono; no borra tus datos.</p></div>';
-    x += '<div class="card peligro"><h3>Zona de riesgo</h3><button type="button" class="small ghost" data-act="borrar">Borrar todos mis datos</button></div>';
-    el.innerHTML = x;
-    pintarVinc(el);
-    // Si Más se vuelve a dibujar (sincronización), el perfil queda tal cual (misma sección abierta).
-    if (pfAbierto) el.querySelector('#miPerfil').replaceWith(pfAbierto);
-    else if (window.CFX_PERFIL) { const m = el.querySelector('#miPerfil'); m.dataset.pf = '1'; window.CFX_PERFIL.montar(m); }
-    el.onclick = async (e) => {
-      const b = e.target.closest('[data-act]'); if (!b) return; const a = b.dataset.act;
-      try {
-        if (a === 'avisos') { await CM.guardarPrefs({ insistir: el.querySelector('#v1').checked, cabeza: el.querySelector('#v2').checked, cabeza_h1: el.querySelector('#v3').value || '13:00', cabeza_h2: el.querySelector('#v4').value || '20:30', plan_semana: el.querySelector('#v5').checked }); toast('Avisos guardados'); return; }
-        if (a === 'sec') { CM.ui.sub = b.dataset.s || null; CM.ir(b.dataset.v); }
-        else if (a === 'aterrizar') CM.aterrizar();
-        else if (a === 'tour') CM.tour();
-        else if (a === 'buscar') CM.buscar();
-        else if (a === 'vcopiar') { await navigator.clipboard.writeText(el.querySelector('#vCod').textContent); toast('Código copiado'); }
-        else if (a === 'vincular') { const r = await rpc('vincular', { p_codigo: el.querySelector('#vIn').value }); toast('Vinculado con ' + r.nombre); await CM.vinculos(true); pintarVinc(el); }
-        else if (a === 'desv') { if (await A.confirmar('¿Desvincular a ' + b.dataset.n + '? Dejan de ver lo que se compartieron.', 'Desvincular')) { await rpc('desvincular', { p_otro: b.dataset.id }); await CM.vinculos(true); await CM.cargar(); pintarVinc(el); } }
-        else if (a === 'delck') { await CM.del(b.dataset.id); render(el); }
-        else if (a === 'pro') pagar();
-        else if (a === 'verif') CFX_VERIFICAR.abrir({ rpc });
-        else if (a === 'esp') espacioForm(CM.espacio(b.dataset.id));
-        else if (a === 'nesp') espacioForm();
-        else if (a === 'prefs') { await rpc('mi_perfil_guardar', { p_nombre: c.nombre, p_telefono: c.telefono, p_prefs: { limite_descanso_min: +el.querySelector('#p1').value || 60, pausa_cada: +el.querySelector('#p2').value || 0, cierre_noche: el.querySelector('#p3').checked } }); c.prefs = Object.assign({}, p, { limite_descanso_min: +el.querySelector('#p1').value || 60, pausa_cada: +el.querySelector('#p2').value || 0, cierre_noche: el.querySelector('#p3').checked }); toast('Guardado'); }
-        else if (a === 'bajar') await descargarTodo();
-        else if (a === 'depurar') { if (await A.confirmar('¿Borrar hábitos y tareas hechas con más de 90 días? Descarga tus datos antes.', 'Limpiar')) { const n = await rpc('mi_depurar', { p_dias: 90 }); toast(n + ' registros eliminados'); await CM.cargar(); CM.pintar(); } }
-        else if (a === 'inst') { if (!(await A.pedirInstalar())) toast('Usa "Agregar a pantalla de inicio" en el menú del navegador'); }
-        else if (a === 'salir') A.salir();
-        else if (a === 'reparar') { if (await A.confirmar('Se vuelve a descargar la app en este teléfono. No se borra ningún dato.', 'Reparar')) A.repararApp(); }
-        else if (a === 'borrar') { if (await A.confirmar('Se borran todas tus tareas, ideas y diario. No se puede deshacer.', 'Borrar todo')) { await rpc('mi_borrar_datos'); await CM.cargar(); toast('Datos borrados'); CM.pintar(); } }
-      } catch (er) { toast(er.message); }
+      '<button type="button" data-act="avisos">Guardar avisos</button>'; },
+    descanso: () => { const p = CM.cuenta.prefs || {}; return '<label>Aviso si usas la app fuera de horario más de (min/día)<input id="p1" type="number" min="10" max="600" value="' + okv(p.limite_descanso_min, 60) + '"></label><label>Recordarme pausar cada (min)<input id="p2" type="number" min="0" max="180" value="' + okv(p.pausa_cada, 50) + '"></label>' +
+      '<label class="chk2"><input id="p3" type="checkbox"' + (p.cierre_noche === false ? '' : ' checked') + '> Aviso de cierre del día</label><button type="button" data-act="prefs">Guardar</button><p class="sub">Solo mido el tiempo dentro de esta app, no el uso total del teléfono.</p>'; },
+    datos: () => { const lim = uso ? uso.limite_items : 0, pc = uso && lim ? Math.min(100, Math.round(uso.items / lim * 100)) : 0;
+      return (uso ? '<div class="barra"><i style="width:' + pc + '%"></i></div><p class="sub">' + uso.items + ' de ' + lim + ' registros · ' + mb(uso.bytes) + '</p>' : '') +
+        '<button type="button" class="small ghost" data-act="bajar">' + CM.ico('bajar', 15) + ' Descargar mis datos</button> <button type="button" class="small ghost" data-act="depurar">Limpiar antiguos</button><p class="sub">Descarga primero; limpiar borra hábitos y tareas hechas con más de 90 días.</p>' +
+        '<div class="card peligro" style="margin-top:14px"><h3>Zona de riesgo</h3><button type="button" class="small ghost" data-act="borrar">Borrar todos mis datos</button></div>'; }
+  };
+  // Dibuja una opción en su hoja (z) y le da sus botones; volver a dibujar = mismo z (la hoja no se cierra).
+  function hojaDe(k) {
+    return (z) => {
+      z.innerHTML = H[k]();
+      if (k === 'vinc') pintarVinc(z);
+      z.onclick = (e) => acciones(e, z, () => hojaDe(k)(z));
     };
+  }
+  async function acciones(e, z, redibujar) {
+    const b = e.target.closest('[data-act]'); if (!b) return; const a = b.dataset.act, c = CM.cuenta, p = c.prefs || {};
+    try {
+      if (a === 'avisos') { await CM.guardarPrefs({ insistir: z.querySelector('#v1').checked, cabeza: z.querySelector('#v2').checked, cabeza_h1: z.querySelector('#v3').value || '13:00', cabeza_h2: z.querySelector('#v4').value || '20:30', plan_semana: z.querySelector('#v5').checked }); toast('Avisos guardados'); }
+      else if (a === 'vcopiar') { await navigator.clipboard.writeText(z.querySelector('#vCod').textContent); toast('Código copiado'); }
+      else if (a === 'vincular') { const r = await rpc('vincular', { p_codigo: z.querySelector('#vIn').value }); toast('Vinculado con ' + r.nombre); await CM.vinculos(true); pintarVinc(z); }
+      else if (a === 'desv') { if (await A.confirmar('¿Desvincular a ' + b.dataset.n + '? Dejan de ver lo que se compartieron.', 'Desvincular')) { await rpc('desvincular', { p_otro: b.dataset.id }); await CM.vinculos(true); await CM.cargar(); pintarVinc(z); } }
+      else if (a === 'delck') { await CM.del(b.dataset.id); redibujar(); }
+      else if (a === 'esp') espacioForm(CM.espacio(b.dataset.id));
+      else if (a === 'nesp') espacioForm();
+      else if (a === 'prefs') { const n = { limite_descanso_min: +z.querySelector('#p1').value || 60, pausa_cada: +z.querySelector('#p2').value || 0, cierre_noche: z.querySelector('#p3').checked }; await rpc('mi_perfil_guardar', { p_nombre: c.nombre, p_telefono: c.telefono, p_prefs: n }); c.prefs = Object.assign({}, p, n); toast('Guardado'); }
+      else if (a === 'bajar') await descargarTodo();
+      else if (a === 'depurar') { if (await A.confirmar('¿Borrar hábitos y tareas hechas con más de 90 días? Descarga tus datos antes.', 'Limpiar')) { const n = await rpc('mi_depurar', { p_dias: 90 }); toast(n + ' registros eliminados'); await CM.cargar(); try { uso = await rpc('mi_uso'); } catch (er) { /* sigue */ } redibujar(); } }
+      else if (a === 'borrar') { if (await A.confirmar('Se borran todas tus tareas, ideas y diario. No se puede deshacer.', 'Borrar todo')) { await rpc('mi_borrar_datos'); await CM.cargar(); toast('Datos borrados'); redibujar(); } }
+    } catch (er) { toast(er.message); }
+  }
+  async function render(el) {
+    const c = CM.cuenta;
+    if (!el.querySelector('#menuMas')) el.innerHTML = '<div class="titulo-v"><h2>Más</h2></div><div id="menuMas"></div>';
+    try { [uso, pago] = await Promise.all([rpc('mi_uso'), rpc('cfx_pago_estado').then((e) => e.ultimo)]); } catch (e) { /* sigue */ }
+    const hasta = c.premium_hasta ? A.fCorta(c.premium_hasta.slice(0, 10)) : '', usuario = c.rol === 'usuario';
+    const ir = (v, s) => () => { CM.ui.sub = s || null; CM.ir(v); };
+    const SEC = [['panel', '', 'panel', 'Panel'], ['metas', '', 'metas', 'Metas'], ['cerebro', 'notas', 'libro', 'Notas'], ['cerebro', 'ideas', 'cerebro', 'Ideas'], ['cerebro', 'problemas', 'alerta', 'Problemas'],
+      ['cerebro', 'diario', 'luna', 'Diario'], ['cerebro', 'logros', 'estrella', 'Logros']];
+    const items = SEC.map((x) => ({ k: 'sec-' + (x[1] || x[0]), ico: CM.ico(x[2], 20), t: x[3], grupo: 'Secciones', accion: ir(x[0], x[1]) })).concat([
+      { k: 'aterrizar', ico: CM.ico('ancla', 20), t: 'Aterrizar', grupo: 'Secciones', accion: () => CM.aterrizar() },
+      { k: 'buscar', ico: CM.ico('lupa', 20), t: 'Buscar', grupo: 'Secciones', accion: () => CM.buscar() },
+      { k: 'premium', ico: CM.ico('estrella', 20), t: c.rol === 'admin' ? 'Administrador' : c.rol === 'socio' ? 'Socio' : c.premium ? 'Plan Pro' : 'Pasar a Pro', grupo: 'Tu plan',
+        d: c.premium && hasta ? 'Hasta el ' + hasta : usuario && pago && pago.estado === 'pendiente' ? 'Pago en revisión' : '', dato: usuario ? (c.premium ? 'PRO' : 'Gratis') : '', accion: usuario ? pagar : () => {} },
+      usuario && { k: 'verif', ico: '🪪', t: 'Verificar identidad', grupo: 'Tu plan', accion: () => CFX_VERIFICAR.abrir({ rpc }) },
+      !usuario && { k: 'panel', ico: '🛡️', t: 'Panel de administración', grupo: 'Tu plan', ir: '../admin/' },
+      { k: 'tour', ico: '🧭', t: 'Ver guía', grupo: 'Tu plan', accion: () => CM.tour() },
+      { k: 'vinc', ico: CM.ico('compartir', 20), t: 'Cuentas vinculadas', d: 'Comparte con quien trabaja contigo', grupo: 'Configuración', abrir: hojaDe('vinc') },
+      { k: 'espacios', ico: '🗂️', t: 'Espacios', d: 'Personal y trabajo con horario', grupo: 'Configuración', abrir: hojaDe('espacios') },
+      { k: 'avisos', ico: CM.ico('bell', 20), t: 'Avisos para no olvidar nada', grupo: 'Configuración', abrir: hojaDe('avisos') },
+      { k: 'descanso', ico: '🌙', t: 'Descanso', d: 'Límite fuera de horario y pausas', grupo: 'Configuración', abrir: hojaDe('descanso') },
+      { k: 'animo', ico: '🙂', t: 'Registros de ánimo', grupo: 'Configuración', abrir: hojaDe('animo') },
+      { k: 'datos', ico: CM.ico('bajar', 20), t: 'Mis datos y espacio', d: uso ? uso.items + ' de ' + uso.limite_items + ' registros' : '', grupo: 'Configuración', abrir: hojaDe('datos') },
+      A.pedirInstalar && { k: 'inst', ico: '📲', t: 'Instalar en el teléfono', grupo: 'Cuenta y ayuda', accion: async () => { if (!(await A.pedirInstalar())) toast('Usa "Agregar a pantalla de inicio" en el menú del navegador'); } },
+      { k: 'reparar', ico: '🛠️', t: 'Reparar la app', d: 'No borra tus datos', dato: 'v' + BT_CONFIG.VERSION, grupo: 'Cuenta y ayuda', accion: async () => { if (await A.confirmar('Se vuelve a descargar la app en este teléfono. No se borra ningún dato.', 'Reparar')) A.repararApp(); } }
+    ]);
+    window.CFX_MENU.montar(el.querySelector('#menuMas'), items);
   }
   CM.mod.mas = { render };
 })();
