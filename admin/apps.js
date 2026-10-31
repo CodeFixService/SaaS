@@ -164,7 +164,7 @@
     catch (x) { toast(a.nombre + ': ' + x.message); }
     await cargar(a);
   }
-  // Respaldo y limpieza (funciones cfx_*, iguales en las 6 apps): Excel del admin, lo que se puede borrar y tablas sobrantes.
+  // Respaldo y limpieza (funciones cfx_*, iguales en las 7 apps): Excel del admin, lo que se puede borrar y tablas sobrantes.
   const nf = (x) => /Could not find|does not exist|PGRST202/i.test(x.message) ? 'La base de esta app aún no tiene esta función: se actualiza sola en máx. 10 minutos.' : x.message;
   async function respaldar(a) {
     try { CFX_RESPALDO.excel(a.repo.toLowerCase() + '-admin', await rpcDe(cliente(a), 'cfx_respaldo')); E[a.id].respaldado = true; toast('Respaldo de ' + a.nombre + ' descargado'); return true; }
@@ -246,7 +246,7 @@
     pintarCabecera();
     APPS.forEach(cargar);
   }
-  // Para el panel de Pagos: deja listas (y conectadas, si ya entraste) las 6 apps sin pintar las tarjetas.
+  // Para el panel de Pagos: deja listas (y conectadas, si ya entraste) las 7 apps sin pintar las tarjetas.
   const preparar = () => Promise.all(APPS.filter((a) => !E[a.id] || !E[a.id].url).map(cargar));
   global.MisApps = { render, APPS, cliente, estado: E, preparar, conectar, rpcDe, abrirAdmin, vincular, kpis, nombre, valor, peso, respaldar, limpieza };
 })(window);

@@ -34,8 +34,8 @@
         [['Usuarios', r.usuarios], ['Activos 7 d', r.activos7], ['Nuevos 7 d', r.nuevos7], ['Pro', r.pro], ['En prueba', r.prueba], ['Pagos por revisar', r.pagos_pendientes], ['Ingresos del mes', '$' + Number(r.ingresos_mes).toLocaleString('es-CL')], ['Socios', r.socios]].map((x) => '<div class="card"><b>' + x[1] + '</b><span>' + x[0] + '</span></div>').join('') + '</div>' +
         '<div id="rSrv"><p class="sub">Revisando servidores…</p></div>';
     } catch (e) { el('resumen').innerHTML = '<p class="err">' + esc(e.message) + '</p>'; }
-    // Súper panel: lo que espera en las 6 apps (pagos, verificaciones y versiones por liberar), con un toque a cada sección.
-    el('resumen').insertAdjacentHTML('beforeend', '<div class="card" id="r6"><h2>Las 6 apps</h2><p class="sub">Revisando…</p></div>');
+    // Súper panel: lo que espera en las 7 apps (pagos, verificaciones y versiones por liberar), con un toque a cada sección.
+    el('resumen').insertAdjacentHTML('beforeend', '<div class="card" id="r6"><h2>Las 7 apps</h2><p class="sub">Revisando…</p></div>');
     (async () => {
       const M = window.MisApps; await M.preparar();
       const con = M.APPS.filter((a) => (M.estado[a.id] || {}).conectado);
@@ -51,9 +51,10 @@
         const e = M.estado[a.id]; if (e.pub && e.lib && App.versionMenor(e.lib, e.pub)) lib.push(a.nombre.split(' ·')[0]);
       }));
       const r6 = $('r6'); if (!r6) return;
-      r6.innerHTML = '<h2>Las 6 apps</h2><div class="stats">' +
+      // Carrusel: tarjetas compactas que se deslizan (número arriba, texto abajo).
+      r6.innerHTML = '<h2>Las 7 apps</h2><div class="car-apps">' +
         [['Pagos por revisar', pagos, 'pagos'], ['Mensajes sin leer', msjs, 'mensajes'], ['Verificaciones', verif, 'control'], ['Por liberar', lib.length, 'apps'], ['Conectadas', con.length + '/' + M.APPS.length, 'apps']]
-          .map((x) => '<button type="button" class="card" data-ir="' + x[2] + '" style="text-align:left"><b>' + x[1] + '</b><span>' + x[0] + '</span></button>').join('') + '</div>' +
+          .map((x) => '<button type="button" class="car-it' + (+String(x[1]).split('/')[0] && x[2] !== 'apps' ? ' hay' : '') + '" data-ir="' + x[2] + '"><b>' + x[1] + '</b><span>' + x[0] + '</span></button>').join('') + '</div>' +
         (lib.length ? '<p class="sub">Listas para liberar: ' + esc(lib.join(', ')) + '</p>' : '') +
         (con.length < M.APPS.length ? '<p class="sub">Conecta las demás en Apps para verlas aquí.</p>' : '');
       r6.onclick = (ev) => { const b = ev.target.closest('[data-ir]'); if (b) show(b.dataset.ir); };
@@ -213,7 +214,7 @@
     d.querySelector('#nk').onclick = async () => { try { await App.crearCuenta({ email: d.querySelector('#ne').value.trim(), nombre: d.querySelector('#nn').value.trim(), rol: d.querySelector('#nr').value }); d.close(); toast('Cuenta creada'); usuarios(); } catch (x) { err(x); } };
   }
 
-  // Precios, links y transferencia ya no van aquí: se editan una vez para las 6 apps en Pagos.
+  // Precios, links y transferencia ya no van aquí: se editan una vez para las 7 apps en Pagos.
   const CFG = [['dias_prueba', 'Días de prueba Pro'], ['soporte_whatsapp', 'WhatsApp de soporte', 1], ['dias_comprobantes', 'Guardar comprobantes (días)'], ['limite_db_mb', 'Límite de base de datos (MB)'], ['auditoria_max', 'Máximo de filas del registro']];
   function ajustes() {
     AJ = window.CFX_AJUSTES.montar(el('ajustes'), [
@@ -222,7 +223,7 @@
       { k: 'push', ico: '🔔', t: 'Notificaciones', d: 'Claves push y servidor', abrir: push },
       { k: 'registro', ico: '📜', t: 'Registro de cambios', d: 'Quién cambió qué y por qué', abrir: registro },
       { k: 'cuenta', ico: '👤', t: 'Mi cuenta', d: 'Foto, nombre y clave', abrir: () => { location.href = App.ROOT + 'app/#mas'; } }
-    ], { arriba: '<div class="titulo-v"><h2>Ajustes</h2></div><p class="sub">Precios, planes, textos, keys, cupones y avisos de las 6 apps están en Pagos y Control.</p>' });
+    ], { arriba: '<div class="titulo-v"><h2>Ajustes</h2></div><p class="sub">Precios, planes, textos, keys, cupones y avisos de las 7 apps están en Pagos y Control.</p>' });
   }
   function generales(z) {
     const c = pub.config || {};
@@ -253,7 +254,7 @@
     try {
       filas = await rpc('admin_auditoria', { p_limite: 5000 });
       z.innerHTML = '<div class="card"><p class="sub">' + filas.length + ' filas. Quién cambió o borró algo y por qué. Descárgalo y, si eres administrador, vacíalo para liberar espacio.</p><div class="btns-s"><button type="button" id="rD">Descargar CSV</button>' + (SUPER ? '<button type="button" class="ghost" id="rV">Vaciar lo descargado</button>' : '') + '</div></div>' +
-        '<button type="button" class="aviso-ver" id="rApps">🧹 Respaldo y limpieza de las 6 apps<br><span class="sub">En Apps: descarga el Excel de cada una, borra lo que ya no sirve y revisa tablas sobrantes.</span></button>' +
+        '<button type="button" class="aviso-ver" id="rApps">🧹 Respaldo y limpieza de las 7 apps<br><span class="sub">En Apps: descarga el Excel de cada una, borra lo que ya no sirve y revisa tablas sobrantes.</span></button>' +
         filas.slice(0, 100).map((f) => '<div class="card"><div class="fila"><span class="tit">' + esc(f.accion) + '</span><span class="sub">' + App.hace(f.created_at) + '</span></div><p class="sub">' + esc(f.quien_email || '') + ' (' + esc(f.rol || '') + ') · ' + esc(f.detalle || '') + (f.motivo ? '<br><b>Motivo:</b> ' + esc(f.motivo) : '') + '</p></div>').join('');
       $('rD').onclick = () => { const c = (s) => '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"'; const csv = 'id,fecha,quien,rol,accion,detalle,motivo\n' + filas.map((f) => [f.id, f.created_at, f.quien_email, f.rol, f.accion, f.detalle, f.motivo].map(c).join(',')).join('\n'); const u = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' })); App.descargar(u, 'registro-' + App.hoy() + '.csv'); setTimeout(() => URL.revokeObjectURL(u), 4000); App.pendienteVaciar = true; toast('Descargado'); };
       $('rApps').onclick = () => show('apps');

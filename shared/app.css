@@ -54,6 +54,15 @@ main { max-width: 780px; margin: 0 auto; padding: 16px; }
 .stats .card { margin: 0; padding: 12px 14px; }
 .stats b { display: block; font-size: 22px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 .stats span { font-size: 13px; color: var(--muted); }
+/* Carrusel de tarjetas compactas (CM → Resumen → Las 7 apps): se desliza de lado, cada tarjeta centrada. */
+.car-apps { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 2px 10px; margin: 0 -2px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.car-apps::-webkit-scrollbar { display: none; }
+.car-apps .car-it { flex: 0 0 auto; width: 128px !important; min-height: 104px !important; margin: 0 !important; padding: 14px 10px !important; scroll-snap-align: start;
+  display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center;
+  border-radius: 18px !important; border: 1.5px solid var(--line) !important; background: var(--card) !important; color: var(--text) !important; box-shadow: none !important; }
+.car-apps .car-it b { font-size: 26px; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.car-apps .car-it span { font-size: 12.5px; line-height: 1.25; color: var(--muted); font-weight: 600; white-space: normal; }
+.car-apps .car-it.hay { border-color: var(--brand) !important; background: color-mix(in srgb, var(--brand) 12%, var(--card)) !important; }
 
 /* Formularios */
 label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin: 12px 0 6px; }

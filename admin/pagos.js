@@ -1,4 +1,4 @@
-/* Centro de Mando · Pagos de las 6 apps en un solo lugar.
+/* Centro de Mando · Pagos de las 7 apps en un solo lugar.
    1) Precios, link de pago, comisión y datos de transferencia: se escriben una vez y se guardan en todas las apps (cfx_pagos_config_guardar).
    2) Comprobantes por revisar de todas las apps: ver, aprobar (con los días de Premium) o rechazar (cfx_pago_resolver).
    3) Cuentas que no pagan el primer pago (por ejemplo, las de prueba que creas tú). Usa las conexiones de Apps (MisApps). */
@@ -19,7 +19,7 @@
   }
   function formulario() {
     const c = cfg || {}, n = c.negocio || {}, cl = c.cliente || {}, t = c.transferencia || {}, tj = c.tarjeta || {};
-    return '<div class="card" id="pgCfg"><h2>Precios y formas de pago</h2><p class="sub">Iguales para las 6 apps. Al guardar se copian a todas las apps conectadas.</p>' +
+    return '<div class="card" id="pgCfg"><h2>Precios y formas de pago</h2><p class="sub">Iguales para las 7 apps. Al guardar se copian a todas las apps conectadas.</p>' +
       '<h3>Negocio (cuenta principal)</h3><div class="grid2">' + campo('negocio.inicio', 'Primer pago', n.inicio, 'number') + campo('negocio.inicio_dias', 'Días que da', n.inicio_dias, 'number') +
       campo('negocio.mensual', 'Premium mensual', n.mensual, 'number') + campo('negocio.anual', 'Premium anual', n.anual, 'number') + '</div>' +
       '<label class="fila" style="gap:8px"><input type="checkbox" data-k="negocio.exigir_inicio" style="width:auto"' + (n.exigir_inicio ? ' checked' : '') + '> Los negocios nuevos no pueden usar la app hasta su primer pago</label>' +
@@ -39,7 +39,7 @@
       '<h3>Transferencia</h3><div class="grid2">' + campo('transferencia.banco', 'Banco', t.banco) + campo('transferencia.tipo', 'Tipo de cuenta', t.tipo) + campo('transferencia.numero', 'Número', t.numero) +
       campo('transferencia.rut', 'RUT', t.rut) + campo('transferencia.titular', 'Titular', t.titular) + campo('transferencia.correo', 'Correo', t.correo, 'email') + '</div>' +
       campo('whatsapp', 'WhatsApp para dudas de pago (con 56)', c.whatsapp, 'tel') +
-      '<button type="button" class="block" id="pgGuardar">Guardar en las 6 apps</button><div id="pgRes"></div></div>';
+      '<button type="button" class="block" id="pgGuardar">Guardar en las 7 apps</button><div id="pgRes"></div></div>';
   }
   function leer() {
     const o = JSON.parse(JSON.stringify(cfg || {}));
@@ -146,11 +146,11 @@
 
   async function render(el) {
     raiz = el;
-    el.innerHTML = '<div class="titulo-v"><h2>Pagos</h2><span class="sub">Las 6 apps</span></div><p class="sub">Cargando…</p>';
+    el.innerHTML = '<div class="titulo-v"><h2>Pagos</h2><span class="sub">Las 7 apps</span></div><p class="sub">Cargando…</p>';
     await M().preparar();
     try { cfg = await A.rpc('cfx_pagos_config'); } catch (x) { cfg = null; }
     const sin = M().APPS.filter((a) => !(M().estado[a.id] || {}).conectado);
-    el.innerHTML = '<div class="titulo-v"><h2>Pagos</h2><span class="sub">Las 6 apps</span></div>' +
+    el.innerHTML = '<div class="titulo-v"><h2>Pagos</h2><span class="sub">Las 7 apps</span></div>' +
       (sin.length ? '<div class="card"><p class="sub">Para ver y aprobar sus pagos, conecta: ' + sin.map((a) => '<button type="button" class="small ghost" data-con="' + a.id + '">' + esc(a.nombre.split(' ·')[0]) + '</button>').join(' ') + '</p></div>' : '') +
       '<div class="seg chips"><button type="button" class="chip' + (filtro === 'pendiente' ? ' on' : '') + '" data-f="pendiente">Por revisar</button><button type="button" class="chip' + (filtro === 'todos' ? ' on' : '') + '" data-f="todos">Todos</button></div>' +
       '<div id="pgLista"></div>' + formulario() +
@@ -158,7 +158,7 @@
       '<label>App<select id="pgExApp">' + M().APPS.map((a) => '<option value="' + a.id + '">' + esc(a.nombre) + '</option>').join('') + '</select></label>' +
       '<label>Correo de la cuenta<input id="pgEx" type="email"></label><div class="btns-s"><button type="button" class="small" id="pgExSi">Eximir</button><button type="button" class="small ghost" id="pgExNo">Quitar</button></div></div>' +
       '<div class="card"><h2>🎁 Liberar el registro</h2><p class="sub">Por los días que elijas nadie queda bloqueado por el primer pago, y las cuentas que se creen en ese tiempo quedan en la versión gratis (sin primer pago). Al terminar, vuelve el cobro normal para las nuevas.</p>' +
-      '<label>App<select id="lbApp"><option value="todas">Las 6 apps</option>' + M().APPS.map((a) => '<option value="' + a.id + '">' + esc(a.nombre) + '</option>').join('') + '</select></label>' +
+      '<label>App<select id="lbApp"><option value="todas">Las 7 apps</option>' + M().APPS.map((a) => '<option value="' + a.id + '">' + esc(a.nombre) + '</option>').join('') + '</select></label>' +
       '<label>Días<input id="lbDias" type="number" inputmode="numeric" min="1" max="90" value="7"></label>' +
       '<div class="btns-s"><button type="button" class="small" id="lbSi">Liberar</button><button type="button" class="small ghost" id="lbNo">Terminar ahora</button></div><div id="lbRes"></div></div>';
     el.querySelector('#pgGuardar').onclick = guardarTodas;

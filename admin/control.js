@@ -1,4 +1,4 @@
-/* Centro de Mando · Control de las 6 apps desde un solo lugar (funciones comunes cfx_* del núcleo).
+/* Centro de Mando · Control de las 7 apps desde un solo lugar (funciones comunes cfx_* del núcleo).
    Eliges la app arriba y manejas: aviso a todos, planes (interruptores sí/no y límites), textos, keys de Premium,
    cupones, verificaciones de identidad y el registro de lo que se hizo. Usa las conexiones de Apps (MisApps). */
 (function (global) {
@@ -28,7 +28,7 @@
     caja().innerHTML = '<div class="card"><h2>Aviso a todos</h2><p class="sub">Les llega a la campanita y como notificación.</p>' +
       '<label>A quién<select id="avD"><option value="todos">Todos</option><option value="negocios">Negocios (cuentas principales)</option><option value="clientes">Clientes</option><option value="premium">Solo Premium</option><option value="gratis">Solo gratis</option></select></label>' +
       '<label>Título<input id="avT" maxlength="80"></label><label>Mensaje<textarea id="avC" maxlength="240" rows="3"></textarea></label>' +
-      '<label class="fila" style="gap:8px"><input type="checkbox" id="avTodas" style="width:auto" checked> Enviar en las 6 apps (a todas las cuentas)</label><button type="button" class="block" id="avG">Enviar</button><div id="avR"></div></div>';
+      '<label class="fila" style="gap:8px"><input type="checkbox" id="avTodas" style="width:auto" checked> Enviar en las 7 apps (a todas las cuentas)</label><button type="button" class="block" id="avG">Enviar</button><div id="avR"></div></div>';
     raiz.querySelector('#avG').onclick = async () => {
       const apps = raiz.querySelector('#avTodas').checked ? M().APPS.filter(conectada) : [app()], res = [];
       if (!(await confirmar('Se envía a ' + raiz.querySelector('#avD').selectedOptions[0].text.toLowerCase() + ' en ' + apps.length + ' app(s).', 'Enviar'))) return;
@@ -99,7 +99,7 @@
     caja().innerHTML = '<div class="card"><h2>Cupón de descuento</h2><p class="sub">Descuenta el precio del plan al pagar Premium (no aplica a "otro monto").</p>' +
       '<div class="grid2"><label>Código<input id="cC" maxlength="20" placeholder="FERIA20" autocapitalize="characters"></label><label>% descuento<input id="cP" type="number" value="20" min="1" max="100"></label>' +
       '<label>Usos máximos<input id="cU" type="number" placeholder="sin límite"></label><label>Vence<input id="cV" type="date"></label></div>' +
-      '<label class="fila" style="gap:8px"><input type="checkbox" id="cTodas" style="width:auto" checked> Guardar en las 6 apps</label><button type="button" class="block" id="cG">Guardar cupón</button><div id="cR"></div></div>' +
+      '<label class="fila" style="gap:8px"><input type="checkbox" id="cTodas" style="width:auto" checked> Guardar en las 7 apps</label><button type="button" class="block" id="cG">Guardar cupón</button><div id="cR"></div></div>' +
       '<div class="card"><h2>Cupones de ' + esc(app().nombre) + '</h2>' + (L.map((x) => '<div class="fila" style="padding:4px 0;border-top:1px solid var(--line)"><span class="grow"><b>' + esc(x.codigo) + '</b> · ' + x.pct + '%' +
         '<br><span class="sub">' + x.usos + (x.usos_max ? ' de ' + x.usos_max : '') + ' usos' + (x.vence ? ' · vence ' + A.fCorta(x.vence) : '') + (x.activo ? '' : ' · pausado') + '</span></span>' +
         '<button type="button" class="small ghost" data-b="' + esc(x.codigo) + '">Borrar</button></div>').join('') || '<p class="empty">Sin cupones</p>') + '</div>';
@@ -143,10 +143,10 @@
     try { h = await rpc('cfx_humano') || {}; } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
     caja().innerHTML = '<div class="card"><h2>Verificación humana</h2><p class="sub">Con Cloudflare Turnstile, antes de entrar o crear una cuenta aparece "Confirma que no eres un robot". Evita cuentas falsas y ataques.</p>' +
       '<ol class="sub"><li>En Cloudflare → Turnstile crea un sitio con los dominios de tus apps y copia la <b>site key</b> y la <b>secret key</b>.</li>' +
-      '<li>Pega la site key aquí y guárdala en las 6 apps.</li><li>En cada Supabase: Authentication → Attack Protection → CAPTCHA → Turnstile, pega la secret key y guarda.</li></ol>' +
+      '<li>Pega la site key aquí y guárdala en las 7 apps.</li><li>En cada Supabase: Authentication → Attack Protection → CAPTCHA → Turnstile, pega la secret key y guarda.</li></ol>' +
       '<p class="sub">Primero el paso 2 y después el 3 (si no, nadie puede entrar). Para apagarlo: deja vacío y guarda, y apágalo en Supabase.</p>' +
       '<label>Site key<input id="huK" value="' + esc(h.site_key || '') + '" placeholder="0x4AAAAAAA…"></label>' +
-      '<label class="fila" style="gap:8px"><input type="checkbox" id="huTodas" style="width:auto" checked> Guardar en las 6 apps</label><button type="button" class="block" id="huG">Guardar</button><div id="huR"></div></div>';
+      '<label class="fila" style="gap:8px"><input type="checkbox" id="huTodas" style="width:auto" checked> Guardar en las 7 apps</label><button type="button" class="block" id="huG">Guardar</button><div id="huR"></div></div>';
     raiz.querySelector('#huG').onclick = async () => {
       const apps = raiz.querySelector('#huTodas').checked ? M().APPS.filter(conectada) : [app()], res = [];
       for (const a of apps) { try { await M().rpcDe(M().cliente(a), 'cfx_humano_guardar', { p_site_key: raiz.querySelector('#huK').value.trim() }); res.push(a.nombre + ': ✓'); } catch (x) { res.push(a.nombre + ': ' + nf(x)); } }
@@ -251,10 +251,10 @@
 
   async function render(el) {
     raiz = el;
-    el.innerHTML = '<div class="titulo-v"><h2>Control</h2><span class="sub">Las 6 apps</span></div><p class="sub">Cargando…</p>';
+    el.innerHTML = '<div class="titulo-v"><h2>Control</h2><span class="sub">Las 7 apps</span></div><p class="sub">Cargando…</p>';
     await M().preparar();
     const a = app();
-    el.innerHTML = '<div class="titulo-v"><h2>Control</h2><span class="sub">Las 6 apps</span></div>' +
+    el.innerHTML = '<div class="titulo-v"><h2>Control</h2><span class="sub">Las 7 apps</span></div>' +
       '<div class="seg">' + M().APPS.map((x) => '<button type="button" data-app="' + x.id + '" class="' + (x.id === actual ? 'on' : '') + '">' + esc(x.nombre.split(' ·')[0]) + (conectada(x) ? '' : ' 🔌') + '</button>').join('') + '</div>' +
       '<div class="chips">' + SECC.map((s) => '<button type="button" class="chip' + (s[0] === seccion ? ' on' : '') + '" data-s="' + s[0] + '">' + s[1] + '</button>').join('') + '</div><div id="ctlCuerpo"></div>';
     el.querySelectorAll('[data-app]').forEach((b) => { b.onclick = () => { actual = b.dataset.app; render(el); }; });

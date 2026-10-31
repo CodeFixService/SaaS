@@ -1,4 +1,4 @@
-/* Centro de Mando · Mensajes de soporte de las 6 apps en una sola bandeja.
+/* Centro de Mando · Mensajes de soporte de las 7 apps en una sola bandeja.
    Cada persona escribe desde el 🛟 de su app (núcleo · ayuda.js); aquí ves todas las conversaciones juntas, con la app de
    cada una, y respondes (le llega un aviso). Usa las conexiones de Apps (MisApps). Los avisos de mensajes nuevos llegan
    al tiro por el puente (cfx_aviso_externo). */
@@ -57,7 +57,7 @@
 
   async function render(el) {
     raiz = el;
-    el.innerHTML = '<div class="titulo-v"><h2>Mensajes</h2><span class="sub">Soporte de las 6 apps</span></div><p class="sub">Cargando…</p>';
+    el.innerHTML = '<div class="titulo-v"><h2>Mensajes</h2><span class="sub">Soporte de las 7 apps</span></div><p class="sub">Cargando…</p>';
     await M().preparar();
     const sin = M().APPS.filter((a) => !(M().estado[a.id] || {}).conectado);
     const { L, avisos } = await bandeja();
