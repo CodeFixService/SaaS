@@ -99,6 +99,7 @@
       if (a.leer) try { e.lib = String((a.leer.propia ? ((await A.cargarPublica()).config || {}).version_liberada : campo(await rpcDe(c, a.leer.rpc), a.leer.campo)) || ''); } catch (x) { /* nada */ }
       if (e.conectado) try { e.resumen = await rpcDe(c, 'admin_resumen'); } catch (x) { e.error = 'Sin permiso de administrador en esta app (' + x.message + ').'; }
       if (e.conectado && !a.propia && !e.vinculada) vincular(a).catch(() => { /* base aún sin el núcleo nuevo */ });
+      if (e.conectado && !e.bdProg && e.bdPide && e.bd && menor(e.bd, e.bdPide)) rpcDe(c, 'cfx_actualizar_ahora', { p_programar: false }).then((r) => { const d = causaBd(r); e.bdMal = d.mal; e.bdMsg = d.t; pintarTarjeta(a); }).catch(() => {});
     } catch (x) { e.error = x.message; }
     e.cargando = false;
     pintarTarjeta(a); pintarCabecera();
@@ -137,8 +138,10 @@
       ' · Núcleo ' + (e.nucleo ? 'v' + esc(e.nucleo) : '—') + (e.nucleo && NUCLEO && e.nucleo !== NUCLEO ? ' <span class="pill warn">falta sincronizar</span>' : '') + '</p></div></div>' +
       '<div style="margin:8px 0">' + est + '</div>' +
       (e.error ? '<p class="sub warn">' + esc(e.error) + '</p>' : '') +
+      (e.bdMsg && s.faltaBd ? '<p class="sub' + (e.bdMal ? ' warn' : '') + '">' + esc(e.bdMsg) + '</p>' : '') +
       '<div class="btns-s">' +
-        (a.liberar && e.conectado ? '<button type="button" class="small" data-a="lib"' + (s.lista ? '' : ' disabled') + '>' + (s.alDia ? A.ico('check', 15) + ' Liberada' : A.ico('cohete', 15) + ' Liberar v' + esc(e.pub || '?')) + '</button>' : '') +
+        (a.liberar && e.conectado ? '<button type="button" class="small" data-a="lib"' + (s.lista && !e.liberando ? '' : ' disabled') + '>' + (e.liberando ? 'Liberando…' : s.alDia ? A.ico('check', 15) + ' Liberada' : A.ico('cohete', 15) + ' Liberar v' + esc(e.pub || '?')) + '</button>' : '') +
+        (s.faltaBd && e.conectado ? '<button type="button" class="small" data-a="bd"' + (e.bdProg ? ' disabled' : '') + '>' + (e.bdProg ? 'Actualizando la base…' : '⚡ Actualizar base ahora') + '</button>' : '') +
         (!a.propia && e.url ? (e.conectado ? '<button type="button" class="small ghost" data-a="salir">Desconectar</button>' : '<button type="button" class="small" data-a="con">' + A.ico('enchufe', 15) + ' Conectar</button>') : '') +
         '<button type="button" class="small ghost" data-a="rec" aria-label="Revisar">' + A.ico('refrescar', 15) + '</button>' +
       '</div>';
@@ -173,17 +176,47 @@
       d.addEventListener('close', () => ok(r));
     });
   }
+  // Nunca queda "pegado": si la app no responde en 20 s se avisa y se vuelve a revisar.
+  const aTiempo = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('no respondió en ' + ms / 1000 + ' s (revisa la conexión o vuelve a conectarte)')), ms))]);
   async function liberar(a, sinPreguntar) {
     const e = E[a.id];
     const notas = sinPreguntar ? (e.notas || '') : await pedirNotas(a, e);
     if (notas === null) return;
+    e.liberando = true; pintarTarjeta(a);
     try {
-      const { error } = await a.liberar(cliente(a), e.pub); if (error) throw new Error(error.message);
+      const { error } = await aTiempo(a.liberar(cliente(a), e.pub), 20000); if (error) throw new Error(error.message);
       let n = 0;
       try { const r = await cliente(a).rpc('cfx_avisar_version', { p_version: e.pub, p_notas: notas, p_app: corto(a) }); if (!r.error) n = r.data || 0; } catch (x) { /* base aún sin la función: se avisa la próxima */ }
       if (!sinPreguntar) toast(corto(a) + ' v' + e.pub + ' liberada' + (n ? ' · aviso a ' + n : ''));
     } catch (x) { toast(a.nombre + ': ' + x.message); }
+    e.liberando = false;
     await cargar(a);
+    if (!estadoDe(a).alDia && e.conectado && !e.error) toast(corto(a) + ': se guardó, pero sigue leyendo v' + (e.lib || '—') + '. Toca ↻ en un rato.');
+  }
+  // Base atrasada: programa la actualización en el servidor (máx. 1 minuto) y muestra el resultado real de auto_actualizar().
+  function causaBd(r) {
+    const u = (r.ultimos || [])[0], t = (r.tareas || []).find((x) => /auto/.test(x.nombre));
+    if (u && /sin cambios|no disponible/i.test(u.detalle)) return { mal: true, t: 'Último intento: ' + u.detalle };
+    if (!t) return { mal: true, t: 'Esta base no tiene la tarea de actualización automática (pg_cron). Pega una vez el instalar-corto.sql de la app en su Supabase.' };
+    if (t.ok === false) return { mal: true, t: 'La tarea automática falló: ' + (t.error || 'sin detalle') };
+    return { mal: false, t: u ? 'Último intento: ' + u.detalle : 'Se revisa sola cada 10 min.' };
+  }
+  async function actualizarBase(a) {
+    const e = E[a.id], c = cliente(a);
+    e.bdProg = true; pintarTarjeta(a);
+    try {
+      const r = await aTiempo(rpcDe(c, 'cfx_actualizar_ahora', { p_programar: true }), 15000);
+      if (r.programada !== 'ok') { e.bdMal = true; e.bdMsg = 'No se pudo programar (' + r.programada + '). En Supabase → Database → Extensions activa pg_cron y http, y pega el instalar-corto.sql de la app.'; }
+      else { e.bdMal = false; e.bdMsg = 'Programada: la base se actualiza en máx. 1 minuto. Se revisa sola.'; toast(corto(a) + ': actualizando la base…'); }
+      pintarTarjeta(a);
+      if (r.programada === 'ok') {
+        await new Promise((ok) => setTimeout(ok, 75000));
+        await cargar(a);
+        if (estadoDe(a).faltaBd) { const d = causaBd(await rpcDe(c, 'cfx_actualizar_ahora', { p_programar: false })); e.bdMal = d.mal; e.bdMsg = d.t; }
+        else toast(corto(a) + ': base al día ✓');
+      }
+    } catch (x) { e.bdMal = true; e.bdMsg = /Could not find|does not exist|PGRST202/i.test(x.message) ? 'Esta base aún no tiene "Actualizar ahora": pega una vez el instalar-corto.sql de la app en su Supabase.' : x.message; }
+    e.bdProg = false; pintarTarjeta(a);
   }
   // Respaldo y limpieza (funciones cfx_*, iguales en las 7 apps): Excel del admin, lo que se puede borrar y tablas sobrantes.
   const nf = (x) => /Could not find|does not exist|PGRST202/i.test(x.message) ? 'La base de esta app aún no tiene esta función: se actualiza sola en máx. 10 minutos.' : x.message;
@@ -258,6 +291,7 @@
       const b = ev.target.closest('[data-a]'), c = ev.target.closest('[data-app]'); if (!b || !c) return;
       const a = APPS.find((x) => x.id === c.dataset.app), act = b.dataset.a;
       if (act === 'lib') liberar(a);
+      else if (act === 'bd') actualizarBase(a);
       else if (act === 'con') conectar(a);
       else if (act === 'salir') cliente(a).auth.signOut().then(() => cargar(a));
       else if (act === 'rec') cargar(a);
