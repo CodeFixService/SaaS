@@ -21,8 +21,7 @@ const VOZ_FALSA = () => {
     require('child_process').execSync(__dirname + '/base.sh /home/user/' + app, { stdio: 'ignore' });
     const t = await abrir('/home/user/' + app, db); const malos = [];
     try {
-      await t.ctx.addInitScript(VOZ_FALSA);
-      const { page: p } = await t.nuevo();
+      const { page: p, ctx } = await t.nuevo(); await ctx.addInitScript(VOZ_FALSA);
       const A = CUENTAS[app];
       if (A) {
         const c = await A.cuenta(t);
