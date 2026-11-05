@@ -339,3 +339,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Versiones en main**: CM 4.52 · Billetera 1.21.30 · Órbita 5.58 · Barbería 2.52 (db_version 2.52) · BiciTaller 2.52 · Estaciona 2.14.32 · Cerebro 1.36.
 - **Pestañita**: tapaba la tarjeta principal. Ahora delgada (34×12 px, flecha 12 px) a la orilla derecha, justo bajo la campana (a mano del pulgar derecho; `--cfx-pest-d` la centra bajo la campana). Área para tocar más grande que el dibujo. El contador va a su izquierda.
 - **Barra de abajo, misma regla en todas**: al bajar se esconde, al subir aparece (y arriba del todo, al cargar y al cambiar de pantalla). Ya no reaparece al llegar al final (rebote) ni se esconde sola a los 4 s.
+
+## U6 · Más sin repetidos · núcleo 2.35 (05/11/2026)
+- **Versiones en main**: CM 4.53 · Billetera 1.21.31 · Órbita 5.59 · Barbería 2.53 (db_version 2.53) · BiciTaller 2.53 · Estaciona 2.14.33 · Cerebro 1.37.
+- **Regla común** (ayuda.js `enBarra()`, usada por CFX_MENU al pintar): una fila del Más se quita si coincide con un botón visible de la barra o con el + por destino (ruta+hash normalizados, `index.html` = carpeta), por clave (`k` = data-v/r/k/tab/hash) o por nombre (sin emojis ni contadores). No cuenta el botón que abre el propio menú (mas/ajustes/perfil/cuenta) ni los sobrantes `.cfx-oculto`.
+- Revisado: Órbita (Productos `caja/#productos` y Clientes `fichas/#clientes` abren otra pestaña: no son repetidos) y Estaciona sin repetidos hoy; la regla evita que aparezcan en adelante.
