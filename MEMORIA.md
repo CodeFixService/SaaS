@@ -313,3 +313,12 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - Billetera y Estaciona ya no tienen ventana propia de términos (la pide el núcleo). Órbita mantiene "Antes de empezar" y Billetera el alta, pero al aceptar ahí llaman `cfx_legal_aceptar` (no pregunta dos veces).
 - **Pendiente del dueño**: razón social, RUT y domicilio de CodeFix para la sección "Responsable" (hoy dice "CodeFix (Chile)" + chat de soporte).
 - Prueba: `pruebas/legal_ui.js` (CM, Billetera, Órbita vieja y nueva, BiciTaller, Estaciona). menu_ui.js: avisos de "perfil de arriba" y fallas de Barbería ya existían en main.
+
+## U1-U4 · núcleo 2.31 (05/11/2026)
+- **Versiones en main**: CM 4.49 (base 4.13) · Billetera 1.21.27 (base 24) · Órbita 5.55 (base 5.17) · Barbería 2.49 · BiciTaller 2.49 (base 2.12) · Estaciona 2.14.29 (base 17) · Cerebro 1.33 (base 1.8).
+- **U1 voz.js**: dictado se corta tras 2,5 s de silencio (7 s sin voz, 60 s máx., corte forzado si el navegador no avisa); botón se esconde tras 3 s y vuelve al tocar el campo; nunca en contraseña, email, numeric/tel, teléfono, RUT, códigos, precio ni monto. Micrófono con z-index máximo (quedaba bajo capas fijas). Usa `SpeechRecognition` sin prefijo si existe.
+- **U2 barra.js**: barra de abajo que se esconde sola (aparece al cargar, navegar, subir y al final; se esconde al bajar o tras 4 s); asa o deslizar arriba la muestra; nunca en PC ni con ventana abierta. `CodeFixBarra.ver/ocultar`, `window.CFX_BARRA_FIJA`.
+- **U3 ayuda.js**: sin PRO arriba; campana y foto 32 px; ☰ solo en teléfono (`.cfx-cab-extra`, atajo, plan, Mi perfil, Cerrar sesión); `data-cfx-queda` deja un botón arriba.
+- **U4 admin.sql**: `cfx_actualizar_ahora(p_programar)` programa tarea única pg_cron 'cfx-ahora' (bloque DO, no función SQL: "cache lookup failed") y anota en `cfx_registro` accion 'auto'. CM → Apps: "⚡ Actualizar base ahora" con causa real; Liberar muestra "Liberando…" y corta a los 20 s.
+- **Regla de pruebas (Josué)**: antes de main se corre UNA sola prueba general (`pruebas/central.js`); no crear pruebas por cada cambio. central.js necesita la base `barberia_prueba` (`./base.sh /home/user/barberia barberia_prueba`).
+- **Pendiente nuevo (Josué)**: modo sin conexión (núcleo: caché + cola de cambios que se envía al volver); vincular cuentas con un código (cliente↔negocio y negocio↔negocio); chat entre cuentas vinculadas (en el núcleo, una vez).
