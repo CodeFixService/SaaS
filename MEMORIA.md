@@ -322,3 +322,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **U4 admin.sql**: `cfx_actualizar_ahora(p_programar)` programa tarea única pg_cron 'cfx-ahora' (bloque DO, no función SQL: "cache lookup failed") y anota en `cfx_registro` accion 'auto'. CM → Apps: "⚡ Actualizar base ahora" con causa real; Liberar muestra "Liberando…" y corta a los 20 s.
 - **Regla de pruebas (Josué)**: antes de main se corre UNA sola prueba general (`pruebas/central.js`); no crear pruebas por cada cambio. central.js necesita la base `barberia_prueba` (`./base.sh /home/user/barberia barberia_prueba`).
 - **Pendiente nuevo (Josué)**: modo sin conexión (núcleo: caché + cola de cambios que se envía al volver); vincular cuentas con un código (cliente↔negocio y negocio↔negocio); chat entre cuentas vinculadas (en el núcleo, una vez).
+
+## U10 · núcleo 2.32 (05/11/2026)
+- **Versiones en main**: CM 4.50 · Billetera 1.21.28 · Órbita 5.56 · Barbería 2.50 (db_version 2.50) · BiciTaller 2.50 · Estaciona 2.14.30 · Cerebro 1.34 (bases sin otro cambio).
+- **Botón + con su color final desde la primera carga**: carga.js (en el `<head>`) pone al abrir el último `--brand` guardado (`localStorage cfx-brand`, se guarda solo al cambiar el estilo inline del `<html>`) y la clase `cfx-premium` si la última vez era PRO (`cfx-premium`, la escribe `CFX_PREMIUM.marcar`). Antes el + partía con otro color y cambiaba al llegar la cuenta.
+- Barra: `-webkit-tap-highlight-color: transparent` (sin mancha oscura al tocar en Android) y anillo solo con teclado (`:focus-visible`).
