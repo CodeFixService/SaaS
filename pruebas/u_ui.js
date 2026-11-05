@@ -12,6 +12,7 @@ const VOZ_FALSA = () => {
     const r = this; r.start = () => { setTimeout(() => r.onresult && r.onresult({ results: [[{ transcript: 'hola mundo' }]] }), 300); };
     r.stop = () => { window.__voz.paradas++; setTimeout(() => r.onend && r.onend(), 50); }; r.abort = () => r.onend && r.onend();
   };
+  window.SpeechRecognition = window.webkitSpeechRecognition;
 };
 (async () => {
   const pedidas = process.argv.slice(2); let fallas = 0;
