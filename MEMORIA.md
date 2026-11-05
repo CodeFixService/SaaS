@@ -327,3 +327,10 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Versiones en main**: CM 4.50 · Billetera 1.21.28 · Órbita 5.56 · Barbería 2.50 (db_version 2.50) · BiciTaller 2.50 · Estaciona 2.14.30 · Cerebro 1.34 (bases sin otro cambio).
 - **Botón + con su color final desde la primera carga**: carga.js (en el `<head>`) pone al abrir el último `--brand` guardado (`localStorage cfx-brand`, se guarda solo al cambiar el estilo inline del `<html>`) y la clase `cfx-premium` si la última vez era PRO (`cfx-premium`, la escribe `CFX_PREMIUM.marcar`). Antes el + partía con otro color y cambiaba al llegar la cuenta.
 - Barra: `-webkit-tap-highlight-color: transparent` (sin mancha oscura al tocar en Android) y anillo solo con teclado (`:focus-visible`).
+
+## U7+U8+U9 · núcleo 2.33 (05/11/2026)
+- **Versiones en main**: CM 4.51 · Billetera 1.21.29 · Órbita 5.57 · Barbería 2.51 (db_version 2.51) · BiciTaller 2.51 · Estaciona 2.14.31 · Cerebro 1.35 (bases sin otro cambio).
+- **U7 cabecera**: arriba solo la campana; foto, FREE/PRO, ⇄ atajo y ☰ quedan ocultos (siguen en el DOM: BiciTaller cliente usa `.cfx-plan` de referencia). Teléfono: sin logo (`img` y `[class*=logo]` de ≤3 letras/emoji → `.cfx-sin-logo`; `h1::before` de Órbita). Flecha de volver (`ES_VOLVER` o `.cfx-flecha`) → `.cfx-volver`, cuadrado limpio 38 px con sombra.
+- **U8 pestañita** `.cfx-pest` (centro, colgando de la cabecera `.cfx-cab-h`; lleva el contador de pendientes) → panel `.cfx-pnl` que baja desde arriba: foto 56 px, nombre, correo, plan; botones propios de la cabecera (solo teléfono), ⇄ "Cambiar de app/cuenta" (admin/atajo), Mi plan/Pasar a PRO, Mi perfil, Cerrar sesión. Cierra con velo, Escape, flecha ↑ o deslizar arriba. Sin cabecera: va dentro de la boya fija.
+- **U9 cinta PRO**: `.cfx-cinta` 3 px dorada bajo la cabecera (`html.cfx-premium`); la línea fija de arriba de premium.js solo queda si no hay cabecera (`html:not(.cfx-con-cinta)`).
+- Pruebas viejas (u_ui, r2_ui) aún buscan `.cfx-ham`/`.cfx-av` visibles: quedaron desactualizadas (la regla es central.js).
