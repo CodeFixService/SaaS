@@ -334,3 +334,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **U8 pestañita** `.cfx-pest` (centro, colgando de la cabecera `.cfx-cab-h`; lleva el contador de pendientes) → panel `.cfx-pnl` que baja desde arriba: foto 56 px, nombre, correo, plan; botones propios de la cabecera (solo teléfono), ⇄ "Cambiar de app/cuenta" (admin/atajo), Mi plan/Pasar a PRO, Mi perfil, Cerrar sesión. Cierra con velo, Escape, flecha ↑ o deslizar arriba. Sin cabecera: va dentro de la boya fija.
 - **U9 cinta PRO**: `.cfx-cinta` 3 px dorada bajo la cabecera (`html.cfx-premium`); la línea fija de arriba de premium.js solo queda si no hay cabecera (`html:not(.cfx-con-cinta)`).
 - Pruebas viejas (u_ui, r2_ui) aún buscan `.cfx-ham`/`.cfx-av` visibles: quedaron desactualizadas (la regla es central.js).
+
+## Arreglos de Josué tras U7-U9 · núcleo 2.34 (05/11/2026)
+- **Versiones en main**: CM 4.52 · Billetera 1.21.30 · Órbita 5.58 · Barbería 2.52 (db_version 2.52) · BiciTaller 2.52 · Estaciona 2.14.32 · Cerebro 1.36.
+- **Pestañita**: tapaba la tarjeta principal. Ahora delgada (34×12 px, flecha 12 px) a la orilla derecha, justo bajo la campana (a mano del pulgar derecho; `--cfx-pest-d` la centra bajo la campana). Área para tocar más grande que el dibujo. El contador va a su izquierda.
+- **Barra de abajo, misma regla en todas**: al bajar se esconde, al subir aparece (y arriba del todo, al cargar y al cambiar de pantalla). Ya no reaparece al llegar al final (rebote) ni se esconde sola a los 4 s.
