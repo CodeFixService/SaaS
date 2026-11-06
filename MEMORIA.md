@@ -396,3 +396,9 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **ayuda.js** `reparar()`: confirma, borra `caches`, desregistra los service workers y recarga con `?cfx=…` (no toca localStorage: sesión, PIN y datos quedan).
 - Va al final de **Configuración** en el menú común (CFX_MENU) y en "Cuenta y ayuda" suelto (apps sin menú común).
 - Versiones: CM 4.60 · Billetera 1.21.37 · Órbita 5.65 · Barbería 2.59 · BiciTaller 2.60 · Estaciona 2.14.39 · Cerebro 1.44. central.js revisa el botón en las 7 apps.
+
+## Órbita 5.66 (bd 5.19) · Variantes + ficha con barra "Agregar" (06/11/2026)
+- Tabla `variantes` (owner_id, clave, nombre, precio, stock, orden). RPC `variantes_guardar(clave, lista)` (dueño; deja catalog_items.opciones con los nombres) y `variantes_de(negocio)` (público).
+- `armar_pedido` cobra el precio de la opción y revisa su stock (`apartado_op`); `mover_stock` descuenta también la opción. Caja (venta en local) aún no descuenta por opción.
+- Caja → producto: "💲 Precio y stock distinto por opción". shared/tienda.js: `CFX_FICHA` (cargar, con, agotada), opciones agotadas tachadas, precio de la tarjeta cambia con la opción, ficha (tocar foto o nombre) con cantidad y barra fija "Agregar · $".
+- central.js prueba la ficha y el precio por opción en t/.
