@@ -409,3 +409,9 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 
 ## Órbita 5.70 · D20 Tienda en 5 min + D23 barra de progreso (06/11/2026)
 - index.html (cargarHoy): "Te falta configurar" pasa a "🚀 Tu tienda en 5 minutos": 7 pasos (rubro, logo, WhatsApp, horario, productos, link de pago, compartir) con barra (`.t5` en core.css), hechos con ✅ tachados; se oculta al completar. Compartir/QR marca `localStorage cfx:compartio`. central.js lo prueba.
+
+## Órbita 5.71 (bd 5.21) · Grupo 1: inventario + Caja por opción + push al pedido + fichas WebP (06/11/2026)
+- SQL 5.21: `caja_descontar` descuenta también la opción (it.opcion → variantes); `stock_sumar(clave, opcion, cant)` (dueño, ±, "Entró mercadería"); `inventario()` (dueño/equipo: clave, opcion null=producto, stock, apartado, precio); trigger `notifications_pedido_url`: un aviso 'apps/pedidos/' pasa a 'apps/pedidos/?p=<id>' (pedido creado/cambiado en la misma transacción).
+- Caja: al vender un producto con opciones pide cuál (Core.elegir) y usa su precio; pendStock lleva opcion; traerStock usa inventario(); tarjeta 📦 Inventario en Productos (KPIs + ➕ Entró por producto/opción); stock bajo incluye opciones.
+- Pedidos: ?p=id busca el pedido en las pestañas, lo marca y lo centra. Fichas: foto con CFX_ACHICAR('vitrina').
+- central.js: push abre pedido exacto · inventario y venta por opción.

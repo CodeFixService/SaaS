@@ -85,6 +85,28 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await t.sim.su("insert into public.pedidos (negocio_id, cliente_id, lineas, subtotal, total, entrega, estado) values ($1, $2, '[{\"nombre\":\"Polera\",\"cant\":1,\"precio\":10000,\"subtotal\":10000}]', 10000, 10000, 'retiro', 'recibido')", [tid, cli]);
         await q.evaluate(() => document.dispatchEvent(new Event('visibilitychange'))); await q.waitForTimeout(1500);
         ok(await q.locator('.card.nuevo').count() === 1, 'Órbita: pedido nuevo en vivo en Pedidos');
+        // Push de pedido abre ESE pedido: el aviso lleva ?p=<id> y la página lo busca y lo marca.
+        await t.sim.su("begin; insert into public.pedidos (negocio_id, cliente_id, lineas, subtotal, total, entrega, estado) values ('" + tid + "', '" + cli + "', '[]', 5000, 5000, 'retiro', 'entregado'); select public.notify_user('" + tid + "', 'p', 'p', 'apps/pedidos/'); commit;");
+        const [{ pid, url }] = await t.sim.su("select url, substr(url, 17) pid from public.notifications where title = 'p' order by created_at desc limit 1");
+        await q.goto(t.base + '/apps/pedidos/?p=' + pid); await q.waitForTimeout(3500);
+        ok(/^apps\/pedidos\/\?p=/.test(url) && await q.locator('[data-ped="' + pid + '"].nuevo').count() === 1, 'Órbita: push de pedido abre el pedido exacto ' + url);
+        // Inventario: la Caja pide la opción, la venta descuenta producto y opción en el servidor, y ➕ Entró suma.
+        await t.sim.su("insert into public.catalog_items (owner_id, client_key, nombre, precio, stock, opciones) values ($1, 'cam', 'Camisa', 9000, 10, 'Rojo, Azul')", [tid]);
+        await t.sim.su("insert into public.variantes (owner_id, clave, nombre, precio, stock, orden) values ($1, 'cam', 'Rojo', 9500, 5, 0), ($1, 'cam', 'Azul', null, 5, 1)", [tid]);
+        await q.evaluate((k) => localStorage.setItem('caja:migrado', '1') || localStorage.setItem('caja:' + k + ':productos', JSON.stringify([{ id: 'cam', nombre: 'Camisa', precio: 9000, costo: 4000, stock: 10, categoria: '', publicado: true, ops: 'Rojo, Azul', vars: [] }])), tid);
+        await q.goto(t.base + '/apps/caja/'); await q.waitForTimeout(3000);
+        await q.click('#prods .prod[data-id="cam"]'); await q.waitForTimeout(300);
+        await q.click('.elegir button:has-text("Rojo")'); await q.waitForTimeout(200);
+        const tk = await q.evaluate(() => [document.getElementById('ticket').textContent.includes('Camisa (Rojo)'), document.getElementById('ticketTotal').textContent]);
+        await q.click('#bCobrar'); await q.waitForTimeout(1500);
+        const st = await t.sim.su("select (select stock from public.catalog_items where client_key = 'cam')::int p, (select stock from public.variantes where clave = 'cam' and nombre = 'Rojo')::int r");
+        await q.evaluate(() => document.querySelector('[data-v=productos]').click()); await q.waitForTimeout(300);
+        await q.evaluate(() => { window.prompt = () => '4'; });
+        await q.click('#invLista [data-inv="cam"][data-op="Azul"]'); await q.waitForTimeout(1500);
+        const az = await t.sim.su("select stock::int a from public.variantes where clave = 'cam' and nombre = 'Azul'");
+        const inv = await q.evaluate(() => document.getElementById('invKpis').textContent);
+        ok(tk[0] && tk[1].replace(/\D/g, '') === '9500' && st[0].p === 9 && st[0].r === 4 && az[0].a === 9 && inv.includes('unidades'), 'Órbita: inventario y venta por opción ' + JSON.stringify([tk, st, az, inv]));
+        await t.foto('inventario', q);
       }
       const e = t.errores.filter((x) => !/404|Failed to load resource|net::/.test(x));
       ok(!e.length, app + ': sin errores ' + e.join(' | ').slice(0, 200));
