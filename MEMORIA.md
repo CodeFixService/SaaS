@@ -372,3 +372,12 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - `nucleo/vitrina.js` (no `perfil.js`: Barbería ya tiene uno propio). `CodeFixVitrina.montar(nodo, t)`: portada con banner del color, logo, nombre, rubro, Abierto/Cerrado/Vacaciones, estrellas, descripción, 📍 dirección+comuna (Google Maps), horario, correo, "Tienda desde", redes (Instagram/Facebook/TikTok/web) y botones WhatsApp + Compartir. `editor(nodo, perfil)` / `leer(nodo)` para Ajustes.
 - Órbita: `profiles.perfil jsonb` + `set_mi_perfil(jsonb)` (descripcion 400, direccion, comuna, instagram, facebook, tiktok, web→https, correo validado; quita < >). `tienda_publica` y `tienda_info` devuelven perfil, rubro y desde. t/index.html usa la vitrina (reemplaza el cuadro de estado); Ajustes → Mi tienda → "📇 Perfil de tu tienda" (solo guarda si cargó, para no borrar).
 - central.js revisa la tienda pública con perfil (tienda "vitrina").
+
+## U14 Arreglos de pantalla · núcleo 2.40 (06/11/2026)
+- **Versiones en main**: CM 4.59 · Billetera 1.21.36 · Órbita 5.64 (bd 5.18; core.js APP_VERSION al día) · Barbería 2.58 (db_version 2.58) · BiciTaller 2.59 · Estaciona 2.14.38 · Cerebro 1.43.
+- **Pago con tarjeta** (pagos.js): "Copiar monto" y "💳 Abrir pago con tarjeta" uno bajo otro, ancho completo, mismo alto, con relleno (antes cortado y descuadrado).
+- **Sin línea amarilla** bajo la cabecera (`.cfx-cinta` oculta; PRO se sigue notando en pestaña activa/+ dorados) y 16 px de espacio entre la cabecera y lo que sigue (`.cfx-cab-h + *`), así la pestañita no pisa la tira de pestañas.
+- **PRO entero**: `.pill`, `.pill.pro`, `.pill.gold`, `.cfx-plan` sin saltos de línea ni achicarse (tema.css).
+- **Cifras** (tema.css `.cfx-cifras`): ícono arriba, número y texto abajo. Órbita → Fichas → Campañas → Mis suscriptores la usa.
+- **Globito solo en la campana**: el número (pendientes + chat sin leer) ya no va junto a la flechita; va en la campana como atributo `data-cfx-n` (::after), que sobrevive si la app rehace su campana. Si la campana ya tiene su propio número, el del núcleo va a la izquierda (`data-cfx-n-izq`).
+- **Espacio sobre la barra**: relleno inferior 112 → 136 px (el ➕ se ve completo al final).

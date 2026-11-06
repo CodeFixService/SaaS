@@ -18,6 +18,8 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         ok(r[0] === '$10.000' && r[1] === '$20' && r[2] === 10000 && r[3] === 25990 && Number.isNaN(r[4]), 'Órbita: precios en pesos chilenos ' + JSON.stringify(r));
         await p.goto(t.base + '/apps/fichas/'); await p.waitForTimeout(1500);
         ok(await p.evaluate(() => { const e = document.getElementById('f-precio'); return !e || e.placeholder === '10.000'; }), 'Órbita: editor de anuncio pide precio sin decimales');
+        // U14: el pill PRO no se parte y no hay línea amarilla bajo la cabecera.
+        ok(await p.evaluate(() => { const x = document.querySelector('.pill.pro'); const c = document.querySelector('.cfx-cinta'); return (!x || getComputedStyle(x).whiteSpace === 'nowrap') && (!c || getComputedStyle(c).display === 'none'); }), 'Órbita: PRO entero y sin línea amarilla');
         // Vitrina (núcleo): la página pública luce el perfil de la tienda.
         const id = '00000000-0000-0000-0000-0000000000aa';
         await t.sim.su('set session_replication_role = replica');
