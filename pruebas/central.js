@@ -130,6 +130,21 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         const [{ a: az2 }] = await t.sim.su("select stock::int a from public.variantes where clave = 'cam' and nombre = 'Azul'");
         ok(rolBd === 'bodega' && bo[0] && !bo[1] && !bo[2] && bo[3] && /permiso/i.test(bo[4]) && az2 === 11, 'Órbita: equipo con roles (bodega) ' + JSON.stringify([rolBd, bo, az2]));
         await t.foto('equipo-bodega', w);
+        // Vitrina también en el catálogo con cuenta: el cliente ve la portada y "Compartir" da el link público.
+        const vc = '00000000-0000-0000-0000-0000000000ac';
+        await t.sim.su('set session_replication_role = replica');
+        await t.sim.su("insert into auth.users (id, email) values ($1, 'clivit@x.cl') on conflict do nothing", [vc]);
+        await t.sim.su("insert into auth.claves (email, pass) values ('clivit@x.cl', 'clave123') on conflict do nothing");
+        await t.sim.su("insert into public.profiles (id, email, role, empresa, negocio_id, terms_at) values ($1, 'clivit@x.cl', 'client', 'Cliente', $2, now()) on conflict do nothing", [vc, id]);
+        await t.sim.su('set session_replication_role = origin');
+        const { page: c } = await t.nuevo(); await c.goto(t.base + '/'); await c.waitForTimeout(1200);
+        await c.fill('input[type=email]:visible', 'clivit@x.cl'); await c.fill('input[type=password]:visible', 'clave123'); await c.press('input[type=password]:visible', 'Enter'); await c.waitForTimeout(3000);
+        await c.goto(t.base + '/apps/catalogo/'); await c.waitForTimeout(2500);
+        const vt = await c.evaluate(async () => { const s = document.querySelector('#vProductos #perfil .pf'); if (!s) return null; let u = ''; navigator.share = async (d) => { u = d.url; };
+          s.querySelector('[data-pf="compartir"]').click(); await new Promise((r) => setTimeout(r, 200));
+          return [s.querySelector('h2').textContent, s.textContent.includes('Ropa hecha a mano'), !!s.querySelector('a[href*="wa.me/56912345678"]'), /\/t\/\?s=vitrina$/.test(u), document.documentElement.scrollWidth <= innerWidth + 1]; });
+        ok(vt && vt[0] === 'Vitrina Prueba' && vt.slice(1).every(Boolean), 'Órbita: vitrina en catálogo con cuenta ' + JSON.stringify(vt));
+        await t.foto('vitrina-catalogo', c);
       }
       const e = t.errores.filter((x) => !/404|Failed to load resource|net::|Sin permiso para vender/.test(x));
       ok(!e.length, app + ': sin errores ' + e.join(' | ').slice(0, 200));
