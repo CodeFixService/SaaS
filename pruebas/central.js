@@ -22,6 +22,11 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
       ok(barra, app + ': barra de carga aparece y se va');
       // Reparar la app (núcleo): está en Configuración del menú común.
       ok(await p.evaluate(() => { const d = document.createElement('div'); document.body.append(d); try { CFX_MENU.montar(d, []); return d.textContent.includes('Reparar la app'); } catch (e) { return fetch(document.querySelector('script[src*="ayuda.js"]').src).then((r) => r.text()).then((t) => t.includes("t: 'Reparar la app'")); } finally { d.remove(); } }), app + ': botón Reparar la app');
+      // Fotos (núcleo fotos.js): una foto grande se achica a WebP y queda bajo el peso del comprobante.
+      const fz = await p.evaluate(async () => { if (!window.CFX_ACHICAR) return null; const c = document.createElement('canvas'); c.width = 3000; c.height = 2000; const g = c.getContext('2d');
+        for (let i = 0; i < 4000; i++) { g.fillStyle = 'hsl(' + (i * 37 % 360) + ',70%,50%)'; g.fillRect((i * 97) % 3000, (i * 53) % 2000, 60, 40); }
+        const d = await CFX_ACHICAR(c.toDataURL('image/png'), 'comprobante'); return [d.slice(0, 15), d.length, CFX_FOTO.comprobante.kb * 1400]; });
+      ok(fz && fz[0] === 'data:image/webp' && fz[1] <= fz[2], app + ': foto achicada a WebP ' + JSON.stringify(fz));
       if (app === 'Aplicaciones') {
         const r = await p.evaluate(() => [Core.money(10000), Core.money(19.99), Core.precioNum('10.000'), Core.precioNum('$ 25.990'), Core.precioNum('Consultar')]);
         ok(r[0] === '$10.000' && r[1] === '$20' && r[2] === 10000 && r[3] === 25990 && Number.isNaN(r[4]), 'Órbita: precios en pesos chilenos ' + JSON.stringify(r));
