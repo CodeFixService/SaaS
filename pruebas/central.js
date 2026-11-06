@@ -107,8 +107,31 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         const inv = await q.evaluate(() => document.getElementById('invKpis').textContent);
         ok(tk[0] && tk[1].replace(/\D/g, '') === '9500' && st[0].p === 9 && st[0].r === 4 && az[0].a === 9 && inv.includes('unidades'), 'Órbita: inventario y venta por opción ' + JSON.stringify([tk, st, az, inv]));
         await t.foto('inventario', q);
+        // Equipo con roles: el dueño cambia el rol en Mi equipo; Bodega ve Inventario (sin Vender) y el servidor no la deja vender.
+        const eid = '00000000-0000-0000-0000-0000000000eb';
+        await t.sim.su('set session_replication_role = replica');
+        await t.sim.su("insert into auth.users (id, email) values ($1, 'bodega@x.cl') on conflict do nothing", [eid]);
+        await t.sim.su("insert into auth.claves (email, pass) values ('bodega@x.cl', 'clave123') on conflict do nothing");
+        await t.sim.su("insert into public.profiles (id, email, role, empresa, negocio_id) values ($1, 'bodega@x.cl', 'equipo', 'Bodeguero', $2) on conflict do nothing", [eid, tid]);
+        await t.sim.su('set session_replication_role = origin');
+        await t.sim.su("update public.profiles set plan = 'pro' where id = $1", [tid]);
+        await q.goto(t.base + '/#equipo'); await q.waitForTimeout(2500);
+        await q.evaluate(() => document.getElementById('cEquipo').scrollIntoView());
+        await q.selectOption('select[data-rol="bodega@x.cl"]', 'bodega'); await q.waitForTimeout(1200);
+        const [{ r: rolBd }] = await t.sim.su("select equipo_rol r from public.profiles where email = 'bodega@x.cl'");
+        const { page: w } = await t.nuevo(); await w.goto(t.base + '/'); await w.waitForTimeout(1200);
+        await w.fill('input[type=email]:visible', 'bodega@x.cl'); await w.fill('input[type=password]:visible', 'clave123'); await w.press('input[type=password]:visible', 'Enter'); await w.waitForTimeout(3000);
+        await w.goto(t.base + '/apps/caja/'); await w.waitForTimeout(3000);
+        const bo = await w.evaluate(async () => { const vis = (s) => { const e = document.querySelector(s); return !!e && !e.classList.contains('hidden') && e.offsetParent !== null; };
+          let vender = 'ok'; try { await Cuenta.rpc('caja_descontar', { p_items: [{ clave: 'cam', cant: 1 }] }); vender = 'vendió'; } catch (e) { vender = e.message; }
+          return [vis('#invCard'), vis('nav.tabs button[data-v="vender"]'), vis('#bGuardarProd'), document.getElementById('invLista').textContent.includes('Camisa'), vender]; });
+        await w.evaluate(() => { window.prompt = () => '2'; });
+        await w.click('#invLista [data-inv="cam"][data-op="Azul"]'); await w.waitForTimeout(1500);
+        const [{ a: az2 }] = await t.sim.su("select stock::int a from public.variantes where clave = 'cam' and nombre = 'Azul'");
+        ok(rolBd === 'bodega' && bo[0] && !bo[1] && !bo[2] && bo[3] && /permiso/i.test(bo[4]) && az2 === 11, 'Órbita: equipo con roles (bodega) ' + JSON.stringify([rolBd, bo, az2]));
+        await t.foto('equipo-bodega', w);
       }
-      const e = t.errores.filter((x) => !/404|Failed to load resource|net::/.test(x));
+      const e = t.errores.filter((x) => !/404|Failed to load resource|net::|Sin permiso para vender/.test(x));
       ok(!e.length, app + ': sin errores ' + e.join(' | ').slice(0, 200));
     } catch (x) { fallas++; console.log(x.message); await t.foto(app + '-central-error'); }
     await t.cerrar();

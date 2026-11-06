@@ -415,3 +415,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - Caja: al vender un producto con opciones pide cuál (Core.elegir) y usa su precio; pendStock lleva opcion; traerStock usa inventario(); tarjeta 📦 Inventario en Productos (KPIs + ➕ Entró por producto/opción); stock bajo incluye opciones.
 - Pedidos: ?p=id busca el pedido en las pestañas, lo marca y lo centra. Fichas: foto con CFX_ACHICAR('vitrina').
 - central.js: push abre pedido exacto · inventario y venta por opción.
+
+## Órbita 5.72 (bd 5.22) · Grupo 2: equipo con roles (06/11/2026)
+- SQL 5.22: `profiles.equipo_rol` (vendedor|bodega|admin, default vendedor = comportamiento anterior); `equipo_puede(que)` (dueño todo; vendedor caja+pedidos; bodega inventario+pedidos; admin caja+inventario+pedidos+estadisticas); `equipo_rol(email, rol)` (dueño); `mi_equipo()` devuelve rol; `my_account()` trae equipo_rol; `caja_descontar` exige caja; `stock_sumar` acepta equipo con inventario (stock del negocio).
+- Inicio → Mi equipo: elegir rol al crear y cambiarlo en la lista. Caja: bodega sin Vender/Reporte y abre Inventario; admin ve Vender + Inventario; equipo no ve "valor a costo". Pedidos: admin del equipo ve Estadísticas.
+- central.js: equipo con roles (bodega).
