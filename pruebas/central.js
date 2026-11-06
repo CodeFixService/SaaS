@@ -66,6 +66,15 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await t.sim.su("update public.variantes set stock = 3 where owner_id = $1 and clave = 'pol' and nombre = 'S'", [id]);
         const av = await t.sim.su("select (select count(*) from public.notifications where target_id = $1 and title like '%Polera (S)%')::int n, (select count(*) from public.avisos_stock where cliente_id = $1)::int q", [cli]);
         ok(JSON.stringify(av).includes('"n":1') && JSON.stringify(av).includes('"q":0'), 'Órbita: volvió el stock por opción avisa ' + JSON.stringify(av));
+        // Pedido nuevo en vivo: con Pedidos abierto, un pedido que entra se marca (y suena/vibra) sin recargar.
+        await t.sim.crearUsuario('tienda@x.cl', 'clave123', { tipo: 'negocio', empresa: 'Tienda Ana' }); await t.sim.su('update public.profiles set terms_at = now()');
+        const [{ id: tid }] = await t.sim.su("select id from public.profiles where email = 'tienda@x.cl'");
+        const { page: q } = await t.nuevo(); await q.goto(t.base + '/'); await q.waitForTimeout(1200);
+        await q.fill('input[type=email]:visible', 'tienda@x.cl'); await q.fill('input[type=password]:visible', 'clave123'); await q.press('input[type=password]:visible', 'Enter'); await q.waitForTimeout(3000);
+        await q.goto(t.base + '/apps/pedidos/'); await q.waitForTimeout(2500);
+        await t.sim.su("insert into public.pedidos (negocio_id, cliente_id, lineas, subtotal, total, entrega, estado) values ($1, $2, '[{\"nombre\":\"Polera\",\"cant\":1,\"precio\":10000,\"subtotal\":10000}]', 10000, 10000, 'retiro', 'recibido')", [tid, cli]);
+        await q.evaluate(() => document.dispatchEvent(new Event('visibilitychange'))); await q.waitForTimeout(1500);
+        ok(await q.locator('.card.nuevo').count() === 1, 'Órbita: pedido nuevo en vivo en Pedidos');
       }
       const e = t.errores.filter((x) => !/404|Failed to load resource|net::/.test(x));
       ok(!e.length, app + ': sin errores ' + e.join(' | ').slice(0, 200));
