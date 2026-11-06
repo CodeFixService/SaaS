@@ -406,3 +406,6 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 ## Núcleo 2.42 · Fotos WebP (06/11/2026)
 - nucleo/fotos.js: `CFX_FOTO_URL(canvas, q)` (WebP o JPEG si el teléfono no puede) y `CFX_ACHICAR(archivo|dataURL, tipo)` (lado, fondo blanco, baja calidad y luego tamaño hasta ~kb×1400). pagos.js (comprobante) y verificar.js (documento) lo usan; Órbita Core.fotoChica/comprobante también. Las bases ya aceptaban webp.
 - Versiones: CM 4.61 · Cerebro 1.45 · Billetera 1.21.38 · Órbita 5.69 · Barbería 2.60 (bd 2.60) · BiciTaller 2.61 · Estaciona 2.14.40. central.js revisa la foto WebP en las 7 apps.
+
+## Órbita 5.70 · D20 Tienda en 5 min + D23 barra de progreso (06/11/2026)
+- index.html (cargarHoy): "Te falta configurar" pasa a "🚀 Tu tienda en 5 minutos": 7 pasos (rubro, logo, WhatsApp, horario, productos, link de pago, compartir) con barra (`.t5` en core.css), hechos con ✅ tachados; se oculta al completar. Compartir/QR marca `localStorage cfx:compartio`. central.js lo prueba.

@@ -76,6 +76,11 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         const [{ id: tid }] = await t.sim.su("select id from public.profiles where email = 'tienda@x.cl'");
         const { page: q } = await t.nuevo(); await q.goto(t.base + '/'); await q.waitForTimeout(1200);
         await q.fill('input[type=email]:visible', 'tienda@x.cl'); await q.fill('input[type=password]:visible', 'clave123'); await q.press('input[type=password]:visible', 'Enter'); await q.waitForTimeout(3000);
+        // Tienda en 5 min: barra de progreso con pasos; al compartir se marca ese paso.
+        const t5 = async () => q.evaluate(() => [!document.getElementById('hoyFalta').classList.contains('hidden'), document.getElementById('hoyFaltaN').textContent, document.getElementById('hoyFaltaB').style.width]);
+        const a5 = await t5(); await q.evaluate(() => { navigator.share = null; window.open = () => null; document.getElementById('hoyCompartir').click(); location.reload(); }); await q.waitForTimeout(3000); const b5 = await t5();
+        ok(a5[0] && / de 7$/.test(a5[1]) && parseInt(b5[1]) === parseInt(a5[1]) + 1 && parseFloat(b5[2]) > parseFloat(a5[2]), 'Órbita: tienda en 5 min con barra ' + JSON.stringify([a5, b5]));
+        await t.foto('tienda5', q);
         await q.goto(t.base + '/apps/pedidos/'); await q.waitForTimeout(2500);
         await t.sim.su("insert into public.pedidos (negocio_id, cliente_id, lineas, subtotal, total, entrega, estado) values ($1, $2, '[{\"nombre\":\"Polera\",\"cant\":1,\"precio\":10000,\"subtotal\":10000}]', 10000, 10000, 'retiro', 'recibido')", [tid, cli]);
         await q.evaluate(() => document.dispatchEvent(new Event('visibilitychange'))); await q.waitForTimeout(1500);
