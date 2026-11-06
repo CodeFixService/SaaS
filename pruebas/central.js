@@ -50,6 +50,22 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         const tot = await p.evaluate(() => document.getElementById('barTotal').textContent);
         ok(f[0] && f[1] && tot.replace(/\D/g, '') === '12000', 'Órbita: ficha con barra Agregar y precio por opción ' + JSON.stringify([f, tot]));
         await t.foto('ficha');
+        // "Te puede gustar": la ficha sugiere otro producto de la misma categoría y al tocarlo cambia de producto.
+        await t.sim.su("insert into public.catalog_items (owner_id, client_key, nombre, precio, categoria) values ($1, 'sho', 'Short', 8000, 'Ropa')", [id]);
+        await p.goto(t.base + '/t/?s=vitrina'); await p.waitForTimeout(2000);
+        await p.click('#grid .item > b'); await p.waitForTimeout(400);
+        const g = await p.evaluate(() => { const b = document.querySelector('.t-ficha [data-f-mas]'); if (!b) return null; const n = b.textContent; b.click(); return [n, document.querySelector('.t-ficha h3').textContent]; });
+        ok(g && g[1] !== 'Polera' && g[0].includes(g[1]), 'Órbita: Te puede gustar ' + JSON.stringify(g));
+        // Volvió el stock por opción: "S" pasa de 0 a 3 y avisa al cliente que pidió "Avísame".
+        const cli = '00000000-0000-0000-0000-0000000000ab';
+        await t.sim.su('set session_replication_role = replica');
+        await t.sim.su('insert into auth.users (id, email) values ($1, $2) on conflict do nothing', [cli, 'cli@x.cl']);
+        await t.sim.su("insert into public.profiles (id, email, role) values ($1, 'cli@x.cl', 'user') on conflict do nothing", [cli]);
+        await t.sim.su("insert into public.avisos_stock (cliente_id, negocio_id, clave) values ($1, $2, 'pol')", [cli, id]);
+        await t.sim.su('set session_replication_role = origin');
+        await t.sim.su("update public.variantes set stock = 3 where owner_id = $1 and clave = 'pol' and nombre = 'S'", [id]);
+        const av = await t.sim.su("select (select count(*) from public.notifications where target_id = $1 and title like '%Polera (S)%')::int n, (select count(*) from public.avisos_stock where cliente_id = $1)::int q", [cli]);
+        ok(JSON.stringify(av).includes('"n":1') && JSON.stringify(av).includes('"q":0'), 'Órbita: volvió el stock por opción avisa ' + JSON.stringify(av));
       }
       const e = t.errores.filter((x) => !/404|Failed to load resource|net::/.test(x));
       ok(!e.length, app + ': sin errores ' + e.join(' | ').slice(0, 200));
