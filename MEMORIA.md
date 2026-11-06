@@ -350,3 +350,7 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Causa 1 (CM, BiciTaller, Cerebro)**: en index.html, con `#type=recovery` se mostraba la clave nueva y se cortaba con `return` ANTES de conectar los botones → `bNueva` sin acción. Ahora la revisión de sesión/recuperación va al final, después de los botones. `bNueva` valida 6 caracteres y muestra "Guardando…".
 - **Causa 2 (BiciTaller)**: `redirectTo` era `ROOT + 'index.html'`; Cloudflare redirige a `/` y el sw.js entregaba la respuesta con marca de redirección → Chrome ERR_FAILED. Ahora `redirectTo: App.ROOT` (CM y Cerebro igual) y sw.js usa `limpia()` (como CM y Cerebro).
 - Órbita (`rootUrl()`), Billetera (`RAIZ`) y Estaciona ya volvían a la raíz. Si el correo llega antes de este cambio, pedir uno nuevo. La URL raíz de cada app debe estar en Supabase → Authentication → URL Configuration → Redirect URLs.
+
+## Campana siempre y pestañita firme · núcleo 2.36 (06/11/2026)
+- **Versiones en main**: CM 4.55 · Billetera 1.21.32 · Órbita 5.60 · Barbería 2.54 (db_version 2.54) · BiciTaller 2.55 · Estaciona 2.14.34 · Cerebro 1.39.
+- Paneles de administración de Billetera y Órbita no tenían campana y la pestañita salía deforme (la app estilaba todo botón de la cabecera). Ahora: si la pantalla no trae campana, el núcleo pone la suya (`.cfx-campana-n`, abre hoja "Avisos": estado de los avisos al teléfono + "Activar avisos" con `CodeFixInstalar.activarPush`); si después aparece la de la app, la del núcleo se quita. `.cfx-pest` con medidas `!important` (34×12).
