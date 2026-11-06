@@ -344,3 +344,9 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Versiones en main**: CM 4.53 · Billetera 1.21.31 · Órbita 5.59 · Barbería 2.53 (db_version 2.53) · BiciTaller 2.53 · Estaciona 2.14.33 · Cerebro 1.37.
 - **Regla común** (ayuda.js `enBarra()`, usada por CFX_MENU al pintar): una fila del Más se quita si coincide con un botón visible de la barra o con el + por destino (ruta+hash normalizados, `index.html` = carpeta), por clave (`k` = data-v/r/k/tab/hash) o por nombre (sin emojis ni contadores). No cuenta el botón que abre el propio menú (mas/ajustes/perfil/cuenta) ni los sobrantes `.cfx-oculto`.
 - Revisado: Órbita (Productos `caja/#productos` y Clientes `fichas/#clientes` abren otra pestaña: no son repetidos) y Estaciona sin repetidos hoy; la regla evita que aparezcan en adelante.
+
+## Recuperar contraseña arreglado (06/11/2026) · CM 4.54 · BiciTaller 2.54 · Cerebro 1.38
+- **Síntoma (Josué, BiciTaller)**: el enlace del correo daba ERR_FAILED; con el enlace del panel de Supabase se podía escribir la clave pero "Guardar y entrar" se quedaba pegado.
+- **Causa 1 (CM, BiciTaller, Cerebro)**: en index.html, con `#type=recovery` se mostraba la clave nueva y se cortaba con `return` ANTES de conectar los botones → `bNueva` sin acción. Ahora la revisión de sesión/recuperación va al final, después de los botones. `bNueva` valida 6 caracteres y muestra "Guardando…".
+- **Causa 2 (BiciTaller)**: `redirectTo` era `ROOT + 'index.html'`; Cloudflare redirige a `/` y el sw.js entregaba la respuesta con marca de redirección → Chrome ERR_FAILED. Ahora `redirectTo: App.ROOT` (CM y Cerebro igual) y sw.js usa `limpia()` (como CM y Cerebro).
+- Órbita (`rootUrl()`), Billetera (`RAIZ`) y Estaciona ya volvían a la raíz. Si el correo llega antes de este cambio, pedir uno nuevo. La URL raíz de cada app debe estar en Supabase → Authentication → URL Configuration → Redirect URLs.
