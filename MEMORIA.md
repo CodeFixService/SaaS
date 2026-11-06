@@ -381,3 +381,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Cifras** (tema.css `.cfx-cifras`): ícono arriba, número y texto abajo. Órbita → Fichas → Campañas → Mis suscriptores la usa.
 - **Globito solo en la campana**: el número (pendientes + chat sin leer) ya no va junto a la flechita; va en la campana como atributo `data-cfx-n` (::after), que sobrevive si la app rehace su campana. Si la campana ya tiene su propio número, el del núcleo va a la izquierda (`data-cfx-n-izq`).
 - **Espacio sobre la barra**: relleno inferior 112 → 136 px (el ➕ se ve completo al final).
+
+## Pendientes anotados (06/11/2026)
+- **Billetera**: al actualizar sale en rojo "la autorización aún se está cargando" y no deja actualizar. Revisar.
+- **Reparar app (núcleo, todas)**: botón "Reparar la app" en Ajustes → Configuración (lo más intuitivo posible): limpia caché/service worker, vuelve a cargar la sesión y la versión, y se arregla sola.
+- Forma de trabajo: una función a la vez (máx. dos por chat); al cambiar de chat, prompt con resumen de lo hecho, lo en curso y lo que falta.
