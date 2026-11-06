@@ -170,6 +170,28 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
           JSON.parse(md.body).external_reference === mpid && JSON.parse(md.body).items[0].unit_price === 10000 && /Preparando/.test(me[0]) && !/payment_id/.test(me[1]),
           'Órbita: Mercado Pago automático ' + JSON.stringify([mc, mv, md.estado, md.mp_pago, md.n, me]));
         await t.foto('mp-pagado', m);
+        // Boleta SII: el dueño guarda sus datos (manual) y anota el folio; el cliente lo ve. Luego automática con OpenFactura (cada 5 min).
+        await q.goto(t.base + '/#boleta'); await q.waitForTimeout(2500);
+        await q.evaluate(() => { const f = (i, v) => { document.getElementById(i).value = v; }; f('bRut', '76.795.561-8'); f('bRazon', 'Tienda Ana SpA'); f('bGiro', 'Venta de ropa'); f('bDir', 'Calle 1'); f('bComuna', 'Santiago');
+          document.querySelector('#boletaBody [data-bo="guardar"]').click(); }); await q.waitForTimeout(1500);
+        await q.goto(t.base + '/apps/pedidos/?f=activos'); await q.waitForTimeout(2500);
+        await q.evaluate(() => { window.prompt = () => '1234'; });
+        await q.click('[data-bol="' + mpid + '"]'); await q.waitForTimeout(1500);
+        const bq = await q.evaluate(() => document.getElementById('lista').textContent.includes('Boleta N° 1234'));
+        await m.reload(); await m.waitForTimeout(2500);
+        const bm = await m.evaluate(() => document.getElementById('boleta').textContent);
+        await t.sim.su("insert into extensions.http_respuestas (url_like, content) values ('%haulmer.com/v2/dte/document', '{\"FOLIO\":555,\"SELF_SERVICE\":{\"url\":\"https://of.cl/b/555\"}}') on conflict (url_like) do update set content = excluded.content");
+        await q.goto(t.base + '/#boleta'); await q.waitForTimeout(2500);
+        await q.evaluate(() => { document.querySelector('[name=bModo][value=openfactura]').click(); document.getElementById('bKey').value = '928e15a2d14d4a6292345f04960f4bd3';
+          document.querySelector('#boletaBody [data-bo="guardar"]').click(); }); await q.waitForTimeout(1500);
+        const [{ id: bid }] = await t.sim.su("insert into public.pedidos (negocio_id, invitado_nombre, invitado_tel, lineas, subtotal, descuento, total, entrega, estado, pagado_at, token) values ($1, 'Rosa', '56911112222', '[{\"nombre\":\"Polera\",\"cant\":2,\"precio\":5000,\"subtotal\":10000}]', 10000, 1000, 9000, 'retiro', 'preparando', now(), $2) returning id", [tid, 'bo' + 'x'.repeat(22)]);
+        const [{ n: bn }] = await t.sim.su('select public.boleta_pendientes() n');
+        const [bd] = await t.sim.su("select boleta_folio f, boleta_url u, (select content from extensions.http_log where uri like '%haulmer%' order by n desc limit 1) body, (select rut from public.boleta_cuentas where owner_id = $2) rut from public.pedidos where id = $1", [bid, tid]);
+        const dte = JSON.parse(bd.body).dte;
+        ok(bq && /1234/.test(bm) && /Tienda Ana SpA/.test(bm) && bn >= 1 && bd.f === '555' && bd.u === 'https://of.cl/b/555' && bd.rut === '76795561-8' &&
+          dte.Encabezado.IdDoc.TipoDTE === 39 && dte.Encabezado.Totales.MntTotal === 9000 && dte.Encabezado.Totales.MntNeto + dte.Encabezado.Totales.IVA === 9000 && dte.DscRcgGlobal[0].ValorDR === 1000,
+          'Órbita: boleta SII ' + JSON.stringify([bq, bm, bn, bd.f, bd.u, bd.rut]));
+        await t.foto('boleta', m);
       }
       const e = t.errores.filter((x) => !/404|Failed to load resource|net::|Sin permiso para vender/.test(x));
       ok(!e.length, app + ': sin errores ' + e.join(' | ').slice(0, 200));

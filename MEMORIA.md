@@ -426,3 +426,9 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - Arreglo: `drop function mi_equipo()` antes de su definición vieja (volver a correr instalar.sql sobre 5.22 fallaba → la base no se actualizaba sola).
 - UI: Ajustes → Links de pago: tarjeta ⚡ Mercado Pago automático (token, activo, desconectar). r/ (pedido): "⚡ Pagar con Mercado Pago" (sin comprobante si no hay otro link); al volver confirma solo. Catálogo → Mis pedidos: mismo botón (vuelve a r/).
 - Pruebas: stub.sql simula `extensions.http` (http_log). central.js: Mercado Pago automático.
+
+## Órbita 5.76 (bd 5.24) · Grupo 5: Boleta SII (06/11/2026)
+- SQL 5.24: tabla `boleta_cuentas` (owner_id, modo manual|openfactura, apikey oculta, rut, razon, giro, direccion, comuna, auto). Pedidos: `boleta_folio/url/at/error/intentos`. `rut_normal(text)` (módulo 11). `boleta_estado()` (dueño y equipo; fin de key solo dueño), `boleta_guardar(jsonb)` (null = quitar), `boleta_dte` arma boleta 39 (precios con IVA, receptor 66666666-6, descuento en DscRcgGlobal, "Otros" si falta), `of_api` POST api.haulmer.com/v2/dte/document (header apikey + Idempotency-Key cfx-<pedido>), `boleta_intentar` (guarda FOLIO y SELF_SERVICE.url, avisa al cliente), `boleta_emitir(id)` (equipo con Pedidos), `boleta_anotar(id, folio)` (manual; null borra), cron `boleta-emitir` cada 5 min (`boleta_pendientes`: pagados en línea o entregados, 3 días, 5 intentos). `pedidos_tienda`, `mis_pedidos` y `ver_pedido` traen `boleta`.
+- UI: Ajustes → 🧾 Boleta SII (#boleta). Pedidos: botón 🧾 Emitir/Anotar boleta y "Boleta N°". Cliente (r/ y Mis pedidos): "Boleta electrónica N° X · razón (RUT) · Ver boleta".
+- Ojo: formato OpenFactura no verificado contra su documentación (el host no estaba permitido): probar con una boleta real antes de ofrecerla. Ventas de Caja aún sin boleta.
+- Pruebas: central.js "Órbita: boleta SII" (stub haulmer).
