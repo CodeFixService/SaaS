@@ -391,3 +391,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Causa**: el sw.js de Billetera (js/core.js `VERSION`), CM y Cerebro (shared/config.js `VERSION`) solo instala si la versión del código = version.json. En U14 (y antes en CM/Cerebro) se subió version.json sin el código → "Actualizar" fallaba siempre.
 - Corregido: Billetera 1.21.36, CM 4.59, Cerebro 1.43; además Órbita `DB_VERSION` 5.18 y Barbería core `VERSION` 2.58 (solo se muestran).
 - **central.js** ahora compara la versión del código con version.json en saas, emprendedor, Aplicaciones, barberia y contenido. Al subir versión: version.json + ese archivo.
+
+## Botón "Reparar la app" (06/11/2026) · núcleo 2.41
+- **ayuda.js** `reparar()`: confirma, borra `caches`, desregistra los service workers y recarga con `?cfx=…` (no toca localStorage: sesión, PIN y datos quedan).
+- Va al final de **Configuración** en el menú común (CFX_MENU) y en "Cuenta y ayuda" suelto (apps sin menú común).
+- Versiones: CM 4.60 · Billetera 1.21.37 · Órbita 5.65 · Barbería 2.59 · BiciTaller 2.60 · Estaciona 2.14.39 · Cerebro 1.44. central.js revisa el botón en las 7 apps.
