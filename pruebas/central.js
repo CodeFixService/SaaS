@@ -18,6 +18,17 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         ok(r[0] === '$10.000' && r[1] === '$20' && r[2] === 10000 && r[3] === 25990 && Number.isNaN(r[4]), 'Órbita: precios en pesos chilenos ' + JSON.stringify(r));
         await p.goto(t.base + '/apps/fichas/'); await p.waitForTimeout(1500);
         ok(await p.evaluate(() => { const e = document.getElementById('f-precio'); return !e || e.placeholder === '10.000'; }), 'Órbita: editor de anuncio pide precio sin decimales');
+        // Vitrina (núcleo): la página pública luce el perfil de la tienda.
+        const id = '00000000-0000-0000-0000-0000000000aa';
+        await t.sim.su('set session_replication_role = replica');
+        await t.sim.su('insert into auth.users (id, email) values ($1, $2) on conflict do nothing', [id, 'vitrina@x.cl']);
+        await t.sim.su("insert into public.profiles (id, email, role, empresa, slug, telefono, horario, rubro, perfil) values ($1, 'vitrina@x.cl', 'user', 'Vitrina Prueba', 'vitrina', '56912345678', 'Lun a Vie 9 a 18', 'Ropa', $2) on conflict do nothing",
+          [id, JSON.stringify({ descripcion: 'Ropa hecha a mano', comuna: 'Ñuñoa', instagram: '@vitrina' })]);
+        await t.sim.su('set session_replication_role = origin');
+        await p.goto(t.base + '/t/?s=vitrina'); await p.waitForTimeout(1500);
+        const v = await p.evaluate(() => { const s = document.querySelector('#perfil .pf'); return s && [s.querySelector('h2').textContent, s.textContent.includes('Ropa hecha a mano'), !!s.querySelector('a[href*="instagram.com/vitrina"]'), !!s.querySelector('a[href*="wa.me/56912345678"]'), document.documentElement.scrollWidth <= innerWidth + 1]; });
+        ok(v && v[0] === 'Vitrina Prueba' && v.slice(1).every(Boolean), 'Órbita: tienda pública con perfil ' + JSON.stringify(v));
+        await t.foto('vitrina');
       }
       const e = t.errores.filter((x) => !/404|Failed to load resource|net::/.test(x));
       ok(!e.length, app + ': sin errores ' + e.join(' | ').slice(0, 200));

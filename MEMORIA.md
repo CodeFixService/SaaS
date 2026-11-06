@@ -366,3 +366,9 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - Pone ejemplo en gris si no hay placeholder. Normaliza en change / Enter / submit / pointerdown en otro elemento (antes de que la app lea): "10 mil", "2 lucas", "1,5 millones", "$15.990" → dígitos; teléfono chileno → `569XXXXXXXX` (mismo formato que wa.me y las apps; +otro país se respeta); RUT → 12.345.678-5 (borde ámbar si DV no calza, no bloquea); fecha d/m/aa → dd-mm-aaaa; patente → mayúsculas sin guiones; correo → minúsculas. Lo que no entiende lo deja igual ("9,99", "10000").
 - Aprende por campo (localStorage `cfx-datos`): si el negocio escribe "15 mil", el ejemplo pasa a "Ej: 15 mil".
 - Mostrar: `CodeFixDatos.mostrar(tipo, v)` o `<span data-dato="monto">` ($10.000, +56 9 1234 5678, …).
+
+## U12 Vitrina de la tienda · núcleo 2.39 (06/11/2026)
+- **Versiones en main**: CM 4.58 · Billetera 1.21.35 · Órbita 5.63 (bd 5.18) · Barbería 2.57 (db_version 2.57) · BiciTaller 2.58 · Estaciona 2.14.37 · Cerebro 1.42.
+- `nucleo/vitrina.js` (no `perfil.js`: Barbería ya tiene uno propio). `CodeFixVitrina.montar(nodo, t)`: portada con banner del color, logo, nombre, rubro, Abierto/Cerrado/Vacaciones, estrellas, descripción, 📍 dirección+comuna (Google Maps), horario, correo, "Tienda desde", redes (Instagram/Facebook/TikTok/web) y botones WhatsApp + Compartir. `editor(nodo, perfil)` / `leer(nodo)` para Ajustes.
+- Órbita: `profiles.perfil jsonb` + `set_mi_perfil(jsonb)` (descripcion 400, direccion, comuna, instagram, facebook, tiktok, web→https, correo validado; quita < >). `tienda_publica` y `tienda_info` devuelven perfil, rubro y desde. t/index.html usa la vitrina (reemplaza el cuadro de estado); Ajustes → Mi tienda → "📇 Perfil de tu tienda" (solo guarda si cargó, para no borrar).
+- central.js revisa la tienda pública con perfil (tienda "vitrina").
