@@ -151,6 +151,25 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await q.click('#grid [data-add]'); await q.waitForTimeout(300);
         const pc = await q.evaluate(() => document.body.textContent.includes('Vista previa'));
         ok(pv.every((n) => n > 0) && pc, 'Órbita: vista previa con botones ' + JSON.stringify([pv, pc]));
+        // Mercado Pago automático: el dueño conecta su Access Token; el cliente paga en Mercado Pago y al volver el pedido se aprueba solo.
+        await t.sim.su("insert into extensions.http_respuestas (url_like, content) values ('%/users/me', '{\"nickname\":\"TIENDAANA\"}') on conflict do nothing");
+        await q.goto(t.base + '/'); await q.waitForTimeout(2500);
+        await q.evaluate(() => { document.getElementById('mpTok').value = 'APP_USR-1234567890-abcdefghijklmnopqrstuvwxyz'; document.querySelector('#mpBody [data-mp="guardar"]').click(); }); await q.waitForTimeout(1500);
+        const mc = await q.evaluate(() => [document.getElementById('mpBody').textContent.includes('TIENDAANA'), !!document.getElementById('mpOn')]);
+        const mk = 'mp' + 'x'.repeat(22);
+        const [{ id: mpid }] = await t.sim.su("insert into public.pedidos (negocio_id, invitado_nombre, invitado_tel, lineas, subtotal, total, entrega, estado, retenido_hasta, token) values ($1, 'Rosa', '56911112222', '[{\"nombre\":\"Polera\",\"cant\":1,\"precio\":10000,\"subtotal\":10000}]', 10000, 10000, 'retiro', 'pagando', now() + interval '30 minutes', $2) returning id", [tid, mk]);
+        await t.sim.su("insert into extensions.http_respuestas (url_like, content) values ('%/checkout/preferences', $1), ('%/v1/payments/search%', $2) on conflict (url_like) do update set content = excluded.content",
+          [JSON.stringify({ init_point: t.base + '/r/?t=' + mk + '&payment_id=99&status=approved' }), JSON.stringify({ results: [{ id: 99, status: 'approved', external_reference: mpid, transaction_amount: 10000, currency_id: 'CLP' }] })]);
+        const { page: m } = await t.nuevo(); await m.goto(t.base + '/r/?t=' + mk); await m.waitForTimeout(2000);
+        const mv = await m.evaluate(() => [!document.getElementById('rowMp').classList.contains('hidden'), document.getElementById('rowComp').classList.contains('hidden'), document.getElementById('bMp').textContent]);
+        await t.foto('mp-pagar', m);
+        await m.click('#bMp'); await m.waitForTimeout(3500);
+        const [md] = await t.sim.su("select estado, mp_pago, (select count(*) from public.notifications where target_id = $2 and title like '%Mercado Pago%')::int n, (select content from extensions.http_log where uri like '%preferences' order by n desc limit 1) body from public.pedidos where id = $1", [mpid, tid]);
+        const me = await m.evaluate(() => [document.getElementById('estado').textContent, location.search]);
+        ok(mc.every(Boolean) && mv[0] && mv[1] && /Mercado Pago/.test(mv[2]) && md.estado === 'preparando' && md.mp_pago === '99' && md.n === 1 &&
+          JSON.parse(md.body).external_reference === mpid && JSON.parse(md.body).items[0].unit_price === 10000 && /Preparando/.test(me[0]) && !/payment_id/.test(me[1]),
+          'Órbita: Mercado Pago automático ' + JSON.stringify([mc, mv, md.estado, md.mp_pago, md.n, me]));
+        await t.foto('mp-pagado', m);
       }
       const e = t.errores.filter((x) => !/404|Failed to load resource|net::|Sin permiso para vender/.test(x));
       ok(!e.length, app + ': sin errores ' + e.join(' | ').slice(0, 200));

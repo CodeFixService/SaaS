@@ -40,6 +40,15 @@ create function extensions.http_get(url text) returns extensions.http_response l
   select coalesce((select row(r.status, 'text/plain', '{}'::jsonb, r.content)::extensions.http_response
     from extensions.http_respuestas r where url like r.url_like limit 1), row(404, 'text/plain', '{}'::jsonb, '')::extensions.http_response) $$;
 create function extensions.http_set_curlopt(a text, b text) returns boolean language sql as $$ select true $$;
+-- http(request) (Mercado Pago): responde igual que http_get según la uri; anota cada llamada en extensions.http_log.
+create type extensions.http_header as (field text, value text);
+create type extensions.http_request as (method text, uri text, headers extensions.http_header[], content_type text, content text);
+create table extensions.http_log (n serial, method text, uri text, content text);
+create function extensions.http(r extensions.http_request) returns extensions.http_response language plpgsql as $$
+begin
+  insert into extensions.http_log (method, uri, content) values (r.method, r.uri, r.content);
+  return extensions.http_get(r.uri);
+end $$;
 -- storage
 create schema storage;
 create table storage.buckets (id text primary key, name text, public boolean default false, file_size_limit bigint,
