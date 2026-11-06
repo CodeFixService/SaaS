@@ -277,20 +277,52 @@ drop trigger if exists cfx_cupon_usado on public.cfx_pagos;
 create trigger cfx_cupon_usado after update of estado on public.cfx_pagos for each row execute function public.cfx_cupon_usado();
 
 -- ---------- Verificación humana (Cloudflare Turnstile): la site key es pública; la secret key va en Supabase → Authentication → CAPTCHA ----------
+-- y, para las compras/reservas sin cuenta, también aquí (cfx_secretos, nunca sale de la base): la base revisa el token con Cloudflare.
 insert into public.cfx_config (clave, valor) values ('humano', '{"site_key": ""}') on conflict (clave) do nothing;
+create table if not exists public.cfx_secretos (clave text primary key, valor text not null, updated_at timestamptz not null default now());
+alter table public.cfx_secretos enable row level security;
+revoke all on public.cfx_secretos from anon, authenticated;
 create or replace function public.cfx_humano() returns jsonb
-language sql stable security definer set search_path = '' as $$ select valor from public.cfx_config where clave = 'humano' $$;
-create or replace function public.cfx_humano_guardar(p_site_key text) returns void
+language sql stable security definer set search_path = '' as $$
+  select valor || jsonb_build_object('invitados', exists (select 1 from public.cfx_secretos where clave = 'turnstile'))
+  from public.cfx_config where clave = 'humano' $$;
+drop function if exists public.cfx_humano_guardar(text);
+create or replace function public.cfx_humano_guardar(p_site_key text, p_secreto text default null) returns void
 language plpgsql security definer set search_path = '' as $$
 begin
   perform <CHK>;
   if coalesce(p_site_key, '') <> '' and p_site_key !~ '^[0-9A-Za-z_-]{10,60}$' then raise exception 'Site key no válida'; end if;
+  if coalesce(p_secreto, '') <> '' and p_secreto !~ '^[0-9A-Za-z_-]{10,80}$' then raise exception 'Secret key no válida'; end if;
   update public.cfx_config set valor = jsonb_build_object('site_key', coalesce(p_site_key, '')) where clave = 'humano';
-  perform public.cfx_anotar('humano', case when coalesce(p_site_key, '') = '' then 'apagado' else 'site key ' || right(p_site_key, 4) end);
+  -- null = dejar la secret key como está; '' = quitarla (o si se apaga la site key).
+  if coalesce(p_site_key, '') = '' or p_secreto = '' then delete from public.cfx_secretos where clave = 'turnstile';
+  elsif p_secreto is not null then
+    insert into public.cfx_secretos (clave, valor) values ('turnstile', p_secreto)
+    on conflict (clave) do update set valor = excluded.valor, updated_at = now();
+  end if;
+  perform public.cfx_anotar('humano', case when coalesce(p_site_key, '') = '' then 'apagado' else 'site key ' || right(p_site_key, 4) ||
+    case when exists (select 1 from public.cfx_secretos where clave = 'turnstile') then ' + compras sin cuenta' else '' end end);
 end $$;
-revoke all on function public.cfx_humano(), public.cfx_humano_guardar(text) from public;
+-- ¿El token de Turnstile es de una persona? Sin secret key no se exige. Si Cloudflare no responde, no frena la venta.
+create or replace function public.cfx_humano_ok(p_token text) returns boolean
+language plpgsql security definer set search_path = '' as $$
+declare k text := (select valor from public.cfx_secretos where clave = 'turnstile'); st int; c text;
+begin
+  if k is null then return true; end if;
+  if coalesce(p_token, '') = '' or length(p_token) > 4000 then return false; end if;
+  begin
+    perform extensions.http_set_curlopt('CURLOPT_TIMEOUT', '5');
+    execute 'select status, content from extensions.http(row($1, $2, $3, $4, $5)::extensions.http_request)' into st, c
+      using 'POST', 'https://challenges.cloudflare.com/turnstile/v0/siteverify', array[]::extensions.http_header[],
+            'application/x-www-form-urlencoded', 'secret=' || k || '&response=' || p_token;
+  exception when others then return true;
+  end;
+  if st is distinct from 200 or c !~ '^\s*\{' then return true; end if;
+  return coalesce((c::jsonb ->> 'success')::boolean, false);
+end $$;
+revoke all on function public.cfx_humano(), public.cfx_humano_guardar(text, text), public.cfx_humano_ok(text) from public, anon, authenticated;
 grant execute on function public.cfx_humano() to anon, authenticated;
-grant execute on function public.cfx_humano_guardar(text) to authenticated;
+grant execute on function public.cfx_humano_guardar(text, text) to authenticated;
 
 revoke all on function public.cfx_anotar(text, text), public.cfx_cupon_usado() from public, anon, authenticated;
 revoke all on function public.cfx_registro_lista(int), public.cfx_planes(), public.cfx_plan_guardar(text, text, jsonb, jsonb), public.cfx_textos(), public.cfx_texto_guardar(text, text),

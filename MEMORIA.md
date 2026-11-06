@@ -440,3 +440,18 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **App (ayuda.js)**: Cuenta y ayuda → "🗂️ Mis datos y privacidad" (no admin; `CFX_LEGAL.misDatos()`): interruptores de ofertas, 📥 Descargar mis datos (JSON al instante), corregir / oponerme / bloquear / borrar (solicitud con texto), Mis solicitudes con estado y fecha límite. Privacidad punto "Tus derechos" apunta ahí (sin subir LEGAL.version).
 - **CM → Control → 🔒 Datos** (por app): resumen (en curso, vencen <5 días, brechas abiertas, consentimientos), solicitudes con días restantes (Responder / Prorrogar / No acoger), brechas (Registrar, Editar, Ya avisé a la Agencia, Avisar a los afectados, Cerrar) y Registro de actividades de tratamiento (fijo en admin/control.js `RAT`). Supresión: se borra la cuenta en el panel de la app y luego se responde.
 - Prueba: central.js (CM) usuario acepta ofertas, descarga copia y pide rectificación; admin responde, registra brecha y avisa.
+
+## GRUPO 7 · A7 anon/buckets + A8 encabezados + Turnstile · núcleo 2.44 (06/11/2026)
+- **Versiones**: CM 4.63 (bd 4.15) · Billetera 1.21.40 (26) · Órbita 5.78 (5.26) · Barbería 2.62 · BiciTaller 2.63 (2.14) · Estaciona 2.14.42 (19) · Cerebro 1.47 (1.10).
+- **A7 (nucleo/sql/seguridad.sql, va al final del núcleo)**: en Supabase anon recibe permiso para toda función nueva y `revoke ... from public` NO se lo quita.
+  Un `do` le quita a anon (y public) toda función plpgsql cuyo primer paso es `perform <CHK>` (ej. cm_puente_secreto, cfx_humano_guardar, cfx_respaldo, cfx_limpieza).
+  Buckets públicos sin límite → 5 MB y solo webp/jpeg/png (Órbita fichas). `cfx_seguridad()` (admin) = tablas sin RLS, anon escribe, anon lee, funciones anon, buckets, humano.
+  CM → Control → 🛡️ Seguridad la muestra por app.
+- **A8 (nucleo/_headers → raíz de cada repo con sincronizar.py, paso 7)**: nosniff, Referrer-Policy, X-Frame-Options, HSTS 1 año, Permissions-Policy (cámara/micrófono/ubicación/pago solo la app),
+  COOP same-origin-allow-popups y CSP (object-src none, base-uri/frame-ancestors/form-action self, script-src self + inline + wasm + Turnstile + jsdelivr). Sirve en Cloudflare Pages y Workers;
+  GitHub Pages lo ignora. pruebas/h.js aplica el bloque "/*" del _headers para que las pruebas vean lo mismo.
+- **Turnstile**: humano.js también pide la verificación en recover/otp/resend (si no, con CAPTCHA en Supabase fallaba "olvidé mi contraseña").
+  Compras sin cuenta: CM → 🤖 Humano guarda además la **secret key** (`cfx_humano_guardar(site, secreto)`: null = no cambiar, '' = quitar) en `cfx_secretos` (sin acceso desde la app).
+  `cfx_humano()` dice `invitados` = hay secret. humano.js agrega `p_humano` a las RPC de `INVITADO` (hoy solo `crear_pedido_invitado`); `cfx_humano_ok(token)` lo revisa con
+  challenges.cloudflare.com/turnstile/v0/siteverify (si Cloudflare no responde, deja pasar). Para sumar otra app (ej. Barbería reservar_invitado): agregar `p_humano text default null`
+  (drop de la firma vieja), llamar `cfx_humano_ok` y sumarla a `INVITADO`.

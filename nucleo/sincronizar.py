@@ -10,6 +10,7 @@ Hace en cada repositorio:
   5. Escribe nucleo.json con la versión del núcleo (el Centro de Mando la muestra en cada tarjeta).
   6. SQL común (nucleo/sql/*.sql: pagos, administración e inventario): lo pone entre las marcas "-- >>> CFX núcleo" y "-- <<< CFX núcleo"
      de cada instalar.sql (BiciTaller: schema.sql y luego node supabase/generar.mjs). <CHK> = cómo exige ser admin cada app.
+  7. Copia _headers (encabezados de seguridad y caché de Cloudflare) a la raíz.
 No toca nada más: ni la base de datos, ni la lógica de cada app. Se puede correr las veces que quieras.
 """
 import json, os, re, shutil, subprocess, sys
@@ -102,7 +103,7 @@ def sql_comun(repo, nombre):
         print('  ⚠️ ', nombre, 'no tiene las marcas del SQL común en', archivo)
         return
     i, j = s.index(INI), s.index(FIN)
-    comun = ''.join(open(os.path.join(AQUI, 'sql', f), encoding='utf-8').read() for f in ('pagos.sql', 'admin.sql', 'ayuda.sql', 'legal.sql', 'referidos.sql', 'socios.sql', 'inventario.sql'))
+    comun = ''.join(open(os.path.join(AQUI, 'sql', f), encoding='utf-8').read() for f in ('pagos.sql', 'admin.sql', 'ayuda.sql', 'legal.sql', 'referidos.sql', 'socios.sql', 'inventario.sql', 'seguridad.sql'))
     tablas = sorted(set(TABLA.findall(s[:i] + s[j:])) | set(TABLA.findall(comun)))
     comun = comun.replace('<CHK>', chk).replace('<LISTA>', "array['" + "', '".join(tablas) + "']")
     nuevo = s[:i] + INI + '\n' + comun + s[j:]
@@ -126,6 +127,7 @@ def main():
             if os.path.abspath(destino) != os.path.abspath(os.path.join(AQUI, nombre)):
                 shutil.copy(os.path.join(AQUI, nombre), destino)
         shutil.copy(os.path.join(AQUI, 'tema.css'), os.path.join(r, css, 'tema.css'))
+        shutil.copy(os.path.join(AQUI, '_headers'), os.path.join(r, '_headers'))  # encabezados de seguridad (Cloudflare)
         enlazar(r, js, css)
         cachear(r, js, css, sw)
         sql_comun(r, repo)

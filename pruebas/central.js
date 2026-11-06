@@ -15,7 +15,13 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
     if (app !== 'barberia') require('child_process').execSync(__dirname + '/base.sh /home/user/' + app, { stdio: 'ignore' });
     const t = await abrir('/home/user/' + app, db); const p = t.page;
     try {
-      await p.goto(t.base + '/'); await p.waitForTimeout(1500);
+      const resp = await p.goto(t.base + '/'); await p.waitForTimeout(1500);
+      // A8: encabezados de seguridad del núcleo (_headers) y A7: sin cuenta no se llaman funciones de admin.
+      const hd = resp.headers();
+      ok(/frame-ancestors 'self'/.test(hd['content-security-policy'] || '') && /camera=\(self\)/.test(hd['permissions-policy'] || '') && hd['x-content-type-options'] === 'nosniff', app + ': encabezados de seguridad');
+      const [an] = await t.sim.su("select has_function_privilege('anon', 'public.cfx_humano_guardar(text, text)', 'execute') g, has_function_privilege('anon', 'public.cfx_seguridad()', 'execute') s, has_function_privilege('anon', 'public.cfx_humano()', 'execute') h, has_function_privilege('anon', 'public.cfx_humano_ok(text)', 'execute') k, (select count(*) from storage.buckets where public and (file_size_limit is null or allowed_mime_types is null))::int b");
+      ok(!an.g && !an.s && an.h && !an.k && an.b === 0, app + ': anon sin funciones de admin y buckets públicos con límite ' + JSON.stringify(an));
+      ok(await p.evaluate(() => fetch(document.querySelector('script[src*="humano.js"]').src).then((r) => r.text()).then((x) => /recover\|otp\|resend/.test(x))), app + ': Turnstile también al recuperar la contraseña');
       ok(await p.evaluate(() => !!window.CFX_CARGA && !!document.querySelector('style') && typeof fetch === 'function'), app + ': carga unificada activa');
       // La barra aparece con una consulta lenta y se va al terminar.
       const barra = await p.evaluate(async () => { CFX_CARGA.barra(true); await new Promise((r) => setTimeout(r, 400)); const on = document.querySelector('.cfx-carga-b.on') !== null; CFX_CARGA.barra(false); return on && !document.querySelector('.cfx-carga-b.on'); });
@@ -45,6 +51,18 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         const v = await p.evaluate(() => { const s = document.querySelector('#perfil .pf'); return s && [s.querySelector('h2').textContent, s.textContent.includes('Ropa hecha a mano'), !!s.querySelector('a[href*="instagram.com/vitrina"]'), !!s.querySelector('a[href*="wa.me/56912345678"]'), document.documentElement.scrollWidth <= innerWidth + 1]; });
         ok(v && v[0] === 'Vitrina Prueba' && v.slice(1).every(Boolean), 'Órbita: tienda pública con perfil ' + JSON.stringify(v));
         await t.foto('vitrina');
+        // Turnstile en compras sin cuenta: con secret key, humano.js pone el token y la base lo revisa con Cloudflare.
+        await t.sim.su("update public.cfx_config set valor = '{\"site_key\": \"0x4AAAAAAAprueba\"}' where clave = 'humano'");
+        await t.sim.su("insert into public.cfx_secretos (clave, valor) values ('turnstile', '0x4AAAAAAAsecreto') on conflict (clave) do update set valor = excluded.valor");
+        await t.sim.su("insert into extensions.http_respuestas (url_like, content) values ('%turnstile/v0/siteverify%', '{\"success\": false}') on conflict (url_like) do update set content = excluded.content");
+        const pedir = () => p.evaluate(() => Cuenta.rpc('crear_pedido_invitado', { p_slug: 'vitrina', p_nombre: 'Robot', p_tel: '56911112222', p_items: [], p_entrega: 'retiro', p_direccion: '', p_nota: '' }).then((r) => JSON.stringify(r), (e) => 'ERR ' + e.message));
+        await p.reload(); await p.waitForTimeout(1200);
+        const robot = await pedir();
+        await t.sim.su("update extensions.http_respuestas set content = '{\"success\": true}' where url_like = '%turnstile/v0/siteverify%'");
+        const humano = await pedir();
+        const [lg] = await t.sim.su("select count(*)::int n, bool_and(content like '%response=token-prueba%') t from extensions.http_log where uri like '%siteverify%'");
+        ok(/robot/.test(robot) && !/robot/.test(humano) && lg.n === 2 && lg.t, 'Órbita: Turnstile en compra sin cuenta ' + JSON.stringify([robot, humano, lg]));
+        await t.sim.su("delete from public.cfx_secretos; update public.cfx_config set valor = '{\"site_key\": \"\"}' where clave = 'humano'");
         // Variantes + ficha: la opción "L" cuesta distinto y "S" está agotada; la ficha muestra la barra Agregar y el carrito cobra el precio de la opción.
         await t.sim.su("insert into public.catalog_items (owner_id, client_key, nombre, precio, categoria, opciones) values ($1, 'pol', 'Polera', 10000, 'Ropa', 'S, L')", [id]);
         await t.sim.su("insert into public.variantes (owner_id, clave, nombre, precio, stock, orden) values ($1, 'pol', 'S', null, 0, 0), ($1, 'pol', 'L', 12000, null, 1)", [id]);
@@ -215,6 +233,14 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await p.click('[data-br=avisar]'); await p.click('#baG'); await p.waitForTimeout(1200);
         await t.foto('control-datos');
         const [dd] = await t.sim.su("select (select si from cfx_consent where tipo = 'ofertas')::text c, (select estado from cfx_derechos where tipo = 'rectificacion') r, (select count(*) from cfx_derechos where tipo = 'portabilidad')::int po, (select avisados from cfx_brechas limit 1) b, (select count(*) from notificaciones where titulo like '%solicitud de datos%')::int n");
+        // A7: Control → 🛡️ Seguridad y secret key de Turnstile guardada desde 🤖 Humano.
+        await p.click('[data-s=seguridad]'); await p.waitForTimeout(1500);
+        const sg = await p.evaluate(() => document.getElementById('ctlCuerpo').textContent);
+        await t.foto('control-seguridad');
+        await p.click('[data-s=humano]'); await p.waitForTimeout(1000);
+        await p.uncheck('#huTodas'); await p.fill('#huK', '0x4AAAAAAAprueba'); await p.fill('#huS', '0x4AAAAAAAsecreto'); await p.click('#huG'); await p.waitForTimeout(1500);
+        const [hs] = await t.sim.su("select (select valor from cfx_secretos where clave = 'turnstile') s, public.cfx_humano() h");
+        ok(/Seguridad de la app/.test(sg) && /Tablas sin reglas \(RLS\): ninguna/.test(sg) && hs.s === '0x4AAAAAAAsecreto' && hs.h.invitados === true && !('secreto' in hs.h), 'CM: Control → Seguridad y secret key ' + JSON.stringify(hs.h));
         ok(copia.cuenta.email === 'titular@x.cl' && copia.consentimientos.ofertas === true && Object.keys(copia.datos).length > 0 && /Corregir un dato/.test(ul) && vio &&
           dd.c === 'true' && dd.r === 'respondida' && dd.po === 1 && dd.b >= 1 && dd.n === 1, 'Mis datos y privacidad + Control → Datos ' + JSON.stringify([Object.keys(copia.datos), dd]));
       }

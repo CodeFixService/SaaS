@@ -6,7 +6,7 @@
   const A = global.App, { esc, toast, modal, confirmar } = A;
   const M = () => global.MisApps;
   let raiz = null, actual = 'cm', seccion = 'avisar';
-  const SECC = [['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['push', '🔔 Notificaciones'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['registro', '📜 Registro']];
+  const SECC = [['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['push', '🔔 Notificaciones'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['registro', '📜 Registro']];
   // Nombres legibles de las claves de los planes (las demás se muestran tal cual).
   const NOMBRE = { productos: 'Productos', clientes: 'Clientes', fichas: 'Fichas publicadas', equipo: 'Equipo', pedidos_mes: 'Pedidos al mes', respuestas: 'Respuestas rápidas',
     contactos: 'Contactos', favoritos: 'Favoritos', mensajes_seguidos: 'Mensajes seguidos', barberos: 'Barberos', servicios: 'Servicios', ofertas: 'Ofertas',
@@ -146,12 +146,35 @@
       '<li>Pega la site key aquí y guárdala en las 7 apps.</li><li>En cada Supabase: Authentication → Attack Protection → CAPTCHA → Turnstile, pega la secret key y guarda.</li></ol>' +
       '<p class="sub">Primero el paso 2 y después el 3 (si no, nadie puede entrar). Para apagarlo: deja vacío y guarda, y apágalo en Supabase.</p>' +
       '<label>Site key<input id="huK" value="' + esc(h.site_key || '') + '" placeholder="0x4AAAAAAA…"></label>' +
+      '<label>Secret key (compras sin cuenta) <input id="huS" type="password" autocomplete="off" placeholder="' + (h.invitados ? '•••• guardada · vacío = no cambiar' : 'Opcional: 0x4AAAAAAA…') + '"></label>' +
+      '<p class="sub">Con la secret key, las compras sin cuenta de la tienda también piden la verificación y la base la revisa con Cloudflare (no sale de la base). ' +
+      (h.invitados ? '✅ Activa en esta app. <label class="fila" style="gap:8px;display:inline-flex"><input type="checkbox" id="huQ" style="width:auto"> Quitarla</label>' : 'Sin secret key: las compras sin cuenta no la piden.') + '</p>' +
       '<label class="fila" style="gap:8px"><input type="checkbox" id="huTodas" style="width:auto" checked> Guardar en las 7 apps</label><button type="button" class="block" id="huG">Guardar</button><div id="huR"></div></div>';
     raiz.querySelector('#huG').onclick = async () => {
       const apps = raiz.querySelector('#huTodas').checked ? M().APPS.filter(conectada) : [app()], res = [];
-      for (const a of apps) { try { await M().rpcDe(M().cliente(a), 'cfx_humano_guardar', { p_site_key: raiz.querySelector('#huK').value.trim() }); res.push(a.nombre + ': ✓'); } catch (x) { res.push(a.nombre + ': ' + nf(x)); } }
+      const q = raiz.querySelector('#huQ'), sec = q && q.checked ? '' : (raiz.querySelector('#huS').value.trim() || null);
+      for (const a of apps) { try { await M().rpcDe(M().cliente(a), 'cfx_humano_guardar', { p_site_key: raiz.querySelector('#huK').value.trim(), p_secreto: sec }); res.push(a.nombre + ': ✓'); } catch (x) { res.push(a.nombre + ': ' + nf(x)); } }
+      raiz.querySelector('#huS').value = '';
       raiz.querySelector('#huR').innerHTML = res.map((t) => '<p class="sub">' + esc(t) + '</p>').join('');
     };
+  }
+
+  // 🛡️ Seguridad (A7): qué puede hacer alguien sin cuenta en esta app y cómo están sus buckets.
+  async function seguridad() {
+    let s;
+    try { s = await rpc('cfx_seguridad'); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
+    const ok = (b) => (b ? '✅' : '⚠️'), lista = (l) => (l.length ? l.map(esc).join(', ') : 'ninguna');
+    const bk = (s.buckets || []).map((b) => '<li>' + ok(!b.publico || (b.mb && b.tipos)) + ' <b>' + esc(b.id) + '</b> · ' + (b.publico ? 'público (se ve con su dirección)' : 'privado') +
+      ' · ' + (b.mb ? 'hasta ' + b.mb + ' MB' : 'sin límite de tamaño') + ' · ' + (b.tipos ? esc(b.tipos.join(', ')) : 'cualquier tipo') + (b.anon_lista ? ' · ⚠️ sin cuenta se puede listar' : '') + '</li>').join('');
+    const h = s.humano || {};
+    caja().innerHTML = '<div class="card"><h2>Seguridad de la app</h2>' +
+      '<p>' + ok(!s.sin_rls.length) + ' Tablas sin reglas (RLS): ' + lista(s.sin_rls) + '</p>' +
+      '<p>' + ok(!s.anon_escribe.length) + ' Sin cuenta pueden escribir en: ' + lista(s.anon_escribe) + '</p>' +
+      '<p>' + ok(h.activo) + ' Verificación humana: ' + (h.activo ? 'activa al entrar' + (h.invitados ? ' y en compras sin cuenta' : '') : 'apagada (🤖 Humano)') + '</p>' +
+      '<h3>Archivos (buckets)</h3><ul class="sub">' + (bk || '<li>Esta app no guarda archivos.</li>') + '</ul>' +
+      '<details><summary class="sub">Lo que se ve sin cuenta: ' + s.anon_lee.length + ' tablas públicas y ' + s.funciones_anon.length + ' funciones</summary>' +
+      '<p class="sub">Tablas: ' + lista(s.anon_lee) + '</p><p class="sub">Funciones: ' + lista(s.funciones_anon) + '</p>' +
+      '<p class="sub">Son las de la vitrina, reservas y pedidos sin cuenta. Las de administrador ya no se pueden llamar sin cuenta.</p></details></div>';
   }
 
   async function registro() {
@@ -264,7 +287,7 @@
     };
   }
 
-  const F = { avisar, planes, textos, keys, cupones, verif, humano, push, referidos, socios, datos, registro };
+  const F = { avisar, planes, textos, keys, cupones, verif, humano, push, referidos, socios, datos, seguridad, registro };
   // Referidos: quién invitó a quién (con qué cuenta), ranking, premio automático y premio a mano (días + sticker).
   const STICKERS = ['🏆 ¡Eres un crack invitando!', '🚀 ¡Vas volando! Gracias por recomendarnos', '💪 ¡Sigue así, vas muy bien!', '🌟 ¡Gracias por correr la voz!'];
   async function referidos() {

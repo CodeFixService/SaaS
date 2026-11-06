@@ -9,7 +9,21 @@ const { crear } = require('./sim');
 const TIPOS = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.mjs': 'application/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml',
   '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.txt': 'text/plain', '.ico': 'image/x-icon', '.jpg': 'image/jpeg', '.woff2': 'font/woff2' };
 
+// Encabezados de "/*" del _headers del repo (CSP, Permissions-Policy…): así la prueba ve lo mismo que Cloudflare.
+function encabezados(raiz) {
+  const r = {}; let todos = false;
+  try {
+    for (const l of fs.readFileSync(path.join(raiz, '_headers'), 'utf8').split('\n')) {
+      if (/^\S/.test(l)) todos = l.trim() === '/*';
+      else if (todos && l.includes(':')) r[l.slice(0, l.indexOf(':')).trim()] = l.slice(l.indexOf(':') + 1).trim();
+    }
+  } catch (e) { /* sin _headers */ }
+  delete r['Strict-Transport-Security'];
+  return r;
+}
+
 function servir(raiz) {
+  const extra = encabezados(raiz);
   return new Promise((ok) => {
     const s = http.createServer((req, res) => {
       const u = new URL(req.url, 'http://x');
@@ -18,7 +32,7 @@ function servir(raiz) {
       if (fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, 'index.html');
       if (!fs.existsSync(f) && fs.existsSync(f + '.html')) f += '.html';
       if (!fs.existsSync(f)) { res.writeHead(404); return res.end('404'); }
-      res.writeHead(200, { 'Content-Type': TIPOS[path.extname(f)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
+      res.writeHead(200, Object.assign({}, extra, { 'Content-Type': TIPOS[path.extname(f)] || 'application/octet-stream', 'Cache-Control': 'no-store' }));
       fs.createReadStream(f).pipe(res);
     });
     s.listen(0, () => ok(s));
@@ -65,4 +79,4 @@ async function abrir(repo, db, opts = {}) {
   };
 }
 
-module.exports = { abrir, servir };
+module.exports = { encabezados, abrir, servir };
