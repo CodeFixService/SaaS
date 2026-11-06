@@ -354,3 +354,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 ## Campana siempre y pestañita firme · núcleo 2.36 (06/11/2026)
 - **Versiones en main**: CM 4.55 · Billetera 1.21.32 · Órbita 5.60 · Barbería 2.54 (db_version 2.54) · BiciTaller 2.55 · Estaciona 2.14.34 · Cerebro 1.39.
 - Paneles de administración de Billetera y Órbita no tenían campana y la pestañita salía deforme (la app estilaba todo botón de la cabecera). Ahora: si la pantalla no trae campana, el núcleo pone la suya (`.cfx-campana-n`, abre hoja "Avisos": estado de los avisos al teléfono + "Activar avisos" con `CodeFixInstalar.activarPush`); si después aparece la de la app, la del núcleo se quita. `.cfx-pest` con medidas `!important` (34×12).
+
+## U11 Íconos en todo el texto · núcleo 2.37 (06/11/2026)
+- **Versiones en main**: CM 4.56 · Billetera 1.21.33 · Órbita 5.61 · Barbería 2.55 (db_version 2.55) · BiciTaller 2.56 · Estaciona 2.14.35 · Cerebro 1.40.
+- `iconos.js` ya no mira solo el emoji del inicio de botones/títulos: recorre todos los textos y cambia cada emoji conocido en cualquier posición ("Hola, Ana 👋", "🌴 …<br>🔴 …", "con ➕."). Al inicio deja margen (`.ic-e`); en medio/final `.ic-e.en`; solo `.ic-e.solo`. Fuera: `option` (no admite íconos), chat, campos, avatares, `.no-ico`/`data-emoji`, selectores de ≥6 botones-emoji. Los avisos emergentes (toast) ahora también se convierten.
+- 28 íconos nuevos: pulgar, derecha, abajo, arriba, torta, comida, ropa, belleza, huella, planta, taza, sueno, carpeta, enchufe, senal, bateria(Baja), video, bot, ojoNo, medalla, triste, control, audifonos, numeros, pelota, dado (+ ✋🙌🙏 → mano, más caras y corazones). Cubre los rubros de Órbita.
