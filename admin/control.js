@@ -6,7 +6,7 @@
   const A = global.App, { esc, toast, modal, confirmar } = A;
   const M = () => global.MisApps;
   let raiz = null, actual = 'cm', seccion = 'avisar';
-  const SECC = [['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['push', '🔔 Notificaciones'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['registro', '📜 Registro']];
+  const SECC = [['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['push', '🔔 Notificaciones'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['registro', '📜 Registro']];
   // Nombres legibles de las claves de los planes (las demás se muestran tal cual).
   const NOMBRE = { productos: 'Productos', clientes: 'Clientes', fichas: 'Fichas publicadas', equipo: 'Equipo', pedidos_mes: 'Pedidos al mes', respuestas: 'Respuestas rápidas',
     contactos: 'Contactos', favoritos: 'Favoritos', mensajes_seguidos: 'Mensajes seguidos', barberos: 'Barberos', servicios: 'Servicios', ofertas: 'Ofertas',
@@ -26,7 +26,7 @@
 
   async function avisar() {
     caja().innerHTML = '<div class="card"><h2>Aviso a todos</h2><p class="sub">Les llega a la campanita y como notificación.</p>' +
-      '<label>A quién<select id="avD"><option value="todos">Todos</option><option value="negocios">Negocios (cuentas principales)</option><option value="clientes">Clientes</option><option value="premium">Solo Premium</option><option value="gratis">Solo gratis</option></select></label>' +
+      '<label>A quién<select id="avD"><option value="todos">Todos</option><option value="negocios">Negocios (cuentas principales)</option><option value="clientes">Clientes</option><option value="premium">Solo Premium</option><option value="gratis">Solo gratis</option><option value="ofertas">Publicidad: solo quienes aceptaron ofertas</option></select></label>' +
       '<label>Título<input id="avT" maxlength="80"></label><label>Mensaje<textarea id="avC" maxlength="240" rows="3"></textarea></label>' +
       '<label class="fila" style="gap:8px"><input type="checkbox" id="avTodas" style="width:auto" checked> Enviar en las 7 apps (a todas las cuentas)</label><button type="button" class="block" id="avG">Enviar</button><div id="avR"></div></div>';
     raiz.querySelector('#avG').onclick = async () => {
@@ -198,7 +198,73 @@
     };
   }
 
-  const F = { avisar, planes, textos, keys, cupones, verif, humano, push, referidos, socios, registro };
+  // 🔒 Datos personales (Ley 21.719): solicitudes de derechos con su plazo, brechas de seguridad, consentimientos y registro de tratamiento.
+  const TIPO_D = { acceso: '📄 Acceso', rectificacion: '✏️ Rectificación', supresion: '🗑️ Supresión (borrar)', oposicion: '✋ Oposición', portabilidad: '📥 Portabilidad', bloqueo: '⏸️ Bloqueo' };
+  const RAT = [['Cuentas', 'nombre, correo, teléfono, foto', 'dar el servicio', 'contrato', 'mientras exista la cuenta'],
+    ['Pagos y Premium', 'comprobantes, montos, fechas', 'cobrar y llevar la contabilidad', 'contrato y ley tributaria', 'comprobante: hasta revisarlo; pago: plazo legal'],
+    ['Avisos y chat', 'mensajes, suscripción push', 'avisar y dar soporte', 'contrato', 'avisos 30 días; chat 1 año'],
+    ['Seguridad', 'intentos, registro de cambios, verificación humana', 'evitar fraudes', 'interés legítimo', 'registro: hasta que lo borres'],
+    ['Identidad (si se pide)', 'RUT, cédula, selfie', 'verificar a la persona', 'consentimiento expreso', 'fotos: se borran al revisar'],
+    ['Ofertas', 'cuenta y preferencias', 'publicidad', 'consentimiento (se retira cuando quieras)', 'hasta que lo retire']];
+  async function datos() {
+    let r, L, B;
+    try { [r, L, B] = await Promise.all([rpc('cfx_privacidad_resumen'), rpc('cfx_derechos_lista', { p_todas: false }), rpc('cfx_brechas_lista')]); }
+    catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
+    const cons = (k) => (r.consent || []).find((x) => x.tipo === k) || { si: 0, no: 0 };
+    caja().innerHTML = '<p class="sub">Ley 21.719 (vigente desde el 1-dic-2026): responder cada solicitud dentro de 30 días (prorrogable una vez) y avisar las brechas a la Agencia y a los afectados sin demora.</p>' +
+      '<div class="card"><div class="fila"><span class="grow">Solicitudes en curso</span><b>' + r.pendientes + '</b></div><div class="fila"><span class="grow">Vencen en menos de 5 días</span><b' + (r.vencen ? ' class="warn"' : '') + '>' + r.vencen + '</b></div>' +
+      '<div class="fila"><span class="grow">Brechas abiertas</span><b' + (r.brechas ? ' class="warn"' : '') + '>' + r.brechas + '</b></div>' +
+      '<div class="fila"><span class="grow">Aceptan ofertas de CodeFix</span><b>' + cons('ofertas').si + '</b></div><div class="fila"><span class="grow">No quieren ofertas de negocios</span><b>' + cons('negocios').no + '</b></div></div>' +
+      '<div class="card"><h2>Solicitudes</h2>' + (L.map((d, i) => '<div style="padding:6px 0;border-top:1px solid var(--line)"><div class="fila"><b class="grow">' + esc(TIPO_D[d.tipo] || d.tipo) + '</b><span class="pill ' + (d.dias < 5 ? 'warn' : 'ok') + '">' + (d.dias < 0 ? 'vencida' : d.dias + ' días') + '</span></div>' +
+        '<p class="sub">' + esc(d.email) + ' · ' + A.hace(d.creado) + (d.estado === 'prorrogada' ? ' · prorrogada' : '') + '</p>' + (d.detalle ? '<p>' + esc(d.detalle) + '</p>' : '') +
+        (d.tipo === 'supresion' ? '<p class="sub">Borra la cuenta en el panel de la app (menos lo que la ley obliga a guardar) y después responde aquí.</p>' : '') +
+        '<div class="btns-s"><button type="button" class="small" data-dr="responder" data-i="' + i + '">Responder</button>' + (d.estado === 'pendiente' ? '<button type="button" class="small ghost" data-dr="prorrogar" data-i="' + i + '">Prorrogar 30 días</button>' : '') +
+        '<button type="button" class="small ghost" data-dr="rechazar" data-i="' + i + '">No acoger</button></div></div>').join('') || '<p class="empty">Sin solicitudes en curso 🎉</p>') + '</div>' +
+      '<div class="card"><div class="fila"><h2 class="grow">Brechas de seguridad</h2><button type="button" class="small" data-br="nueva">＋ Registrar</button></div>' +
+      (B.map((b, i) => '<div style="padding:6px 0;border-top:1px solid var(--line)"><div class="fila"><b class="grow">#' + b.id + ' · ' + esc(b.descripcion) + '</b><span class="pill ' + (b.cerrada ? 'ok' : 'warn') + '">' + (b.cerrada ? 'cerrada' : 'riesgo ' + esc(b.riesgo)) + '</span></div>' +
+        '<p class="sub">Detectada ' + A.hace(b.detectada) + ' · ' + b.afectados + ' afectados' + (b.datos ? ' · ' + esc(b.datos) : '') + '</p>' + (b.medidas ? '<p class="sub">Medidas: ' + esc(b.medidas) + '</p>' : '') +
+        '<p class="sub">Agencia: ' + (b.agencia ? '✓ ' + A.hace(b.agencia) : '⏳ falta avisar') + ' · Afectados: ' + (b.titulares ? '✓ ' + b.avisados + ' avisados' : '⏳ falta avisar') + '</p>' +
+        (b.cerrada ? '' : '<div class="btns-s"><button type="button" class="small ghost" data-br="editar" data-i="' + i + '">Editar</button>' + (b.agencia ? '' : '<button type="button" class="small" data-br="agencia" data-i="' + i + '">Ya avisé a la Agencia</button>') +
+          '<button type="button" class="small" data-br="avisar" data-i="' + i + '">Avisar a los afectados</button><button type="button" class="small ghost" data-br="cerrar" data-i="' + i + '">Cerrar</button></div>') + '</div>').join('') || '<p class="empty">Sin brechas registradas.</p>') + '</div>' +
+      '<details class="card"><summary><b>Registro de actividades de tratamiento</b></summary><p class="sub">Qué datos trata ' + esc(app().nombre.split(' ·')[0]) + ', para qué, con qué base y cuánto tiempo. Encargados: Supabase (base de datos) y Cloudflare (publicación); servidores fuera de Chile.</p>' +
+        RAT.map((x) => '<div style="padding:4px 0;border-top:1px solid var(--line)"><b>' + esc(x[0]) + '</b><div class="sub">' + esc(x[1]) + ' · ' + esc(x[2]) + ' · base: ' + esc(x[3]) + ' · ' + esc(x[4]) + '</div></div>').join('') + '</details>';
+    const brecha = (b) => {
+      b = b || {};
+      const d = modal('<h2>' + (b.id ? 'Brecha #' + b.id : 'Registrar brecha') + '</h2><label>Qué pasó<textarea id="brD" rows="3" maxlength="1000">' + esc(b.descripcion || '') + '</textarea></label>' +
+        '<label>Qué datos se vieron afectados<input id="brT" maxlength="500" value="' + esc(b.datos || '') + '" placeholder="correos, teléfonos…"></label><label>Cuántas personas (aprox.)<input id="brN" type="number" min="0" value="' + (b.afectados || 0) + '"></label>' +
+        '<label>Riesgo<select id="brR">' + ['bajo', 'medio', 'alto'].map((x) => '<option' + ((b.riesgo || 'medio') === x ? ' selected' : '') + '>' + x + '</option>').join('') + '</select></label>' +
+        '<label>Medidas tomadas<textarea id="brM" rows="2" maxlength="1000">' + esc(b.medidas || '') + '</textarea></label><div class="btns"><button class="ghost" data-cerrar>Cancelar</button><button id="brG">Guardar</button></div>');
+      d.querySelector('#brG').onclick = async () => {
+        try { await rpc('cfx_brecha_guardar', { p: { id: b.id || '', descripcion: d.querySelector('#brD').value, datos: d.querySelector('#brT').value, afectados: d.querySelector('#brN').value, riesgo: d.querySelector('#brR').value, medidas: d.querySelector('#brM').value } }); d.close(); toast('Guardado'); datos(); }
+        catch (x) { toast(nf(x)); }
+      };
+    };
+    caja().onclick = async (ev) => {
+      const b = ev.target.closest('[data-dr],[data-br]'); if (!b) return;
+      try {
+        if (b.dataset.dr) {
+          const s = L[+b.dataset.i], ac = b.dataset.dr;
+          const d = modal('<h2>' + (ac === 'responder' ? 'Responder' : ac === 'prorrogar' ? 'Prorrogar 30 días' : 'No acoger') + '</h2><p class="sub">' + esc(TIPO_D[s.tipo] + ' · ' + s.email) + '. Le llega como aviso.</p>' +
+            '<label>' + (ac === 'responder' ? 'Respuesta' : 'Motivo') + '<textarea id="drT" rows="3" maxlength="800"></textarea></label><div class="btns"><button class="ghost" data-cerrar>Cancelar</button><button id="drG">Enviar</button></div>');
+          d.querySelector('#drG').onclick = async () => { try { await rpc('cfx_derecho_responder', { p_id: s.id, p_accion: ac, p_respuesta: d.querySelector('#drT').value }); d.close(); toast('Listo'); datos(); } catch (x) { toast(nf(x)); } };
+          return;
+        }
+        const x = B[+b.dataset.i];
+        if (b.dataset.br === 'nueva') return brecha();
+        if (b.dataset.br === 'editar') return brecha(x);
+        if (b.dataset.br === 'agencia' || b.dataset.br === 'cerrar') {
+          if (!(await confirmar(b.dataset.br === 'agencia' ? 'Marca que ya informaste la brecha #' + x.id + ' a la Agencia de Protección de Datos Personales.' : '¿Cerrar la brecha #' + x.id + '?', 'Confirmar'))) return;
+          await rpc('cfx_brecha_marcar', { p_id: x.id, p_que: b.dataset.br }); toast('Listo'); return datos();
+        }
+        const d = modal('<h2>Avisar a los afectados</h2><label>A quién<select id="baD"><option value="todos">Todos</option><option value="negocios">Negocios</option><option value="clientes">Clientes</option></select></label>' +
+          '<label>Título<input id="baT" maxlength="80" value="⚠️ Aviso de seguridad"></label><label>Mensaje<textarea id="baC" rows="4" maxlength="240">Detectamos un problema de seguridad que pudo afectar ' + esc(x.datos || 'tus datos') + '. Ya lo corregimos. Te recomendamos cambiar tu clave. Dudas: chat de soporte.</textarea></label>' +
+          '<div class="btns"><button class="ghost" data-cerrar>Cancelar</button><button id="baG">Enviar</button></div>');
+        d.querySelector('#baG').onclick = async () => { try { const n = await rpc('cfx_brecha_avisar', { p_id: x.id, p_destino: d.querySelector('#baD').value, p_titulo: d.querySelector('#baT').value, p_cuerpo: d.querySelector('#baC').value }); d.close(); toast('Avisados: ' + n); datos(); } catch (e) { toast(nf(e)); } };
+      } catch (e) { toast(nf(e)); }
+    };
+  }
+
+  const F = { avisar, planes, textos, keys, cupones, verif, humano, push, referidos, socios, datos, registro };
   // Referidos: quién invitó a quién (con qué cuenta), ranking, premio automático y premio a mano (días + sticker).
   const STICKERS = ['🏆 ¡Eres un crack invitando!', '🚀 ¡Vas volando! Gracias por recomendarnos', '💪 ¡Sigue así, vas muy bien!', '🌟 ¡Gracias por correr la voz!'];
   async function referidos() {

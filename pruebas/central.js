@@ -193,6 +193,31 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
           'Órbita: boleta SII ' + JSON.stringify([bq, bm, bn, bd.f, bd.u, bd.rut]));
         await t.foto('boleta', m);
       }
+      if (app === 'saas') {
+        // Mis datos y privacidad (núcleo): consentimiento de ofertas, copia de los datos y solicitud de rectificación; el admin responde y registra una brecha.
+        await t.sim.crearUsuario('juanjosuecastilloloyola@gmail.com', 'admin123'); await t.sim.crearUsuario('titular@x.cl', 'clave123');
+        const { page: u } = await t.nuevo(); await u.goto(t.base + '/'); await u.waitForTimeout(800);
+        await u.fill('input[type=email]', 'titular@x.cl'); await u.fill('input[type=password]', 'clave123'); await u.press('input[type=password]', 'Enter'); await u.waitForTimeout(3000);
+        await t.sinModales(u); await u.evaluate(() => CFX_LEGAL.misDatos()); await u.waitForTimeout(1200);
+        await u.click('dialog [data-c="ofertas"]'); await u.waitForTimeout(800);
+        const [dl] = await Promise.all([u.waitForEvent('download'), u.click('dialog [data-bajar]')]);
+        const copia = JSON.parse(fs.readFileSync(await dl.path(), 'utf8'));
+        await u.click('dialog [data-t="rectificacion"]'); await u.fill('dialog [data-txt]', 'Mi nombre es Ana Pérez'); await u.click('dialog [data-enviar]'); await u.waitForTimeout(1200);
+        const ul = await u.evaluate(() => document.querySelector('dialog [data-lista]').textContent);
+        await t.foto('mis-datos', u);
+        await p.goto(t.base + '/'); await p.fill('input[type=email]', 'juanjosuecastilloloyola@gmail.com'); await p.fill('input[type=password]', 'admin123'); await p.press('input[type=password]', 'Enter');
+        await p.waitForURL(/admin/); await p.waitForTimeout(800); await t.sinModales();
+        await p.goto(t.base + '/admin/#control'); await p.waitForTimeout(3000); await t.sinModales();
+        await p.click('[data-s=datos]'); await p.waitForTimeout(1500);
+        const vio = await p.evaluate(() => document.getElementById('ctlCuerpo').textContent.includes('titular@x.cl'));
+        await p.click('[data-dr=responder]'); await p.fill('#drT', 'Listo, lo corregimos.'); await p.click('#drG'); await p.waitForTimeout(1200);
+        await p.click('[data-br=nueva]'); await p.fill('#brD', 'Acceso indebido de prueba'); await p.fill('#brN', '3'); await p.click('#brG'); await p.waitForTimeout(1200);
+        await p.click('[data-br=avisar]'); await p.click('#baG'); await p.waitForTimeout(1200);
+        await t.foto('control-datos');
+        const [dd] = await t.sim.su("select (select si from cfx_consent where tipo = 'ofertas')::text c, (select estado from cfx_derechos where tipo = 'rectificacion') r, (select count(*) from cfx_derechos where tipo = 'portabilidad')::int po, (select avisados from cfx_brechas limit 1) b, (select count(*) from notificaciones where titulo like '%solicitud de datos%')::int n");
+        ok(copia.cuenta.email === 'titular@x.cl' && copia.consentimientos.ofertas === true && Object.keys(copia.datos).length > 0 && /Corregir un dato/.test(ul) && vio &&
+          dd.c === 'true' && dd.r === 'respondida' && dd.po === 1 && dd.b >= 1 && dd.n === 1, 'Mis datos y privacidad + Control → Datos ' + JSON.stringify([Object.keys(copia.datos), dd]));
+      }
       const e = t.errores.filter((x) => !/404|Failed to load resource|net::|Sin permiso para vender/.test(x));
       ok(!e.length, app + ': sin errores ' + e.join(' | ').slice(0, 200));
     } catch (x) { fallas++; console.log(x.message); await t.foto(app + '-central-error'); }

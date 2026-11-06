@@ -92,8 +92,9 @@ declare u uuid; n int := 0;
 begin
   perform <CHK>;
   if trim(coalesce(p_titulo, '')) = '' then raise exception 'Escribe el título'; end if;
-  if p_destino not in ('todos', 'negocios', 'clientes', 'premium', 'gratis') then raise exception 'Destino no válido'; end if;
-  for u in select * from public.cfx_destinatarios(p_destino) loop
+  if p_destino not in ('todos', 'negocios', 'clientes', 'premium', 'gratis', 'ofertas') then raise exception 'Destino no válido'; end if;
+  -- 'ofertas' = publicidad: solo a quienes aceptaron recibir ofertas (consentimiento, sql/legal.sql).
+  for u in select d from public.cfx_destinatarios(case when p_destino = 'ofertas' then 'todos' else p_destino end) d where p_destino <> 'ofertas' or public.cfx_acepta(d, 'ofertas') loop
     perform public.cfx_avisar(u, left(p_titulo, 80), left(coalesce(p_cuerpo, ''), 240));
     n := n + 1;
   end loop;
