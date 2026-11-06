@@ -145,6 +145,12 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
           return [s.querySelector('h2').textContent, s.textContent.includes('Ropa hecha a mano'), !!s.querySelector('a[href*="wa.me/56912345678"]'), /\/t\/\?s=vitrina$/.test(u), document.documentElement.scrollWidth <= innerWidth + 1]; });
         ok(vt && vt[0] === 'Vitrina Prueba' && vt.slice(1).every(Boolean), 'Órbita: vitrina en catálogo con cuenta ' + JSON.stringify(vt));
         await t.foto('vitrina-catalogo', c);
+        // Vista previa del dueño: productos con los mismos botones que ve el cliente (al tocar solo avisa).
+        await q.goto(t.base + '/apps/catalogo/'); await q.waitForTimeout(2500);
+        const pv = await q.evaluate(() => [document.querySelectorAll('#grid [data-add]').length, document.querySelectorAll('#grid [data-prev]').length, document.querySelectorAll('#grid .opc-ch').length]);
+        await q.click('#grid [data-add]'); await q.waitForTimeout(300);
+        const pc = await q.evaluate(() => document.body.textContent.includes('Vista previa'));
+        ok(pv.every((n) => n > 0) && pc, 'Órbita: vista previa con botones ' + JSON.stringify([pv, pc]));
       }
       const e = t.errores.filter((x) => !/404|Failed to load resource|net::|Sin permiso para vender/.test(x));
       ok(!e.length, app + ': sin errores ' + e.join(' | ').slice(0, 200));
