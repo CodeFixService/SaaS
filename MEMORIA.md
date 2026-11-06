@@ -383,6 +383,11 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **Espacio sobre la barra**: relleno inferior 112 → 136 px (el ➕ se ve completo al final).
 
 ## Pendientes anotados (06/11/2026)
-- **Billetera**: al actualizar sale en rojo "la autorización aún se está cargando" y no deja actualizar. Revisar.
+- ~~Billetera "aún se está publicando"~~ ✅ (ver arreglo abajo).
 - **Reparar app (núcleo, todas)**: botón "Reparar la app" en Ajustes → Configuración (lo más intuitivo posible): limpia caché/service worker, vuelve a cargar la sesión y la versión, y se arregla sola.
 - Forma de trabajo: una función a la vez (máx. dos por chat); al cambiar de chat, prompt con resumen de lo hecho, lo en curso y lo que falta.
+
+## Arreglo "aún se está publicando" (06/11/2026) · mismas versiones de U14
+- **Causa**: el sw.js de Billetera (js/core.js `VERSION`), CM y Cerebro (shared/config.js `VERSION`) solo instala si la versión del código = version.json. En U14 (y antes en CM/Cerebro) se subió version.json sin el código → "Actualizar" fallaba siempre.
+- Corregido: Billetera 1.21.36, CM 4.59, Cerebro 1.43; además Órbita `DB_VERSION` 5.18 y Barbería core `VERSION` 2.58 (solo se muestran).
+- **central.js** ahora compara la versión del código con version.json en saas, emprendedor, Aplicaciones, barberia y contenido. Al subir versión: version.json + ese archivo.
