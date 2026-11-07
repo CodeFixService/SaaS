@@ -467,6 +467,6 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - **SaaS/.github/workflows/salud.yml**: cada día 11:23 UTC llama cfx_ping() en las 7 (nucleo/proyectos.json, lo escribe sincronizar.py paso 8). Falla → correo de GitHub.
   (Billetera mantiene su ping.yml viejo; se puede borrar.)
 - **SaaS/.github/workflows/respaldo.yml**: cada día 07:41 UTC, pg_dump 17 (-Fc; public, privado, auth, storage, cron) por app, cifrado gpg AES256 con `RESPALDO_CLAVE`,
-  artefacto 14 días. Secretos `BD_SAAS, BD_EMPRENDEDOR, BD_APLICACIONES, BD_BARBERIA, BD_TALLER, BD_ESTACIONAMIENTO, BD_CONTENIDO` = cadena **Session pooler** (la directa es IPv6).
+  artefacto 14 días. Secretos `CENTRO_DE_MANDO, BILLETERA, ORBITA, BARBERIA, BICITALLER, ESTACIONA, CEREBRO` = cadena **Session pooler** (la directa es IPv6).
   Falta secreto → se salta con aviso. Restaurar: `gpg -d X.dump.gpg > X.dump && pg_restore --no-owner --no-acl -d "<cadena>" X.dump`.
 - Prueba: central.js (las 7) anota un error a mano y uno lanzado, llama cfx_ping; CM → Control → Salud muestra y borra.

@@ -3,7 +3,7 @@ name: Respaldo diario (pg_dump de las 7 bases)
 # Copia completa de cada base (public, privado, auth, storage, cron), cifrada con RESPALDO_CLAVE y guardada 14 días
 # como artefacto de esta ejecución (Actions → la ejecución → Artifacts). Secretos en Settings → Secrets and variables → Actions:
 #   RESPALDO_CLAVE            una frase larga (guárdala también fuera de GitHub: sin ella no se puede abrir el respaldo)
-#   BD_SAAS, BD_EMPRENDEDOR, BD_APLICACIONES, BD_BARBERIA, BD_TALLER, BD_ESTACIONAMIENTO, BD_CONTENIDO
+#   CENTRO_DE_MANDO, BILLETERA, ORBITA, BARBERIA, BICITALLER, ESTACIONA, CEREBRO
 #     = cadena "Session pooler" de cada proyecto (Supabase → Connect → Session pooler, con la clave de la base puesta).
 #       La directa (db.xxx.supabase.co) no sirve: es solo IPv6 y GitHub no tiene IPv6.
 # Si falta el secreto de una app, esa app se salta (aviso amarillo). Al terminar anota el respaldo en la base → CM → Control → 🩺 Salud.
@@ -22,15 +22,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [SAAS, EMPRENDEDOR, APLICACIONES, BARBERIA, TALLER, ESTACIONAMIENTO, CONTENIDO]
+        app: [CENTRO_DE_MANDO, BILLETERA, ORBITA, BARBERIA, BICITALLER, ESTACIONA, CEREBRO]
     env:
-      BD: ${{ secrets[format('BD_{0}', matrix.app)] }}
+      BD: ${{ secrets[matrix.app] }}
       CLAVE: ${{ secrets.RESPALDO_CLAVE }}
     steps:
       - name: Revisar secretos
         id: s
         run: |
-          if [ -z "$BD" ] || [ -z "$CLAVE" ]; then echo "::warning::Falta BD_${{ matrix.app }} o RESPALDO_CLAVE: se salta"; echo "ok=no" >> "$GITHUB_OUTPUT"; else echo "ok=si" >> "$GITHUB_OUTPUT"; fi
+          if [ -z "$BD" ] || [ -z "$CLAVE" ]; then echo "::warning::Falta el secreto ${{ matrix.app }} o RESPALDO_CLAVE: se salta"; echo "ok=no" >> "$GITHUB_OUTPUT"; else echo "ok=si" >> "$GITHUB_OUTPUT"; fi
       - name: Instalar pg_dump 17
         if: steps.s.outputs.ok == 'si'
         run: |
