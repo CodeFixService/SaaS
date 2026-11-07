@@ -1,0 +1,6 @@
+// Publicación en Cloudflare (Workers con archivos estáticos). No necesita compilación.
+{
+  "name": "saas",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./" }
+}
