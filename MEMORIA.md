@@ -477,4 +477,6 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - CM 4.65: en Mis aplicaciones el botón "⚡ Actualizar base ahora" (cfx_actualizar_ahora → auto_actualizar en máx. 1 min) aparece siempre en cada app conectada, no solo cuando falta base.
 - Ideas de Josué para DESPUÉS de terminar la tienda:
   · Actualización NUNCA automática: al negocio/cliente le aparece el botón "Actualizar" (como en Billetera) y la app se actualiza solo cuando lo toca.
-  · CM → "Probar": una rama fija de pruebas (ej. `pruebas`) en cada repo; CM muestra el link de la vista previa de esa rama (Cloudflare Pages preview) para probar y luego liberar.
+- ✅ HECHO (CM 4.65): Mis aplicaciones → "🧪 Probar vX" cuando la rama fija `pruebas` del repo trae version.json más nueva que main. Link = https://pruebas-<worker>.juanjosuecastilloloyola.workers.dev/
+  (vista previa de Cloudflare Workers Builds, misma base real). Flujo: central.js OK → push a `pruebas` → Josué prueba → OK → main → Liberar.
+  Requiere en Cloudflare, por cada worker: Settings → Build → Branch control → "Builds for non-production branches" ON, y Settings → Domains & Routes → Preview URLs ON.
