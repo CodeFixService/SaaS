@@ -129,7 +129,8 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         // G10: 🧾 Comprobante del pedido (ítems, total, medio de pago) → WhatsApp al teléfono del cliente.
         await t.sim.su("update public.pedidos set comprobante_at = now() where negocio_id = $1 and estado = 'recibido'", [tid]);
         await q.evaluate(() => { window.__abrio = []; window.open = (u) => { window.__abrio.push(u); return null; }; document.dispatchEvent(new Event('visibilitychange')); }); await q.waitForTimeout(1500);
-        await q.locator('.card.nuevo [data-recibo]').first().click(); await q.waitForTimeout(400);
+        const [{ rid }] = await t.sim.su("select id rid from public.pedidos where negocio_id = $1 and estado = 'recibido' order by created_at desc limit 1", [tid]);
+        await q.locator('[data-recibo="' + rid + '"]').click(); await q.waitForTimeout(400);
         const cpP = await q.evaluate(() => { const d = document.querySelector('.cfx-comp'); const r = [d && d.querySelector('pre').textContent]; d.querySelector('#compTel').value = '9 1234 5678';
           d.querySelector('[data-a=wsp]').click(); return r.concat(window.__abrio[0] || '', !document.querySelector('.cfx-comp')); });
         ok(/1 × Polera — \$10\.000/.test(cpP[0]) && /TOTAL: \$10\.000/.test(cpP[0]) && /Pago: Transferencia/.test(cpP[0]) && /No es boleta electrónica/.test(cpP[0]) &&
