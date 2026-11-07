@@ -144,7 +144,7 @@ end $$;
 create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '4.16'::text $$;
+language sql immutable as $$ select '4.17'::text $$;
 create or replace function public.cfg_int(c text) returns int
 language sql stable security definer set search_path = '' as $$
   select (valor #>> '{}')::int from public.config where clave = c
@@ -1413,6 +1413,74 @@ revoke all on function public.vinculo_codigo(boolean), public.vincular(text), pu
   public.compartir(uuid, uuid, boolean), public.compartido_guardar(uuid, jsonb), public.compartido_historial(uuid), public.vinculado(uuid), public.compartido_conmigo(uuid) from public, anon;
 grant execute on function public.vinculo_codigo(boolean), public.vincular(text), public.mis_vinculos(), public.desvincular(uuid), public.compartidos_info(),
   public.compartir(uuid, uuid, boolean), public.compartido_guardar(uuid, jsonb), public.compartido_historial(uuid), public.vinculado(uuid), public.compartido_conmigo(uuid) to authenticated;
+
+-- 🧪 Rama "pruebas" de cada repo: el CM la confirma (pruebas → main) o la deshace (pruebas vuelve a main) con un token de GitHub
+-- guardado solo en la base (cfx_secretos 'github', nunca sale). Token fine-grained: repos de CodeFixService, permiso Contents: Read and write.
+create or replace function public.gh_api(p_metodo text, p_ruta text, p_cuerpo jsonb default null) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare st int; c text; tk text := (select valor from public.cfx_secretos where clave = 'github');
+begin
+  if tk is null then return jsonb_build_object('status', 0, 'error', 'Falta el token de GitHub (CM → Apps → 🔑 GitHub).'); end if;
+  perform extensions.http_set_curlopt('CURLOPT_TIMEOUT', '20');
+  execute 'select status, content from extensions.http(row($1, $2, $3, $4, $5)::extensions.http_request)' into st, c
+    using p_metodo, 'https://api.github.com' || p_ruta,
+          array[row('Authorization', 'Bearer ' || tk)::extensions.http_header, row('Accept', 'application/vnd.github+json')::extensions.http_header,
+                row('User-Agent', 'CodeFix-Centro-de-Mando')::extensions.http_header, row('X-GitHub-Api-Version', '2022-11-28')::extensions.http_header],
+          'application/json', p_cuerpo::text;
+  return jsonb_build_object('status', st, 'body', case when c ~ '^\s*[\{\[]' then c::jsonb end);
+exception when others then
+  return jsonb_build_object('status', 0, 'error', sqlerrm);
+end $$;
+revoke all on function public.gh_api(text, text, jsonb) from public, anon, authenticated;
+
+create or replace function public.cm_github_guardar(p_token text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+begin
+  perform public.super_check();
+  if coalesce(trim(p_token), '') = '' then delete from public.cfx_secretos where clave = 'github';
+  else insert into public.cfx_secretos (clave, valor) values ('github', trim(p_token))
+         on conflict (clave) do update set valor = excluded.valor, updated_at = now(); end if;
+  perform public.auditar('github', case when coalesce(trim(p_token), '') = '' then 'Token de GitHub borrado' else 'Token de GitHub guardado' end);
+  return jsonb_build_object('token', exists (select 1 from public.cfx_secretos where clave = 'github'));
+end $$;
+create or replace function public.cm_github() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  perform public.super_check();
+  return jsonb_build_object('token', exists (select 1 from public.cfx_secretos where clave = 'github'));
+end $$;
+
+-- p_accion 'confirmar': main avanza a pruebas (si main cambió entre medio, se mezcla). 'deshacer': pruebas vuelve a ser igual a main.
+create or replace function public.cm_pruebas(p_repo text, p_accion text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare r text; m jsonb; p jsonb; x jsonb; ms text; ps text;
+begin
+  perform public.super_check();
+  if p_repo not in ('SaaS', 'Emprendedor', 'Aplicaciones', 'Barberia', 'Taller', 'Estacionamiento', 'Contenido') then raise exception 'Repo no válido'; end if;
+  if p_accion not in ('confirmar', 'deshacer') then raise exception 'Acción no válida'; end if;
+  r := '/repos/CodeFixService/' || p_repo;
+  m := public.gh_api('GET', r || '/git/ref/heads/main'); p := public.gh_api('GET', r || '/git/ref/heads/pruebas');
+  if (m ->> 'status')::int is distinct from 200 or (p ->> 'status')::int is distinct from 200 then
+    raise exception 'GitHub no respondió (%): %', coalesce(m ->> 'status', '?'), coalesce(m ->> 'error', p ->> 'error', m #>> '{body,message}', p #>> '{body,message}', 'sin detalle');
+  end if;
+  ms := m #>> '{body,object,sha}'; ps := p #>> '{body,object,sha}';
+  if ms = ps then return jsonb_build_object('ok', true, 'cambio', false); end if;
+  if p_accion = 'deshacer' then
+    x := public.gh_api('PATCH', r || '/git/refs/heads/pruebas', jsonb_build_object('sha', ms, 'force', true));
+  else
+    x := public.gh_api('PATCH', r || '/git/refs/heads/main', jsonb_build_object('sha', ps, 'force', false));
+    if (x ->> 'status')::int = 422 then
+      x := public.gh_api('POST', r || '/merges', jsonb_build_object('base', 'main', 'head', 'pruebas', 'commit_message', 'Confirmado desde el Centro de Mando (pruebas → main)'));
+    end if;
+  end if;
+  if coalesce((x ->> 'status')::int, 0) not between 200 and 299 then
+    raise exception 'GitHub rechazó (%): %', coalesce(x ->> 'status', '?'), coalesce(x ->> 'error', x #>> '{body,message}', 'sin detalle');
+  end if;
+  perform public.auditar('pruebas', p_repo || ': ' || case when p_accion = 'confirmar' then 'pruebas confirmada → main' else 'pruebas deshecha (vuelve a main)' end);
+  return jsonb_build_object('ok', true, 'cambio', true);
+end $$;
+revoke all on function public.cm_github_guardar(text), public.cm_github(), public.cm_pruebas(text, text) from public, anon;
+grant execute on function public.cm_github_guardar(text), public.cm_github(), public.cm_pruebas(text, text) to authenticated;
 
 -- >>> CFX núcleo (no editar aquí: se copia de saas/nucleo/sql con sincronizar.py)
 -- ---------------------------------------------------------------------

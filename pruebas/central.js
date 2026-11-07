@@ -268,6 +268,17 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
           otras: document.querySelectorAll('[data-a=probar]').length, bd: !!document.querySelector('[data-app=cm] [data-a=bd]') }));
         await t.foto('apps-probar');
         ok(pr.h === 'https://pruebas-aplicaciones.juanjosuecastilloloyola.workers.dev/' && /v99\.1/.test(pr.t) && pr.otras === 1 && pr.bd, 'CM: Mis aplicaciones → 🧪 Probar (rama pruebas) y ⚡ Actualizar base siempre ' + JSON.stringify(pr));
+        // ✅ Confirmar: deshabilitado hasta abrir 🧪 Probar; con el token guardado, la base del CM mueve main a pruebas en GitHub (simulado con stub.sql).
+        await t.sim.su("insert into extensions.http_respuestas (url_like, content) values ('%/repos/CodeFixService/Aplicaciones/git/ref/heads/main', '{\"object\":{\"sha\":\"aaa111\"}}'), ('%/repos/CodeFixService/Aplicaciones/git/ref/heads/pruebas', '{\"object\":{\"sha\":\"bbb222\"}}'), ('%/repos/CodeFixService/Aplicaciones/git/refs/heads/main', '{\"ref\":\"refs/heads/main\"}')");
+        await p.click('#appsGh'); await p.waitForTimeout(600); await p.fill('dialog #ghT', 'github_pat_prueba'); await p.click('dialog [data-si]'); await p.waitForTimeout(1200);
+        const antes = await p.evaluate(() => document.querySelector('[data-app=aplicaciones] [data-a=pconf]').disabled);
+        await p.evaluate(() => document.addEventListener('click', (ev) => { if (ev.target.closest('[data-a=probar]')) ev.preventDefault(); }));
+        await p.click('[data-app=aplicaciones] [data-a=probar]'); await p.waitForTimeout(600);
+        const despues = await p.evaluate(() => document.querySelector('[data-app=aplicaciones] [data-a=pconf]').disabled);
+        await p.click('[data-app=aplicaciones] [data-a=pconf]'); await p.waitForTimeout(600); await p.click('dialog [data-si]'); await p.waitForTimeout(2500);
+        const [gh] = await t.sim.su("select (select valor from cfx_secretos where clave = 'github') tk, (select count(*) from extensions.http_log where method = 'PATCH' and uri like '%Aplicaciones/git/refs/heads/main' and content like '%bbb222%' and content like '%false%')::int pm, has_function_privilege('anon', 'public.cm_pruebas(text, text)', 'execute') an, has_function_privilege('authenticated', 'public.gh_api(text, text, jsonb)', 'execute') au");
+        await t.foto('apps-confirmar');
+        ok(antes && !despues && gh.tk === 'github_pat_prueba' && gh.pm === 1 && !gh.an && !gh.au, 'CM: ✅ Confirmar tras 🧪 Probar (pruebas → main) ' + JSON.stringify([antes, despues, gh]));
       }
       const e = t.errores.filter((x) => !/404|Failed to load resource|net::|Sin permiso para vender|G8 lanzado/.test(x));
       ok(!e.length, app + ': sin errores ' + e.join(' | ').slice(0, 200));

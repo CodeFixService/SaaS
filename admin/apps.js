@@ -10,6 +10,9 @@
   // https://pruebas-<worker>.<cuenta>.workers.dev (vista previa, con la misma base real). Se prueba ahí y después pasa a main → Liberar.
   const RAMA_PRUEBAS = 'pruebas', CUENTA_WORKERS = 'juanjosuecastilloloyola.workers.dev';
   const urlPrueba = (a) => 'https://' + RAMA_PRUEBAS + '-' + a.worker + '.' + CUENTA_WORKERS + '/';
+  // ✅ Confirmar se habilita después de abrir 🧪 Probar al menos una vez (por versión). ↩️ Deshacer siempre.
+  const PROBO = (a) => 'cm-probo-' + a.id;
+  const probo = (a) => { try { return localStorage.getItem(PROBO(a)) === String((E[a.id].prueba || {}).version); } catch (x) { return false; } };
   const campo = (o, ruta) => !ruta ? o : ruta.split('.').reduce((x, k) => (x == null ? x : x[k]), o);
 
   // Cómo se lee y se libera la versión en cada app (cada una lo guarda a su manera).
@@ -147,7 +150,9 @@
       (e.error ? '<p class="sub warn">' + esc(e.error) + '</p>' : '') +
       (e.bdMsg && (s.faltaBd || e.bdManual) ? '<p class="sub' + (e.bdMal ? ' warn' : '') + '">' + esc(e.bdMsg) + '</p>' : '') +
       '<div class="btns-s">' +
-        (e.prueba ? '<a class="btn small" data-a="probar" href="' + urlPrueba(a) + '" target="_blank" rel="noopener">🧪 Probar v' + esc(e.prueba.version) + '</a>' : '') +
+        (e.prueba ? '<a class="btn small" data-a="probar" href="' + urlPrueba(a) + '" target="_blank" rel="noopener">🧪 Probar v' + esc(e.prueba.version) + '</a>' +
+          '<button type="button" class="small" data-a="pconf"' + (probo(a) && !e.pBusy ? '' : ' disabled') + ' title="Primero ábrela con 🧪 Probar">' + (e.pBusy === 'confirmar' ? 'Confirmando…' : '✅ Confirmar') + '</button>' +
+          '<button type="button" class="small ghost" data-a="pdes"' + (e.pBusy ? ' disabled' : '') + '>' + (e.pBusy === 'deshacer' ? 'Deshaciendo…' : '↩️ Deshacer') + '</button>' : '') +
         (a.liberar && e.conectado ? '<button type="button" class="small" data-a="lib"' + (s.lista && !e.liberando ? '' : ' disabled') + '>' + (e.liberando ? 'Liberando…' : s.alDia ? A.ico('check', 15) + ' Liberada' : A.ico('cohete', 15) + ' Liberar v' + esc(e.pub || '?')) + '</button>' : '') +
         (e.conectado ? '<button type="button" class="small' + (s.faltaBd ? '' : ' ghost') + '" data-a="bd" title="Corre auto_actualizar() en la base de esta app"' + (e.bdProg ? ' disabled' : '') + '>' + (e.bdProg ? 'Actualizando la base…' : '⚡ Actualizar base ahora') + '</button>' : '') +
         (!a.propia && e.url ? (e.conectado ? '<button type="button" class="small ghost" data-a="salir">Desconectar</button>' : '<button type="button" class="small" data-a="con">' + A.ico('enchufe', 15) + ' Conectar</button>') : '') +
@@ -226,6 +231,38 @@
     } catch (x) { e.bdMal = true; e.bdMsg = /Could not find|does not exist|PGRST202/i.test(x.message) ? 'Esta base aún no tiene "Actualizar ahora": pega una vez el instalar-corto.sql de la app en su Supabase.' : x.message; }
     e.bdProg = false; pintarTarjeta(a);
   }
+  // 🧪 Confirmar (pruebas → main) o Deshacer (pruebas vuelve a main). Lo hace la base del CM con el token de GitHub (cm_pruebas).
+  async function accionPrueba(a, acc) {
+    const e = E[a.id], v = (e.prueba || {}).version;
+    const txt = acc === 'confirmar' ? 'La v' + v + ' de ' + corto(a) + ' pasa a la versión publicada (main). Cloudflare la publica en 1-2 minutos y después tocas 🚀 Liberar.'
+      : 'Se descarta lo que está en pruebas (v' + v + ') de ' + corto(a) + '. La versión publicada no cambia.';
+    if (!(await confirmar(txt, acc === 'confirmar' ? '✅ Confirmar' : '↩️ Deshacer'))) return;
+    e.pBusy = acc; pintarTarjeta(a);
+    try {
+      await rpcDe(A.sb, 'cm_pruebas', { p_repo: a.repo, p_accion: acc });
+      toast(corto(a) + (acc === 'confirmar' ? ': v' + v + ' pasó a main. En unos minutos aparece 🚀 Liberar (toca ↻).' : ': pruebas descartada.'));
+      e.prueba = null;
+    } catch (x) {
+      if (/token de GitHub/i.test(x.message)) { toast('Primero guarda el token de GitHub'); tokenGitHub(); }
+      else toast(corto(a) + ': ' + (/Could not find|PGRST202/i.test(x.message) ? 'actualiza la base del Centro de Mando (⚡ Actualizar base ahora).' : x.message));
+    }
+    e.pBusy = null; pintarTarjeta(a);
+    setTimeout(() => cargar(a), 4000);
+  }
+  async function tokenGitHub() {
+    let tiene = false; try { tiene = (await rpcDe(A.sb, 'cm_github')).token; } catch (x) { /* base sin la función aún */ }
+    const d = modal('<h2 style="margin:0 0 6px">🔑 Token de GitHub</h2>' +
+      '<p class="sub">Para ✅ Confirmar y ↩️ Deshacer. ' + (tiene ? 'Ya hay uno guardado; pega otro para cambiarlo o deja vacío para borrarlo.' : 'Aún no hay uno guardado.') + '</p>' +
+      '<p class="sub">GitHub → foto → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token. ' +
+      'Resource owner: CodeFixService · Repository access: All repositories · Permissions → Contents: Read and write. Copia el token (empieza con github_pat_).</p>' +
+      '<input id="ghT" type="password" placeholder="github_pat_…" autocomplete="off" style="width:100%">' +
+      '<div class="btns" style="margin-top:12px"><button class="ghost" data-no type="button">Cancelar</button><button data-si type="button">Guardar</button></div>');
+    d.querySelector('[data-no]').onclick = () => d.close();
+    d.querySelector('[data-si]').onclick = async () => {
+      try { const r = await rpcDe(A.sb, 'cm_github_guardar', { p_token: d.querySelector('#ghT').value }); toast(r.token ? 'Token guardado 🔑' : 'Token borrado'); d.close(); }
+      catch (x) { toast(x.message); }
+    };
+  }
   // Respaldo y limpieza (funciones cfx_*, iguales en las 7 apps): Excel del admin, lo que se puede borrar y tablas sobrantes.
   const nf = (x) => /Could not find|does not exist|PGRST202/i.test(x.message) ? 'La base de esta app aún no tiene esta función: se actualiza sola en máx. 10 minutos.' : x.message;
   async function respaldar(a) {
@@ -291,14 +328,16 @@
   }
   function render(el) {
     raiz = el;
-    el.innerHTML = '<div class="titulo-v"><h2>Mis aplicaciones</h2><button type="button" class="small ghost" id="appsTodo">' + A.ico('refrescar', 15) + ' Revisar todas</button></div>' +
-      '<p class="sub">La base de cada app se actualiza sola. Cuando aparezca 🧪 Probar, ábrela y revisa los cambios; si está bien, se pasa a main y tocas 🚀 Liberar (o Liberar todo): a sus usuarios se les actualiza sola.</p>' +
+    el.innerHTML = '<div class="titulo-v"><h2>Mis aplicaciones</h2><div class="btns-s"><button type="button" class="small ghost" id="appsGh">🔑 GitHub</button><button type="button" class="small ghost" id="appsTodo">' + A.ico('refrescar', 15) + ' Revisar todas</button></div></div>' +
+      '<p class="sub">La base de cada app se actualiza sola. Cuando aparezca 🧪 Probar, ábrela y revisa los cambios: si está bien, ✅ Confirmar y luego 🚀 Liberar; si no, ↩️ Deshacer (o Liberar todo): a sus usuarios se les actualiza sola.</p>' +
       '<div id="appsCab"></div>' + APPS.map((a) => '<div class="card app-card" data-app="' + a.id + '"></div>').join('');
     el.querySelector('#appsTodo').onclick = () => APPS.forEach(cargar);
+    el.querySelector('#appsGh').onclick = tokenGitHub;
     el.onclick = (ev) => {
       const b = ev.target.closest('[data-a]'), c = ev.target.closest('[data-app]'); if (!b || !c) return;
       const a = APPS.find((x) => x.id === c.dataset.app), act = b.dataset.a;
-      if (act === 'probar') return;  // es un link: abre la vista previa de la rama pruebas
+      if (act === 'probar') { try { localStorage.setItem(PROBO(a), String(E[a.id].prueba.version)); } catch (x) { /* sin guardar */ } setTimeout(() => pintarTarjeta(a), 300); return; }
+      if (act === 'pconf' || act === 'pdes') return accionPrueba(a, act === 'pconf' ? 'confirmar' : 'deshacer');
       if (act === 'lib') liberar(a);
       else if (act === 'bd') actualizarBase(a);
       else if (act === 'con') conectar(a);
