@@ -23,6 +23,13 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
       ok(!an.g && !an.s && an.h && !an.k && an.b === 0, app + ': anon sin funciones de admin y buckets públicos con límite ' + JSON.stringify(an));
       ok(await p.evaluate(() => fetch(document.querySelector('script[src*="humano.js"]').src).then((r) => r.text()).then((x) => /recover\|otp\|resend/.test(x))), app + ': Turnstile también al recuperar la contraseña');
       ok(await p.evaluate(() => !!window.CFX_CARGA && !!document.querySelector('style') && typeof fetch === 'function'), app + ': carga unificada activa');
+      // G8: los errores de JS se anotan en la base (cfx_error_anotar, sin cuenta) y el ping anti-pausa responde.
+      await p.evaluate(() => { window.CFX_ERRORES_LOCAL = true; CFX_CARGA.anotarError('prueba G8 error', '/x.js:1:1'); setTimeout(() => { throw new Error('G8 lanzado'); }, 0); });
+      await p.waitForTimeout(1500);
+      const pg = await p.evaluate(() => { for (const k of Object.keys(window)) if (/_CONFIG$/.test(k) && window[k] && window[k].SUPABASE_URL) { const c = window[k];
+        return fetch(c.SUPABASE_URL + '/rest/v1/rpc/cfx_ping', { method: 'POST', headers: { apikey: c.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }, body: '{}' }).then((r) => r.json()); } });
+      const [er] = await t.sim.su("select count(*) filter (where mensaje = 'prueba G8 error')::int a, count(*) filter (where mensaje like '%G8 lanzado%')::int b, (select count(*) from cfx_salud where clave = 'ping')::int c, has_function_privilege('anon', 'public.cfx_salud()', 'execute') s from cfx_errores");
+      ok(er.a === 1 && er.b === 1 && er.c === 1 && !er.s && pg === 'ok', app + ': errores anotados y ping anti-pausa ' + JSON.stringify(er));
       // La barra aparece con una consulta lenta y se va al terminar.
       const barra = await p.evaluate(async () => { CFX_CARGA.barra(true); await new Promise((r) => setTimeout(r, 400)); const on = document.querySelector('.cfx-carga-b.on') !== null; CFX_CARGA.barra(false); return on && !document.querySelector('.cfx-carga-b.on'); });
       ok(barra, app + ': barra de carga aparece y se va');
@@ -240,11 +247,19 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await p.click('[data-s=humano]'); await p.waitForTimeout(1000);
         await p.uncheck('#huTodas'); await p.fill('#huK', '0x4AAAAAAAprueba'); await p.fill('#huS', '0x4AAAAAAAsecreto'); await p.click('#huG'); await p.waitForTimeout(1500);
         const [hs] = await t.sim.su("select (select valor from cfx_secretos where clave = 'turnstile') s, public.cfx_humano() h");
+        // G8: Control → 🩺 Salud muestra ping, respaldo y errores, y se borran.
+        await t.sim.su("select public.cfx_salud_marca('respaldo', '{\"mb\": 1.5, \"tablas\": 40}')");
+        await p.click('[data-s=salud]'); await p.waitForTimeout(1500);
+        const sl = await p.evaluate(() => document.getElementById('ctlCuerpo').textContent);
+        await t.foto('control-salud');
+        await p.click('#ctlCuerpo [data-er]:not([data-er=todos])'); await p.waitForTimeout(1200);
+        const [sb] = await t.sim.su("select count(*)::int n from cfx_errores");
+        ok(/Salud de/.test(sl) && /Ping anti-pausa/.test(sl) && /1.5 MB/.test(sl) && /prueba G8 error/.test(sl) && sb.n === 1, 'CM: Control → Salud ' + JSON.stringify(sb));
         ok(/Seguridad de la app/.test(sg) && /Tablas sin reglas \(RLS\): ninguna/.test(sg) && hs.s === '0x4AAAAAAAsecreto' && hs.h.invitados === true && !('secreto' in hs.h), 'CM: Control → Seguridad y secret key ' + JSON.stringify(hs.h));
         ok(copia.cuenta.email === 'titular@x.cl' && copia.consentimientos.ofertas === true && Object.keys(copia.datos).length > 0 && /Corregir un dato/.test(ul) && vio &&
           dd.c === 'true' && dd.r === 'respondida' && dd.po === 1 && dd.b >= 1 && dd.n === 1, 'Mis datos y privacidad + Control → Datos ' + JSON.stringify([Object.keys(copia.datos), dd]));
       }
-      const e = t.errores.filter((x) => !/404|Failed to load resource|net::|Sin permiso para vender/.test(x));
+      const e = t.errores.filter((x) => !/404|Failed to load resource|net::|Sin permiso para vender|G8 lanzado/.test(x));
       ok(!e.length, app + ': sin errores ' + e.join(' | ').slice(0, 200));
     } catch (x) { fallas++; console.log(x.message); await t.foto(app + '-central-error'); }
     await t.cerrar();

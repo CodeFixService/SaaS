@@ -455,3 +455,18 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
   `cfx_humano()` dice `invitados` = hay secret. humano.js agrega `p_humano` a las RPC de `INVITADO` (hoy solo `crear_pedido_invitado`); `cfx_humano_ok(token)` lo revisa con
   challenges.cloudflare.com/turnstile/v0/siteverify (si Cloudflare no responde, deja pasar). Para sumar otra app (ej. Barbería reservar_invitado): agregar `p_humano text default null`
   (drop de la firma vieja), llamar `cfx_humano_ok` y sumarla a `INVITADO`.
+
+## GRUPO 8 · Respaldo pg_dump + ping anti-pausa + monitoreo de errores · núcleo 2.45 (07/11/2026)
+- **Versiones**: CM 4.64 (bd 4.16) · Billetera 1.21.41 (27) · Órbita 5.79 (5.27) · Barbería 2.63 · BiciTaller 2.64 (2.15) · Estaciona 2.14.43 (20) · Cerebro 1.48 (1.11).
+- **SQL (nucleo/sql/salud.sql, antes de seguridad.sql)**: `cfx_errores` (agrupado por firma md5(mensaje|1ª línea de dónde), `veces`, máx. 300 filas, 30 días) y `cfx_salud` (clave 'ping' / 'respaldo').
+  `cfx_error_anotar(mensaje, donde, pagina, navegador, version)` y `cfx_ping()` abiertas a anon (sin Turnstile: no crean cuentas ni avisan, con tope).
+  `cfx_salud_marca(clave, jsonb)` solo la base (la llama respaldo.yml con la conexión). Admin: `cfx_salud()` y `cfx_errores_borrar(id|null)`.
+- **carga.js**: escucha `error` y `unhandledrejection` → POST a rpc/cfx_error_anotar con la URL/anon de `window.*_CONFIG` (y su VERSION si tiene). Máx. 5 por apertura, sin repetir,
+  ignora ruido (sin internet, extensiones, ResizeObserver, "Script error."). En localhost no manda salvo `window.CFX_ERRORES_LOCAL = true`. API `CFX_CARGA.anotarError(msg, donde)`.
+- **CM → Control → 🩺 Salud** (por app): último ping, último respaldo (MB), errores 24 h y la lista con Borrar / Borrar todos.
+- **SaaS/.github/workflows/salud.yml**: cada día 11:23 UTC llama cfx_ping() en las 7 (nucleo/proyectos.json, lo escribe sincronizar.py paso 8). Falla → correo de GitHub.
+  (Billetera mantiene su ping.yml viejo; se puede borrar.)
+- **SaaS/.github/workflows/respaldo.yml**: cada día 07:41 UTC, pg_dump 17 (-Fc; public, privado, auth, storage, cron) por app, cifrado gpg AES256 con `RESPALDO_CLAVE`,
+  artefacto 14 días. Secretos `BD_SAAS, BD_EMPRENDEDOR, BD_APLICACIONES, BD_BARBERIA, BD_TALLER, BD_ESTACIONAMIENTO, BD_CONTENIDO` = cadena **Session pooler** (la directa es IPv6).
+  Falta secreto → se salta con aviso. Restaurar: `gpg -d X.dump.gpg > X.dump && pg_restore --no-owner --no-acl -d "<cadena>" X.dump`.
+- Prueba: central.js (las 7) anota un error a mano y uno lanzado, llama cfx_ping; CM → Control → Salud muestra y borra.

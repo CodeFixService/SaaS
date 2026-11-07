@@ -11,6 +11,7 @@ Hace en cada repositorio:
   6. SQL común (nucleo/sql/*.sql: pagos, administración e inventario): lo pone entre las marcas "-- >>> CFX núcleo" y "-- <<< CFX núcleo"
      de cada instalar.sql (BiciTaller: schema.sql y luego node supabase/generar.mjs). <CHK> = cómo exige ser admin cada app.
   7. Copia _headers (encabezados de seguridad y caché de Cloudflare) a la raíz.
+  8. Escribe nucleo/proyectos.json (URL y clave anon públicas de cada app): lo usan salud.yml y respaldo.yml de GitHub Actions.
 No toca nada más: ni la base de datos, ni la lógica de cada app. Se puede correr las veces que quieras.
 """
 import json, os, re, shutil, subprocess, sys
@@ -103,7 +104,7 @@ def sql_comun(repo, nombre):
         print('  ⚠️ ', nombre, 'no tiene las marcas del SQL común en', archivo)
         return
     i, j = s.index(INI), s.index(FIN)
-    comun = ''.join(open(os.path.join(AQUI, 'sql', f), encoding='utf-8').read() for f in ('pagos.sql', 'admin.sql', 'ayuda.sql', 'legal.sql', 'referidos.sql', 'socios.sql', 'inventario.sql', 'seguridad.sql'))
+    comun = ''.join(open(os.path.join(AQUI, 'sql', f), encoding='utf-8').read() for f in ('pagos.sql', 'admin.sql', 'ayuda.sql', 'legal.sql', 'referidos.sql', 'socios.sql', 'inventario.sql', 'salud.sql', 'seguridad.sql'))
     tablas = sorted(set(TABLA.findall(s[:i] + s[j:])) | set(TABLA.findall(comun)))
     comun = comun.replace('<CHK>', chk).replace('<LISTA>', "array['" + "', '".join(tablas) + "']")
     nuevo = s[:i] + INI + '\n' + comun + s[j:]
@@ -113,8 +114,12 @@ def sql_comun(repo, nombre):
         subprocess.check_call(['node', os.path.join(repo, 'supabase', 'generar.mjs')], stdout=subprocess.DEVNULL)
 
 
+CONF = re.compile(r"SUPABASE_URL:\s*'([^']+)'[\s\S]*?SUPABASE_ANON_KEY:\s*'([^']+)'")
+
+
 def main():
     base = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(AQUI))
+    proyectos = {}
     for repo, (js, css, sw) in APPS.items():
         r = os.path.join(base, repo)
         if not os.path.isdir(r):
@@ -133,7 +138,12 @@ def main():
         sql_comun(r, repo)
         insignia(r)
         json.dump({'nucleo': VERSION}, open(os.path.join(r, 'nucleo.json'), 'w'))
+        m = CONF.search(open(os.path.join(r, js, 'config.js'), encoding='utf-8').read()) if os.path.exists(os.path.join(r, js, 'config.js')) else None
+        if m:
+            proyectos[repo] = {'url': m.group(1), 'anon': m.group(2)}
         print('✓', repo, '· núcleo', VERSION)
+    if len(proyectos) == len(APPS):
+        json.dump(proyectos, open(os.path.join(AQUI, 'proyectos.json'), 'w'), indent=1)
 
 
 if __name__ == '__main__':

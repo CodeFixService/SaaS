@@ -6,7 +6,7 @@
   const A = global.App, { esc, toast, modal, confirmar } = A;
   const M = () => global.MisApps;
   let raiz = null, actual = 'cm', seccion = 'avisar';
-  const SECC = [['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['push', '🔔 Notificaciones'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['registro', '📜 Registro']];
+  const SECC = [['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['push', '🔔 Notificaciones'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['salud', '🩺 Salud'], ['registro', '📜 Registro']];
   // Nombres legibles de las claves de los planes (las demás se muestran tal cual).
   const NOMBRE = { productos: 'Productos', clientes: 'Clientes', fichas: 'Fichas publicadas', equipo: 'Equipo', pedidos_mes: 'Pedidos al mes', respuestas: 'Respuestas rápidas',
     contactos: 'Contactos', favoritos: 'Favoritos', mensajes_seguidos: 'Mensajes seguidos', barberos: 'Barberos', servicios: 'Servicios', ofertas: 'Ofertas',
@@ -177,6 +177,26 @@
       '<p class="sub">Son las de la vitrina, reservas y pedidos sin cuenta. Las de administrador ya no se pueden llamar sin cuenta.</p></details></div>';
   }
 
+  // 🩺 Salud (G8): último ping anti-pausa y respaldo (GitHub Actions) y los errores que tuvo la app en los teléfonos.
+  async function salud() {
+    let s;
+    try { s = await rpc('cfx_salud'); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
+    const dias = (t) => (t ? (Date.now() - new Date(t)) / 864e5 : 99), r = s.respaldo || null;
+    caja().innerHTML = '<div class="card"><h2>Salud de ' + esc(app().nombre) + '</h2>' +
+      '<p>' + (dias(s.ping) < 3 ? '✅' : '⚠️') + ' Ping anti-pausa: ' + (s.ping ? A.hace(s.ping) : 'nunca (revisa GitHub → SaaS → Actions → Salud)') + '</p>' +
+      '<p>' + (r && dias(r.cuando) < 2 ? '✅' : '⚠️') + ' Respaldo: ' + (r ? A.hace(r.cuando) + ' · ' + esc(r.mb) + ' MB' : 'nunca (falta su secreto en GitHub → SaaS → Settings → Secrets)') + '</p>' +
+      '<p>' + (s.errores_24h ? '⚠️ ' + s.errores_24h : '✅ 0') + ' errores en las últimas 24 h</p></div>' +
+      '<div class="card"><div class="fila"><h2 class="grow">Errores</h2>' + (s.errores.length ? '<button type="button" class="small" data-er="todos">Borrar todos</button>' : '') + '</div>' +
+      (s.errores.map((e) => '<div style="padding:6px 0;border-top:1px solid var(--line)"><div class="fila"><b class="grow">' + esc(e.mensaje) + '</b><button type="button" class="small ghost" data-er="' + e.id + '">Borrar</button></div>' +
+        '<div class="sub">' + (e.veces === 1 ? '1 vez' : e.veces + ' veces') + ' · ' + A.hace(e.ultimo) + ' · ' + esc(e.pagina) + (e.version ? ' · v' + esc(e.version) : '') + ' · ' + esc(e.navegador) + (e.con_cuenta ? ' · con cuenta' : '') + '</div>' +
+        '<details><summary class="sub">Dónde</summary><pre class="sub" style="white-space:pre-wrap;font-size:11px">' + esc(e.donde) + '</pre></details></div>').join('') || '<p class="empty">Sin errores 🎉</p>') + '</div>';
+    caja().onclick = async (ev) => {
+      const b = ev.target.closest('[data-er]'); if (!b) return;
+      if (b.dataset.er === 'todos' && !(await confirmar('Se borran todos los errores anotados de esta app.', 'Borrar'))) return;
+      try { await rpc('cfx_errores_borrar', { p_id: b.dataset.er === 'todos' ? null : Number(b.dataset.er) }); toast('Borrado'); salud(); } catch (x) { toast(nf(x)); }
+    };
+  }
+
   async function registro() {
     let L = [];
     try { L = await rpc('cfx_registro_lista', { p_limite: 200 }); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
@@ -287,7 +307,7 @@
     };
   }
 
-  const F = { avisar, planes, textos, keys, cupones, verif, humano, push, referidos, socios, datos, seguridad, registro };
+  const F = { avisar, planes, textos, keys, cupones, verif, humano, push, referidos, socios, datos, seguridad, salud, registro };
   // Referidos: quién invitó a quién (con qué cuenta), ranking, premio automático y premio a mano (días + sticker).
   const STICKERS = ['🏆 ¡Eres un crack invitando!', '🚀 ¡Vas volando! Gracias por recomendarnos', '💪 ¡Sigue así, vas muy bien!', '🌟 ¡Gracias por correr la voz!'];
   async function referidos() {

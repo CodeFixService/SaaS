@@ -1,0 +1,37 @@
+name: Salud (ping anti-pausa de las 7 bases)
+
+# El plan gratis de Supabase pausa la base tras 7 días sin uso. Esto llama cfx_ping() en las 7 apps cada día
+# (URL y clave anon públicas en nucleo/proyectos.json, las escribe sincronizar.py). Si alguna falla, el job queda en rojo
+# y GitHub te avisa por correo. El último ping se ve en Centro de Mando → Control → 🩺 Salud.
+on:
+  schedule:
+    - cron: '23 11 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: nucleo/proyectos.json
+          sparse-checkout-cone-mode: false
+      - name: Llamar a cfx_ping() en cada app
+        run: |
+          mal=0
+          for app in $(jq -r 'keys[]' nucleo/proyectos.json); do
+            url=$(jq -r --arg a "$app" '.[$a].url' nucleo/proyectos.json); key=$(jq -r --arg a "$app" '.[$a].anon' nucleo/proyectos.json)
+            code=000
+            for i in 1 2 3; do
+              code=$(curl -s -o /tmp/r.txt -w '%{http_code}' --max-time 60 -X POST "$url/rest/v1/rpc/cfx_ping" \
+                -H "apikey: $key" -H "Authorization: Bearer $key" -H 'Content-Type: application/json' -d '{}') || true
+              [ "$code" = "200" ] && break; sleep 20
+            done
+            echo "$app → $code $(head -c 200 /tmp/r.txt)"
+            echo "- $app: $code" >> "$GITHUB_STEP_SUMMARY"
+            [ "$code" = "200" ] || mal=1
+          done
+          exit $mal

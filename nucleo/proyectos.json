@@ -1,0 +1,30 @@
+{
+ "saas": {
+  "url": "https://vqevujjraisrcoirswuq.supabase.co",
+  "anon": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxZXZ1ampyYWlzcmNvaXJzd3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzMzk3NzMsImV4cCI6MjEwNzkxNTc3M30.XHeUtKmMJ5sSMCeGCzYnsYS3xQwPYrDwuylw3p7ICFk"
+ },
+ "emprendedor": {
+  "url": "https://zbgfvxsqajtixjzxoxeu.supabase.co",
+  "anon": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpiZ2Z2eHNxYWp0aXhqenhveGV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3NDQ0NzUsImV4cCI6MjEwNzMyMDQ3NX0._JyVta9bPzX56iHb-e9lcdy6-NTm16WGaqEZAGbszGE"
+ },
+ "Aplicaciones": {
+  "url": "https://gilsamacgappycibcqhq.supabase.co",
+  "anon": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpbHNhbWFjZ2FwcHljaWJjcWhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NDUzMzgsImV4cCI6MjEwNzEyMTMzOH0.VtdaNS1_qc8jxr9ScW1C84yMeA88HgmJVlyHwQg8dV4"
+ },
+ "barberia": {
+  "url": "https://gxlabxuttnxvzkucckef.supabase.co",
+  "anon": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4bGFieHV0dG54dnprdWNja2VmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3NzA4MTYsImV4cCI6MjEwNzM0NjgxNn0.u4fRLUSkYwIN9dWz5CSupyWZy83NX9NtLZio9mFfO74"
+ },
+ "taller": {
+  "url": "https://iwvjthcmufirbnotgixi.supabase.co",
+  "anon": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3dmp0aGNtdWZpcmJub3RnaXhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIwMDU1MjMsImV4cCI6MjEwNzU4MTUyM30.54Hc89HlUejofX3knvL4nXDNCphsrZeQG7m50jEIlfw"
+ },
+ "estacionamiento": {
+  "url": "https://wphxtspicejywwzlbuux.supabase.co",
+  "anon": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndwaHh0c3BpY2VqeXd3emxidXV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MjU4OTEsImV4cCI6MjEwNzQwMTg5MX0.coQrJqkMbwHdf-E9IgpQ97T4SHAI8LKao3zZAgcZsko"
+ },
+ "contenido": {
+  "url": "https://vndqseptmymgqyxumbqy.supabase.co",
+  "anon": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuZHFzZXB0bXltZ3F5eHVtYnF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyMTIxMjEsImV4cCI6MjEwODc4ODEyMX0.kJKU63-4heUrV7tUtpmDTpfXJvBWp_wgwOyEF5-DO78"
+ }
+}

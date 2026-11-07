@@ -1,0 +1,66 @@
+name: Respaldo diario (pg_dump de las 7 bases)
+
+# Copia completa de cada base (public, privado, auth, storage, cron), cifrada con RESPALDO_CLAVE y guardada 14 días
+# como artefacto de esta ejecución (Actions → la ejecución → Artifacts). Secretos en Settings → Secrets and variables → Actions:
+#   RESPALDO_CLAVE            una frase larga (guárdala también fuera de GitHub: sin ella no se puede abrir el respaldo)
+#   BD_SAAS, BD_EMPRENDEDOR, BD_APLICACIONES, BD_BARBERIA, BD_TALLER, BD_ESTACIONAMIENTO, BD_CONTENIDO
+#     = cadena "Session pooler" de cada proyecto (Supabase → Connect → Session pooler, con la clave de la base puesta).
+#       La directa (db.xxx.supabase.co) no sirve: es solo IPv6 y GitHub no tiene IPv6.
+# Si falta el secreto de una app, esa app se salta (aviso amarillo). Al terminar anota el respaldo en la base → CM → Control → 🩺 Salud.
+# Restaurar: gpg -d app.dump.gpg > app.dump && pg_restore --no-owner --no-acl -d "<cadena de la base nueva>" app.dump
+on:
+  schedule:
+    - cron: '41 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  respaldo:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [SAAS, EMPRENDEDOR, APLICACIONES, BARBERIA, TALLER, ESTACIONAMIENTO, CONTENIDO]
+    env:
+      BD: ${{ secrets[format('BD_{0}', matrix.app)] }}
+      CLAVE: ${{ secrets.RESPALDO_CLAVE }}
+    steps:
+      - name: Revisar secretos
+        id: s
+        run: |
+          if [ -z "$BD" ] || [ -z "$CLAVE" ]; then echo "::warning::Falta BD_${{ matrix.app }} o RESPALDO_CLAVE: se salta"; echo "ok=no" >> "$GITHUB_OUTPUT"; else echo "ok=si" >> "$GITHUB_OUTPUT"; fi
+      - name: Instalar pg_dump 17
+        if: steps.s.outputs.ok == 'si'
+        run: |
+          sudo apt-get install -y -q postgresql-common >/dev/null
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y >/dev/null
+          sudo apt-get install -y -q postgresql-client-17 >/dev/null
+      - name: pg_dump + cifrar
+        if: steps.s.outputs.ok == 'si'
+        run: |
+          set -o pipefail
+          f="${{ matrix.app }}-$(date -u +%Y%m%d).dump"
+          for i in 1 2 3; do
+            /usr/lib/postgresql/17/bin/pg_dump "$BD" -Fc -Z 9 -n public -n privado -n auth -n storage -n cron -f "$f" && break
+            echo "intento $i falló"; sleep 30; [ $i = 3 ] && exit 1
+          done
+          tablas=$(/usr/lib/postgresql/17/bin/pg_restore -l "$f" | grep -c 'TABLE DATA' || true)
+          [ "$tablas" -gt 0 ] || { echo "::error::El respaldo salió sin datos"; exit 1; }
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$CLAVE" --symmetric --cipher-algo AES256 -o "$f.gpg" "$f"
+          mb=$(awk "BEGIN{printf \"%.2f\", $(stat -c%s "$f")/1048576}")
+          rm -f "$f"; echo "F=$f.gpg" >> "$GITHUB_ENV"; echo "MB=$mb" >> "$GITHUB_ENV"; echo "TABLAS=$tablas" >> "$GITHUB_ENV"
+          echo "- ${{ matrix.app }}: $mb MB · $tablas tablas" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: steps.s.outputs.ok == 'si'
+        with:
+          name: respaldo-${{ matrix.app }}
+          path: ${{ env.F }}
+          retention-days: 14
+          compression-level: 0
+      - name: Anotar en la base (CM → Control → Salud)
+        if: steps.s.outputs.ok == 'si'
+        run: |
+          /usr/lib/postgresql/17/bin/psql "$BD" -v ON_ERROR_STOP=1 -qtc "select public.cfx_salud_marca('respaldo', jsonb_build_object('mb', $MB, 'tablas', $TABLAS, 'run', '${{ github.run_id }}'))" \
+            || echo "::warning::La base aún no tiene cfx_salud_marca (núcleo 2.45): corre select public.auto_actualizar();"
