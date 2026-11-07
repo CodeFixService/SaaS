@@ -138,10 +138,10 @@
       ' · Núcleo ' + (e.nucleo ? 'v' + esc(e.nucleo) : '—') + (e.nucleo && NUCLEO && e.nucleo !== NUCLEO ? ' <span class="pill warn">falta sincronizar</span>' : '') + '</p></div></div>' +
       '<div style="margin:8px 0">' + est + '</div>' +
       (e.error ? '<p class="sub warn">' + esc(e.error) + '</p>' : '') +
-      (e.bdMsg && s.faltaBd ? '<p class="sub' + (e.bdMal ? ' warn' : '') + '">' + esc(e.bdMsg) + '</p>' : '') +
+      (e.bdMsg && (s.faltaBd || e.bdManual) ? '<p class="sub' + (e.bdMal ? ' warn' : '') + '">' + esc(e.bdMsg) + '</p>' : '') +
       '<div class="btns-s">' +
         (a.liberar && e.conectado ? '<button type="button" class="small" data-a="lib"' + (s.lista && !e.liberando ? '' : ' disabled') + '>' + (e.liberando ? 'Liberando…' : s.alDia ? A.ico('check', 15) + ' Liberada' : A.ico('cohete', 15) + ' Liberar v' + esc(e.pub || '?')) + '</button>' : '') +
-        (s.faltaBd && e.conectado ? '<button type="button" class="small" data-a="bd"' + (e.bdProg ? ' disabled' : '') + '>' + (e.bdProg ? 'Actualizando la base…' : '⚡ Actualizar base ahora') + '</button>' : '') +
+        (e.conectado ? '<button type="button" class="small' + (s.faltaBd ? '' : ' ghost') + '" data-a="bd" title="Corre auto_actualizar() en la base de esta app"' + (e.bdProg ? ' disabled' : '') + '>' + (e.bdProg ? 'Actualizando la base…' : '⚡ Actualizar base ahora') + '</button>' : '') +
         (!a.propia && e.url ? (e.conectado ? '<button type="button" class="small ghost" data-a="salir">Desconectar</button>' : '<button type="button" class="small" data-a="con">' + A.ico('enchufe', 15) + ' Conectar</button>') : '') +
         '<button type="button" class="small ghost" data-a="rec" aria-label="Revisar">' + A.ico('refrescar', 15) + '</button>' +
       '</div>';
@@ -203,7 +203,7 @@
   }
   async function actualizarBase(a) {
     const e = E[a.id], c = cliente(a);
-    e.bdProg = true; pintarTarjeta(a);
+    e.bdProg = true; e.bdManual = true; pintarTarjeta(a);
     try {
       const r = await aTiempo(rpcDe(c, 'cfx_actualizar_ahora', { p_programar: true }), 15000);
       if (r.programada !== 'ok') { e.bdMal = true; e.bdMsg = 'No se pudo programar (' + r.programada + '). En Supabase → Database → Extensions activa pg_cron y http, y pega el instalar-corto.sql de la app.'; }
@@ -213,7 +213,7 @@
         await new Promise((ok) => setTimeout(ok, 75000));
         await cargar(a);
         if (estadoDe(a).faltaBd) { const d = causaBd(await rpcDe(c, 'cfx_actualizar_ahora', { p_programar: false })); e.bdMal = d.mal; e.bdMsg = d.t; }
-        else toast(corto(a) + ': base al día ✓');
+        else { e.bdMal = false; e.bdMsg = 'Base al día ✓ (auto_actualizar corrió).'; toast(corto(a) + ': base al día ✓'); }
       }
     } catch (x) { e.bdMal = true; e.bdMsg = /Could not find|does not exist|PGRST202/i.test(x.message) ? 'Esta base aún no tiene "Actualizar ahora": pega una vez el instalar-corto.sql de la app en su Supabase.' : x.message; }
     e.bdProg = false; pintarTarjeta(a);

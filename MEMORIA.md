@@ -470,3 +470,11 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
   artefacto 14 días. Secretos `CENTRO_DE_MANDO, BILLETERA, ORBITA, BARBERIA, BICITALLER, ESTACIONA, CEREBRO` = cadena **Session pooler** (la directa es IPv6).
   Falta secreto → se salta con aviso. Restaurar: `gpg -d X.dump.gpg > X.dump && pg_restore --no-owner --no-acl -d "<cadena>" X.dump`.
 - Prueba: central.js (las 7) anota un error a mano y uno lanzado, llama cfx_ping; CM → Control → Salud muestra y borra.
+
+## Cierre G8 + CM 4.65 (07/11/2026)
+- Actions probado: Salud ✅ las 7. Respaldo ✅ 6 (CM 0,13 MB · Billetera 0,62 · Órbita 0,51 · Barbería 0,20 · BiciTaller 0,15 · Estaciona 0,14); CEREBRO sin secreto (se salta).
+  Las de sa-east-1 y Billetera fallaban con aws-0 ("tenant/user not found"): se arreglaron pegando la cadena exacta de Supabase → Connect → Session pooler.
+- CM 4.65: en Mis aplicaciones el botón "⚡ Actualizar base ahora" (cfx_actualizar_ahora → auto_actualizar en máx. 1 min) aparece siempre en cada app conectada, no solo cuando falta base.
+- Ideas de Josué para DESPUÉS de terminar la tienda:
+  · Actualización NUNCA automática: al negocio/cliente le aparece el botón "Actualizar" (como en Billetera) y la app se actualiza solo cuando lo toca.
+  · CM → "Probar": una rama fija de pruebas (ej. `pruebas`) en cada repo; CM muestra el link de la vista previa de esa rama (Cloudflare Pages preview) para probar y luego liberar.
