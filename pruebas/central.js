@@ -126,6 +126,14 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await t.sim.su("insert into public.pedidos (negocio_id, cliente_id, lineas, subtotal, total, entrega, estado) values ($1, $2, '[{\"nombre\":\"Polera\",\"cant\":1,\"precio\":10000,\"subtotal\":10000}]', 10000, 10000, 'retiro', 'recibido')", [tid, cli]);
         await q.evaluate(() => document.dispatchEvent(new Event('visibilitychange'))); await q.waitForTimeout(1500);
         ok(await q.locator('.card.nuevo').count() === 1, 'Órbita: pedido nuevo en vivo en Pedidos');
+        // G10: 🧾 Comprobante del pedido (ítems, total, medio de pago) → WhatsApp al teléfono del cliente.
+        await t.sim.su("update public.pedidos set comprobante_at = now() where negocio_id = $1 and estado = 'recibido'", [tid]);
+        await q.evaluate(() => { window.__abrio = []; window.open = (u) => { window.__abrio.push(u); return null; }; document.dispatchEvent(new Event('visibilitychange')); }); await q.waitForTimeout(1500);
+        await q.locator('.card.nuevo [data-recibo]').first().click(); await q.waitForTimeout(400);
+        const cpP = await q.evaluate(() => { const d = document.querySelector('.cfx-comp'); const r = [d && d.querySelector('pre').textContent]; d.querySelector('#compTel').value = '9 1234 5678';
+          d.querySelector('[data-a=wsp]').click(); return r.concat(window.__abrio[0] || '', !document.querySelector('.cfx-comp')); });
+        ok(/1 × Polera — \$10\.000/.test(cpP[0]) && /TOTAL: \$10\.000/.test(cpP[0]) && /Pago: Transferencia/.test(cpP[0]) && /No es boleta electrónica/.test(cpP[0]) &&
+          /^https:\/\/wa\.me\/56912345678\?text=/.test(cpP[1]) && cpP[2], 'Órbita: comprobante de pedido por WhatsApp ' + JSON.stringify(cpP));
         // Push de pedido abre ESE pedido: el aviso lleva ?p=<id> y la página lo busca y lo marca.
         await t.sim.su("begin; insert into public.pedidos (negocio_id, cliente_id, lineas, subtotal, total, entrega, estado) values ('" + tid + "', '" + cli + "', '[]', 5000, 5000, 'retiro', 'entregado'); select public.notify_user('" + tid + "', 'p', 'p', 'apps/pedidos/'); commit;");
         const [{ pid, url }] = await t.sim.su("select url, substr(url, 17) pid from public.notifications where title = 'p' order by created_at desc limit 1");
@@ -147,7 +155,22 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         const az = await t.sim.su("select stock::int a from public.variantes where clave = 'cam' and nombre = 'Azul'");
         const inv = await q.evaluate(() => document.getElementById('invKpis').textContent);
         ok(tk[0] && tk[1].replace(/\D/g, '') === '9500' && st[0].p === 9 && st[0].r === 4 && az[0].a === 9 && inv.includes('unidades'), 'Órbita: inventario y venta por opción ' + JSON.stringify([tk, st, az, inv]));
+        // G10: 🧾 Comprobante de la venta de Caja (botón tras cobrar y 🧾 en el reporte).
+        await q.evaluate(() => document.querySelector('[data-v=vender]').click()); await q.waitForTimeout(200);
+        const cpC = await q.evaluate(() => { const b = document.getElementById('bComp'); const vis = !b.hidden; b.click(); const d = document.querySelector('.cfx-comp');
+          const r = [vis, d && d.querySelector('pre').textContent]; if (d) d.querySelector('[data-a=x]').click(); return r; });
+        ok(cpC[0] && /1 × Camisa \(Rojo\) — \$9\.500/.test(cpC[1]) && /Pago: Efectivo/.test(cpC[1]) && !/\(Rojo\) \(Rojo\)/.test(cpC[1]), 'Órbita: comprobante de venta en Caja ' + JSON.stringify(cpC));
         await t.foto('inventario', q);
+        // G10: 🔔 Probar aviso en Mi perfil → Avanzado (lo muestra el service worker, vibra y vuelve a sonar).
+        await q.evaluate(() => { window.__notif = null; CodeFixInstalar.pushActiva = async () => true; Object.defineProperty(Notification, 'permission', { get: () => 'granted' });
+          navigator.serviceWorker.getRegistration = async () => ({ scope: location.origin + '/', showNotification: async (ti, o) => { window.__notif = [ti, o]; } }); });
+        await t.sinModales(q); await q.locator('.cfx-av:visible').first().click(); await q.waitForTimeout(500); await q.click('dialog [data-a=perfil]'); await q.waitForTimeout(700);
+        await q.locator('.cfx-hoja-m').first().locator('.cfx-aj > .cfx-fila').nth(2).evaluate((b) => b.click()); await q.waitForTimeout(800);
+        await q.locator('.cfx-hoja-m [data-pf=probar]').click(); await q.waitForTimeout(800);
+        const pa = await q.evaluate(() => window.__notif);
+        ok(pa && /prueba/.test(pa[0]) && pa[1].renotify && pa[1].vibrate && /icons\/icon-192\.png$/.test(pa[1].icon), 'Órbita: 🔔 Probar aviso ' + JSON.stringify(pa));
+        await t.foto('probar-aviso', q);
+        await q.goto(t.base + '/apps/caja/'); await q.waitForTimeout(2500);
         // Equipo con roles: el dueño cambia el rol en Mi equipo; Bodega ve Inventario (sin Vender) y el servidor no la deja vender.
         const eid = '00000000-0000-0000-0000-0000000000eb';
         await t.sim.su('set session_replication_role = replica');

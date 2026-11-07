@@ -82,7 +82,7 @@ self.addEventListener('push', (e) => {
   const conItem = /item=[0-9a-f-]{36}/.test(d.url || '');
   e.waitUntil(self.registration.showNotification(d.title || 'Centro de Mando', {
     body: d.body || '', icon: 'icons/icon-192.png', badge: 'icons/badge.png', tag: d.tag, data: { url: d.url || '/', id: d.tag },
-    renotify: true, requireInteraction: conItem, vibrate: [200, 100, 200],
+    renotify: !!d.tag, requireInteraction: conItem, vibrate: [200, 100, 200],
     actions: conItem ? [{ action: 'hecho', title: '✓ Listo' }, { action: 'mas1h', title: '⏰ 1 hora más' }] : /#nuevo/.test(d.url || '') ? [{ action: 'abrir', title: '✏️ Anotar' }] : []
   }));
 });

@@ -491,3 +491,12 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - index.html: tarjeta "✅ Qué hacer hoy" (hacerHoy: tareas en orden de urgencia con número; según rol del equipo; "🎉 Todo al día"). Botón "❓ Ayuda" en la tarjeta (el ❓ flotante se oculta con la barra): Ver el recorrido · Preguntas frecuentes (7) · Escribir a soporte. Cliente sigue con chat directo.
 - shared/tour.js (propio de Órbita por ahora; pasarlo al núcleo cuando otra app lo use): `CFX_TOUR.iniciar(pasos, {clave, forzar})`, 1ª vez (localStorage cfx:tour:<clave>), espera ventanas abiertas, salta pasos ocultos.
 - Primer ciclo por la rama pruebas de Órbita. central.js: "Órbita: qué hacer hoy + ayuda y recorrido".
+
+## G10 · 🧾 Comprobante de venta + 🔔 push potentes · Órbita 5.81 (bd 5.29) · núcleo 2.46 (07/11/2026)
+- shared/comprobante.js (solo Órbita, en FILES de sw.js): `CFX_COMPROBANTE.abrir({negocio, fecha, numero, cliente, tel, items, descuento, total, medio, entrega})` → hoja con el resumen ("No es boleta electrónica"), teléfono editable, 💬 WhatsApp (wa.me/<tel>?text=; sin teléfono usa navigator.share), 📤 Compartir, 📋 Copiar.
+- Caja: botón "🧾 Comprobante de la venta" tras Cobrar (se oculta al agregar otro producto) y 🧾 en cada venta del reporte. Pedidos: "🧾 Comprobante" en cada pedido.
+- SQL 5.29: `pedidos_tienda` devuelve `medio` ('mercadopago' si mp_pago, 'transferencia' si comprobante_at).
+- Push: sw.js de las 7 con `renotify: !!d.tag` (renotify sin tag hace fallar showNotification) y vibrate; Órbita: avisos con url apps/pedidos/ quedan a la vista (requireInteraction) y vibran más.
+  Órbita enviar/index.ts: `pushConReintento` (TTL 259200, urgency 'high', 2 reintentos en 429/5xx). Se despliega pegando corto.ts en Supabase → Edge Functions → enviar. Las otras 6 apps: mismo cambio en su función cuando les toque (requiere redeploy manual; Barbería ya tenía urgency high).
+- Núcleo ayuda.js: "🔔 Probar aviso" en Mi perfil → Avanzado (visible con avisos activos; showNotification del service worker).
+- central.js: comprobante de pedido por WhatsApp · comprobante de venta en Caja · 🔔 Probar aviso.
