@@ -106,6 +106,22 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         const a5 = await t5(); await q.evaluate(() => { navigator.share = null; window.open = () => null; document.getElementById('hoyCompartir').click(); location.reload(); }); await q.waitForTimeout(3000); const b5 = await t5();
         ok(a5[0] && / de 7$/.test(a5[1]) && parseInt(b5[1]) === parseInt(a5[1]) + 1 && parseFloat(b5[2]) > parseFloat(a5[2]), 'Órbita: tienda en 5 min con barra ' + JSON.stringify([a5, b5]));
         await t.foto('tienda5', q);
+        // G9: recorrido guiado la 1ª vez (se salta y no vuelve), ✅ Qué hacer hoy y ❓ Ayuda con preguntas frecuentes.
+        await t.sinModales(q); await q.waitForTimeout(1700);
+        const tr = await q.evaluate(() => { const c = document.querySelector('.cfx-tour-caja'); if (!c) return [null]; const a = c.querySelector('small').textContent; c.querySelector('[data-t=s]').click();
+          const b = c.querySelector('small').textContent; c.querySelector('[data-t=x]').click(); return [a, b, !document.querySelector('.cfx-tour'), localStorage.getItem('cfx:tour:orbita-inicio')]; });
+        await t.sim.su("insert into public.messages (sender, recipient, body) values ($1, $2, 'Hola, ¿tienen talla M?')", [cli, tid]);
+        await q.reload(); await q.waitForTimeout(3000); await t.sinModales(q); await q.waitForTimeout(1700);
+        const qh = await q.evaluate(() => [!!document.querySelector('.cfx-tour'), document.getElementById('hoyHacerL').textContent]);
+        await q.evaluate(() => document.getElementById('hoyAyuda').click()); await q.waitForTimeout(300);
+        await q.click('.elegir button:has-text("Preguntas frecuentes")'); await q.waitForTimeout(300);
+        const fq = await q.locator('.faq details').count(); await q.click('.faq button[data-x]');
+        await q.evaluate(() => document.getElementById('hoyAyuda').click()); await q.waitForTimeout(300);
+        await q.click('.elegir button:has-text("Ver el recorrido")'); await q.waitForTimeout(500); await t.foto('recorrido', q);
+        const tr2 = await q.evaluate(() => { const c = document.querySelector('.cfx-tour-caja'); const r = !!c && /^1 de/.test(c.querySelector('small').textContent); if (c) c.querySelector('[data-t=x]').click(); return r; });
+        ok(tr[0] && /^1 de 5/.test(tr[0]) && /^2 de/.test(tr[1]) && tr[2] && tr[3] === '1' && !qh[0] && /Responde 1 mensaje/.test(qh[1]) && fq === 7 && tr2,
+          'Órbita: qué hacer hoy + ayuda y recorrido ' + JSON.stringify([tr, qh, fq, tr2]));
+        await t.foto('hoy_hacer', q);
         await q.goto(t.base + '/apps/pedidos/'); await q.waitForTimeout(2500);
         await t.sim.su("insert into public.pedidos (negocio_id, cliente_id, lineas, subtotal, total, entrega, estado) values ($1, $2, '[{\"nombre\":\"Polera\",\"cant\":1,\"precio\":10000,\"subtotal\":10000}]', 10000, 10000, 'retiro', 'recibido')", [tid, cli]);
         await q.evaluate(() => document.dispatchEvent(new Event('visibilitychange'))); await q.waitForTimeout(1500);

@@ -485,3 +485,9 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
   token fine-grained en cfx_secretos 'github' (CM → Apps → 🔑 GitHub). Confirmar = PATCH main→sha de pruebas (si no es fast-forward, POST /merges). Deshacer = pruebas vuelve a main (force).
   SaaS ahora tiene wrangler.jsonc con "previews": {} (Cloudflare Preview command: npx wrangler preview). Link de prueba fijo: https://pruebas-<worker>.juanjosuecastilloloyola.workers.dev/ ✅.
   Sumar una app: wrangler.jsonc con previews + rama pruebas (Claude) · Cloudflare → worker → Configuration → Preview: "Builds for preview branches" ON (Josué).
+
+## Órbita 5.80 (bd 5.28) · G9: E26 ✅ Qué hacer hoy + ❓ ayuda y 🧭 recorrido (07/11/2026)
+- SQL 5.28: `hoy_negocio` suma nuevos, preparando, listos, sin_leer (mensajes), boleta_error (3 días), abierto, vacaciones y pro_dias.
+- index.html: tarjeta "✅ Qué hacer hoy" (hacerHoy: tareas en orden de urgencia con número; según rol del equipo; "🎉 Todo al día"). Botón "❓ Ayuda" en la tarjeta (el ❓ flotante se oculta con la barra): Ver el recorrido · Preguntas frecuentes (7) · Escribir a soporte. Cliente sigue con chat directo.
+- shared/tour.js (propio de Órbita por ahora; pasarlo al núcleo cuando otra app lo use): `CFX_TOUR.iniciar(pasos, {clave, forzar})`, 1ª vez (localStorage cfx:tour:<clave>), espera ventanas abiertas, salta pasos ocultos.
+- Primer ciclo por la rama pruebas de Órbita. central.js: "Órbita: qué hacer hoy + ayuda y recorrido".
