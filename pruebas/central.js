@@ -166,8 +166,7 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await q.evaluate(() => localStorage.setItem('cfx:tour:orbita-inicio', '1')); await q.goto(t.base + '/'); await q.waitForTimeout(3000);
         await q.evaluate(() => { window.__notif = null; CodeFixInstalar.pushActiva = async () => true; Object.defineProperty(Notification, 'permission', { get: () => 'granted' });
           navigator.serviceWorker.getRegistration = async () => ({ scope: location.origin + '/', showNotification: async (ti, o) => { window.__notif = [ti, o]; } }); });
-        await t.sinModales(q); await q.locator('.cfx-av:visible').first().click(); await q.waitForTimeout(500); await q.click('dialog [data-a=perfil]'); await q.waitForTimeout(700);
-        await q.locator('.cfx-hoja-m').first().locator('.cfx-aj > .cfx-fila').nth(2).evaluate((b) => b.click()); await q.waitForTimeout(800);
+        await t.sinModales(q); await q.evaluate(() => CFX_PERFIL.abrir('avanzado')); await q.waitForTimeout(1000);
         await q.locator('.cfx-hoja-m [data-pf=probar]').click(); await q.waitForTimeout(800);
         const pa = await q.evaluate(() => window.__notif);
         ok(pa && /prueba/.test(pa[0]) && pa[1].renotify && pa[1].vibrate && /icons\/icon-192\.png$/.test(pa[1].icon), 'Órbita: 🔔 Probar aviso ' + JSON.stringify(pa));
