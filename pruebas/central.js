@@ -258,6 +258,16 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         ok(/Seguridad de la app/.test(sg) && /Tablas sin reglas \(RLS\): ninguna/.test(sg) && hs.s === '0x4AAAAAAAsecreto' && hs.h.invitados === true && !('secreto' in hs.h), 'CM: Control → Seguridad y secret key ' + JSON.stringify(hs.h));
         ok(copia.cuenta.email === 'titular@x.cl' && copia.consentimientos.ofertas === true && Object.keys(copia.datos).length > 0 && /Corregir un dato/.test(ul) && vio &&
           dd.c === 'true' && dd.r === 'respondida' && dd.po === 1 && dd.b >= 1 && dd.n === 1, 'Mis datos y privacidad + Control → Datos ' + JSON.stringify([Object.keys(copia.datos), dd]));
+        // 🧪 Probar: si la rama "pruebas" de un repo trae una versión más nueva, Mis aplicaciones muestra el link a su vista previa.
+        const DIR = { SaaS: 'saas', Emprendedor: 'emprendedor', Aplicaciones: 'Aplicaciones', Barberia: 'barberia', Taller: 'taller', Estacionamiento: 'estacionamiento', Contenido: 'contenido' };
+        await p.route(/raw\.githubusercontent\.com\/CodeFixService\//, (r) => { const [, repo, rama, ruta] = new URL(r.request().url()).pathname.match(/^\/CodeFixService\/([^/]+)\/([^/]+)\/(.+)$/);
+          if (rama === 'pruebas') return repo === 'Aplicaciones' && ruta === 'version.json' ? r.fulfill({ contentType: 'application/json', body: '{"version":"99.1","notas":"prueba rama"}' }) : r.fulfill({ status: 404, body: '' });
+          const f = '/home/user/' + DIR[repo] + '/' + ruta; return fs.existsSync(f) ? r.fulfill({ body: fs.readFileSync(f) }) : r.fulfill({ status: 404, body: '' }); });
+        await p.goto(t.base + '/admin/#apps'); await p.waitForTimeout(5000); await t.sinModales();
+        const pr = await p.evaluate(() => ({ h: (document.querySelector('[data-app=aplicaciones] [data-a=probar]') || {}).href, t: (document.querySelector('[data-app=aplicaciones] [data-prueba]') || {}).textContent,
+          otras: document.querySelectorAll('[data-a=probar]').length, bd: !!document.querySelector('[data-app=cm] [data-a=bd]') }));
+        await t.foto('apps-probar');
+        ok(pr.h === 'https://pruebas-aplicaciones.juanjosuecastilloloyola.workers.dev/' && /v99\.1/.test(pr.t) && pr.otras === 1 && pr.bd, 'CM: Mis aplicaciones → 🧪 Probar (rama pruebas) y ⚡ Actualizar base siempre ' + JSON.stringify(pr));
       }
       const e = t.errores.filter((x) => !/404|Failed to load resource|net::|Sin permiso para vender|G8 lanzado/.test(x));
       ok(!e.length, app + ': sin errores ' + e.join(' | ').slice(0, 200));

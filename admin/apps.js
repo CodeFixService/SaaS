@@ -5,7 +5,11 @@
 (function (global) {
   'use strict';
   const A = global.App, { esc, toast, modal, confirmar } = A;
-  const RAW = (repo, ruta) => 'https://raw.githubusercontent.com/CodeFixService/' + repo + '/main/' + ruta + '?t=' + Date.now();
+  const RAW = (repo, ruta, rama) => 'https://raw.githubusercontent.com/CodeFixService/' + repo + '/' + (rama || 'main') + '/' + ruta + '?t=' + Date.now();
+  // 🧪 Probar: los cambios nuevos se suben primero a la rama fija "pruebas" de cada repo. Cloudflare Workers Builds la publica en
+  // https://pruebas-<worker>.<cuenta>.workers.dev (vista previa, con la misma base real). Se prueba ahí y después pasa a main → Liberar.
+  const RAMA_PRUEBAS = 'pruebas', CUENTA_WORKERS = 'juanjosuecastilloloyola.workers.dev';
+  const urlPrueba = (a) => 'https://' + RAMA_PRUEBAS + '-' + a.worker + '.' + CUENTA_WORKERS + '/';
   const campo = (o, ruta) => !ruta ? o : ruta.split('.').reduce((x, k) => (x == null ? x : x[k]), o);
 
   // Cómo se lee y se libera la versión en cada app (cada una lo guarda a su manera).
@@ -85,6 +89,8 @@
         fetch(RAW(a.repo, 'version.json'), { cache: 'no-store' }).then((r) => r.json()).catch(() => ({})),
         a.propia ? Promise.resolve('') : fetch(RAW(a.repo, a.cfg), { cache: 'no-store' }).then((r) => r.text()).catch(() => '')]);
       e.pub = String(vj.version || ''); e.notas = String(vj.notas || '');
+      e.prueba = await fetch(RAW(a.repo, 'version.json', RAMA_PRUEBAS), { cache: 'no-store' }).then((r) => r.ok ? r.json() : null).catch(() => null);
+      if (e.prueba && !(e.prueba.version && (!e.pub || menor(e.pub, String(e.prueba.version))))) e.prueba = null;  // rama igual o más vieja que main: nada que probar
       e.nucleo = await fetch(RAW(a.repo, 'nucleo.json'), { cache: 'no-store' }).then((r) => r.json()).then((j) => String(j.nucleo || '')).catch(() => '');
       e.bdPide = vj.bd != null ? String(vj.bd) : a.propia ? String(global.BT_CONFIG.DB_VERSION || '') : ((conf.match(/DB_VERSION\s*:\s*'([^']+)'/) || [])[1] || '');
       if (a.propia) e.url = global.BT_CONFIG.SUPABASE_URL;
@@ -137,9 +143,11 @@
       ' · Base de datos ' + (e.bd ? 'v' + esc(e.bd) : '—') + (e.bdPide && e.bd && s.faltaBd ? ' (pide v' + esc(e.bdPide) + ')' : '') +
       ' · Núcleo ' + (e.nucleo ? 'v' + esc(e.nucleo) : '—') + (e.nucleo && NUCLEO && e.nucleo !== NUCLEO ? ' <span class="pill warn">falta sincronizar</span>' : '') + '</p></div></div>' +
       '<div style="margin:8px 0">' + est + '</div>' +
+      (e.prueba ? '<p class="sub" data-prueba style="margin:0 0 8px">🧪 En pruebas: v' + esc(e.prueba.version) + (e.prueba.notas ? ' · ' + esc(e.prueba.notas) : '') + '</p>' : '') +
       (e.error ? '<p class="sub warn">' + esc(e.error) + '</p>' : '') +
       (e.bdMsg && (s.faltaBd || e.bdManual) ? '<p class="sub' + (e.bdMal ? ' warn' : '') + '">' + esc(e.bdMsg) + '</p>' : '') +
       '<div class="btns-s">' +
+        (e.prueba ? '<a class="btn small" data-a="probar" href="' + urlPrueba(a) + '" target="_blank" rel="noopener">🧪 Probar v' + esc(e.prueba.version) + '</a>' : '') +
         (a.liberar && e.conectado ? '<button type="button" class="small" data-a="lib"' + (s.lista && !e.liberando ? '' : ' disabled') + '>' + (e.liberando ? 'Liberando…' : s.alDia ? A.ico('check', 15) + ' Liberada' : A.ico('cohete', 15) + ' Liberar v' + esc(e.pub || '?')) + '</button>' : '') +
         (e.conectado ? '<button type="button" class="small' + (s.faltaBd ? '' : ' ghost') + '" data-a="bd" title="Corre auto_actualizar() en la base de esta app"' + (e.bdProg ? ' disabled' : '') + '>' + (e.bdProg ? 'Actualizando la base…' : '⚡ Actualizar base ahora') + '</button>' : '') +
         (!a.propia && e.url ? (e.conectado ? '<button type="button" class="small ghost" data-a="salir">Desconectar</button>' : '<button type="button" class="small" data-a="con">' + A.ico('enchufe', 15) + ' Conectar</button>') : '') +
@@ -284,12 +292,13 @@
   function render(el) {
     raiz = el;
     el.innerHTML = '<div class="titulo-v"><h2>Mis aplicaciones</h2><button type="button" class="small ghost" id="appsTodo">' + A.ico('refrescar', 15) + ' Revisar todas</button></div>' +
-      '<p class="sub">La base de cada app se actualiza sola. Cuando una versión nueva esté lista, pruébala y toca 🚀 Liberar (o Liberar todo): a sus usuarios se les actualiza sola.</p>' +
+      '<p class="sub">La base de cada app se actualiza sola. Cuando aparezca 🧪 Probar, ábrela y revisa los cambios; si está bien, se pasa a main y tocas 🚀 Liberar (o Liberar todo): a sus usuarios se les actualiza sola.</p>' +
       '<div id="appsCab"></div>' + APPS.map((a) => '<div class="card app-card" data-app="' + a.id + '"></div>').join('');
     el.querySelector('#appsTodo').onclick = () => APPS.forEach(cargar);
     el.onclick = (ev) => {
       const b = ev.target.closest('[data-a]'), c = ev.target.closest('[data-app]'); if (!b || !c) return;
       const a = APPS.find((x) => x.id === c.dataset.app), act = b.dataset.a;
+      if (act === 'probar') return;  // es un link: abre la vista previa de la rama pruebas
       if (act === 'lib') liberar(a);
       else if (act === 'bd') actualizarBase(a);
       else if (act === 'con') conectar(a);
