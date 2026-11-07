@@ -26,13 +26,12 @@ En **Authentication → Sign In / Providers**:
   cliente tendrá que confirmar su correo antes de entrar.
 
 En **Authentication → URL Configuration** (sirve para "olvidé mi contraseña"):
-- **Site URL**: la dirección donde está la app. Para probar en GitHub Pages: `https://codefixservice.github.io/SaaS/`
-  (después, la de Cloudflare: `https://TU-DOMINIO.pages.dev/`).
-- **Redirect URLs**: agrega `https://codefixservice.github.io/SaaS/**` y, cuando la tengas, `https://TU-DOMINIO.pages.dev/**`.
+- **Site URL**: la dirección donde está la app. `https://saas.juanjosuecastilloloyola.workers.dev/` (Cloudflare Workers).
+- **Redirect URLs**: agrega `https://saas.juanjosuecastilloloyola.workers.dev/**` y `https://pruebas-saas.juanjosuecastilloloyola.workers.dev/**`.
 
 ## 3. Tareas automáticas
 Ya quedan creadas con el paso 1 (cada 5 minutos: libera horas sin pago, recordatorios, vencimientos y limpieza diaria;
-cada minuto: notificaciones al celular). Si alguna vez quieres reinstalarlas solas, usa [`supabase/cron.sql`](../supabase/cron.sql).
+cada minuto: notificaciones al celular). Si alguna vez faltan, vuelve a correr `supabase/instalar.sql`.
 
 ## 4. Función "servidor" (crear cuentas y enviar notificaciones)
 1. Supabase → **Edge Functions** → **Deploy a new function** → **Via Editor**.

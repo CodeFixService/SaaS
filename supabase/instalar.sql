@@ -144,7 +144,7 @@ end $$;
 create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '4.17'::text $$;
+language sql immutable as $$ select '4.18'::text $$;
 create or replace function public.cfg_int(c text) returns int
 language sql stable security definer set search_path = '' as $$
   select (valor #>> '{}')::int from public.config where clave = c
@@ -1101,12 +1101,13 @@ end $$;
 do $$
 begin
   create extension if not exists http with schema extensions;
-  perform cron.unschedule(jobid) from cron.job where jobname in ('cm-auto', 'cf-pedidos');  -- cf-pedidos: tarea vieja (pedidos_tareas ya no existe)
+  perform cron.unschedule(jobid) from cron.job where jobname in ('cm-auto', 'cf-pedidos', 'bt-tareas');  -- cf-pedidos: tarea vieja (pedidos_tareas ya no existe)
   perform cron.schedule('cm-auto', '*/10 * * * *', 'select public.auto_actualizar()');
+  perform cron.schedule('bt-tareas', '*/5 * * * *', 'select public.tareas_periodicas()');  -- antes solo en cron.sql (A4: un solo instalador)
 exception when others then
-  raise notice 'Actualización automática no activada (%). Corre supabase/cron.sql y vuelve a correr este archivo.', sqlerrm;
+  raise notice 'Tareas automáticas no activadas (%). Activa pg_cron en Supabase → Database → Extensions y vuelve a correr este archivo.', sqlerrm;
 end $$;
--- Push de la campanita cada minuto (antes solo venía en cron.sql y había que pegarlo a mano: sin él no llegaban las notificaciones).
+-- Push de la campanita cada minuto (sin él no llegan las notificaciones).
 do $$
 begin
   create extension if not exists pg_net with schema extensions;

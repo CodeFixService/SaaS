@@ -3,7 +3,10 @@
 App web (PWA) multi-negocio para Chile: reservas, catálogo u órdenes según el rubro, abono con comprobante,
 agenda, clientes, calificaciones, promociones, planes Gratis/Premium, socio y panel de súper administrador.
 Resumen corto del proyecto: [`MEMORIA.md`](MEMORIA.md).
-Servidor: **Supabase** (plan gratis). Publicación: **Cloudflare Pages**.
+Servidor: **Supabase** (plan gratis). Publicación: **Cloudflare Workers** (`main` → `https://saas.juanjosuecastilloloyola.workers.dev/`,
+`pruebas` → `https://pruebas-saas.juanjosuecastilloloyola.workers.dev/`).
+Hoy este repo es el **Centro de Mando** (`admin/`) de todas las apps CodeFix y guarda el **núcleo** común (`nucleo/`, se copia a cada app con
+`python3 nucleo/sincronizar.py <carpeta>`). Lista de trabajo: [`PLAN.md`](PLAN.md).
 
 ➡️ Configuración paso a paso: [`docs/CONFIGURAR.md`](docs/CONFIGURAR.md)
 
@@ -67,8 +70,7 @@ cliente/              App del cliente con cuenta
 t/?s=<negocio>         Página pública del negocio: reservar y crear cuenta
 r/?t=<token>          Página de la reserva: pagar, comprobante, cancelar, reagendar, seguir la bici, calificar
 shared/               Estilos, núcleo (sesión, campanita, push, imágenes) y librerías
-supabase/schema.sql   Base de datos completa (tablas, reglas de seguridad y funciones)
-supabase/cron.sql     Tareas automáticas
+supabase/instalar.sql Base de datos completa y tareas automáticas (único instalador; se puede volver a correr)
 supabase/functions/servidor/index.ts   Crear cuentas y enviar push
 ```
 

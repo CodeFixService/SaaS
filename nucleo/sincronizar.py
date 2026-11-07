@@ -3,7 +3,7 @@
 
 Uso:  python3 nucleo/sincronizar.py /ruta/a/los/repos      (carpeta que contiene saas, emprendedor, barberia, …)
 Hace en cada repositorio:
-  1. Copia los scripts de JS (humano y carga en el <head>; iconos, instalar, barra, auto, fotos, voz, respaldo, pagos, verificar, premium, ayuda, datos, vitrina) y tema.css a la carpeta que usa esa app.
+  1. Copia los scripts de JS (seguro, humano y carga en el <head>; iconos, instalar, barra, auto, fotos, voz, respaldo, pagos, verificar, premium, ayuda, datos, vitrina) y tema.css a la carpeta que usa esa app.
   2. Enlaza tema.css en cada página (después del CSS propio) y los scripts al final del <body>, si faltan.
   3. Agrega los archivos a la lista del service worker (para que funcionen sin internet).
   4. Crea icons/badge.png (ícono chico de las notificaciones de Android, insignia.py) si falta o cambió el ícono.
@@ -42,7 +42,7 @@ SQL = {
 }
 INI, FIN = '-- >>> CFX núcleo (no editar aquí: se copia de saas/nucleo/sql con sincronizar.py)', '-- <<< CFX núcleo'
 TABLA = re.compile(r'create table (?:if not exists )?((?:public|privado)\.[a-z_]+)', re.I)
-CABEZA = ('humano.js', 'carga.js')  # van primero en el <head> (antes de que la app cree su conexión a Supabase)
+CABEZA = ('seguro.js', 'humano.js', 'carga.js')  # van primero en el <head> (antes de que la app cree su conexión a Supabase)
 JS = ('iconos.js', 'instalar.js', 'barra.js', 'auto.js', 'fotos.js', 'voz.js', 'respaldo.js', 'pagos.js', 'verificar.js', 'premium.js', 'ayuda.js', 'datos.js', 'vitrina.js')
 SALTAR = re.compile(r'(^docs/|guia|legal|actualizar\.html)')
 

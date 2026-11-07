@@ -171,6 +171,10 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         const pa = await q.evaluate(() => window.__notif);
         ok(pa && /prueba/.test(pa[0]) && pa[1].renotify && pa[1].vibrate && /icons\/icon-192\.png$/.test(pa[1].icon), 'Órbita: 🔔 Probar aviso ' + JSON.stringify(pa));
         await t.foto('probar-aviso', q);
+        // G11: un solo filtro de texto (seguro.js del núcleo) y keys viejas canjeadas con cfx_key_canjear.
+        const g11 = await q.evaluate(async () => [CFX_ESC('<b>"x"</b>'), String(CFX_HTML`<i>${'<s>'}</i>`), CFX_URL('javascript:alert(1)'), Core.esc === undefined ? 'sin' : Core.esc('<'),
+          (await Cuenta.rpc('redeem_license', { p_key: 'CFX-NADA' })).error]);
+        ok(g11[0] === '&lt;b&gt;&quot;x&quot;&lt;/b&gt;' && g11[1] === '<i>&lt;s&gt;</i>' && g11[2] === '#' && g11[3] === '&lt;' && /no válida/.test(g11[4]), 'Órbita: G11 seguro.js + key ' + JSON.stringify(g11));
         await q.goto(t.base + '/apps/caja/'); await q.waitForTimeout(2500);
         // Equipo con roles: el dueño cambia el rol en Mi equipo; Bodega ve Inventario (sin Vender) y el servidor no la deja vender.
         const eid = '00000000-0000-0000-0000-0000000000eb';
