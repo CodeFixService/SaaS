@@ -163,6 +163,7 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         ok(cpC[0] && /1 × Camisa \(Rojo\) — \$9\.500/.test(cpC[1]) && /Pago: Efectivo/.test(cpC[1]) && !/\(Rojo\) \(Rojo\)/.test(cpC[1]), 'Órbita: comprobante de venta en Caja ' + JSON.stringify(cpC));
         await t.foto('inventario', q);
         // G10: 🔔 Probar aviso en Mi perfil → Avanzado (lo muestra el service worker, vibra y vuelve a sonar).
+        await q.evaluate(() => localStorage.setItem('cfx:tour:orbita-inicio', '1')); await q.goto(t.base + '/'); await q.waitForTimeout(3000);
         await q.evaluate(() => { window.__notif = null; CodeFixInstalar.pushActiva = async () => true; Object.defineProperty(Notification, 'permission', { get: () => 'granted' });
           navigator.serviceWorker.getRegistration = async () => ({ scope: location.origin + '/', showNotification: async (ti, o) => { window.__notif = [ti, o]; } }); });
         await t.sinModales(q); await q.locator('.cfx-av:visible').first().click(); await q.waitForTimeout(500); await q.click('dialog [data-a=perfil]'); await q.waitForTimeout(700);
