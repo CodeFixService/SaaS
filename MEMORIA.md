@@ -480,3 +480,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - ✅ HECHO (CM 4.65): Mis aplicaciones → "🧪 Probar vX" cuando la rama fija `pruebas` del repo trae version.json más nueva que main. Link = https://pruebas-<worker>.juanjosuecastilloloyola.workers.dev/
   (vista previa de Cloudflare Workers Builds, misma base real). Flujo: central.js OK → push a `pruebas` → Josué prueba → OK → main → Liberar.
   Requiere en Cloudflare, por cada worker: Settings → Build → Branch control → "Builds for non-production branches" ON, y Settings → Domains & Routes → Preview URLs ON.
+- ✅ CM 4.66 (bd 4.17): ✅ Confirmar (habilitado tras abrir 🧪 Probar, por versión en localStorage) y ↩️ Deshacer en cada tarjeta con rama pruebas.
+  SQL en SaaS/supabase/instalar.sql (no núcleo; solo vive en la base del CM): gh_api (interna) + cm_github / cm_github_guardar / cm_pruebas(repo, 'confirmar'|'deshacer'),
+  token fine-grained en cfx_secretos 'github' (CM → Apps → 🔑 GitHub). Confirmar = PATCH main→sha de pruebas (si no es fast-forward, POST /merges). Deshacer = pruebas vuelve a main (force).
+  SaaS ahora tiene wrangler.jsonc con "previews": {} (Cloudflare Preview command: npx wrangler preview). Link de prueba fijo: https://pruebas-<worker>.juanjosuecastilloloyola.workers.dev/ ✅.
+  Sumar una app: wrangler.jsonc con previews + rama pruebas (Claude) · Cloudflare → worker → Configuration → Preview: "Builds for preview branches" ON (Josué).
