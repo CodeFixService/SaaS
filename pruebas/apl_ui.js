@@ -14,7 +14,7 @@ async function entrar(t, p, email, pass) {
     await t.sim.su("insert into public.user_invites (email, nombre, role, negocio_id) values ('cli@x.cl','Pepe','client',$1)", [u.id]);
     const c = await t.sim.crearUsuario('cli@x.cl', 'clave123');
     await t.sim.su("update public.profiles set terms_at = now()");
-    await t.sim.su("insert into public.messages (sender, recipient, body) values ($1,$2,'hola tienda'),($2,$1,'hola cliente')", [c.id, u.id]);
+    await t.sim.su("insert into public.cfx_mensajes (de, para, texto) values ($1,$2,'hola tienda'),($2,$1,'hola cliente')", [c.id, u.id]);
     await t.sim.su("insert into public.catalog_items (owner_id, client_key, nombre, precio, stock) values ($1,'k1','Vaso',1000,3)", [u.id]);
     await t.sim.su("select public.notify_user($1, 'Aviso uno', 'cuerpo', './'), public.notify_user($1, 'Aviso dos', 'cuerpo', './')", [u.id]);
     await t.sim.su("update public.notifications set status = 'sent', sent_at = now()");
@@ -32,7 +32,7 @@ async function entrar(t, p, email, pass) {
     await p.locator('.conv').first().click(); await p.waitForTimeout(1000);
     assert(await t.anchoOk(), 'ancho chat'); await t.foto('chat');
     await p.click('#bBorrarChat'); await p.waitForTimeout(1200);
-    assert((await t.sim.su('select count(*)::int n from messages'))[0].n === 0, 'chat borrado');
+    assert((await t.sim.su('select count(*)::int n from cfx_mensajes'))[0].n === 0, 'chat borrado');
   } catch (e) { console.log(e.message); await t.foto('error'); }
   console.log('ERRORES:', t.errores.join('\n') || 'ninguno');
   await t.cerrar();

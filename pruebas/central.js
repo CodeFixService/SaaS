@@ -110,7 +110,7 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await t.sinModales(q); await q.waitForTimeout(1700);
         const tr = await q.evaluate(() => { const c = document.querySelector('.cfx-tour-caja'); if (!c) return [null]; const a = c.querySelector('small').textContent; c.querySelector('[data-t=s]').click();
           const b = c.querySelector('small').textContent; c.querySelector('[data-t=x]').click(); return [a, b, !document.querySelector('.cfx-tour'), localStorage.getItem('cfx:tour:orbita-inicio')]; });
-        await t.sim.su("insert into public.messages (sender, recipient, body) values ($1, $2, 'Hola, ¿tienen talla M?')", [cli, tid]);
+        await t.sim.su("insert into public.cfx_mensajes (de, para, texto) values ($1, $2, 'Hola, ¿tienen talla M?')", [cli, tid]);
         await q.reload(); await q.waitForTimeout(3000); await t.sinModales(q); await q.waitForTimeout(1700);
         const qh = await q.evaluate(() => [!!document.querySelector('.cfx-tour'), document.getElementById('hoyHacerL').textContent]);
         await q.evaluate(() => document.getElementById('hoyAyuda').click()); await q.waitForTimeout(300);
@@ -122,6 +122,26 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         ok(tr[0] && /^1 de 5/.test(tr[0]) && /^2 de/.test(tr[1]) && tr[2] && tr[3] === '1' && !qh[0] && /Responde 1 mensaje/.test(qh[1]) && fq === 7 && tr2,
           'Órbita: qué hacer hoy + ayuda y recorrido ' + JSON.stringify([tr, qh, fq, tr2]));
         await t.foto('hoy_hacer', q);
+        // G12 · C14 chat del núcleo: 3 mensajes seguidos y se bloquea el envío; reportar llega al admin. C19: con el módulo apagado no hay chat.
+        const c2 = '00000000-0000-0000-0000-0000000000c2';
+        await t.sim.su('set session_replication_role = replica');
+        await t.sim.su('insert into auth.users (id, email) values ($1, $2) on conflict do nothing', [c2, 'cli2@x.cl']);
+        await t.sim.su("insert into public.profiles (id, email, role, empresa, negocio_id) values ($1, 'cli2@x.cl', 'client', 'Cliente Dos', $2) on conflict do nothing", [c2, tid]);
+        await t.sim.su('set session_replication_role = origin');
+        await t.sim.su("insert into public.cfx_mensajes (de, para, texto) values ($1, $2, 'Hola G12')", [c2, tid]);
+        await q.goto(t.base + '/apps/mensajes/?con=' + c2); await q.waitForTimeout(2500); await t.sinModales(q);
+        for (const m of ['uno', 'dos', 'tres']) { await q.fill('#texto', m); await q.click('#bEnviar'); await q.waitForTimeout(1200); }
+        const ch = await q.evaluate(() => [document.getElementById('bEnviar').disabled, document.getElementById('tip').textContent, document.querySelectorAll('#msgs .b.mio').length]);
+        await q.evaluate(() => { window.prompt = () => 'spam'; document.querySelector('#msgs .rep').click(); }); await q.waitForTimeout(1200);
+        const [cr] = await t.sim.su("select (select count(*) from cfx_mensajes where de = $1)::int n, (select count(*) from cfx_reportes where motivo = 'spam')::int r, (select count(*) from notifications where title like '%reporte%')::int a", [tid]);
+        await t.foto('chat_g12', q);
+        await t.sim.su("update public.cfx_config set valor = '{\"chat\": false}' where clave = 'modulos'");
+        await q.goto(t.base + '/'); await q.waitForTimeout(2500);
+        const off = await q.evaluate(() => [document.body.classList.contains('sin-chat'), [...document.querySelectorAll('a[href*="apps/mensajes/"]')].every((x) => !x.offsetParent)]);
+        await q.goto(t.base + '/apps/mensajes/'); await q.waitForTimeout(2000);
+        off.push(await q.evaluate(() => /no está disponible/.test(document.querySelector('main').textContent)));
+        await t.sim.su("update public.cfx_config set valor = '{}' where clave = 'modulos'");
+        ok(ch[0] && /Ya enviaste 3/.test(ch[1]) && ch[2] === 3 && cr.n === 3 && cr.r === 1 && off.every(Boolean), 'Órbita: chat del núcleo (3 seguidos, reportar) y módulo apagado ' + JSON.stringify([ch, cr, off]));
         await q.goto(t.base + '/apps/pedidos/'); await q.waitForTimeout(2500);
         await t.sim.su("insert into public.pedidos (negocio_id, cliente_id, lineas, subtotal, total, entrega, estado) values ($1, $2, '[{\"nombre\":\"Polera\",\"cant\":1,\"precio\":10000,\"subtotal\":10000}]', 10000, 10000, 'retiro', 'recibido')", [tid, cli]);
         await q.evaluate(() => document.dispatchEvent(new Event('visibilitychange'))); await q.waitForTimeout(1500);
@@ -327,6 +347,16 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         const [gh] = await t.sim.su("select (select valor from cfx_secretos where clave = 'github') tk, (select count(*) from extensions.http_log where method = 'PATCH' and uri like '%Aplicaciones/git/refs/heads/main' and content like '%bbb222%' and content like '%false%')::int pm, has_function_privilege('anon', 'public.cm_pruebas(text, text)', 'execute') an, has_function_privilege('authenticated', 'public.gh_api(text, text, jsonb)', 'execute') au");
         await t.foto('apps-confirmar');
         ok(antes && !despues && gh.tk === 'github_pat_prueba' && gh.pm === 1 && !gh.an && !gh.au, 'CM: ✅ Confirmar tras 🧪 Probar (pruebas → main) ' + JSON.stringify([antes, despues, gh]));
+        // G12 · C19: 🧩 Módulos en la tarjeta de una app que los tiene (aquí el CM con un gancho de prueba): apagar el chat.
+        await t.sim.su("create or replace function public.cfx_modulos_app() returns text[] language sql immutable as $$ select array['chat'] $$");
+        await p.click('[data-app=cm] [data-a=rec]'); await p.waitForTimeout(2500);
+        await p.click('[data-app=cm] [data-a=mod]'); await p.waitForTimeout(600);
+        const md = await p.evaluate(() => [document.querySelector('dialog #mods').textContent, document.querySelector('dialog [data-m=chat]').checked]);
+        await p.click('dialog [data-m=chat]'); await p.waitForTimeout(1500);
+        const [mc] = await t.sim.su("select public.cfx_modulos() m, (select count(*) from cfx_registro where accion = 'módulo')::int r");
+        await t.foto('cm_modulos');
+        await t.sim.su('drop function public.cfx_modulos_app()');
+        ok(/Chat/.test(md[0]) && md[1] && mc.m.chat === false && mc.r === 1, 'CM: 🧩 Módulos apaga el chat de una app ' + JSON.stringify([md, mc]));
       }
       const e = t.errores.filter((x) => !/404|Failed to load resource|net::|Sin permiso para vender|G8 lanzado/.test(x));
       ok(!e.length, app + ': sin errores ' + e.join(' | ').slice(0, 200));

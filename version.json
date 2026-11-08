@@ -1,1 +1,1 @@
-{"version": "4.69", "bd": "4.19", "funcion": "3.0", "notas": "🛡️ Más seguridad: tras 10 keys erróneas en una hora se bloquea el canje (antes no contaba)"}
+{"version": "4.70", "bd": "4.20", "funcion": "3.0", "notas": "🧩 Módulos que se prenden y apagan desde el Centro de Mando y chat con reglas comunes en el núcleo"}

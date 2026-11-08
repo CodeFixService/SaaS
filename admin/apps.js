@@ -107,6 +107,8 @@
       if (a.bd) try { const d = await rpcDe(c, a.bd.rpc); e.bd = String(campo(d, a.bd.campo) ?? ''); } catch (x) { /* no publicada para esta cuenta */ }
       if (a.leer) try { e.lib = String((a.leer.propia ? ((await A.cargarPublica()).config || {}).version_liberada : campo(await rpcDe(c, a.leer.rpc), a.leer.campo)) || ''); } catch (x) { /* nada */ }
       if (e.conectado) try { e.resumen = await rpcDe(c, 'admin_resumen'); } catch (x) { e.error = 'Sin permiso de administrador en esta app (' + x.message + ').'; }
+      e.modulos = null;
+      if (e.conectado) try { e.modulos = await rpcDe(c, 'cfx_modulos_admin'); } catch (x) { /* base sin módulos del núcleo */ }
       if (e.conectado && !a.propia && !e.vinculada) vincular(a).catch(() => { /* base aún sin el núcleo nuevo */ });
       if (e.conectado && !e.bdProg && e.bdPide && e.bd && menor(e.bd, e.bdPide)) rpcDe(c, 'cfx_actualizar_ahora', { p_programar: false }).then((r) => { const d = causaBd(r); e.bdMal = d.mal; e.bdMsg = d.t; pintarTarjeta(a); }).catch(() => {});
     } catch (x) { e.error = x.message; }
@@ -156,6 +158,7 @@
         (a.liberar && e.conectado ? '<button type="button" class="small" data-a="lib"' + (s.lista && !e.liberando ? '' : ' disabled') + '>' + (e.liberando ? 'Liberando…' : s.alDia ? A.ico('check', 15) + ' Liberada' : A.ico('cohete', 15) + ' Liberar v' + esc(e.pub || '?')) + '</button>' : '') +
         (e.conectado ? '<button type="button" class="small' + (s.faltaBd ? '' : ' ghost') + '" data-a="bd" title="Corre auto_actualizar() en la base de esta app"' + (e.bdProg ? ' disabled' : '') + '>' + (e.bdProg ? 'Actualizando la base…' : '⚡ Actualizar base ahora') + '</button>' : '') +
         (!a.propia && e.url ? (e.conectado ? '<button type="button" class="small ghost" data-a="salir">Desconectar</button>' : '<button type="button" class="small" data-a="con">' + A.ico('enchufe', 15) + ' Conectar</button>') : '') +
+        (e.conectado && e.modulos && e.modulos.length ? '<button type="button" class="small ghost" data-a="mod">🧩 Módulos</button>' : '') +
         '<button type="button" class="small ghost" data-a="rec" aria-label="Revisar">' + A.ico('refrescar', 15) + '</button>' +
       '</div>';
   }
@@ -314,6 +317,24 @@
     };
     pintar();
   }
+  // 🧩 Módulos (núcleo: cfx_modulos_admin / cfx_modulo_guardar): prender o apagar chat, calificaciones, cupones… en esta app.
+  function modulos(a) {
+    const e = E[a.id], c = cliente(a);
+    const d = modal('<h2>🧩 Módulos de ' + esc(corto(a)) + '</h2><p class="muted">Apagado: sus botones desaparecen de la app y el servidor no lo deja usar. Los datos no se borran.</p><div id="mods"></div>' +
+      '<div class="btns"><button class="ghost" data-cerrar type="button">Cerrar</button></div>');
+    const pintar = () => {
+      d.querySelector('#mods').innerHTML = e.modulos.map((m) => '<label class="fila" style="gap:10px;margin:8px 0"><input type="checkbox" data-m="' + esc(m.clave) + '"' + (m.activo ? ' checked' : '') + '>' +
+        '<span class="grow"><b>' + esc(m.nombre) + '</b><br><span class="sub">' + esc(m.detalle) + '</span></span></label>').join('');
+    };
+    pintar();
+    d.querySelector('#mods').onchange = async (ev) => {
+      const k = ev.target.dataset.m; if (!k) return;
+      ev.target.disabled = true;
+      try { e.modulos = await rpcDe(c, 'cfx_modulo_guardar', { p_clave: k, p_activo: ev.target.checked }); toast((ev.target.checked ? 'Prendido: ' : 'Apagado: ') + k); }
+      catch (x) { toast(x.message); }
+      pintar();
+    };
+  }
   function conectar(a, listo) {
     const d = modal('<h2>Conectar ' + esc(a.nombre) + '</h2><p class="muted">Entra una vez con tu cuenta de administrador de esta app (queda guardada solo en este teléfono). Después manejas todo desde aquí y su panel se abre ya iniciado.</p>' +
       '<label>Correo<input id="ce" type="email" autocomplete="username" value="' + esc((A.cuenta && A.cuenta.email) || '') + '"></label><label>Contraseña<input id="cp" type="password" autocomplete="current-password"></label>' +
@@ -343,6 +364,7 @@
       else if (act === 'con') conectar(a);
       else if (act === 'salir') cliente(a).auth.signOut().then(() => cargar(a));
       else if (act === 'rec') cargar(a);
+      else if (act === 'mod') modulos(a);
       else if (act === 'limp') limpieza(a);
       else if (act === 'adm') abrirAdmin(a);
     };

@@ -104,7 +104,7 @@ def sql_comun(repo, nombre):
         print('  ⚠️ ', nombre, 'no tiene las marcas del SQL común en', archivo)
         return
     i, j = s.index(INI), s.index(FIN)
-    comun = ''.join(open(os.path.join(AQUI, 'sql', f), encoding='utf-8').read() for f in ('pagos.sql', 'admin.sql', 'ayuda.sql', 'legal.sql', 'referidos.sql', 'socios.sql', 'inventario.sql', 'salud.sql', 'seguridad.sql'))
+    comun = ''.join(open(os.path.join(AQUI, 'sql', f), encoding='utf-8').read() for f in ('pagos.sql', 'admin.sql', 'ayuda.sql', 'legal.sql', 'referidos.sql', 'socios.sql', 'inventario.sql', 'salud.sql', 'modulos.sql', 'chat.sql', 'seguridad.sql'))
     tablas = sorted(set(TABLA.findall(s[:i] + s[j:])) | set(TABLA.findall(comun)))
     comun = comun.replace('<CHK>', chk).replace('<LISTA>', "array['" + "', '".join(tablas) + "']")
     nuevo = s[:i] + INI + '\n' + comun + s[j:]

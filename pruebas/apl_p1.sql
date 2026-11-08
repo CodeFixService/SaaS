@@ -4,7 +4,7 @@ insert into auth.users (id, email, raw_user_meta_data) values ('00000000-0000-00
 insert into public.user_invites (email, nombre, role, negocio_id) values ('cli@x.cl', 'Pepe', 'client', '00000000-0000-0000-0000-0000000000b1');
 insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000c1', 'cli@x.cl');
 select role, negocio_id is not null from public.profiles order by email;
-insert into public.messages (sender, recipient, body, created_at) values
+insert into public.cfx_mensajes (de, para, texto, creado) values
  ('00000000-0000-0000-0000-0000000000c1', '00000000-0000-0000-0000-0000000000b1', 'viejo', now() - interval '29 days'),
  ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000c1', 'nuevo', now());
 insert into public.catalog_items (owner_id, client_key, nombre, precio, stock, updated_at) values ('00000000-0000-0000-0000-0000000000b1', 'k1', 'Vaso', 1000, 0, now() - interval '40 days');
