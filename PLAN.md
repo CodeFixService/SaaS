@@ -21,8 +21,8 @@ Origen: análisis de Órbita del 05/11/2026. Marcar ✅ al terminar. Esta lista 
 
 ## C. Pasar al núcleo (universal)
 - C14 Chat con sus reglas (3 seguidos, 100 al día, bloquear, reportar) ✅ G12 (núcleo 2.49 chat.sql; Órbita lo usa; las otras apps en su turno)
-- C15 Calificaciones en ambas direcciones
-- C16 Cupones y tarjeta de sellos
+- C15 Calificaciones en ambas direcciones ✅ G12b (núcleo 2.50 calificaciones.sql; Órbita bd 5.33; las otras apps en su turno)
+- C16 Cupones y tarjeta de sellos ✅ G12b (núcleo 2.50 fidelidad.sql: cfx_descuentos + cfx_sellos; Órbita bd 5.33)
 - C17 Carrito y despacho (tienda.js, despacho.js)
 - C18 Auditoría y limpieza automática
 - C19 Módulos enchufables que se activan desde el CM ✅ G12 (modulos.sql + CM → Mis aplicaciones → 🧩 Módulos)
@@ -57,7 +57,7 @@ Origen: análisis de Órbita del 05/11/2026. Marcar ✅ al terminar. Esta lista 
 U1-U14 · Reparar la app · variantes + ficha · Te puede gustar · stock por opción · pedido nuevo · fotos WebP · inventario en Caja · equipo con roles · vitrina · boleta SII · respaldo + ping + errores (G8) · rama pruebas · comprobante WhatsApp + push potentes (G10)
 
 ## Grupos que siguen (uno por chat)
-G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 · G13 C17-C18 + B10-B11 · G14 B12-B13 + D21-22 · G15 E24-E25 + E27 · G16 E28-E29 + F30 · G17 F31-F33 · G18 G35-G37
+G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C18 + B10-B11 · G14 B12-B13 + D21-22 · G15 E24-E25 + E27 · G16 E28-E29 + F30 · G17 F31-F33 · G18 G35-G37
 
 ## Antes de lanzar (cuando Josué diga "listo")
 - LIMPIEZA FINAL: dejar TODOS los usuarios (auth + perfil + plan) pero sin datos: productos, opciones/stock, fotos de buckets, diseño/tienda, pedidos, ventas, clientes, promociones, comprobantes. Primero un SQL que solo cuenta por usuario; luego el borrado.

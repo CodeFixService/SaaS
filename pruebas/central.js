@@ -142,6 +142,35 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         off.push(await q.evaluate(() => /no está disponible/.test(document.querySelector('main').textContent)));
         await t.sim.su("update public.cfx_config set valor = '{}' where clave = 'modulos'");
         ok(ch[0] && /Ya enviaste 3/.test(ch[1]) && ch[2] === 3 && cr.n === 3 && cr.r === 1 && off.every(Boolean), 'Órbita: chat del núcleo (3 seguidos, reportar) y módulo apagado ' + JSON.stringify([ch, cr, off]));
+        // G12b · C15 calificaciones en 2 direcciones y C16 cupones + tarjeta de sellos del núcleo (Pro). Con los módulos apagados no se usan ni se ven.
+        await t.sim.su("update public.profiles set plan = 'pro', pro_until = now() + interval '30 days' where id = $1", [tid]);
+        await q.goto(t.base + '/apps/pedidos/?v=cupones'); await q.waitForTimeout(2500); await t.sinModales(q);
+        await q.fill('#cCodigo', 'g12-b'); await q.fill('#cPct', '10'); await q.click('#bCupon'); await q.waitForTimeout(1500);
+        const cu = await q.evaluate(() => document.getElementById('cupones').textContent);
+        await t.foto('cupones_g12b', q);
+        await q.evaluate(() => Cuenta.rpc('set_mi_tienda', { p_datos_pago: '', p_horario: '', p_abierto: true, p_sellos_meta: 2, p_sellos_premio: 'Café gratis' }));
+        await t.sim.su("insert into public.catalog_items (owner_id, client_key, nombre, precio, categoria) values ($1, 'g12', 'Gorro', 10000, 'Ropa')", [tid]);
+        const [gp] = await t.sim.su("select public.guardar_pedido($1, $2, null, null, '[{\"clave\":\"g12\",\"cant\":1}]', 'retiro', '', '', 'g12b') r", [tid, c2]);
+        const [pz] = await t.sim.su("select id, descuento from public.pedidos where id = $1", [gp.r.id]);
+        const [pz2] = await t.sim.su("insert into public.pedidos (negocio_id, cliente_id, lineas, subtotal, total, entrega, estado) values ($1, $2, '[]', 5000, 5000, 'retiro', 'listo') returning id", [tid, c2]);
+        await t.sim.su("update public.pedidos set estado = 'listo', subtotal = 5000, total = 5000 where id = $1", [pz.id]);
+        const stG = [];
+        for (const x of [pz.id, pz2.id]) stG.push(await q.evaluate((i) => Cuenta.rpc('actualizar_pedido', { p_id: i, p_estado: 'entregado' }).then((r) => r.ok, (e) => e.message), x));
+        const r1 = await q.evaluate((i) => Cuenta.rpc('cfx_calificar', { p_ref: i, p_estrellas: 5 }), pz.id);
+        const r2 = await q.evaluate((i) => Cuenta.rpc('cfx_calificar', { p_ref: i, p_estrellas: 4 }), pz.id);
+        const [fd] = await t.sim.su("select (select usos from cfx_descuentos where owner_id = $1 and codigo = 'G12B') u, (select row(cantidad, premios)::text from cfx_sellos where negocio_id = $1 and cliente_id = $2) s, (select count(*) from notifications where target_id = $2 and title like '%tarjeta de sellos%')::int n", [tid, c2]);
+        const pt = await q.evaluate(() => Cuenta.rpc('pedidos_tienda', { p_estado: 'historial' }));
+        const p1 = pt.find((x) => x.id === pz.id), p2 = pt.find((x) => x.id === pz2.id);
+        await t.sim.su("update public.cfx_config set valor = '{\"cupones\": false, \"sellos\": false, \"calificaciones\": false}' where clave = 'modulos'");
+        const [gp2] = await t.sim.su("select public.guardar_pedido($1, $2, null, null, '[{\"clave\":\"g12\",\"cant\":1}]', 'retiro', '', '', 'G12B') r, public.cfx_sellos_cfg_de($1) ti, public.estrellas_tienda($1) e", [tid, c2]);
+        await q.goto(t.base + '/apps/pedidos/?v=cupones'); await q.waitForTimeout(2500);
+        const mo = await q.evaluate(() => [document.body.classList.contains('sin-cupones'), !document.querySelector('[data-v=cupones]').offsetParent, document.getElementById('v-pedidos').classList.contains('on')]);
+        const pt2 = await q.evaluate(() => Cuenta.rpc('pedidos_tienda', { p_estado: 'historial' }));
+        await t.sim.su("update public.cfx_config set valor = '{}' where clave = 'modulos'");
+        ok(/G12B/.test(cu) && Number(pz.descuento) === 1000 && gp.r.ok && stG.every((x) => x === true) && r1.ok && !r2.ok && /Ya fue/.test(r2.error) && fd.u === 1 && fd.s === '(0,1)' && fd.n === 1 &&
+          p1.calificado && Number(p1.cliente_estrellas) === 5 && !p2.calificado && !gp2.r.ok && /Cupón/.test(gp2.r.error) && gp2.ti === null && gp2.e === null && mo.every(Boolean) && pt2.every((x) => x.calificado),
+          'Órbita: calificaciones, cupones y sellos del núcleo + módulos apagados ' + JSON.stringify([cu, gp.r.ok, stG, r1, r2, fd, p1 && [p1.calificado, p1.cliente_estrellas], gp2.r, gp2.ti, gp2.e, mo]));
+        await t.sim.su("update public.profiles set plan = 'free', pro_until = null where id = $1", [tid]);
         await q.goto(t.base + '/apps/pedidos/'); await q.waitForTimeout(2500);
         await t.sim.su("insert into public.pedidos (negocio_id, cliente_id, lineas, subtotal, total, entrega, estado) values ($1, $2, '[{\"nombre\":\"Polera\",\"cant\":1,\"precio\":10000,\"subtotal\":10000}]', 10000, 10000, 'retiro', 'recibido')", [tid, cli]);
         await q.evaluate(() => document.dispatchEvent(new Event('visibilitychange'))); await q.waitForTimeout(1500);
