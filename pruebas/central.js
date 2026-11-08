@@ -170,6 +170,18 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         ok(/G12B/.test(cu) && Number(pz.descuento) === 1000 && gp.r.ok && stG.every((x) => x === true) && r1.ok && !r2.ok && /Ya fue/.test(r2.error) && fd.u === 1 && fd.s === '(0,1)' && fd.n === 1 &&
           p1.calificado && Number(p1.cliente_estrellas) === 5 && !p2.calificado && !gp2.r.ok && /Cupón/.test(gp2.r.error) && gp2.ti === null && gp2.e === null && mo.every(Boolean) && pt2.every((x) => x.calificado),
           'Órbita: calificaciones, cupones y sellos del núcleo + módulos apagados ' + JSON.stringify([cu, gp.r.ok, stG, r1, r2, fd, p1 && [p1.calificado, p1.cliente_estrellas], gp2.r, gp2.ti, gp2.e, mo]));
+        // G13 · C17 carrito y despacho del núcleo: el cliente guarda su carrito, recibe 1 recordatorio, el despacho por comuna se cobra y el pedido vacía el carrito. C18: auditar → cfx_registro.
+        const como = (u) => t.sim.su("select set_config('request.jwt.claim.sub', $1, false)", [u]);
+        await como(tid); await t.sim.su("select public.guardar_despacho('{\"retiro\": true, \"gratis_desde\": 0, \"zonas\": [{\"comuna\": \"Ñuñoa\", \"precio\": 2500}]}')");
+        await como(c2); await t.sim.su("select public.guardar_carrito($1, '[{\"clave\":\"g12\",\"cant\":2,\"nombre\":\"Gorro\"}]')", [tid]);
+        const [k1] = await t.sim.su("select (select count(*) from public.cfx_carritos where cliente = $1 and negocio = $2)::int n, public.cfx_carrito_aviso($1, $2, 1) av", [c2, tid]);
+        [{ pu: k1.pu }] = await t.sim.su("select count(*)::int pu from public.notifications where target_id = $1 and title like '🛒%'", [c2]);
+        const [k2] = await t.sim.su("select public.crear_pedido($1, '[{\"clave\":\"g12\",\"cant\":1}]', 'despacho', 'Calle 1, nunoa', '', '') r", [tid]);
+        await como('');
+        const [k3] = await t.sim.su("select (select count(*) from public.cfx_carritos where cliente = $1)::int n, (select costo_despacho from public.pedidos where id = ($2::jsonb ->> 'id')::uuid)::int d, to_regclass('public.carritos') v, to_regclass('public.auditoria') au", [c2, JSON.stringify(k2.r)]);
+        await t.sim.su("select public.auditar('Prueba G13', 'registro único')");
+        const [k4] = await t.sim.su("select count(*)::int n from public.cfx_registro where accion = 'Prueba G13'");
+        ok(k1.n === 1 && k1.av === true && k1.pu === 1 && k2.r.ok && k3.n === 0 && k3.d === 2500 && !k3.v && !k3.au && k4.n === 1, 'Órbita: carrito + despacho + registro del núcleo ' + JSON.stringify([k1, k2.r.ok, k3, k4]));
         await t.sim.su("update public.profiles set plan = 'free', pro_until = null where id = $1", [tid]);
         await q.goto(t.base + '/apps/pedidos/'); await q.waitForTimeout(2500);
         await t.sim.su("insert into public.pedidos (negocio_id, cliente_id, lineas, subtotal, total, entrega, estado) values ($1, $2, '[{\"nombre\":\"Polera\",\"cant\":1,\"precio\":10000,\"subtotal\":10000}]', 10000, 10000, 'retiro', 'recibido')", [tid, cli]);
@@ -386,6 +398,19 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await t.foto('cm_modulos');
         await t.sim.su('drop function public.cfx_modulos_app()');
         ok(/Chat/.test(md[0]) && md[1] && mc.m.chat === false && mc.r === 1, 'CM: 🧩 Módulos apaga el chat de una app ' + JSON.stringify([md, mc]));
+        // G13 · C18: 🧹 Respaldo y limpieza junta lo del núcleo (🌙 auto) con lo de la app, y la limpieza automática se apaga y se prende.
+        await t.sim.su("insert into cfx_registro (quien, accion, detalle, creado) values ('x', 'viejo', 'G13', now() - interval '200 days')");
+        await p.evaluate(() => MisApps.limpieza(MisApps.APPS.find((x) => x.id === 'cm'))); await p.waitForTimeout(2500);
+        const lm = await p.evaluate(() => { const d = [...document.querySelectorAll('dialog')].pop(); return [d.textContent, d.querySelector('[data-auto]').checked, !!d.querySelector('[data-c=n_registro]:not([disabled])')]; });
+        await t.foto('cm_limpieza');
+        await p.evaluate(() => [...document.querySelectorAll('dialog')].pop().querySelector('[data-auto]').click()); await p.waitForTimeout(1200);
+        const [la] = await t.sim.su("select (select valor #>> '{}' from cfx_config where clave = 'limpieza_auto') v, public.cfx_limpieza_auto() n, (select count(*) from cfx_registro where accion = 'viejo')::int q");
+        await t.sim.su("update cfx_config set valor = 'true' where clave = 'limpieza_auto'");
+        const [lb] = await t.sim.su("select public.cfx_limpieza_auto() n, has_function_privilege('authenticated', 'public.cfx_limpieza_auto()', 'execute') au");
+        [{ q: lb.q }] = await t.sim.su("select count(*)::int q from cfx_registro where accion = 'viejo'");
+        await p.evaluate(() => [...document.querySelectorAll('dialog')].pop().close());
+        ok(/Limpieza automática cada noche/.test(lm[0]) && /auto/.test(lm[0]) && /Carritos abandonados/.test(lm[0]) && lm[1] && lm[2] && la.v === 'false' && la.n === 0 && la.q === 1 && lb.n >= 1 && lb.q === 0 && !lb.au,
+          'CM: 🧹 limpieza del núcleo + 🌙 automática (apagar/prender) ' + JSON.stringify([lm.slice(1), la, lb]));
       }
       const e = t.errores.filter((x) => !/404|Failed to load resource|net::|Sin permiso para vender|G8 lanzado/.test(x));
       ok(!e.length, app + ': sin errores ' + e.join(' | ').slice(0, 200));

@@ -14,8 +14,8 @@ Origen: análisis de Órbita del 05/11/2026. Marcar ✅ al terminar. Esta lista 
 - A9 Docs corregidas ✅ G11 (README/CONFIGURAR → Cloudflare, términos → Ajustes → Zona peligrosa) · Repo privado EN PAUSA (grupo propio)
 
 ## B. Velocidad
-- B10 Índices y consultas (quitar los select('*'))
-- B11 Carga diferida por pantalla
+- B10 Índices y consultas (quitar los select('*')) ✅ G13 (Órbita sin select('*'); índices de lo que corre cada minuto y de las listas)
+- B11 Carga diferida por pantalla ✅ G13 (Core.script: el QR se baja al usarlo. Falta: ayuda.js liviano, en B12)
 - B12 Caché inteligente en el service worker
 - B13 Medir el tiempo de carga real
 
@@ -23,8 +23,8 @@ Origen: análisis de Órbita del 05/11/2026. Marcar ✅ al terminar. Esta lista 
 - C14 Chat con sus reglas (3 seguidos, 100 al día, bloquear, reportar) ✅ G12 (núcleo 2.49 chat.sql; Órbita lo usa; las otras apps en su turno)
 - C15 Calificaciones en ambas direcciones ✅ G12b (núcleo 2.50 calificaciones.sql; Órbita bd 5.33; las otras apps en su turno)
 - C16 Cupones y tarjeta de sellos ✅ G12b (núcleo 2.50 fidelidad.sql: cfx_descuentos + cfx_sellos; Órbita bd 5.33)
-- C17 Carrito y despacho (tienda.js, despacho.js)
-- C18 Auditoría y limpieza automática
+- C17 Carrito y despacho (tienda.js, despacho.js) ✅ G13 (núcleo 2.51 carrito.sql + tienda.js/despacho.js opcionales; módulo 🛒 Recordar carrito)
+- C18 Auditoría y limpieza automática ✅ G13 (limpieza.sql: una lista + 🌙 automática cada noche; Órbita: un solo registro cfx_registro)
 - C19 Módulos enchufables que se activan desde el CM ✅ G12 (modulos.sql + CM → Mis aplicaciones → 🧩 Módulos)
 
 ## D. Arranque fácil
@@ -57,7 +57,7 @@ Origen: análisis de Órbita del 05/11/2026. Marcar ✅ al terminar. Esta lista 
 U1-U14 · Reparar la app · variantes + ficha · Te puede gustar · stock por opción · pedido nuevo · fotos WebP · inventario en Caja · equipo con roles · vitrina · boleta SII · respaldo + ping + errores (G8) · rama pruebas · comprobante WhatsApp + push potentes (G10)
 
 ## Grupos que siguen (uno por chat)
-G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C18 + B10-B11 · G14 B12-B13 + D21-22 · G15 E24-E25 + E27 · G16 E28-E29 + F30 · G17 F31-F33 · G18 G35-G37
+G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C18 + B10-B11 ✅ · G14 B12-B13 + D21-22 · G15 E24-E25 + E27 · G16 E28-E29 + F30 · G17 F31-F33 · G18 G35-G37
 
 ## Antes de lanzar (cuando Josué diga "listo")
 - LIMPIEZA FINAL: dejar TODOS los usuarios (auth + perfil + plan) pero sin datos: productos, opciones/stock, fotos de buckets, diseño/tienda, pedidos, ventas, clientes, promociones, comprobantes. Primero un SQL que solo cuenta por usuario; luego el borrado.

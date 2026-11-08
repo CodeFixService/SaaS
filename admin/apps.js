@@ -276,16 +276,17 @@
     const c = cliente(a), e = E[a.id], bajadas = new Set();
     const d = modal('<div class="fila"><h2 class="grow" style="margin:0">' + A.ico('escoba', 20) + ' ' + esc(a.nombre) + '</h2><button class="small ghost" data-cerrar type="button">Cerrar</button></div>' +
       '<div class="card"><h3>1. Respaldo</h3><p class="sub">Excel con cuentas, pagos, ajustes y registro de esta app. Descárgalo antes de borrar.</p><button type="button" data-r>' + A.ico('bajar', 15) + ' Descargar respaldo (Excel)</button></div>' +
-      '<div class="card"><h3>2. Limpieza</h3><div data-l><p class="sub">Revisando…</p></div></div>' +
+      '<div class="card"><h3>2. Limpieza</h3><label class="fila" style="gap:8px;align-items:center;padding:4px 0 8px"><input type="checkbox" data-auto style="width:auto" disabled> <span class="grow"><b>🌙 Limpieza automática cada noche</b><span class="sub" data-auto-txt style="display:block">Revisando…</span></span></label><div data-l><p class="sub">Revisando…</p></div></div>' +
       '<div class="card"><h3>3. Tablas sobrantes</h3><p class="sub">Restos de versiones antiguas que la app ya no usa. Las vacías se borran con un toque; las que tienen datos piden respaldo y escribir "sí".</p><div data-i><p class="sub">Revisando…</p></div></div>');
     d.querySelector('[data-r]').onclick = () => respaldar(a);
     async function pintar() {
       const L = d.querySelector('[data-l]'), I = d.querySelector('[data-i]');
       try {
         const l = await rpcDe(c, 'cfx_limpieza');
-        L.innerHTML = l.map((x) => '<div class="fila" style="padding:6px 0;border-top:1px solid var(--line)"><div class="grow"><b>' + esc(x.titulo) + '</b><div class="sub">' + esc(x.detalle) + ' · ' + Number(x.filas).toLocaleString('es-CL') + ' por borrar</div></div>' +
+        L.innerHTML = l.map((x) => '<div class="fila" style="padding:6px 0;border-top:1px solid var(--line)"><div class="grow"><b>' + esc(x.titulo) + (x.auto ? ' <span class="pill ok" style="font-size:11px">🌙 auto</span>' : '') + '</b><div class="sub">' + esc(x.detalle) + ' · ' + Number(x.filas).toLocaleString('es-CL') + ' por borrar</div></div>' +
           '<button type="button" class="small ghost" data-c="' + esc(x.clave) + '" data-t="' + esc(x.titulo) + '"' + (+x.filas ? '' : ' disabled') + '>Borrar</button></div>').join('');
       } catch (x) { L.innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; }
+      pintarAuto(await rpcDe(c, 'cfx_limpieza_auto_ver').catch((x) => ({ error: nf(x) })));
       try {
         const t = await rpcDe(c, 'cfx_inventario');
         I.innerHTML = t.length ? t.map((x) => '<div class="fila" style="padding:6px 0;border-top:1px solid var(--line)"><div class="grow"><b>' + esc(x.tabla) + '</b><div class="sub">' + (+x.filas ? Number(x.filas).toLocaleString('es-CL') + ' filas' : 'vacía') + '</div></div>' +
@@ -293,6 +294,19 @@
           : '<p class="pill ok">✅ Sin tablas sobrantes</p>';
       } catch (x) { I.innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; }
     }
+    // 🌙 Núcleo (C18): lo marcado "auto" se borra solo cada noche (~4:40 de Chile) si está prendida.
+    function pintarAuto(r) {
+      const k = d.querySelector('[data-auto]'), t = d.querySelector('[data-auto-txt]');
+      if (r.error) { k.disabled = true; t.textContent = r.error; return; }
+      k.disabled = false; k.checked = !!r.activo;
+      t.textContent = (r.activo ? 'Prendida: borra sola lo marcado 🌙 auto.' : 'Apagada: lo marcado 🌙 auto solo se borra a mano.') +
+        (r.ultima ? ' Última: ' + new Date(r.ultima).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' }) + ' · ' + (r.filas || 0) + ' borradas.' : ' Aún no corre.');
+    }
+    d.querySelector('[data-auto]').onchange = async (ev) => {
+      ev.target.disabled = true;
+      try { pintarAuto(await rpcDe(c, 'cfx_limpieza_auto_guardar', { p_activo: ev.target.checked })); toast('🌙 Limpieza automática ' + (ev.target.checked ? 'prendida' : 'apagada')); }
+      catch (x) { toast(nf(x)); ev.target.checked = !ev.target.checked; ev.target.disabled = false; }
+    };
     d.onclick = async (ev) => {
       const b = ev.target.closest('[data-c],[data-td],[data-tb]'); if (!b) return;
       try {

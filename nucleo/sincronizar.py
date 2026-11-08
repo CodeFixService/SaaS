@@ -3,6 +3,7 @@
 
 Uso:  python3 nucleo/sincronizar.py /ruta/a/los/repos      (carpeta que contiene saas, emprendedor, barberia, …)
 Hace en cada repositorio:
+  1b. Módulos opcionales (OPCIONAL: tienda.js y despacho.js de la tienda) solo a las apps que los usan.
   1. Copia los scripts de JS (seguro, humano y carga en el <head>; iconos, instalar, barra, auto, fotos, voz, respaldo, pagos, verificar, premium, ayuda, datos, vitrina) y tema.css a la carpeta que usa esa app.
   2. Enlaza tema.css en cada página (después del CSS propio) y los scripts al final del <body>, si faltan.
   3. Agrega los archivos a la lista del service worker (para que funcionen sin internet).
@@ -44,6 +45,8 @@ INI, FIN = '-- >>> CFX núcleo (no editar aquí: se copia de saas/nucleo/sql con
 TABLA = re.compile(r'create table (?:if not exists )?((?:public|privado)\.[a-z_]+)', re.I)
 CABEZA = ('seguro.js', 'humano.js', 'carga.js')  # van primero en el <head> (antes de que la app cree su conexión a Supabase)
 JS = ('iconos.js', 'instalar.js', 'barra.js', 'auto.js', 'fotos.js', 'voz.js', 'respaldo.js', 'pagos.js', 'verificar.js', 'premium.js', 'ayuda.js', 'datos.js', 'vitrina.js')
+# Módulos de JS opcionales: se copian solo a las apps que los usan (la app los enlaza donde corresponde; no van en todas las páginas).
+OPCIONAL = {'Aplicaciones': ('tienda.js', 'despacho.js')}
 SALTAR = re.compile(r'(^docs/|guia|legal|actualizar\.html)')
 
 
@@ -104,7 +107,7 @@ def sql_comun(repo, nombre):
         print('  ⚠️ ', nombre, 'no tiene las marcas del SQL común en', archivo)
         return
     i, j = s.index(INI), s.index(FIN)
-    comun = ''.join(open(os.path.join(AQUI, 'sql', f), encoding='utf-8').read() for f in ('pagos.sql', 'admin.sql', 'ayuda.sql', 'legal.sql', 'referidos.sql', 'socios.sql', 'inventario.sql', 'salud.sql', 'modulos.sql', 'chat.sql', 'calificaciones.sql', 'fidelidad.sql', 'seguridad.sql'))
+    comun = ''.join(open(os.path.join(AQUI, 'sql', f), encoding='utf-8').read() for f in ('pagos.sql', 'admin.sql', 'ayuda.sql', 'legal.sql', 'referidos.sql', 'socios.sql', 'inventario.sql', 'salud.sql', 'modulos.sql', 'chat.sql', 'calificaciones.sql', 'fidelidad.sql', 'carrito.sql', 'limpieza.sql', 'seguridad.sql'))
     tablas = sorted(set(TABLA.findall(s[:i] + s[j:])) | set(TABLA.findall(comun)))
     comun = comun.replace('<CHK>', chk).replace('<LISTA>', "array['" + "', '".join(tablas) + "']")
     nuevo = s[:i] + INI + '\n' + comun + s[j:]
@@ -131,6 +134,8 @@ def main():
             destino = os.path.join(r, js, nombre)
             if os.path.abspath(destino) != os.path.abspath(os.path.join(AQUI, nombre)):
                 shutil.copy(os.path.join(AQUI, nombre), destino)
+        for nombre in OPCIONAL.get(repo, ()):
+            shutil.copy(os.path.join(AQUI, nombre), os.path.join(r, js, nombre))
         shutil.copy(os.path.join(AQUI, 'tema.css'), os.path.join(r, css, 'tema.css'))
         shutil.copy(os.path.join(AQUI, '_headers'), os.path.join(r, '_headers'))  # encabezados de seguridad (Cloudflare)
         enlazar(r, js, css)
