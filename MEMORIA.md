@@ -507,3 +507,9 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
   NO son dobles: `cupones` (de cada tienda) vs `cfx_cupones` (descuento del Premium) y `messages` (cliente↔tienda) vs `cfx_chat` (soporte con el CM).
 - A6: `nucleo/seguro.js` (va primero en el <head>, CABEZA de sincronizar): `CFX_ESC`, `CFX_HTML` (plantilla que escapa), `CFX_URL` (frena javascript:). Núcleo y Órbita (core, tienda, comprobante, tour, despacho) usan CFX_ESC; vitrina pasa los links de redes por CFX_URL; comprobante de Pedidos y fotos de t/ escapados. Las otras 6 apps tienen copias propias de esc: cambiarlas en su turno.
 - A9 docs: README/CONFIGURAR de Órbita, CM, BiciTaller, Estaciona y Billetera apuntan a Cloudflare Workers; términos de Órbita: "⚙️ Ajustes → Zona peligrosa → Eliminar mi cuenta". Repos privados siguen EN PAUSA.
+
+## Núcleo 2.48 · límite de keys arreglado (08/11/2026)
+- `cfx_key_canjear` (nucleo/sql/admin.sql): una key mala anota 'key fallida' y devuelve `{error}` sin raise (el raise deshacía el registro y el límite de 10/hora nunca contaba). nucleo/pagos.js lanza el error si viene `r.error`.
+- Órbita `redeem_license` (bd 5.31) revisa `r ? 'error'`. central.js: 11 intentos → "Demasiados intentos".
+- Versiones: CM 4.69 (bd 4.19) · Órbita 5.83 (bd 5.31) · Barbería 2.66 · BiciTaller 2.67 (bd 2.16) · Estaciona 2.14.46 (21) · Billetera 1.21.44 (28) · Cerebro 1.51 (1.12).
+- Limpieza final antes de lanzar: anotada en PLAN.md ("Antes de lanzar").

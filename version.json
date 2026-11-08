@@ -1,1 +1,1 @@
-{"version": "4.68", "bd": "4.18", "funcion": "3.0", "notas": "🛡️ Más seguridad: textos y links de la pantalla pasan por un solo filtro (no se cuela código) · Tareas automáticas incluidas en el instalador"}
+{"version": "4.69", "bd": "4.19", "funcion": "3.0", "notas": "🛡️ Más seguridad: tras 10 keys erróneas en una hora se bloquea el canje (antes no contaba)"}

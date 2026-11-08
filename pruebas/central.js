@@ -175,6 +175,10 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         const g11 = await q.evaluate(async () => [CFX_ESC('<b>"x"</b>'), String(CFX_HTML`<i>${'<s>'}</i>`), CFX_URL('javascript:alert(1)'), Core.esc === undefined ? 'sin' : Core.esc('<'),
           (await Cuenta.rpc('redeem_license', { p_key: 'CFX-NADA' })).error]);
         ok(g11[0] === '&lt;b&gt;&quot;x&quot;&lt;/b&gt;' && g11[1] === '<i>&lt;s&gt;</i>' && g11[2] === '#' && g11[3] === '&lt;' && /no válida/.test(g11[4]), 'Órbita: G11 seguro.js + key ' + JSON.stringify(g11));
+        // núcleo 2.48: la key mala queda anotada (antes el raise la deshacía) → al 11º intento se bloquea.
+        const g48 = await q.evaluate(async () => { let r; for (let i = 0; i < 10; i++) r = await Cuenta.rpc('redeem_license', { p_key: 'CFX-NADA' }); return r.error; });
+        ok(/Demasiados intentos/.test(g48), 'Órbita: núcleo 2.48 límite de keys ' + g48);
+        await t.sim.su("delete from public.cfx_registro where accion = 'key fallida'");
         await q.goto(t.base + '/apps/caja/'); await q.waitForTimeout(2500);
         // Equipo con roles: el dueño cambia el rol en Mi equipo; Bodega ve Inventario (sin Vender) y el servidor no la deja vender.
         const eid = '00000000-0000-0000-0000-0000000000eb';
