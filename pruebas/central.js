@@ -30,6 +30,11 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         return fetch(c.SUPABASE_URL + '/rest/v1/rpc/cfx_ping', { method: 'POST', headers: { apikey: c.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }, body: '{}' }).then((r) => r.json()); } });
       const [er] = await t.sim.su("select count(*) filter (where mensaje = 'prueba G8 error')::int a, count(*) filter (where mensaje like '%G8 lanzado%')::int b, (select count(*) from cfx_salud where clave = 'ping')::int c, has_function_privilege('anon', 'public.cfx_salud()', 'execute') s from cfx_errores");
       ok(er.a === 1 && er.b === 1 && er.c === 1 && !er.s && pg === 'ok', app + ': errores anotados y ping anti-pausa ' + JSON.stringify(er));
+      // B13: el tiempo de carga real se anota (1 vez por página y sesión) y el CM lo ve en 🩺 Salud.
+      await p.evaluate(() => { sessionStorage.clear(); CFX_CARGA.anotarCarga(); CFX_CARGA.anotarCarga(); }); await p.waitForTimeout(1200);
+      const [cg] = await t.sim.su("select coalesce(sum(veces), 0)::int n, count(*)::int f, bool_and(ms > 0) m, has_function_privilege('anon', 'public.cfx_carga_anotar(text, int, int, boolean)', 'execute') a from cfx_cargas");
+      const [cs] = await t.sim.su("select jsonb_array_length(c) n from (select (select jsonb_agg(c order by c.veces desc) from (select pagina, sum(veces)::int veces from public.cfx_cargas where dia > current_date - 7 group by pagina) c) c) x");
+      ok(cg.n >= 1 && cg.n <= 2 && cg.f === 1 && cg.m && cg.a && cs.n === 1, app + ': B13 carga anotada ' + JSON.stringify(cg));
       // La barra aparece con una consulta lenta y se va al terminar.
       const barra = await p.evaluate(async () => { CFX_CARGA.barra(true); await new Promise((r) => setTimeout(r, 400)); const on = document.querySelector('.cfx-carga-b.on') !== null; CFX_CARGA.barra(false); return on && !document.querySelector('.cfx-carga-b.on'); });
       ok(barra, app + ': barra de carga aparece y se va');
@@ -223,6 +228,32 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
           const r = [vis, d && d.querySelector('pre').textContent]; if (d) d.querySelector('[data-a=x]').click(); return r; });
         ok(cpC[0] && /1 × Camisa \(Rojo\) — \$9\.500/.test(cpC[1]) && /Pago: Efectivo/.test(cpC[1]) && !/\(Rojo\) \(Rojo\)/.test(cpC[1]), 'Órbita: comprobante de venta en Caja ' + JSON.stringify(cpC));
         await t.foto('inventario', q);
+        // G14 · D21 + D22: cargar muchos productos (lista de WhatsApp, Excel y plantilla del rubro) y publicarlos de una vez.
+        await q.evaluate(() => document.querySelector('[data-v=productos]').click()); await q.waitForTimeout(300);
+        const [{ n: antes }] = await t.sim.su('select count(*)::int n from public.catalog_items where owner_id = $1', [tid]);
+        await q.click('#impPegar'); await q.fill('#impTxt', '*TORTAS:*\nTorta de chocolate - $15.000\nKuchen de manzana\n$8.000\nhttps://wa.me/p/123/56912345678\nVaso 300 ml 1.990\nCamisa 9000');
+        await q.click('#impLeer'); await q.waitForTimeout(300);
+        const d21 = await q.evaluate(() => [...document.querySelectorAll('#impLista .impF')].map((f) => [f.querySelector('[data-k=ok]').checked, f.querySelector('[data-k=nombre]').value, f.querySelector('[data-k=precio]').value, (f.querySelector('small') || {}).textContent || '']));
+        ok(JSON.stringify(d21) === JSON.stringify([[true, 'Torta de chocolate', '15000', 'TORTAS'], [true, 'Kuchen de manzana', '8000', 'TORTAS'], [true, 'Vaso 300 ml', '1990', 'TORTAS'], [false, 'Camisa', '9000', 'TORTAS']]), 'Órbita: D21 lista de WhatsApp ' + JSON.stringify(d21));
+        await t.foto('importar', q);
+        await q.click('#impAgregar'); await q.waitForTimeout(2500);
+        const [im] = await t.sim.su("select count(*)::int n, count(*) filter (where nombre = 'Kuchen de manzana' and precio = 8000 and categoria = 'TORTAS')::int k from public.catalog_items where owner_id = $1", [tid]);
+        ok(im.n === antes + 3 && im.k === 1, 'Órbita: D21 agregados y publicados ' + JSON.stringify(im));
+        const xl = await q.evaluate(async () => { const b = CFX_RESPALDO.libro({ Hoja: [{ Producto: 'Polera', 'Precio venta': 12990, Categoría: 'Ropa', Stock: 5, Tallas: 'S, M' }, { Producto: 'Gorro', 'Precio venta': '5.990', Categoría: 'Ropa', Stock: '', Tallas: '' }] });
+          const f = await CFX_RESPALDO.leer(new File([b], 'lista.xlsx')); const c = CFX_RESPALDO.csv('nombre;precio\n"Té; verde";1.500\n'); return [f, c]; });
+        ok(JSON.stringify(xl[0][1]) === '["Polera","12990","Ropa","5","S, M"]' && xl[0].length === 3 && JSON.stringify(xl[1]) === '[["nombre","precio"],["Té; verde","1.500"]]', 'Órbita: D21 leer Excel y CSV ' + JSON.stringify(xl));
+        await q.evaluate(() => { window.CFX_RESPALDO.leer = async () => [['Producto', 'Precio venta', 'Categoría', 'Stock', 'Tallas'], ['Polera', '12990', 'Ropa', '5', 'S, M']]; });
+        await q.setInputFiles('#impArch', { name: 'l.csv', mimeType: 'text/csv', buffer: Buffer.from('x') }); await q.waitForTimeout(400);
+        const ex = await q.evaluate(() => [document.querySelectorAll('#impLista .impF').length, document.querySelector('#impLista small').textContent]);
+        ok(ex[0] === 1 && /Ropa · .*S, M · stock 5/.test(ex[1]), 'Órbita: D21 columnas del Excel ' + JSON.stringify(ex));
+        await q.click('#impCancelar');
+        await q.click('#impPlant'); await q.waitForTimeout(800);
+        if (!(await q.locator('#impLista .impF').count())) await q.selectOption('#impRubro', 'Ropa y accesorios');
+        await q.waitForTimeout(300);
+        const d22 = await q.evaluate(() => [document.querySelectorAll('#impLista .impF').length, document.querySelector('#impLista [data-k=nombre]').value, !document.getElementById('impRubroW').classList.contains('hidden'), document.documentElement.scrollWidth <= innerWidth + 1]);
+        ok(d22[0] >= 5 && d22[1] && d22[2] && d22[3], 'Órbita: D22 plantilla del rubro ' + JSON.stringify(d22));
+        await t.foto('plantilla', q);
+        await q.click('#impCancelar');
         // G10: 🔔 Probar aviso en Mi perfil → Avanzado (lo muestra el service worker, vibra y vuelve a sonar).
         await q.evaluate(() => localStorage.setItem('cfx:tour:orbita-inicio', '1')); await q.goto(t.base + '/'); await q.waitForTimeout(3000);
         await q.evaluate(() => { window.__notif = null; CodeFixInstalar.pushActiva = async () => true; Object.defineProperty(Notification, 'permission', { get: () => 'granted' });

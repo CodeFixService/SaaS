@@ -178,6 +178,19 @@
   }
 
   // 🩺 Salud (G8): último ping anti-pausa y respaldo (GitHub Actions) y los errores que tuvo la app en los teléfonos.
+  // ⚡ Carga real (B13): cuánto demora en abrir cada página en los teléfonos, últimos 7 días (carga.js → cfx_carga_anotar).
+  function carga(L) {
+    if (!L) return '<div class="card"><h2>⚡ Carga</h2><p class="sub">Actualiza la base de esta app (⚡ Actualizar base) para medir cuánto demora en abrir.</p></div>';
+    const seg = (ms) => (ms / 1000).toLocaleString('es-CL', { maximumFractionDigits: 1 }) + ' s', ico = (ms) => (ms <= 2500 ? '✅' : ms <= 4000 ? '🟡' : '🔴');
+    const n = L.reduce((a, x) => a + x.veces, 0), prom = n ? Math.round(L.reduce((a, x) => a + x.ms * x.veces, 0) / n) : 0;
+    return '<div class="card"><h2>⚡ Carga (últimos 7 días)</h2>' + (!n ? '<p class="empty">Aún sin mediciones: se anotan solas cuando alguien abre la app.</p>' :
+      '<p>' + ico(prom) + ' Abre en <b>' + seg(prom) + '</b> en promedio · ' + n + ' aperturas</p>' +
+      L.map((x) => '<div class="fila" style="padding:6px 0;border-top:1px solid var(--line);gap:8px"><span class="grow" style="overflow-wrap:anywhere">' + ico(x.lcp || x.ms) + ' ' + esc(x.pagina) + '</span>' +
+        '<span class="sub">' + seg(x.ms) + (x.lcp ? ' · se ve en ' + seg(x.lcp) : '') + ' · ' + x.veces + 'x' + (x.lentas ? ' · ' + Math.round(x.lentas * 100 / x.veces) + '% lentas' : '') +
+        ' · ' + Math.round(x.cache * 100 / x.veces) + '% guardada</span></div>').join('') +
+      '<p class="sub">✅ menos de 2,5 s · 🟡 hasta 4 s · 🔴 más. "Guardada" = abrió desde la copia del teléfono (más rápido).</p>') + '</div>';
+  }
+
   async function salud() {
     let s;
     try { s = await rpc('cfx_salud'); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
@@ -185,7 +198,7 @@
     caja().innerHTML = '<div class="card"><h2>Salud de ' + esc(app().nombre) + '</h2>' +
       '<p>' + (dias(s.ping) < 3 ? '✅' : '⚠️') + ' Ping anti-pausa: ' + (s.ping ? A.hace(s.ping) : 'nunca (revisa GitHub → SaaS → Actions → Salud)') + '</p>' +
       '<p>' + (r && dias(r.cuando) < 2 ? '✅' : '⚠️') + ' Respaldo: ' + (r ? A.hace(r.cuando) + ' · ' + esc(r.mb) + ' MB' : 'nunca (falta su secreto en GitHub → SaaS → Settings → Secrets)') + '</p>' +
-      '<p>' + (s.errores_24h ? '⚠️ ' + s.errores_24h : '✅ 0') + ' errores en las últimas 24 h</p></div>' +
+      '<p>' + (s.errores_24h ? '⚠️ ' + s.errores_24h : '✅ 0') + ' errores en las últimas 24 h</p></div>' + carga(s.carga) +
       '<div class="card"><div class="fila"><h2 class="grow">Errores</h2>' + (s.errores.length ? '<button type="button" class="small" data-er="todos">Borrar todos</button>' : '') + '</div>' +
       (s.errores.map((e) => '<div style="padding:6px 0;border-top:1px solid var(--line)"><div class="fila"><b class="grow">' + esc(e.mensaje) + '</b><button type="button" class="small ghost" data-er="' + e.id + '">Borrar</button></div>' +
         '<div class="sub">' + (e.veces === 1 ? '1 vez' : e.veces + ' veces') + ' · ' + A.hace(e.ultimo) + ' · ' + esc(e.pagina) + (e.version ? ' · v' + esc(e.version) : '') + ' · ' + esc(e.navegador) + (e.con_cuenta ? ' · con cuenta' : '') + '</div>' +
