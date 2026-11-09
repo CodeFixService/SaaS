@@ -20,7 +20,7 @@
       d.querySelector('#mo').focus();
     });
   }
-  const show = App.pestanas((v) => ({ resumen, usuarios, pagos: () => window.PagosCentral.render(el('pagos')), mensajes: () => window.MensajesCentral.render(el('mensajes')), control: () => window.ControlApps.render(el('control')), ajustes: () => ajustes(), apps: () => window.MisApps.render(el('apps')) }[v] || (() => {}))());
+  const show = App.pestanas((v) => ({ resumen, usuarios, pagos: () => window.PagosCentral.render(el('pagos')), mensajes: () => window.MensajesCentral.render(el('mensajes')), control: () => window.ControlApps.render(el('control')), analitica: () => window.AnaliticaCM.render(el('analitica')), ajustes: () => ajustes(), apps: () => window.MisApps.render(el('apps')) }[v] || (() => {}))());
   // Ajustes en cuadrícula (núcleo): cada sección se abre dentro y "←" vuelve a las tarjetas.
   let AJ = null;
   const irAjuste = (k) => { show('ajustes'); AJ.abrir(k); };

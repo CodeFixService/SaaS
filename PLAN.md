@@ -34,10 +34,10 @@ Origen: análisis de Órbita del 05/11/2026. Marcar ✅ al terminar. Esta lista 
 - D23 Barra de progreso de la tienda ✅
 
 ## E. Analítica e inteligencia
-- E24 Motor en Python con GitHub Actions
-- E25 Pestaña Analítica en el CM
+- E24 Motor en Python con GitHub Actions ✅ G15 (SaaS analisis.yml + analisis/analisis.py cada noche en las 7 bases; núcleo 2.54 analisis.sql)
+- E25 Pestaña Analítica en el CM ✅ G15 (CM → Más → 📊 Analítica; "Análisis nocturno" en 🩺 Salud)
 - E26 "Qué hacer hoy" para el dueño ✅ G9
-- E27 Avisos de clientes en riesgo y productos que no se mueven
+- E27 Avisos de clientes en riesgo y productos que no se mueven ✅ G15 (Órbita → Hoy → 🔎 Para vender más + tareas en ✅ Qué hacer hoy; módulo 🔎 en el CM)
 - E28 Predicción de stock y ventas
 - E29 Segmentos automáticos de clientes + campañas sugeridas
 
@@ -57,7 +57,7 @@ Origen: análisis de Órbita del 05/11/2026. Marcar ✅ al terminar. Esta lista 
 U1-U14 · Reparar la app · variantes + ficha · Te puede gustar · stock por opción · pedido nuevo · fotos WebP · inventario en Caja · equipo con roles · vitrina · boleta SII · respaldo + ping + errores (G8) · rama pruebas · comprobante WhatsApp + push potentes (G10)
 
 ## Grupos que siguen (uno por chat)
-G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C18 + B10-B11 ✅ · G14 B12-B13 + D21-22 ✅ · G15 E24-E25 + E27 · G16 E28-E29 + F30 · G17 F31-F33 · G18 G35-G37
+G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C18 + B10-B11 ✅ · G14 B12-B13 + D21-22 ✅ · G15 E24-E25 + E27 ✅ · G16 E28-E29 + F30 · G17 F31-F33 · G18 G35-G37
 
 ## Antes de lanzar (cuando Josué diga "listo")
 - LIMPIEZA FINAL: dejar TODOS los usuarios (auth + perfil + plan) pero sin datos: productos, opciones/stock, fotos de buckets, diseño/tienda, pedidos, ventas, clientes, promociones, comprobantes. Primero un SQL que solo cuenta por usuario; luego el borrado.

@@ -1,0 +1,43 @@
+name: Análisis nocturno (Python · las 7 bases)
+
+# E24: cada noche analiza cada base y deja el resultado en la misma base (núcleo analisis.sql → cfx_analisis):
+#   · Centro de Mando → 📊 Analítica: usuarios, ventas, Premium y consejos de cada app.
+#   · Cada negocio (Órbita → Hoy): clientes que dejaron de comprar y productos quietos (E27).
+# Usa los MISMOS secretos del respaldo (cadena "Session pooler" de cada app). Si falta uno, esa app se salta.
+# Correrlo a mano: GitHub → SaaS → Actions → "Análisis nocturno" → Run workflow.
+on:
+  schedule:
+    - cron: '7 8 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analisis:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [CENTRO_DE_MANDO, BILLETERA, ORBITA, BARBERIA, BICITALLER, ESTACIONA, CEREBRO]
+    env:
+      BD: ${{ secrets[matrix.app] }}
+    steps:
+      - name: Revisar secreto
+        id: s
+        run: |
+          if [ -z "$BD" ]; then echo "::warning::Falta el secreto ${{ matrix.app }}: se salta"; echo "ok=no" >> "$GITHUB_OUTPUT"; else echo "ok=si" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/checkout@v4
+        if: steps.s.outputs.ok == 'si'
+        with:
+          sparse-checkout: analisis
+      - name: Analizar
+        if: steps.s.outputs.ok == 'si'
+        run: |
+          command -v psql >/dev/null || sudo apt-get install -y -q postgresql-client >/dev/null
+          for i in 1 2 3; do
+            python3 analisis/analisis.py > salida.txt && break
+            echo "intento $i falló"; sleep 30; [ $i = 3 ] && exit 1
+          done
+          cat salida.txt
+          { echo "### ${{ matrix.app }}"; sed 's/^::warning:://' salida.txt; } >> "$GITHUB_STEP_SUMMARY"

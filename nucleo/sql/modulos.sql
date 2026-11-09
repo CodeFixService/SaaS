@@ -37,7 +37,8 @@ begin
                       ('calificaciones', '⭐ Calificaciones', 'El cliente califica al negocio y el negocio al cliente.'),
                       ('cupones', '🏷️ Cupones', 'Códigos de descuento del negocio para sus clientes.'),
                       ('sellos', '🎟️ Tarjeta de sellos', 'Cada compra suma un sello; al completar la meta, premio.'),
-                      ('carrito', '🛒 Recordar carrito', 'Si el cliente deja productos en el carrito, al día siguiente le llega un aviso (una vez).')) c(clave, nombre, detalle) on c.clave = k), '[]');
+                      ('carrito', '🛒 Recordar carrito', 'Si el cliente deja productos en el carrito, al día siguiente le llega un aviso (una vez).'),
+                      ('analisis', '🔎 Clientes en riesgo y productos quietos', 'Cada noche se revisa quién dejó de comprar y qué no se vende; el negocio lo ve en Hoy.')) c(clave, nombre, detalle) on c.clave = k), '[]');
 end $$;
 
 create or replace function public.cfx_modulo_guardar(p_clave text, p_activo boolean) returns jsonb

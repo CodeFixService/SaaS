@@ -127,6 +127,27 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         ok(tr[0] && /^1 de 5/.test(tr[0]) && /^2 de/.test(tr[1]) && tr[2] && tr[3] === '1' && !qh[0] && /Responde 1 mensaje/.test(qh[1]) && fq === 7 && tr2,
           'Órbita: qué hacer hoy + ayuda y recorrido ' + JSON.stringify([tr, qh, fq, tr2]));
         await t.foto('hoy_hacer', q);
+        // G15 · E24/E27: el análisis nocturno (Python) encuentra clientes que dejaron de venir y productos quietos; el stock que se mueve cuenta.
+        const g15py = () => require('child_process').execSync('python3 ' + __dirname + '/../analisis/analisis.py "host=/var/tmp/pgb port=54329 user=postgres dbname=' + db + '"',
+          { env: { ...process.env, PATH: '/usr/lib/postgresql/16/bin:' + process.env.PATH } }).toString();
+        require('child_process').execSync('psql -h /var/tmp/pgb -p 54329 -U postgres -q -v ON_ERROR_STOP=1 -d ' + db + ' -f ' + __dirname + '/analisis_datos.sql', { env: { ...process.env, PATH: '/usr/lib/postgresql/16/bin:' + process.env.PATH } });
+        const g15out = g15py();
+        const [g15a] = await t.sim.su("select datos -> 'riesgo_total' r, datos -> 'quietos_total' q, datos #>> '{riesgo,0,nombre}' n, datos #>> '{mov,an2,0}' m, (select datos #>> '{ventas,pedidos30}' from cfx_analisis where clave = 'app') p, (select valor ->> 'negocios' from cfx_salud where clave = 'analisis') s from cfx_analisis where clave = '00000000-0000-0000-0000-0000000000e1'");
+        await t.sim.su("update public.catalog_items set stock = 4 where client_key = 'an2'"); g15py();
+        const [g15b] = await t.sim.su("select datos -> 'quietos_total' q, has_function_privilege('authenticated', 'public.cfx_analisis_datos()', 'execute') d, has_function_privilege('authenticated', 'public.cfx_analisis_guardar(jsonb)', 'execute') g, has_function_privilege('anon', 'public.cfx_analisis_mio()', 'execute') a from cfx_analisis where clave = '00000000-0000-0000-0000-0000000000e1'");
+        ok(g15a.r === 2 && g15a.q === 2 && g15a.n === 'Ana Pérez' && g15a.m === '5' && g15a.p === '2' && +g15a.s >= 1 && /Negocios analizados: \d/.test(g15out) && g15b.q === 1 && !g15b.d && !g15b.g && !g15b.a,
+          'Órbita: G15 análisis nocturno en Python (riesgo, quietos y stock que se mueve) ' + JSON.stringify([g15a, g15b]));
+        // En Hoy: 🔎 Para vender más con 💬 WhatsApp listo y la tarea en ✅ Qué hacer hoy. Con el módulo apagado no se ve.
+        await t.sim.su("select public.cfx_analisis_guardar(jsonb_build_object('negocios', jsonb_build_object($1::text, '{\"riesgo\": [{\"nombre\": \"Ana Pérez\", \"tel\": \"912345678\", \"dias\": 40, \"cada\": 10, \"compras\": 4, \"total\": 40000}], \"riesgo_total\": 1, \"quietos\": [{\"nombre\": \"Queque viejo\", \"stock\": 5, \"dias\": 60}], \"quietos_total\": 1, \"mov\": {}}'::jsonb)))", [tid]);
+        await q.reload(); await q.waitForTimeout(3000); await t.sinModales(q); await q.waitForTimeout(800);
+        const g15c = await q.evaluate(() => { const c = document.getElementById('hoyRecuperar'); const w = c.querySelector('[data-wa]');
+          return [!c.classList.contains('hidden'), c.textContent, w && w.href, document.getElementById('hoyHacerL').textContent, !!document.querySelector('#hoyHacerL [data-ir=hoyRecuperar]')]; });
+        await q.evaluate(() => document.getElementById('hoyRecuperar').scrollIntoView()); await t.foto('hoy_recuperar', q);
+        await t.sim.su("update cfx_config set valor = valor || '{\"analisis\": false}' where clave = 'modulos'");
+        const [g15d] = await t.sim.su("select set_config('request.jwt.claim.sub', $1, false), public.cfx_analisis_mio() m", [tid]); await t.sim.su("select set_config('request.jwt.claim.sub', '', false)");
+        await t.sim.su("update cfx_config set valor = valor - 'analisis' where clave = 'modulos'");
+        ok(g15c[0] && /Ana Pérez/.test(g15c[1]) && /Queque viejo/.test(g15c[1]) && /^https:\/\/wa\.me\/56912345678\?text=Hola%20Ana/.test(g15c[2]) && /Escríbele a 1 cliente/.test(g15c[3]) && /1 producto no se vende/.test(g15c[3]) && g15c[4] && g15d.m === null,
+          'Órbita: G15 clientes en riesgo y productos quietos en Hoy + módulo ' + JSON.stringify([g15c.slice(0, 1), g15c[2], g15d]));
         // G12 · C14 chat del núcleo: 3 mensajes seguidos y se bloquea el envío; reportar llega al admin. C19: con el módulo apagado no hay chat.
         const c2 = '00000000-0000-0000-0000-0000000000c2';
         await t.sim.su('set session_replication_role = replica');
@@ -404,6 +425,15 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await t.foto('control-salud');
         await p.click('#ctlCuerpo [data-er]:not([data-er=todos])'); await p.waitForTimeout(1200);
         const [sb] = await t.sim.su("select count(*)::int n from cfx_errores");
+        // G15 · E25: 📊 Analítica (lo calculó Python en la base del CM) y "Análisis nocturno" en 🩺 Salud.
+        require('child_process').execSync('python3 ' + __dirname + '/../analisis/analisis.py "host=/var/tmp/pgb port=54329 user=postgres dbname=' + db + '"', { env: { ...process.env, PATH: '/usr/lib/postgresql/16/bin:' + process.env.PATH } });
+        await p.click('[data-s=salud]'); await p.waitForTimeout(1500);
+        const sl2 = await p.evaluate(() => document.getElementById('ctlCuerpo').textContent);
+        await p.goto(t.base + '/admin/#analitica'); await p.waitForTimeout(3500); await t.sinModales();
+        const anl = await p.evaluate(() => [document.getElementById('v-analitica').textContent, document.querySelectorAll('#v-analitica [data-an]').length, document.querySelectorAll('#anDet svg rect').length]);
+        await t.foto('cm_analitica');
+        ok(/Análisis nocturno: recién/.test(sl2) && /Analítica/.test(anl[0]) && /Cuentas nuevas por día/.test(anl[0]) && /Activas 7 d/.test(anl[0]) && /cuentas entró esta semana/.test(anl[0]) && anl[1] >= 1 && anl[2] >= 60,
+          'CM: 📊 Analítica + análisis en 🩺 Salud ' + JSON.stringify([anl[1], anl[2]]));
         ok(/Salud de/.test(sl) && /Ping anti-pausa/.test(sl) && /1.5 MB/.test(sl) && /prueba G8 error/.test(sl) && sb.n === 1, 'CM: Control → Salud ' + JSON.stringify(sb));
         ok(/Seguridad de la app/.test(sg) && /Tablas sin reglas \(RLS\): ninguna/.test(sg) && hs.s === '0x4AAAAAAAsecreto' && hs.h.invitados === true && !('secreto' in hs.h), 'CM: Control → Seguridad y secret key ' + JSON.stringify(hs.h));
         ok(copia.cuenta.email === 'titular@x.cl' && copia.consentimientos.ofertas === true && Object.keys(copia.datos).length > 0 && /Corregir un dato/.test(ul) && vio &&

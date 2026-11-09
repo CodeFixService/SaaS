@@ -198,6 +198,7 @@
     caja().innerHTML = '<div class="card"><h2>Salud de ' + esc(app().nombre) + '</h2>' +
       '<p>' + (dias(s.ping) < 3 ? '✅' : '⚠️') + ' Ping anti-pausa: ' + (s.ping ? A.hace(s.ping) : 'nunca (revisa GitHub → SaaS → Actions → Salud)') + '</p>' +
       '<p>' + (r && dias(r.cuando) < 2 ? '✅' : '⚠️') + ' Respaldo: ' + (r ? A.hace(r.cuando) + ' · ' + esc(r.mb) + ' MB' : 'nunca (falta su secreto en GitHub → SaaS → Settings → Secrets)') + '</p>' +
+      '<p>' + (s.analisis && dias(s.analisis.cuando) < 2 ? '✅' : '⚠️') + ' Análisis nocturno: ' + (s.analisis ? A.hace(s.analisis.cuando) + ' · ' + esc(s.analisis.negocios) + ' negocios' : 'nunca (GitHub → SaaS → Actions → Análisis nocturno)') + '</p>' +
       '<p>' + (s.errores_24h ? '⚠️ ' + s.errores_24h : '✅ 0') + ' errores en las últimas 24 h</p></div>' + carga(s.carga) +
       '<div class="card"><div class="fila"><h2 class="grow">Errores</h2>' + (s.errores.length ? '<button type="button" class="small" data-er="todos">Borrar todos</button>' : '') + '</div>' +
       (s.errores.map((e) => '<div style="padding:6px 0;border-top:1px solid var(--line)"><div class="fila"><b class="grow">' + esc(e.mensaje) + '</b><button type="button" class="small ghost" data-er="' + e.id + '">Borrar</button></div>' +
