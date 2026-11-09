@@ -109,7 +109,7 @@
   }
   async function render(el) {
     const c = CM.cuenta;
-    if (!el.querySelector('#menuMas')) el.innerHTML = '<div class="titulo-v"><h2>Más</h2></div><div id="menuMas"></div>';
+    if (!el.querySelector('#menuMas')) el.innerHTML = '<div class="titulo-v"><h2>Más</h2></div><div id="menuMas" data-cfx-menu></div>';
     try { [uso, pago] = await Promise.all([rpc('mi_uso'), rpc('cfx_pago_estado').then((e) => e.ultimo)]); } catch (e) { /* sigue */ }
     const hasta = c.premium_hasta ? A.fCorta(c.premium_hasta.slice(0, 10)) : '', usuario = c.rol === 'usuario';
     const ir = (v, s) => () => { CM.ui.sub = s || null; CM.ir(v); };

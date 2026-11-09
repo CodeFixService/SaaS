@@ -370,6 +370,16 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await u.click('dialog [data-t="rectificacion"]'); await u.fill('dialog [data-txt]', 'Mi nombre es Ana Pérez'); await u.click('dialog [data-enviar]'); await u.waitForTimeout(1200);
         const ul = await u.evaluate(() => document.querySelector('dialog [data-lista]').textContent);
         await t.foto('mis-datos', u);
+        // Núcleo 2.53: después de pasar por Más, Hoy no queda con "Cuenta y ayuda" pegado abajo (antes se pegaba a <main>).
+        await u.route(/rpc\/mi_uso/, async (r) => { await new Promise((z) => setTimeout(z, 1500)); r.fallback(); });  // red lenta como en el teléfono
+        await u.goto(t.base + '/app/#hoy'); await u.waitForTimeout(2500); await t.sinModales(u);
+        const cg0 = await u.evaluate(() => document.querySelectorAll('.cfx-cuenta-g').length);
+        await u.evaluate(() => CM.ir('mas')); await u.waitForTimeout(1000);
+        const cgL = await u.evaluate(() => document.querySelectorAll('.cfx-cuenta-g').length); await u.waitForTimeout(1500);
+        const cgM = await u.evaluate(() => [document.querySelectorAll('#v-mas .cfx-mmas').length, document.querySelectorAll('.cfx-cuenta-g').length]);
+        await u.evaluate(() => CM.ir('hoy')); await u.waitForTimeout(1500);
+        const cgH = await u.evaluate(() => [...document.querySelectorAll('.cfx-cuenta-g')].filter((x) => x.offsetParent).length);
+        ok(cg0 === 0 && cgL === 0 && cgM[0] === 1 && cgM[1] === 0 && cgH === 0, 'CM: Hoy sin menú de cuenta extra tras volver de Más ' + JSON.stringify([cg0, cgL, cgM, cgH]));
         await p.goto(t.base + '/'); await p.fill('input[type=email]', 'juanjosuecastilloloyola@gmail.com'); await p.fill('input[type=password]', 'admin123'); await p.press('input[type=password]', 'Enter');
         await p.waitForURL(/admin/); await p.waitForTimeout(800); await t.sinModales();
         await p.goto(t.base + '/admin/#control'); await p.waitForTimeout(3000); await t.sinModales();
