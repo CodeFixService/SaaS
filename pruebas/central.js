@@ -63,6 +63,53 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         const v = await p.evaluate(() => { const s = document.querySelector('#perfil .pf'); return s && [s.querySelector('h2').textContent, s.textContent.includes('Ropa hecha a mano'), !!s.querySelector('a[href*="instagram.com/vitrina"]'), !!s.querySelector('a[href*="wa.me/56912345678"]'), document.documentElement.scrollWidth <= innerWidth + 1]; });
         ok(v && v[0] === 'Vitrina Prueba' && v.slice(1).every(Boolean), 'Órbita: tienda pública con perfil ' + JSON.stringify(v));
         await t.foto('vitrina');
+        // G17 · F32: el Worker de /t/ (worker.js) pone título, og:* y schema.org de la tienda y del producto; /t/og entrega la imagen; si Supabase no responde, la página sale igual.
+        const g17png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+        await t.sim.su("insert into public.catalog_items (owner_id, client_key, nombre, precio, categoria, descripcion, foto, foto_at) values ($1, 'g17p', 'Polerón <Lana>', 18990, 'Polerones', 'Tejido a mano', $2, now()) on conflict do nothing", [id, g17png]);
+        const g17w = await import('/home/user/Aplicaciones/worker.js'), g17f0 = global.fetch, g17dir = '/home/user/Aplicaciones';
+        const g17env = { ASSETS: { fetch: async (r) => { const u = new URL(r.url || r), f = g17dir + (u.pathname.endsWith('/') ? u.pathname + 'index.html' : u.pathname);
+          if (!fs.existsSync(f)) return new Response('no', { status: 404 });
+          return new Response(fs.readFileSync(f), { headers: { 'content-type': /\.html$/.test(f) ? 'text/html; charset=utf-8' : /\.png$/.test(f) ? 'image/png' : 'application/javascript' } }); } } };
+        let g17lento = false;
+        global.fetch = async (u, o) => { const m = String(u).match(/\/rest\/v1\/rpc\/(\w+)$/); const a = JSON.parse(o.body);
+          if (g17lento) await new Promise((z, mal) => o.signal.addEventListener('abort', () => mal(new Error('abort'))));
+          const r = m[1] === 'tienda_publica' ? (await t.sim.su('select public.tienda_publica($1) r', [a.p_slug]))[0].r
+            : m[1] === 'catalogo_publico' ? await t.sim.su('select * from public.catalogo_publico($1)', [a.p_slug]) : await t.sim.su('select * from public.fotos_publicas($1, $2)', [a.p_slug, a.p_claves]);
+          return new Response(JSON.stringify(r), { headers: { 'content-type': 'application/json' } }); };
+        const g17get = async (q) => { const r = await g17w.default.fetch(new Request('https://x.dev' + q), g17env); return [r, /^image/.test(r.headers.get('content-type')) ? Buffer.from(await r.arrayBuffer()) : await r.text()]; };
+        const g17ld = (h) => JSON.parse((h.match(/<script type="application\/ld\+json">(.*?)<\/script>/) || [, 'null'])[1]);
+        const [, g17h] = await g17get('/t/?s=vitrina'), [, g17hp] = await g17get('/t/?s=vitrina&p=g17p'), [g17ri, g17img] = await g17get('/t/og?s=vitrina&p=g17p'), [g17rl] = await g17get('/t/og?s=vitrina');
+        const g17a = g17ld(g17h), g17b = g17ld(g17hp);
+        ok(/<title>Vitrina Prueba · Ropa · Tienda en línea<\/title>/.test(g17h) && /property="og:image" content="https:\/\/x\.dev\/t\/og\?s=vitrina&amp;v=/.test(g17h) && /name="description" content="Ropa hecha a mano"/.test(g17h) &&
+          g17a['@type'] === 'Store' && g17a.address.addressLocality === 'Ñuñoa' && g17a.hasOfferCatalog.itemListElement[0].price === 18990 && g17a.hasOfferCatalog.itemListElement[0].priceCurrency === 'CLP',
+          'Órbita G17: Worker pone título, descripción, og:image y schema.org Store de la tienda ' + JSON.stringify((g17h.match(/<title>.*?<\/title>/) || [])[0]));
+        ok(/<title>Polerón &lt;Lana&gt; · \$18\.990 · Vitrina Prueba<\/title>/.test(g17hp) && /og:type" content="product"/.test(g17hp) && /og:image" content="[^"]*p=g17p/.test(g17hp) &&
+          g17b['@type'] === 'Product' && g17b.offers.price === 18990 && g17b.offers.availability === 'https://schema.org/InStock' && !/<Lana>/.test(g17hp),
+          'Órbita G17: link de producto con su título, precio, foto y schema.org Product (escapado)');
+        ok(g17ri.headers.get('content-type') === 'image/png' && g17img[0] === 0x89 && g17img.length > 20 && g17rl.headers.get('content-type') === 'image/png' && g17rl.status === 200,
+          'Órbita G17: /t/og entrega la foto del producto y, sin logo, el ícono de la app ' + g17img.length);
+        g17lento = true; const g17t0 = Date.now(), [, g17hl] = await g17get('/t/?s=lenta'); g17lento = false;
+        const [, g17hn] = await g17get('/t/?s=noexiste');
+        global.fetch = g17f0;
+        ok(/<title>Tienda · Órbita<\/title>/.test(g17hl) && Date.now() - g17t0 < 2500 && /<title>Tienda · Órbita<\/title>/.test(g17hn) && fs.readFileSync(g17dir + '/robots.txt', 'utf8').includes('Allow: /t/'),
+          'Órbita G17: si Supabase tarda o la tienda no existe, la página sale igual (y robots deja ver /t/) ' + (Date.now() - g17t0) + ' ms');
+        // F32 + F31: ?p= abre la ficha del producto con 🔗 Compartir; las tarjetas animan solo la primera vez (sin parpadeo al llegar fotos).
+        await p.goto(t.base + '/t/?s=vitrina&p=g17p'); await p.waitForTimeout(2500);
+        const g17fi = await p.evaluate(() => { const f = document.querySelector('.t-ficha'); return f && [f.querySelector('h3').textContent, !!f.querySelector('[data-f-comp]'), !!f.querySelector('img'),
+          document.getElementById('grid').classList.contains('t-visto'), document.querySelectorAll('#grid .t-sk, #grid .foto-esq').length, CFX_LINK_PRODUCTO('g17p').endsWith('/t/?s=vitrina&p=g17p')]; });
+        ok(g17fi && g17fi[0] === 'Polerón <Lana>' && g17fi[1] && g17fi[2] && g17fi[3] && g17fi[4] === 0 && g17fi[5], 'Órbita G17: link de producto abre su ficha con 🔗 Compartir ' + JSON.stringify(g17fi));
+        await t.foto('vitrina-producto');
+        await p.emulateMedia({ colorScheme: 'dark' }); await p.goto(t.base + '/t/?s=vitrina'); await p.waitForTimeout(1500);
+        const g17os = await p.evaluate(() => [getComputedStyle(document.body).backgroundColor, getComputedStyle(document.documentElement).getPropertyValue('--brand').trim()]);
+        ok(g17os[0] !== 'rgb(243, 245, 247)' && g17os[1] === '#7c8088', 'Órbita G17: vitrina en modo oscuro con el color de su rubro (Ropa, negro aclarado para que se lea) ' + JSON.stringify(g17os));
+        await t.foto('vitrina-oscuro'); await p.emulateMedia({ colorScheme: 'light' });
+        await t.sim.su("delete from public.catalog_items where owner_id = $1 and client_key = 'g17p'", [id]);
+        // F31: mientras llega el catálogo (red lenta) se ven tarjetas esqueleto.
+        await p.route(/rpc\/catalogo_publico/, async (r) => { await new Promise((z) => setTimeout(z, 1500)); r.fallback(); });
+        await p.goto(t.base + '/t/?s=vitrina'); await p.waitForTimeout(700);
+        const g17sk = await p.evaluate(() => document.querySelectorAll('#grid .t-sk').length);
+        await p.waitForTimeout(2000); await p.unroute(/rpc\/catalogo_publico/);
+        ok(g17sk === 4 && await p.evaluate(() => !document.querySelector('#grid .t-sk')), 'Órbita G17: esqueleto de tarjetas mientras carga el catálogo ' + g17sk);
         // Turnstile en compras sin cuenta: con secret key, humano.js pone el token y la base lo revisa con Cloudflare.
         await t.sim.su("update public.cfx_config set valor = '{\"site_key\": \"0x4AAAAAAAprueba\"}' where clave = 'humano'");
         await t.sim.su("insert into public.cfx_secretos (clave, valor) values ('turnstile', '0x4AAAAAAAsecreto') on conflict (clave) do update set valor = excluded.valor");

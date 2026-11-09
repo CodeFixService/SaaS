@@ -43,9 +43,9 @@ Origen: análisis de Órbita del 05/11/2026. Marcar ✅ al terminar. Esta lista 
 
 ## F. Visual y premium
 - F30 Panel con gráficos en vivo ✅ G16 (Órbita → Pedidos → Estadísticas: hoy en vivo cada 30 s, ventas por día y por hora)
-- F31 Animaciones suaves y estados de carga
-- F32 Vitrina pública con buen SEO y vista previa al compartir por WhatsApp
-- F33 Modo oscuro y temas por rubro
+- F31 Animaciones suaves y estados de carga ✅ G17 (vitrina: tarjetas esqueleto y marco con brillo para fotos; animación solo la 1ª vez; Pedidos con esqueleto)
+- F32 Vitrina pública con buen SEO y vista previa al compartir por WhatsApp ✅ G17 (worker.js en /t/*: título, og:*, schema.org; /t/og = logo o foto; link por producto ?p= con 🔗)
+- F33 Modo oscuro y temas por rubro ✅ G17 (claro/oscuro/auto en Mi perfil; color por rubro si no eligió; marca oscura se aclara en modo oscuro)
 
 ## G. Conexiones
 - G34 Pago automático Mercado Pago ✅ G4 (Webpay después)
@@ -57,7 +57,7 @@ Origen: análisis de Órbita del 05/11/2026. Marcar ✅ al terminar. Esta lista 
 U1-U14 · Reparar la app · variantes + ficha · Te puede gustar · stock por opción · pedido nuevo · fotos WebP · inventario en Caja · equipo con roles · vitrina · boleta SII · respaldo + ping + errores (G8) · rama pruebas · comprobante WhatsApp + push potentes (G10)
 
 ## Grupos que siguen (uno por chat)
-G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C18 + B10-B11 ✅ · G14 B12-B13 + D21-22 ✅ · G15 E24-E25 + E27 ✅ · G16 E28-E29 + F30 ✅ · G17 F31-F33 · G18 G35-G37
+G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C18 + B10-B11 ✅ · G14 B12-B13 + D21-22 ✅ · G15 E24-E25 + E27 ✅ · G16 E28-E29 + F30 ✅ · G17 F31-F33 ✅ · G18 G35-G37
 
 ## Antes de lanzar (cuando Josué diga "listo")
 - LIMPIEZA FINAL: dejar TODOS los usuarios (auth + perfil + plan) pero sin datos: productos, opciones/stock, fotos de buckets, diseño/tienda, pedidos, ventas, clientes, promociones, comprobantes. Primero un SQL que solo cuenta por usuario; luego el borrado.
