@@ -135,7 +135,10 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         const [g15a] = await t.sim.su("select datos -> 'riesgo_total' r, datos -> 'quietos_total' q, datos #>> '{riesgo,0,nombre}' n, datos #>> '{mov,an2,0}' m, (select datos #>> '{ventas,pedidos30}' from cfx_analisis where clave = 'app') p, (select valor ->> 'negocios' from cfx_salud where clave = 'analisis') s from cfx_analisis where clave = '00000000-0000-0000-0000-0000000000e1'");
         await t.sim.su("update public.catalog_items set stock = 4 where client_key = 'an2'"); g15py();
         const [g15b] = await t.sim.su("select datos -> 'quietos_total' q, has_function_privilege('authenticated', 'public.cfx_analisis_datos()', 'execute') d, has_function_privilege('authenticated', 'public.cfx_analisis_guardar(jsonb)', 'execute') g, has_function_privilege('anon', 'public.cfx_analisis_mio()', 'execute') a from cfx_analisis where clave = '00000000-0000-0000-0000-0000000000e1'");
-        ok(g15a.r === 2 && g15a.q === 2 && g15a.n === 'Ana Pérez' && g15a.m === '5' && g15a.p === '2' && +g15a.s >= 1 && /Negocios analizados: \d/.test(g15out) && g15b.q === 1 && !g15b.d && !g15b.g && !g15b.a,
+        // G16 · E28 predicción (stock que se acaba + venta de la semana) y E29 segmentos, del mismo análisis.
+        const [g16a] = await t.sim.su("select datos -> 'acaba_total' a, datos #>> '{acaba,0,nombre}' an, (datos #>> '{semana,monto}')::int sm, datos #>> '{semana,mejor_dia}' md, datos #>> '{segmentos,riesgo,total}' sr, datos #>> '{segmentos,perdidos,total}' sp, datos #>> '{segmentos,nuevos,lista,0,nombre}' sn, jsonb_array_length(datos #> '{mov,an5}') ml from cfx_analisis where clave = '00000000-0000-0000-0000-0000000000e1'");
+        ok(g16a.a === 1 && g16a.an === 'Café molido' && g16a.sm > 0 && !!g16a.md && g16a.sr === '2' && g16a.sp === '1' && g16a.sn === 'Beto' && g16a.ml === 5, 'Órbita: G16 predicción y segmentos en el análisis ' + JSON.stringify(g16a));
+        ok(g15a.r === 2 && g15a.q === 2 && g15a.n === 'Ana Pérez' && g15a.m === '5' && g15a.p === '3' && +g15a.s >= 1 && /Negocios analizados: \d/.test(g15out) && g15b.q === 1 && !g15b.d && !g15b.g && !g15b.a,
           'Órbita: G15 análisis nocturno en Python (riesgo, quietos y stock que se mueve) ' + JSON.stringify([g15a, g15b]));
         // En Hoy: 🔎 Para vender más con 💬 WhatsApp listo y la tarea en ✅ Qué hacer hoy. Con el módulo apagado no se ve.
         await t.sim.su("select public.cfx_analisis_guardar(jsonb_build_object('negocios', jsonb_build_object($1::text, '{\"riesgo\": [{\"nombre\": \"Ana Pérez\", \"tel\": \"912345678\", \"dias\": 40, \"cada\": 10, \"compras\": 4, \"total\": 40000}], \"riesgo_total\": 1, \"quietos\": [{\"nombre\": \"Queque viejo\", \"stock\": 5, \"dias\": 60}], \"quietos_total\": 1, \"mov\": {}}'::jsonb)))", [tid]);
@@ -208,6 +211,23 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await t.sim.su("select public.auditar('Prueba G13', 'registro único')");
         const [k4] = await t.sim.su("select count(*)::int n from public.cfx_registro where accion = 'Prueba G13'");
         ok(k1.n === 1 && k1.av === true && k1.pu === 1 && k2.r.ok && k3.n === 0 && k3.d === 2500 && !k3.v && !k3.au && k4.n === 1, 'Órbita: carrito + despacho + registro del núcleo ' + JSON.stringify([k1, k2.r.ok, k3, k4]));
+        // G16 · F30 Estadísticas en vivo (hoy + gráficos por día y hora) + E28 esta semana + E29 grupos con campaña (cupón + WhatsApp) + Hoy.
+        await t.sim.su("select public.cfx_analisis_guardar(jsonb_build_object('negocios', jsonb_build_object($1::text, '{\"riesgo\": [], \"riesgo_total\": 0, \"quietos\": [], \"quietos_total\": 0, \"acaba\": [{\"nombre\": \"Café molido\", \"stock\": 4, \"dias\": 6, \"semana\": 4.5}], \"acaba_total\": 1, \"semana\": {\"monto\": 35000, \"pedidos\": 3, \"pasada\": 30000, \"pedidos_pasada\": 2, \"mejor_dia\": \"viernes\"}, \"segmentos\": {\"riesgo\": {\"total\": 1, \"lista\": [{\"nombre\": \"Ana Pérez\", \"tel\": \"912345678\", \"dias\": 40, \"compras\": 4, \"total\": 40000}]}, \"vip\": {\"total\": 0, \"lista\": []}, \"nuevos\": {\"total\": 0, \"lista\": []}, \"perdidos\": {\"total\": 0, \"lista\": []}, \"frecuentes\": {\"total\": 0, \"lista\": []}}, \"mov\": {}}'::jsonb)))", [tid]);
+        await q.goto(t.base + '/apps/pedidos/?v=stats'); await q.waitForTimeout(3000); await t.sinModales(q);
+        const g16b = await q.evaluate(() => [document.getElementById('sHoyM').textContent, document.querySelectorAll('#gDias rect.b').length, document.querySelectorAll('#gHoras rect.b').length,
+          !document.getElementById('sSemana').classList.contains('hidden') && document.getElementById('sSemana').textContent, !document.getElementById('sSeg').classList.contains('hidden'), document.getElementById('gHorasL').textContent]);
+        await t.foto('estadisticas_g16', q);
+        await q.click('#gDias', { position: { x: 5, y: 60 } }); const g16l = await q.textContent('#gDiasL');
+        await q.click('[data-seg=riesgo]'); await q.waitForTimeout(300); await q.click('#bCampCupon'); await q.waitForTimeout(1500);
+        const g16c = await q.evaluate(() => { const w = document.querySelector('#sSegL [data-wa]'); return [w && decodeURIComponent(w.href), document.getElementById('sSegL').textContent]; });
+        await q.evaluate(() => document.getElementById('sSeg').scrollIntoView()); await t.foto('segmentos_g16', q);
+        const [g16d] = await t.sim.su("select porcentaje p, hasta - current_date d from cfx_descuentos where owner_id = $1 and codigo = 'VUELVE15'", [tid]);
+        await q.goto(t.base + '/'); await q.waitForTimeout(3000); await t.sinModales(q); await q.waitForTimeout(800);
+        const g16e = await q.evaluate(() => [document.getElementById('hoyRecuperar').textContent, document.getElementById('hoyHacerL').textContent]);
+        ok(g16b[0] !== '$0' && g16b[1] === 30 && g16b[2] === 24 && /~\$35\.000/.test(g16b[3]) && /Café molido/.test(g16b[3]) && g16b[4] && /Tu mejor hora/.test(g16b[5]) && /hace|\d/.test(g16l) && /pedido/.test(g16l) &&
+          /^https:\/\/wa\.me\/56912345678\?text=Hola Ana Pérez/.test(g16c[0]) && /VUELVE15/.test(g16c[0]) && /Cupón VUELVE15 listo/.test(g16c[1]) && g16d && g16d.p === 15 && g16d.d === 14 &&
+          /Se acaba pronto/.test(g16e[0]) && /Café molido/.test(g16e[0]) && /1 producto se acaba/.test(g16e[1]),
+          'Órbita: G16 Estadísticas en vivo + esta semana + grupos con campaña + Hoy ' + JSON.stringify([g16b, g16l, g16c[0], g16d, g16e[1]]));
         await t.sim.su("update public.profiles set plan = 'free', pro_until = null where id = $1", [tid]);
         await q.goto(t.base + '/apps/pedidos/'); await q.waitForTimeout(2500);
         await t.sim.su("insert into public.pedidos (negocio_id, cliente_id, lineas, subtotal, total, entrega, estado) values ($1, $2, '[{\"nombre\":\"Polera\",\"cant\":1,\"precio\":10000,\"subtotal\":10000}]', 10000, 10000, 'retiro', 'recibido')", [tid, cli]);

@@ -18,6 +18,10 @@ QUIETO = 30        # días sin venderse ni moverse el stock para ser "producto q
 MAX_RIESGO = 10    # clientes en riesgo que se muestran por negocio
 MAX_QUIETOS = 15
 PERDIDO = 180      # más de esto ya no es "en riesgo": se fue
+ALCANZA = 14       # E28: productos cuyo stock alcanza para 14 días o menos
+MAX_ACABA = 10
+MAX_SEG = 30       # E29: clientes que se muestran por segmento
+DIAS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
 
 
 def psql(bd, sql, entrada=None):
@@ -95,6 +99,56 @@ def analizar_app(d, hoy):
     return out
 
 
+def semana(vs, hoy):
+    """🔮 E28: venta estimada de los próximos 7 días = promedio de las 4 últimas semanas, pesando más las recientes."""
+    sem = [[0.0, 0] for _ in range(4)]
+    por_dia = [0.0] * 7
+    for v in vs:
+        h = (hoy - dia(v['f'])).days
+        if 0 <= h < 28:
+            sem[h // 7][0] += float(v['m']); sem[h // 7][1] += 1
+        if 0 <= h < 56:
+            por_dia[dia(v['f']).weekday()] += float(v['m'])
+    if not any(x[1] for x in sem):
+        return None
+    pesos = [0.4, 0.3, 0.2, 0.1]
+    return {'monto': round(sum(p * x[0] for p, x in zip(pesos, sem))), 'pedidos': round(sum(p * x[1] for p, x in zip(pesos, sem))),
+            'pasada': round(sem[0][0]), 'pedidos_pasada': sem[0][1], 'mejor_dia': DIAS[por_dia.index(max(por_dia))]}
+
+
+def segmentar(por_cli, clientes, hoy):
+    """👥 E29: cada cliente en un solo segmento (en orden): en riesgo, perdidos, VIP, nuevos, frecuentes. El resto queda como ocasional."""
+    totales = sorted((x['total'] for x in por_cli.values() if len(x['dias']) >= 2), reverse=True)
+    corte = totales[max(0, len(totales) // 5 - 1)] if len(totales) >= 5 else (totales[0] if totales else 0)
+    seg = {k: [] for k in ('riesgo', 'perdidos', 'vip', 'nuevos', 'frecuentes')}
+    ocasionales = 0
+    for k, x in por_cli.items():
+        ds = sorted(x['dias'])
+        hace, n = (hoy - ds[-1]).days, len(ds)
+        cada = max(7, round(statistics.median([(b - a).days for a, b in zip(ds, ds[1:])]))) if n >= 2 else None
+        if cada and max(2 * cada, cada + 14) <= hace <= PERDIDO:
+            s = 'riesgo'
+        elif hace > PERDIDO or (n == 1 and hace > 90):
+            s = 'perdidos'
+        elif n >= 2 and x['total'] >= corte and hace <= 90:
+            s = 'vip'
+        elif (hoy - ds[0]).days <= 30:
+            s = 'nuevos'
+        elif n >= 3:
+            s = 'frecuentes'
+        else:
+            ocasionales += 1
+            continue
+        q = clientes.get(k) or {}
+        seg[s].append({'nombre': q.get('nombre') or 'Cliente', 'tel': q.get('tel') or '', 'dias': hace, 'compras': n, 'total': round(x['total'])})
+    out = {}
+    for s, l in seg.items():
+        l.sort(key=lambda r: (-r['total'], r['dias']))
+        out[s] = {'total': len(l), 'lista': l[:MAX_SEG]}
+    out['ocasionales'] = {'total': ocasionales, 'lista': []}
+    return out
+
+
 def analizar_negocios(d, hoy):
     app = d.get('app') or {}
     if 'ventas' not in app or not d.get('modulo', True):
@@ -128,26 +182,48 @@ def analizar_negocios(d, hoy):
                 riesgo.append({'nombre': q.get('nombre') or 'Cliente', 'tel': q.get('tel') or '', 'dias': hace, 'cada': cada,
                                'compras': len(ds), 'total': round(x['total'])})
         riesgo.sort(key=lambda r: (-r['total'], -r['dias']))
+        segmentos = segmentar(por_cli, clientes, hoy)
         # 📦 Productos quietos: sin ventas ni cambio de stock en 30 días (el stock de anoche queda en "mov": así cuentan las ventas de Caja).
         ultima = {}
         for v in vs:
             for k, _ in v.get('l') or []:
                 ultima[k] = max(ultima.get(k, date.min), dia(v['f']))
         prev = previo.get(n) or {}
-        mov, quietos = {}, []
+        mov, quietos, acaba = {}, [], []
+        # 🔮 E28: unidades vendidas online en 28 días por producto (Caja no queda en pedidos: eso lo suma el ritmo del stock).
+        u28 = {}
+        for v in vs:
+            if dia(v['f']) > hoy - timedelta(days=28):
+                for k, c in v.get('l') or []:
+                    u28[k] = u28.get(k, 0) + (c or 0)
         for p in prods.get(n, []):
             k, st = p['k'], p.get('stock')
             antes = prev.get(k)
             f_mov = dia(antes[1]) if antes and antes[0] == st else (hoy if antes else None)
-            mov[k] = [st, (f_mov or dia(p.get('creado') or hoy)).isoformat()]
+            # Ritmo del stock: promedio de lo que baja por día (las subidas son reposición y no cuentan), hasta 28 días de memoria.
+            tasa, f_calc = (float(antes[2]), dia(antes[3])) if antes and len(antes) >= 4 else (0.0, None)
+            if f_calc and f_calc < hoy and st is not None and antes[0] is not None:
+                d = min((hoy - f_calc).days, 28)
+                baja = max(0, antes[0] - st)
+                obs = min(28, antes[4] if len(antes) >= 5 else 0)
+                tasa = (tasa * obs + baja) / (obs + d)
+                obs = min(28, obs + d)
+            else:
+                obs = antes[4] if antes and len(antes) >= 5 else 0
+            mov[k] = [st, (f_mov or dia(p.get('creado') or hoy)).isoformat(), round(tasa, 3), hoy.isoformat(), obs]
+            ritmo = max(u28.get(k, 0) / 28, tasa)
+            if st is not None and st > 0 and ritmo > 0 and st / ritmo <= ALCANZA:
+                acaba.append({'nombre': p.get('nombre') or 'Producto', 'stock': st, 'dias': int(st / ritmo), 'semana': round(ritmo * 7, 1)})
             ult = max([x for x in (ultima.get(k), f_mov, dia(p.get('creado') or hoy)) if x])
             hace = (hoy - ult).days
             if hace >= QUIETO and (st is None or st > 0):
                 quietos.append({'nombre': p.get('nombre') or 'Producto', 'stock': st, 'dias': hace})
         quietos.sort(key=lambda q: -q['dias'])
+        acaba.sort(key=lambda a: (a['dias'], -a['semana']))
         v30 = [v for v in vs if dia(v['f']) > hoy - timedelta(days=30)]
         vprev = [v for v in vs if hoy - timedelta(days=60) < dia(v['f']) <= hoy - timedelta(days=30)]
         out[n] = {'riesgo': riesgo[:MAX_RIESGO], 'riesgo_total': len(riesgo), 'quietos': quietos[:MAX_QUIETOS], 'quietos_total': len(quietos),
+                  'acaba': acaba[:MAX_ACABA], 'acaba_total': len(acaba), 'semana': semana(vs, hoy), 'segmentos': segmentos,
                   'resumen': {'clientes': len(por_cli), 'recurrentes': sum(1 for x in por_cli.values() if len(x['dias']) > 1),
                               'pedidos30': len(v30), 'ventas30': round(sum(float(v['m']) for v in v30)),
                               'ventas_prev': round(sum(float(v['m']) for v in vprev))},
