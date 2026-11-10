@@ -76,6 +76,15 @@ begin
     return jsonb_build_object('ok', false, 'error', 'No puedes escribirle a esta cuenta');
   end if;
   lim := public.cfx_chat_seguidos(u, p_para);
+  -- G19: con el chat a la venta, el negocio de la conversación debe tenerlo (con soporte siempre se puede).
+  if lim is not null and public.cfx_chat_seguidos(p_para, u) is not null and public.cfx_venta_activa('chat') then
+    if public.cfx_negocio_cuenta(u) is not null and not public.cfx_modulo_de('chat', public.cfx_negocio_cuenta(u)) then
+      return jsonb_build_object('ok', false, 'error', 'El chat es un módulo. Actívalo en Ajustes → 🧩 Módulos');
+    end if;
+    if public.cfx_negocio_cuenta(p_para) is not null and not public.cfx_modulo_de('chat', public.cfx_negocio_cuenta(p_para)) then
+      return jsonb_build_object('ok', false, 'error', 'Esta tienda no tiene chat. Escríbele por WhatsApp');
+    end if;
+  end if;
   if lim is not null then
     if public.cfx_msg_bloqueado(u, p_para) then return jsonb_build_object('ok', false, 'error', 'La conversación está bloqueada'); end if;
     if (public.cfx_msg_restantes(p_para) ->> 'restantes')::int <= 0 then

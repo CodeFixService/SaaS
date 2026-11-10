@@ -51,7 +51,11 @@ begin
   end if;
   n := public.cfx_fid_dueno(auth.uid());
   if n is null then raise exception 'Solo el negocio'; end if;
-  if not coalesce(public.cfx_fid_activo(n, p_modulo), false) then
+  if public.cfx_venta_on() then
+    if not public.cfx_modulo_de(p_modulo, n) then
+      raise exception '% Actívalo en Ajustes → 🧩 Módulos', case p_modulo when 'cupones' then 'Los cupones son un módulo.' else 'La tarjeta de sellos es un módulo.' end;
+    end if;
+  elsif not coalesce(public.cfx_fid_activo(n, p_modulo), false) then
     raise exception '% de la versión Pro', case p_modulo when 'cupones' then 'Los cupones son' else 'La tarjeta de sellos es' end;
   end if;
   return n;
@@ -62,6 +66,7 @@ create or replace function public.cfx_fid_ok(p_negocio uuid, p_modulo text) retu
 language plpgsql stable security definer set search_path = '' as $$
 begin
   if p_negocio is null or not public.cfx_modulo(p_modulo) then return false; end if;
+  if public.cfx_venta_on() then return public.cfx_modulo_de(p_modulo, p_negocio); end if;
   return coalesce(public.cfx_fid_activo(p_negocio, p_modulo), false);
 end $$;
 

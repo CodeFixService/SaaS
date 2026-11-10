@@ -499,6 +499,52 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await q.emulateMedia({ colorScheme: 'dark' }); await q.reload(); await q.waitForTimeout(2500); await t.foto('redes-oscuro', q); await q.emulateMedia({ colorScheme: 'light' });
         await t.sim.su('delete from public.webhooks where owner_id = $1', [tid]);
         await t.sim.su('update public.profiles set plan = $2, pro_until = $3 where id = $1', [tid, g18pl.plan, g18pl.pro_until]);
+        // G19 · 🧩 Módulos de pago por negocio: con la venta prendida, la tienda Free ve packs y sueltos, prueba un pack 7 días,
+        // compra un módulo (Mi equipo) con transferencia y, al aprobarlo, se activa solo ese módulo. Las funciones del Pro pasan a ser módulos.
+        const [g19pg] = await t.sim.su("select valor v from public.cfx_config where clave = 'pagos'");
+        await t.sim.su("update public.cfx_config set valor = jsonb_set(valor, '{transferencia,numero}', '\"123456\"') where clave = 'pagos'");
+        await t.sim.su("update public.profiles set plan = 'free', pro_until = null where id = $1", [tid]);
+        await t.sim.su("update public.cfx_config set valor = valor || '{\"activo\": true}' where clave = 'modulos_venta'");
+        await t.sim.su('delete from public.cfx_modulos_negocio where negocio = $1', [tid]); await t.sim.su('delete from public.cfx_modulos_pruebas where negocio = $1', [tid]);
+        const [g19w0] = await t.sim.su("select set_config('request.jwt.claim.sub', $1, false), public.conexiones_estado() c, public.mis_modulos($1::uuid) m", [tid]); await t.sim.su("select set_config('request.jwt.claim.sub', '', false)");
+        await q.goto(t.base + '/#modulos'); await q.reload(); await q.waitForTimeout(3000);
+        const g19u0 = await q.evaluate(() => { const b = document.getElementById('modTienda'); return [!!b.offsetParent, b.querySelectorAll('.cfxm-pack').length, !!b.querySelector('.cfxm-pack.top .cfxm-tag'),
+          b.querySelectorAll('.cfxm-mod').length, !!b.querySelector('[data-probar="crecer"]'), /\$990\/mes/.test(b.textContent), document.documentElement.scrollWidth <= innerWidth + 1, Cuenta.puede('estadisticas')]; });
+        await t.foto('modulos', q);
+        await q.evaluate(() => document.querySelector('#modTienda [data-probar="crecer"]').click()); await q.waitForTimeout(4500);
+        const g19u1 = await q.evaluate(() => [Cuenta.puede('estadisticas'), Cuenta.puede('equipo'), !!document.querySelector('#modTienda [data-probar="crecer"]'), !!document.querySelector('#modTienda [data-probar="completo"]'),
+          document.getElementById('modTienda').textContent.includes('Prueba gratis hasta')]);
+        await q.evaluate(() => document.querySelector('#modTienda [data-per="a"]').click()); await q.waitForTimeout(300);
+        const g19an = await q.evaluate(() => /\$9\.900\/año/.test(document.getElementById('modTienda').textContent));
+        await q.evaluate(() => document.querySelector('#modTienda [data-per="m"]').click());
+        await q.evaluate(() => document.querySelector('#modTienda [data-comprar="equipo"]').click()); await q.waitForTimeout(1500);
+        const g19d = await q.evaluate(() => { const d = document.querySelector('dialog.cfx-pago'); return [d.querySelector('h2').textContent, d.querySelectorAll('.cp-plan').length, (d.querySelector('#cpMonto') || {}).textContent, !d.querySelector('#cpCupon'), !d.querySelector('#cpKey')]; });
+        await t.foto('modulos-pagar', q);
+        await q.setInputFiles('#cpFoto', __dirname + '/comprobante.png'); await q.waitForTimeout(1500);
+        await q.evaluate(() => document.querySelector('dialog.cfx-pago [data-enviar]').click()); await q.waitForTimeout(1500);
+        const [g19p] = await t.sim.su("select id, producto, periodo, monto, rol from public.cfx_pagos where cuenta = $1 and producto is not null order by creado desc limit 1", [tid]);
+        // El administrador aprueba (aquí una cuenta admin de prueba): se activa Mi equipo 30 días y no el Premium.
+        const g19adm = await t.sim.crearUsuario('juanjosuecastilloloyola@gmail.com', 'clave123');
+        await t.sim.su("update public.profiles set role = 'admin' where id = $1", [g19adm.id]); await t.sim.su('update auth.users set email_confirmed_at = now() where id = $1', [g19adm.id]);
+        const [g19r] = await t.sim.su("select set_config('request.jwt.claim.sub', $1, false), public.cfx_pago_resolver($2, true) r", [g19adm.id, g19p.id]); await t.sim.su("select set_config('request.jwt.claim.sub', '', false)");
+        const [g19e] = await t.sim.su("select (select origen from public.cfx_modulos_negocio where negocio = $1 and modulo = 'equipo') o, round(extract(epoch from (select hasta from public.cfx_modulos_negocio where negocio = $1 and modulo = 'equipo') - now()) / 86400)::int d, " +
+          "public.is_pro($1) pro, public.limite_equipo($1) eq, public.pro_o_modulo($1, 'webhooks') wh, (select count(*) from public.cfx_modulos_negocio where negocio = $1 and origen = 'prueba')::int pr", [tid]);
+        await q.reload(); await q.waitForTimeout(2500);
+        const g19u2 = await q.evaluate(() => [Cuenta.puede('equipo'), document.getElementById('modTienda').textContent.includes('Activo hasta')]);
+        await q.emulateMedia({ colorScheme: 'dark' }); await q.reload(); await q.waitForTimeout(2500); await t.foto('modulos-oscuro', q); await q.emulateMedia({ colorScheme: 'light' });
+        // Seguridad: anon no ve la tienda de módulos ni puede regalar; un cliente no es negocio.
+        const [g19s] = await t.sim.su("select has_function_privilege('anon', 'public.cfx_modulos_tienda()', 'execute') a, has_function_privilege('authenticated', 'public.cfx_modulos_dar(uuid, text, int, text)', 'execute') d, " +
+          "has_function_privilege('anon', 'public.cfx_modulo_regalar(text, text, int)', 'execute') r, public.cfx_negocio_cuenta($1) is null c", [c2]);
+        await t.sim.su("update public.cfx_config set valor = valor || '{\"activo\": false}' where clave = 'modulos_venta'");
+        await t.sim.su('update public.cfx_config set valor = $1 where clave = $2', [g19pg.v, 'pagos']);
+        await t.sim.su('delete from public.cfx_modulos_negocio where negocio = $1', [tid]); await t.sim.su('delete from public.cfx_pagos where producto is not null');
+        await t.sim.su('update public.profiles set plan = $2, pro_until = $3 where id = $1', [tid, g18pl.plan, g18pl.pro_until]);
+        await t.sim.su('delete from auth.users where id = $1', [g19adm.id]);
+        ok(!g19w0.c.pro && g19w0.c.modulo && g19w0.m.estadisticas === false && g19u0.slice(0, 3).join() === 'true,3,true' && g19u0[3] >= 8 && g19u0[4] && g19u0[5] && g19u0[6] && !g19u0[7] &&
+          g19u1[0] && !g19u1[1] && !g19u1[2] && !g19u1[3] && g19u1[4] && g19an && /Mi equipo/.test(g19d[0]) && g19d[1] === 2 && /990/.test(g19d[2]) && g19d[3] && g19d[4] &&
+          g19p && g19p.producto === 'equipo' && g19p.periodo === 'mensual' && g19p.monto === 990 && g19r.r.estado === 'aprobado' && g19e.o === 'pago' && g19e.d === 30 && !g19e.pro && g19e.eq > 0 && !g19e.wh && g19e.pr >= 5 &&
+          g19u2.every(Boolean) && !g19s.a && !g19s.d && !g19s.r && g19s.c,
+          'Órbita G19: 🧩 módulos de pago por negocio (prueba, compra y activación) ' + JSON.stringify([g19w0.m && g19w0.m.estadisticas, g19u0, g19u1, g19an, g19d, g19p, g19r.r, g19e, g19u2, g19s]));
       }
       if (app === 'saas') {
         // Mis datos y privacidad (núcleo): consentimiento de ofertas, copia de los datos y solicitud de rectificación; el admin responde y registra una brecha.
@@ -588,6 +634,16 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await p.click('dialog [data-m=chat]'); await p.waitForTimeout(1500);
         const [mc] = await t.sim.su("select public.cfx_modulos() m, (select count(*) from cfx_registro where accion = 'módulo')::int r");
         await t.foto('cm_modulos');
+        // G19: 💰 vender módulos por negocio desde el CM: prender la venta, poner precio, guardar y regalar el chat 30 días a una cuenta.
+        await p.evaluate(() => [...document.querySelectorAll('dialog')].pop().querySelector('#vOn').click()); await p.waitForTimeout(1500);
+        await p.evaluate(() => { const d = [...document.querySelectorAll('dialog')].pop(); d.querySelector('[data-pr=chat]').value = '1490'; d.querySelector('#vGuardar').click(); }); await p.waitForTimeout(1500);
+        await p.evaluate(() => { const d = [...document.querySelectorAll('dialog')].pop(); d.querySelector('#rEmail').value = 'juanjosuecastilloloyola@gmail.com'; d.querySelector('#rItem').value = 'chat'; d.querySelector('#rDias').value = '30'; d.querySelector('#rOk').click(); });
+        await p.waitForTimeout(1500);
+        const g19c = await p.evaluate(() => { const d = [...document.querySelectorAll('dialog')].pop(); const li = (d.querySelector('ul.list') || {}).textContent || ''; return [/Negocios con módulos/.test(d.textContent), /chat\s*\S*\s*hasta/.test(li), /Básico/.test(d.textContent), document.documentElement.scrollWidth <= innerWidth + 1]; });
+        const [g19cm] = await t.sim.su("select (select valor from cfx_config where clave = 'modulos_venta') v, (select count(*) from cfx_modulos_negocio where modulo = 'chat' and origen = 'regalo')::int n");
+        await t.foto('cm_modulos_venta');
+        await t.sim.su("update cfx_config set valor = valor || '{\"activo\": false}' where clave = 'modulos_venta'"); await t.sim.su('delete from cfx_modulos_negocio');
+        ok(g19c.every(Boolean) && g19cm.v.activo && g19cm.v.precios.chat === 1490 && g19cm.n === 1, 'CM G19: 💰 vender módulos (precio, guardar y regalar) ' + JSON.stringify([g19c, g19cm.v.precios, g19cm.n]));
         await t.sim.su('drop function public.cfx_modulos_app()');
         ok(/Chat/.test(md[0]) && md[1] && mc.m.chat === false && mc.r === 1, 'CM: 🧩 Módulos apaga el chat de una app ' + JSON.stringify([md, mc]));
         // G13 · C18: 🧹 Respaldo y limpieza junta lo del núcleo (🌙 auto) con lo de la app, y la limpieza automática se apaga y se prende.

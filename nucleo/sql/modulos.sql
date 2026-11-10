@@ -18,10 +18,12 @@ begin
     and coalesce(((select valor from public.cfx_config where clave = 'modulos') ->> p_clave)::boolean, true);
 end $$;
 
--- Para la app (esconde lo apagado): {"chat": true, ...}
+-- Para la app (esconde lo apagado): {"chat": true, ...}. Un negocio (o su equipo) ve lo que tiene activo (G19: módulos de pago).
 create or replace function public.cfx_modulos() returns jsonb
 language plpgsql stable security definer set search_path = '' as $$
+declare n uuid := public.cfx_negocio_cuenta(auth.uid());
 begin
+  if n is not null and coalesce((public.cfx_venta() ->> 'activo')::boolean, false) then return public.cfx_modulos_de(n); end if;
   return coalesce((select jsonb_object_agg(k, public.cfx_modulo(k)) from unnest(public.cfx_modulos_de_app()) k), '{}');
 end $$;
 
@@ -31,14 +33,10 @@ language plpgsql stable security definer set search_path = '' as $$
 begin
   perform <CHK>;
   return coalesce((select jsonb_agg(jsonb_build_object('clave', k, 'nombre', coalesce(c.nombre, k), 'detalle', coalesce(c.detalle, ''),
-      'activo', public.cfx_modulo(k)) order by o)
+      'activo', public.cfx_modulo(k), 'precio', public.cfx_venta_precio(k),
+      'negocios', (select count(*) from public.cfx_modulos_negocio m where m.modulo = k and m.hasta > now())) order by o)
     from unnest(public.cfx_modulos_de_app()) with ordinality u(k, o)
-    left join (values ('chat', '💬 Chat', 'Mensajes entre personas: 3 seguidos sin respuesta, 100 al día, bloquear y reportar.'),
-                      ('calificaciones', '⭐ Calificaciones', 'El cliente califica al negocio y el negocio al cliente.'),
-                      ('cupones', '🏷️ Cupones', 'Códigos de descuento del negocio para sus clientes.'),
-                      ('sellos', '🎟️ Tarjeta de sellos', 'Cada compra suma un sello; al completar la meta, premio.'),
-                      ('carrito', '🛒 Recordar carrito', 'Si el cliente deja productos en el carrito, al día siguiente le llega un aviso (una vez).'),
-                      ('analisis', '🔎 Clientes en riesgo y productos quietos', 'Cada noche se revisa quién dejó de comprar y qué no se vende; el negocio lo ve en Hoy.')) c(clave, nombre, detalle) on c.clave = k), '[]');
+    left join public.cfx_modulos_catalogo() c on c.clave = k), '[]');
 end $$;
 
 create or replace function public.cfx_modulo_guardar(p_clave text, p_activo boolean) returns jsonb

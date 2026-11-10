@@ -52,6 +52,9 @@ declare r record; n int := 0; ok boolean; h int := extract(hour from now() at ti
 begin
   if h < 10 or h > 20 or not public.cfx_modulo('carrito') or to_regprocedure('public.cfx_carrito_aviso(uuid,uuid,integer)') is null then return 0; end if;
   for r in select * from public.cfx_carritos where avisado is null and actualizado < now() - interval '20 hours' and actualizado > now() - interval '4 days' limit 500 loop
+    if not public.cfx_modulo_de('carrito', r.negocio) then  -- G19: la tienda no tiene el módulo (no se vuelve a revisar)
+      update public.cfx_carritos set avisado = now() where cliente = r.cliente and negocio = r.negocio; continue;
+    end if;
     execute 'select public.cfx_carrito_aviso($1, $2, $3)' into ok using r.cliente, r.negocio, jsonb_array_length(r.items);
     update public.cfx_carritos set avisado = now() where cliente = r.cliente and negocio = r.negocio;
     if coalesce(ok, false) then n := n + 1; end if;

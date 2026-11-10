@@ -66,7 +66,7 @@ declare n uuid;
 begin
   if auth.uid() is null or not public.cfx_modulo('analisis') or to_regprocedure('public.cfx_analisis_negocio(uuid)') is null then return null; end if;
   execute 'select public.cfx_analisis_negocio($1)' into n using auth.uid();
-  if n is null then return null; end if;
+  if n is null or not public.cfx_modulo_de('analisis', n) then return null; end if;
   return (select (datos - 'mov') || jsonb_build_object('calculado', calculado) from public.cfx_analisis where clave = n::text);
 end $$;
 revoke all on function public.cfx_analisis_mio() from public, anon;

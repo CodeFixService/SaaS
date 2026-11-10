@@ -57,7 +57,8 @@ Origen: análisis de Órbita del 05/11/2026. Marcar ✅ al terminar. Esta lista 
 U1-U14 · Reparar la app · variantes + ficha · Te puede gustar · stock por opción · pedido nuevo · fotos WebP · inventario en Caja · equipo con roles · vitrina · boleta SII · respaldo + ping + errores (G8) · rama pruebas · comprobante WhatsApp + push potentes (G10)
 
 ## Grupos que siguen (uno por chat)
-G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C18 + B10-B11 ✅ · G14 B12-B13 + D21-22 ✅ · G15 E24-E25 + E27 ✅ · G16 E28-E29 + F30 ✅ · G17 F31-F33 ✅ · G18 G35-G37 ✅
+G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C18 + B10-B11 ✅ · G14 B12-B13 + D21-22 ✅ · G15 E24-E25 + E27 ✅ · G16 E28-E29 + F30 ✅ · G17 F31-F33 ✅ · G18 G35-G37 ✅ · G19 🧩 módulos de pago por negocio ✅ (Órbita + CM; las otras apps en su turno)
 
 ## Antes de lanzar (cuando Josué diga "listo")
-- LIMPIEZA FINAL: dejar TODOS los usuarios (auth + perfil + plan) pero sin datos: productos, opciones/stock, fotos de buckets, diseño/tienda, pedidos, ventas, clientes, promociones, comprobantes. Primero un SQL que solo cuenta por usuario; luego el borrado.
+- Precios: CM → Pagos → negocio $3.000/mes y cliente $2.000/mes (Premium barato). CM → Apps → Órbita → 🧩 → 💰 Vender módulos (prendido) y revisar precios/packs; links de monto fijo de Mercado Pago por módulo y pack.
+- LIMPIEZA FINAL: dejar TODOS los usuarios (auth + perfil + plan + módulos comprados cfx_modulos_negocio/cfx_modulos_pruebas) pero sin datos: productos, opciones/stock, fotos de buckets, diseño/tienda, pedidos, ventas, clientes, promociones, comprobantes. Primero un SQL que solo cuenta por usuario; luego el borrado.

@@ -332,15 +332,48 @@
     pintar();
   }
   // 🧩 Módulos (núcleo: cfx_modulos_admin / cfx_modulo_guardar): prender o apagar chat, calificaciones, cupones… en esta app.
+  // G19 (modulos_venta.sql): venderlos por negocio (precio, packs, prueba gratis, links de monto fijo), ver quién los tiene y regalar.
   function modulos(a) {
-    const e = E[a.id], c = cliente(a);
-    const d = modal('<h2>🧩 Módulos de ' + esc(corto(a)) + '</h2><p class="muted">Apagado: sus botones desaparecen de la app y el servidor no lo deja usar. Los datos no se borran.</p><div id="mods"></div>' +
+    const e = E[a.id], c = cliente(a), $p = (n) => '$' + Math.round(Number(n) || 0).toLocaleString('es-CL');
+    const d = modal('<h2>🧩 Módulos de ' + esc(corto(a)) + '</h2><p class="muted">Apagado: sus botones desaparecen de la app y el servidor no lo deja usar. Los datos no se borran.</p>' +
+      '<div id="venta"></div><div id="mods"></div><div id="ventaMas"></div>' +
       '<div class="btns"><button class="ghost" data-cerrar type="button">Cerrar</button></div>');
+    let V = null;  // cfx_venta_admin (null = la base aún no tiene el G19)
+    const num = (id) => { const x = d.querySelector('#' + id); return x && x.value.trim() !== '' ? Math.round(Number(x.value)) : null; };
     const pintar = () => {
-      d.querySelector('#mods').innerHTML = e.modulos.map((m) => '<label class="fila" style="gap:10px;margin:8px 0"><input type="checkbox" data-m="' + esc(m.clave) + '"' + (m.activo ? ' checked' : '') + '>' +
-        '<span class="grow"><b>' + esc(m.nombre) + '</b><br><span class="sub">' + esc(m.detalle) + '</span></span></label>').join('');
+      const cfg = (V && V.config) || {}, on = !!cfg.activo, pr = cfg.precios || {}, L = cfg.links || {};
+      d.querySelector('#venta').innerHTML = !V ? '' :
+        '<div class="card"><label class="fila" style="gap:10px;align-items:center"><input type="checkbox" id="vOn"' + (on ? ' checked' : '') + '>' +
+        '<span class="grow"><b>💰 Vender módulos por negocio</b><br><span class="sub">Cada negocio (Free o Premium) compra o prueba los que quiere. Apagado: todos usan lo prendido, como antes.</span></span></label>' +
+        (on ? '<p class="sub">Ahora: ' + V.activos + ' negocio(s) pagando · ' + V.pruebas + ' probando gratis.</p>' : '') + '</div>';
+      d.querySelector('#mods').innerHTML = e.modulos.map((m) => '<label class="fila" style="gap:10px;margin:8px 0;align-items:flex-start"><input type="checkbox" data-m="' + esc(m.clave) + '"' + (m.activo ? ' checked' : '') + '>' +
+        '<span class="grow" style="min-width:0"><b>' + esc(m.nombre) + '</b><br><span class="sub">' + esc(m.detalle) + '</span>' +
+        (on ? '<br><span class="sub">' + (m.negocios || 0) + ' negocio(s) lo tienen</span>' : '') + '</span>' +
+        (on ? '<input data-pr="' + esc(m.clave) + '" inputmode="numeric" style="width:92px" aria-label="Precio al mes de ' + esc(m.nombre) + '" placeholder="' + esc(String(cfg.precio || 0)) + '" value="' + (m.clave in pr ? esc(String(pr[m.clave])) : '') + '">' : '') +
+        '</label>').join('') + (on ? '<p class="sub">Precio al mes de cada uno (vacío = precio base; 0 = incluido gratis para todos).</p>' : '');
+      const items = V ? Object.entries(cfg.packs || {}).map(([k, p]) => [k, p.nombre]).concat((V.catalogo || []).map((x) => [x.clave, x.nombre])) : [];
+      d.querySelector('#ventaMas').innerHTML = !V || !on ? '' :
+        '<div class="card"><h3>Precios</h3><div class="stats" style="grid-template-columns:repeat(2,minmax(0,1fr))">' +
+        '<label>Precio base al mes<input id="vPrecio" inputmode="numeric" value="' + esc(String(cfg.precio ?? 990)) + '"></label>' +
+        '<label>Descuento Premium %<input id="vDesc" inputmode="numeric" value="' + esc(String(cfg.descuento_premium ?? 20)) + '"></label>' +
+        '<label>Días de prueba gratis<input id="vPrueba" inputmode="numeric" value="' + esc(String(cfg.prueba_dias ?? 7)) + '"></label>' +
+        '<label>Meses que paga el anual<input id="vAnual" inputmode="numeric" value="' + esc(String(cfg.anual_meses ?? 10)) + '"></label></div>' +
+        '<h3>Packs</h3>' + Object.entries(cfg.packs || {}).map(([k, p]) => '<label class="fila" style="gap:8px;align-items:center;margin:6px 0"><span class="grow" style="min-width:0"><b>' + esc(p.nombre) + '</b><br><span class="sub">' +
+          (p.modulos === '*' ? 'Todos los módulos' : (p.modulos || []).length + ' módulos') + '</span></span><input data-pack="' + esc(k) + '" inputmode="numeric" style="width:92px" aria-label="Precio de ' + esc(p.nombre) + '" value="' + esc(String(p.precio || 0)) + '"></label>').join('') +
+        '<details style="margin-top:8px"><summary>🔗 Links de pago con monto fijo</summary><p class="sub">Crea en Mercado Pago un link por cada precio (el cliente no escribe el monto) y pégalo aquí. Premium paga con descuento, así que usa el link general o transferencia.</p>' +
+          items.map(([k, n]) => '<p style="margin:10px 0 4px"><b>' + esc(n) + '</b></p><input data-lk="' + esc(k) + '" data-per="m" placeholder="Link 1 mes (https://…)" value="' + esc(((L[k] || {}).m) || '') + '">' +
+            '<input data-lk="' + esc(k) + '" data-per="a" placeholder="Link 1 año (https://…)" style="margin-top:6px" value="' + esc(((L[k] || {}).a) || '') + '">').join('') + '</details>' +
+        '<p class="err" id="vErr"></p><div class="btns"><button type="button" id="vGuardar">💾 Guardar precios</button></div></div>' +
+        '<div class="card"><h3>🎁 Regalar o quitar</h3><label>Correo del negocio<input id="rEmail" type="email" placeholder="tienda@correo.cl"></label>' +
+        '<label>Módulo o pack<select id="rItem">' + items.map(([k, n]) => '<option value="' + esc(k) + '">' + esc(n) + '</option>').join('') + '</select></label>' +
+        '<label>Días (0 = quitar)<input id="rDias" inputmode="numeric" value="30"></label><p class="err" id="rErr"></p>' +
+        '<div class="btns"><button type="button" id="rOk">🎁 Aplicar</button></div></div>' +
+        '<div class="card"><h3>Negocios con módulos</h3>' + (V.negocios.length ? '<ul class="list">' + V.negocios.map((n) => '<li><div class="grow" style="min-width:0"><b>' + esc(n.email || n.negocio) + '</b>' +
+          '<div class="sub">' + n.modulos.map((m) => esc(m.modulo) + (m.origen === 'prueba' ? ' 🎁' : m.origen === 'regalo' ? ' 🎁R' : '') + ' ' + (new Date(m.hasta) < new Date() ? 'venció' : 'hasta ' + new Date(m.hasta).toLocaleDateString('es-CL'))).join(' · ') + '</div></div></li>').join('') + '</ul>'
+          : '<p class="sub">Aún nadie.</p>') + '</div>';
     };
-    pintar();
+    const cargarVenta = async () => { try { V = await rpcDe(c, 'cfx_venta_admin'); } catch (x) { V = null; } pintar(); };
+    pintar(); cargarVenta();
     d.querySelector('#mods').onchange = async (ev) => {
       const k = ev.target.dataset.m; if (!k) return;
       ev.target.disabled = true;
@@ -348,6 +381,29 @@
       catch (x) { toast(x.message); }
       pintar();
     };
+    d.querySelector('#venta').onchange = async (ev) => {
+      if (ev.target.id !== 'vOn') return;
+      ev.target.disabled = true;
+      try { V = await rpcDe(c, 'cfx_venta_guardar', { p: { activo: ev.target.checked } }); e.modulos = await rpcDe(c, 'cfx_modulos_admin'); toast(ev.target.checked ? '💰 Venta de módulos prendida' : 'Venta de módulos apagada'); }
+      catch (x) { toast(x.message); }
+      pintar();
+    };
+    d.addEventListener('click', async (ev) => {
+      if (ev.target.id === 'vGuardar') {
+        const cfg = V.config || {}, precios = {}, links = {}, packs = JSON.parse(JSON.stringify(cfg.packs || {}));
+        d.querySelectorAll('[data-pr]').forEach((x) => { if (x.value.trim() !== '') precios[x.dataset.pr] = Math.round(Number(x.value)); });
+        d.querySelectorAll('[data-pack]').forEach((x) => { packs[x.dataset.pack].precio = Math.round(Number(x.value) || 0); });
+        d.querySelectorAll('[data-lk]').forEach((x) => { (links[x.dataset.lk] = links[x.dataset.lk] || {})[x.dataset.per] = x.value.trim(); });
+        const p = { precio: num('vPrecio'), descuento_premium: num('vDesc'), prueba_dias: num('vPrueba'), anual_meses: num('vAnual'), packs, links, precios };
+        ev.target.disabled = true;
+        try { V = await rpcDe(c, 'cfx_venta_guardar', { p }); e.modulos = await rpcDe(c, 'cfx_modulos_admin'); toast('💾 Precios guardados'); pintar(); }
+        catch (x) { d.querySelector('#vErr').textContent = x.message; ev.target.disabled = false; }
+      } else if (ev.target.id === 'rOk') {
+        ev.target.disabled = true;
+        try { V = await rpcDe(c, 'cfx_modulo_regalar', { p_email: d.querySelector('#rEmail').value, p_item: d.querySelector('#rItem').value, p_dias: num('rDias') || 0 }); toast('🎁 Listo'); pintar(); }
+        catch (x) { d.querySelector('#rErr').textContent = x.message; ev.target.disabled = false; }
+      }
+    });
   }
   function conectar(a, listo) {
     const d = modal('<h2>Conectar ' + esc(a.nombre) + '</h2><p class="muted">Entra una vez con tu cuenta de administrador de esta app (queda guardada solo en este teléfono). Después manejas todo desde aquí y su panel se abre ya iniciado.</p>' +

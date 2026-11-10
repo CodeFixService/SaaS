@@ -87,7 +87,7 @@
       avisos.map((t) => '<p class="sub warn">' + esc(t) + '</p>').join('') +
       (filas.map((g, i) => '<div class="card"><div class="fila"><span class="pill info">' + esc(g.app.nombre.split(' ·')[0]) + '</span><span class="tit grow">' + esc(g.nombre || g.email) + '</span>' +
         '<span class="pill ' + (g.estado === 'aprobado' ? 'ok' : g.estado === 'rechazado' ? 'bad' : 'warn') + '">' + g.estado + '</span></div>' +
-        '<p class="sub">' + esc(g.email) + ' · ' + (g.rol === 'negocio' ? 'Negocio' : g.rol === 'cliente' ? 'Cliente' : 'Otro') + ' · ' + (PERIODO[g.periodo] || g.periodo) + (g.meses ? ' (' + g.meses + ')' : '') + ' · <b>' + pesos(g.monto) + '</b> por ' + (MEDIO[g.medio] || g.medio) +
+        '<p class="sub">' + esc(g.email) + ' · ' + (g.rol === 'negocio' ? 'Negocio' : g.rol === 'cliente' ? 'Cliente' : 'Otro') + ' · ' + (PERIODO[g.periodo] || g.periodo) + (g.meses ? ' (' + g.meses + ')' : '') + (g.producto ? ' · 🧩 ' + esc(g.producto) : '') + ' · <b>' + pesos(g.monto) + '</b> por ' + (MEDIO[g.medio] || g.medio) +
         ' · ' + A.hace(g.creado) + (g.aprobados ? ' · ya pagó ' + g.aprobados + ' vez/veces' : ' · primer pago') + (g.nota ? '<br>' + esc(g.nota) : '') + (g.motivo ? '<br>Motivo: ' + esc(g.motivo) : '') +
         (g.estado === 'aprobado' && g.dias ? '<br>' + g.dias + ' días de Premium' : '') + '</p>' +
         (g.estado === 'pendiente' ? '<div class="btns-s">' + (g.con_comprobante ? '<button type="button" class="small ghost" data-v="' + i + '">Ver comprobante</button>' : '') +
@@ -104,7 +104,7 @@
           d.querySelector('#pk').onclick = async () => { try { await M().rpcDe(c, 'admin_resolver_pago', { p_id: g.id, p_aprobar: true, p_motivo: null }); d.close(); toast('Conexiones sumadas'); lista(); } catch (x) { toast(x.message); } };
         } else if (b.dataset.ok) {
           const sug = g.sugeridos != null ? g.sugeridos : ({ inicio: (cfg && cfg.negocio && cfg.negocio.inicio_dias) || 30, mensual: 30, anual: 365 }[g.periodo] || 30);
-          const d = modal('<h2>Aprobar pago</h2><p class="muted">' + esc(g.nombre || g.email) + ' · ' + pesos(g.monto) + ' (' + (PERIODO[g.periodo] || '') + (g.meses ? ', ' + g.meses + ' meses' : '') + ')</p><label>Días de Premium que activa<input id="pd" type="number" inputmode="numeric" step="1" value="' + sug + '"></label>' +
+          const d = modal('<h2>Aprobar pago</h2><p class="muted">' + esc(g.nombre || g.email) + ' · ' + pesos(g.monto) + ' (' + (PERIODO[g.periodo] || '') + (g.meses ? ', ' + g.meses + ' meses' : '') + ')' + (g.producto ? ' · 🧩 ' + esc(g.producto) : '') + '</p><label>Días de ' + (g.producto ? 'módulo' : 'Premium') + ' que activa<input id="pd" type="number" inputmode="numeric" step="1" value="' + sug + '"></label>' +
             '<p class="sub">Calculado según lo que pagó (mensual 30, anual 365, cada mes 30; otro monto en proporción). Siempre días enteros. Revisa que el monto llegó a tu cuenta. 0 = solo registrar el pago.</p><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="pk" type="button">Aprobar</button></div>');
           d.querySelector('#pk').onclick = async () => {
             try { const r = await M().rpcDe(c, 'cfx_pago_resolver', { p_id: g.id, p_aprobar: true, p_dias: Math.max(0, Math.round(+d.querySelector('#pd').value || 0)) }); d.close(); toast('Aprobado' + (r.hasta ? ': Premium hasta ' + A.fCorta(String(r.hasta).slice(0, 10)) : '')); lista(); }

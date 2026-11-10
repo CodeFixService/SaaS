@@ -33,6 +33,7 @@ begin
   if coalesce(trim(p_ref), '') = '' then return jsonb_build_object('ok', false, 'error', 'No encontrado'); end if;
   r := public.cfx_calif_ref(p_ref, auth.uid());
   if r is null or r ? 'error' or r ->> 'negocio' is null then return jsonb_build_object('ok', false, 'error', coalesce(r ->> 'error', 'No encontrado')); end if;
+  if not public.cfx_modulo_de('calificaciones', (r ->> 'negocio')::uuid) then return jsonb_build_object('ok', false, 'error', 'Las calificaciones no están disponibles'); end if;
   insert into public.cfx_calificaciones (ref, de_negocio, negocio_id, cliente_id, cliente_ref, estrellas, comentario)
   values (coalesce(r ->> 'ref', p_ref), coalesce((r ->> 'de_negocio')::boolean, false), (r ->> 'negocio')::uuid, (r ->> 'cliente')::uuid,
           nullif(left(r ->> 'cliente_ref', 60), ''), p_estrellas, left(trim(coalesce(p_comentario, '')), 300))
@@ -46,6 +47,7 @@ create or replace function public.cfx_calif_hecha(p_ref text, p_de_negocio boole
 language plpgsql stable security definer set search_path = '' as $$
 begin
   if not public.cfx_modulo('calificaciones') then return true; end if;
+  if public.cfx_venta_activa('calificaciones') and not coalesce(public.cfx_modulo_de('calificaciones', (public.cfx_calif_ref(p_ref, auth.uid()) ->> 'negocio')::uuid), false) then return true; end if;
   return exists (select 1 from public.cfx_calificaciones where ref = p_ref and de_negocio = p_de_negocio);
 end $$;
 
@@ -53,7 +55,7 @@ end $$;
 create or replace function public.cfx_calif_negocio(p_negocio uuid) returns jsonb
 language plpgsql stable security definer set search_path = '' as $$
 begin
-  if not public.cfx_modulo('calificaciones') then return null; end if;
+  if not public.cfx_modulo_de('calificaciones', p_negocio) then return null; end if;
   return (select jsonb_build_object('promedio', round(avg(estrellas), 1), 'total', count(*))
           from public.cfx_calificaciones where negocio_id = p_negocio and not de_negocio);
 end $$;
@@ -62,7 +64,7 @@ end $$;
 create or replace function public.cfx_calif_cliente(p_cliente uuid, p_cliente_ref text default null) returns jsonb
 language plpgsql stable security definer set search_path = '' as $$
 begin
-  if not public.cfx_modulo('calificaciones') or (p_cliente is null and coalesce(p_cliente_ref, '') = '') then return null; end if;
+  if not public.cfx_modulo_mio('calificaciones') or (p_cliente is null and coalesce(p_cliente_ref, '') = '') then return null; end if;
   return (select jsonb_build_object('promedio', round(avg(estrellas), 1), 'total', count(*))
           from public.cfx_calificaciones where de_negocio
             and ((p_cliente is not null and cliente_id = p_cliente) or (p_cliente is null and cliente_ref = p_cliente_ref)));
