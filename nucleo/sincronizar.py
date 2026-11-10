@@ -5,7 +5,7 @@ Uso:  python3 nucleo/sincronizar.py /ruta/a/los/repos      (carpeta que contiene
 Hace en cada repositorio:
   1b. Módulos opcionales (OPCIONAL: tienda.js y despacho.js de la tienda) solo a las apps que los usan.
   1. Copia los scripts de JS (seguro, humano y carga en el <head>; iconos, instalar, barra, auto, fotos, voz, respaldo, pagos, verificar, premium, ayuda, datos, vitrina) y tema.css a la carpeta que usa esa app.
-  2. Enlaza tema.css en cada página (después del CSS propio) y los scripts al final del <body>, si faltan.
+  2. Enlaza Bootstrap (solo utilidades, antes del CSS propio) y tema.css en cada página (después del CSS propio) y los scripts al final del <body>, si faltan.
   3. Agrega los archivos a la lista del service worker (para que funcionen sin internet).
   4. Crea icons/badge.png (ícono chico de las notificaciones de Android, insignia.py) si falta o cambió el ícono.
   5. Escribe nucleo.json con la versión del núcleo (el Centro de Mando la muestra en cada tarjeta).
@@ -47,6 +47,9 @@ CABEZA = ('seguro.js', 'humano.js', 'carga.js')  # van primero en el <head> (ant
 JS = ('iconos.js', 'instalar.js', 'barra.js', 'auto.js', 'fotos.js', 'voz.js', 'respaldo.js', 'pagos.js', 'verificar.js', 'premium.js', 'ayuda.js', 'datos.js', 'vitrina.js')
 # Módulos de JS opcionales: se copian solo a las apps que los usan (la app los enlaza donde corresponde; no van en todas las páginas).
 OPCIONAL = {'Aplicaciones': ('tienda.js', 'despacho.js', 'modulos.js')}
+# CSS de terceros (G20): Bootstrap 5.3.8, SOLO utilidades (sin reboot, grid ni componentes: su .row/.card/.btn chocarían con core.css).
+# Va en <css>/vendor/ y se enlaza ANTES de la hoja propia de la app, así core.css y tema.css siguen mandando.
+VENDOR_CSS = ('vendor/bootstrap-utilities.min.css',)
 SALTAR = re.compile(r'(^docs/|guia|legal|actualizar\.html)')
 
 
@@ -61,6 +64,11 @@ def enlazar(repo, js, css):
         s = open(p, encoding='utf-8').read()
         rel = '../' * f.count('/')
         nuevo = s
+        for v in VENDOR_CSS:
+            if v not in nuevo and '</head>' in nuevo:
+                link = '<link rel="stylesheet" href="' + rel + css + '/' + v + '">'
+                h = re.search(r'<link[^>]+rel="stylesheet"[^>]*>', nuevo)
+                nuevo = (nuevo[:h.start()] + link + '\n' + nuevo[h.start():]) if h else nuevo.replace('</head>', link + '\n</head>', 1)
         if 'tema.css' not in nuevo and '</head>' in nuevo:
             link = '<link rel="stylesheet" href="' + rel + css + '/tema.css">'
             hojas = list(re.finditer(r'<link[^>]+rel="stylesheet"[^>]*>', nuevo))
@@ -87,7 +95,7 @@ def cachear(repo, js, css, sw):
     if not os.path.exists(p):
         return
     s = open(p, encoding='utf-8').read()
-    falta = [x for x in [js + '/' + n for n in CABEZA + JS] + [css + '/tema.css'] if "'" + x + "'" not in s]
+    falta = [x for x in [js + '/' + n for n in CABEZA + JS] + [css + '/tema.css'] + [css + '/' + v for v in VENDOR_CSS] if "'" + x + "'" not in s]
     if not falta:
         return
     # Se agregan junto al primer archivo de esa carpeta que ya esté en la lista.
@@ -137,6 +145,9 @@ def main():
         for nombre in OPCIONAL.get(repo, ()):
             shutil.copy(os.path.join(AQUI, nombre), os.path.join(r, js, nombre))
         shutil.copy(os.path.join(AQUI, 'tema.css'), os.path.join(r, css, 'tema.css'))
+        for v in VENDOR_CSS:
+            os.makedirs(os.path.dirname(os.path.join(r, css, v)), exist_ok=True)
+            shutil.copy(os.path.join(AQUI, v), os.path.join(r, css, v))
         shutil.copy(os.path.join(AQUI, '_headers'), os.path.join(r, '_headers'))  # encabezados de seguridad (Cloudflare)
         enlazar(r, js, css)
         cachear(r, js, css, sw)

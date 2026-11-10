@@ -20,6 +20,7 @@ MAX_QUIETOS = 15
 PERDIDO = 180      # más de esto ya no es "en riesgo": se fue
 ALCANZA = 14       # E28: productos cuyo stock alcanza para 14 días o menos
 MAX_ACABA = 10
+MAX_VOZ = 40
 MAX_SEG = 30       # E29: clientes que se muestran por segmento
 DIAS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
 
@@ -220,10 +221,17 @@ def analizar_negocios(d, hoy):
                 quietos.append({'nombre': p.get('nombre') or 'Producto', 'stock': st, 'dias': hace})
         quietos.sort(key=lambda q: -q['dias'])
         acaba.sort(key=lambda a: (a['dias'], -a['semana']))
+        # 🎤 G20: lo más vendido en 90 días (unidades y cantidad típica por línea): la venta por voz de Caja lo usa para elegir entre parecidos.
+        uds, cants = {}, {}
+        for v in vs:
+            if dia(v['f']) > hoy - timedelta(days=90):
+                for k, c in v.get('l') or []:
+                    uds[k] = uds.get(k, 0) + (c or 0); cants.setdefault(k, []).append(c or 1)
+        voz = [{'k': k, 'u': u, 'cant': int(statistics.median(cants[k]))} for k, u in sorted(uds.items(), key=lambda x: -x[1])[:MAX_VOZ]]
         v30 = [v for v in vs if dia(v['f']) > hoy - timedelta(days=30)]
         vprev = [v for v in vs if hoy - timedelta(days=60) < dia(v['f']) <= hoy - timedelta(days=30)]
         out[n] = {'riesgo': riesgo[:MAX_RIESGO], 'riesgo_total': len(riesgo), 'quietos': quietos[:MAX_QUIETOS], 'quietos_total': len(quietos),
-                  'acaba': acaba[:MAX_ACABA], 'acaba_total': len(acaba), 'semana': semana(vs, hoy), 'segmentos': segmentos,
+                  'acaba': acaba[:MAX_ACABA], 'acaba_total': len(acaba), 'semana': semana(vs, hoy), 'segmentos': segmentos, 'voz': voz,
                   'resumen': {'clientes': len(por_cli), 'recurrentes': sum(1 for x in por_cli.values() if len(x['dias']) > 1),
                               'pedidos30': len(v30), 'ventas30': round(sum(float(v['m']) for v in v30)),
                               'ventas_prev': round(sum(float(v['m']) for v in vprev))},

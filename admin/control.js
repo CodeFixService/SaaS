@@ -5,8 +5,8 @@
   'use strict';
   const A = global.App, { esc, toast, modal, confirmar } = A;
   const M = () => global.MisApps;
-  let raiz = null, actual = 'cm', seccion = 'avisar';
-  const SECC = [['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['push', '🔔 Notificaciones'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['salud', '🩺 Salud'], ['registro', '📜 Registro']];
+  let raiz = null, actual = 'cm', seccion = 'negocios';
+  const SECC = [['negocios', '🏪 Negocios'], ['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['push', '🔔 Notificaciones'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['salud', '🩺 Salud'], ['registro', '📜 Registro']];
   // Nombres legibles de las claves de los planes (las demás se muestran tal cual).
   const NOMBRE = { productos: 'Productos', clientes: 'Clientes', fichas: 'Fichas publicadas', equipo: 'Equipo', pedidos_mes: 'Pedidos al mes', respuestas: 'Respuestas rápidas',
     contactos: 'Contactos', favoritos: 'Favoritos', mensajes_seguidos: 'Mensajes seguidos', barberos: 'Barberos', servicios: 'Servicios', ofertas: 'Ofertas',
@@ -67,6 +67,51 @@
       const b = ev.target.closest('[data-g]'); if (!b) return;
       try { await rpc('cfx_texto_guardar', { p_clave: b.dataset.g, p_valor: caja().querySelector('[data-t="' + b.dataset.g + '"]').value }); toast('Texto guardado'); } catch (x) { toast(nf(x)); }
     };
+  }
+
+  // ---------- G20 · 🏪 Negocios: cuentas de la app elegida arriba, Premium 1 mes / 3 meses / 1 año o quitarlo, y key para esa cuenta ----------
+  let negRol = 'negocio', negQ = '';
+  const fecha = (f) => !f ? '' : /infinity/.test(f) ? 'sin vencimiento' : new Date(f).toLocaleDateString('es-CL');
+  async function negocios() {
+    caja().innerHTML = '<div class="card"><div class="seg" style="display:flex;gap:8px;margin-bottom:8px"><button type="button" data-rol="negocio" class="' + (negRol === 'negocio' ? 'on' : '') + '">Negocios</button>' +
+      '<button type="button" data-rol="cliente" class="' + (negRol === 'cliente' ? 'on' : '') + '">Clientes</button></div>' +
+      '<label>Buscar<input id="ngQ" type="search" maxlength="80" placeholder="Correo o nombre" value="' + esc(negQ) + '"></label><div id="ngL"><p class="sub">Cargando…</p></div></div>';
+    const q = raiz.querySelector('#ngQ'); let t = 0;
+    q.oninput = () => { clearTimeout(t); t = setTimeout(() => { negQ = q.value.trim(); lista(); }, 350); };
+    const lista = async () => {
+      const el = raiz.querySelector('#ngL'); let L;
+      try { L = await rpc('cfx_negocios', { p_q: negQ, p_rol: negRol }); } catch (x) { el.innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
+      if (L && L.error) { el.innerHTML = '<p class="sub warn">' + esc(L.error) + '</p>'; return; }
+      el.innerHTML = '<p class="sub">' + L.length + (L.length >= 300 ? '+ (afina la búsqueda)' : '') + ' cuenta(s)</p>' + (L.map((n, i) => '<div class="ng-f" style="padding:10px 0;border-top:1px solid var(--line)">' +
+        '<b style="display:block;overflow-wrap:anywhere">' + esc(n.nombre || n.email) + '</b><span class="sub" style="display:block;overflow-wrap:anywhere">' + esc(n.email) + ' · desde ' + fecha(n.creado) + (n.suspendido ? ' · ⛔ suspendida' : '') + '</span>' +
+        '<span class="sub" style="display:block">' + (n.premium_hasta ? '⭐ Premium hasta ' + fecha(n.premium_hasta) : 'Gratis') + '</span>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"><button type="button" class="small" data-p="30" data-i="' + i + '">+1 mes</button><button type="button" class="small" data-p="90" data-i="' + i + '">+3 meses</button>' +
+        '<button type="button" class="small" data-p="365" data-i="' + i + '">+1 año</button>' + (n.premium_hasta ? '<button type="button" class="small ghost" data-p="0" data-i="' + i + '">Quitar</button>' : '') +
+        '<button type="button" class="small ghost" data-k="' + i + '">🔑 Key</button></div></div>').join('') || '<p class="empty">Sin cuentas</p>');
+      el.onclick = async (ev) => {
+        const b = ev.target.closest('[data-p], [data-k]'); if (!b) return;
+        const n = L[+(b.dataset.i ?? b.dataset.k)]; if (!n) return;
+        let r;
+        if (b.dataset.k !== undefined) {
+          const d = modal('<h2>🔑 Key para ' + esc(n.nombre || n.email) + '</h2><p class="sub">Pega una key creada en 🔑 Keys (para ' + esc(negRol) + '). Se activa al tiro en esa cuenta.</p>' +
+            '<label>Key<input id="ngK" maxlength="20" placeholder="CFX-XXXX-XXXX-XXXX" autocomplete="off" data-sin-voz></label><button type="button" class="block" id="ngKG">Activar</button><p class="err" id="ngKE"></p>');
+          d.querySelector('#ngKG').onclick = async () => {
+            try { r = await rpc('cfx_key_aplicar', { p_cuenta: n.id, p_rol: negRol, p_email: n.email, p_codigo: d.querySelector('#ngK').value }); }
+            catch (x) { d.querySelector('#ngKE').textContent = nf(x); return; }
+            if (r && r.error) { d.querySelector('#ngKE').textContent = r.error; return; }
+            d.close ? d.close() : d.remove(); toast('🔑 Premium hasta ' + fecha(r.hasta)); lista();
+          };
+          return;
+        }
+        const dias = +b.dataset.p;
+        if (!(await confirmar(dias ? 'Suma ' + b.textContent.replace('+', '') + ' de Premium a ' + (n.nombre || n.email) + '.' : 'Quita el Premium de ' + (n.nombre || n.email) + ' (queda en Gratis, sin borrar datos).', dias ? 'Dar Premium' : 'Quitar'))) return;
+        try { r = await rpc('cfx_premium_cuenta', { p_cuenta: n.id, p_rol: negRol, p_dias: dias }); } catch (x) { toast(nf(x)); return; }
+        if (r && r.error) { toast(r.error); return; }
+        toast(dias ? '⭐ Premium hasta ' + fecha(r.hasta) : 'Premium quitado'); lista();
+      };
+    };
+    caja().querySelectorAll('[data-rol]').forEach((b) => { b.onclick = () => { negRol = b.dataset.rol; negocios(); }; });
+    lista();
   }
 
   async function keys() {
@@ -321,7 +366,7 @@
     };
   }
 
-  const F = { avisar, planes, textos, keys, cupones, verif, humano, push, referidos, socios, datos, seguridad, salud, registro };
+  const F = { negocios, avisar, planes, textos, keys, cupones, verif, humano, push, referidos, socios, datos, seguridad, salud, registro };
   // Referidos: quién invitó a quién (con qué cuenta), ranking, premio automático y premio a mano (días + sticker).
   const STICKERS = ['🏆 ¡Eres un crack invitando!', '🚀 ¡Vas volando! Gracias por recomendarnos', '💪 ¡Sigue así, vas muy bien!', '🌟 ¡Gracias por correr la voz!'];
   async function referidos() {

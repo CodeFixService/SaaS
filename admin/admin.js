@@ -4,6 +4,7 @@
   const { $, esc, rpc, toast, modal, confirmar } = App;
   App.registrarSW();
   const yo = await App.requerir(['admin', 'socio']);
+  try { sessionStorage.setItem('cm-abierto', '1'); } catch (e) { /* nada */ }
   const SUPER = yo.rol === 'admin';
   let pub = await App.cargarPublica();
   const MB = (b) => b < 1048576 ? Math.round(b / 1024) + ' KB' : (b / 1048576).toFixed(1).replace('.', ',') + ' MB';

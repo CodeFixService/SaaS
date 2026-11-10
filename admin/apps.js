@@ -10,6 +10,7 @@
   // https://pruebas-<worker>.<cuenta>.workers.dev (vista previa, con la misma base real). Se prueba ahí y después pasa a main → Liberar.
   const RAMA_PRUEBAS = 'pruebas', CUENTA_WORKERS = 'juanjosuecastilloloyola.workers.dev';
   const urlPrueba = (a) => 'https://' + RAMA_PRUEBAS + '-' + a.worker + '.' + CUENTA_WORKERS + '/';
+  // 🧪 Probar abre con ?cfx-limpio: la app borra su caché y service worker al entrar (como incógnito, sin versiones viejas; núcleo carga.js).
   // ✅ Confirmar se habilita después de abrir 🧪 Probar al menos una vez (por versión). ↩️ Deshacer siempre.
   const PROBO = (a) => 'cm-probo-' + a.id;
   const probo = (a) => { try { return localStorage.getItem(PROBO(a)) === String((E[a.id].prueba || {}).version); } catch (x) { return false; } };
@@ -152,7 +153,7 @@
       (e.error ? '<p class="sub warn">' + esc(e.error) + '</p>' : '') +
       (e.bdMsg && (s.faltaBd || e.bdManual) ? '<p class="sub' + (e.bdMal ? ' warn' : '') + '">' + esc(e.bdMsg) + '</p>' : '') +
       '<div class="btns-s">' +
-        (e.prueba ? '<a class="btn small" data-a="probar" href="' + urlPrueba(a) + '" target="_blank" rel="noopener">🧪 Probar v' + esc(e.prueba.version) + '</a>' +
+        (e.prueba ? '<a class="btn small" data-a="probar" href="' + urlPrueba(a) + '?cfx-limpio=' + encodeURIComponent(e.prueba.version) + '" target="_blank" rel="noopener">🧪 Probar v' + esc(e.prueba.version) + '</a>' +
           '<button type="button" class="small" data-a="pconf"' + (probo(a) && !e.pBusy ? '' : ' disabled') + ' title="Primero ábrela con 🧪 Probar">' + (e.pBusy === 'confirmar' ? 'Confirmando…' : '✅ Confirmar') + '</button>' +
           '<button type="button" class="small ghost" data-a="pdes"' + (e.pBusy ? ' disabled' : '') + '>' + (e.pBusy === 'deshacer' ? 'Deshaciendo…' : '↩️ Deshacer') + '</button>' : '') +
         (a.liberar && e.conectado ? '<button type="button" class="small" data-a="lib"' + (s.lista && !e.liberando ? '' : ' disabled') + '>' + (e.liberando ? 'Liberando…' : s.alDia ? A.ico('check', 15) + ' Liberada' : A.ico('cohete', 15) + ' Liberar v' + esc(e.pub || '?')) + '</button>' : '') +

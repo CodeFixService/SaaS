@@ -2,7 +2,7 @@
   "name": "Centro de Mando",
   "short_name": "Mando",
   "description": "Tu centro de mando personal: tareas, metas, ideas y descanso",
-  "start_url": "app/",
+  "start_url": "admin/",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0a0e17",

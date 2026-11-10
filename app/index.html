@@ -8,6 +8,7 @@
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" href="../icons/icon-192.png">
 <link rel="apple-touch-icon" href="../icons/icon-192.png">
+<link rel="stylesheet" href="../shared/vendor/bootstrap-utilities.min.css">
 <link rel="stylesheet" href="../shared/app.css">
 <link rel="stylesheet" href="cm.css">
 <link rel="stylesheet" href="../shared/tema.css">
@@ -33,6 +34,11 @@
 (async function () {
   App.registrarSW();
   const c = await App.requerir();
+  // G20: el administrador (y socio) parte en el Panel. Solo al abrir la app (primera pantalla de la sesión); después puede venir aquí con ⇄.
+  try {
+    if ((c.rol === 'admin' || c.rol === 'socio') && !sessionStorage.getItem('cm-abierto') && !/\/admin\//.test(document.referrer)) { sessionStorage.setItem('cm-abierto', '1'); location.replace(App.ROOT + 'admin/'); return; }
+    sessionStorage.setItem('cm-abierto', '1');
+  } catch (e) { /* sin sessionStorage */ }
   CM.cuenta = c;
   await App.cargarPublica();
   try { await CM.cargar(); } catch (e) { App.toast(e.message); }
