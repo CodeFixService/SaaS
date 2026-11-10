@@ -74,6 +74,11 @@ G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C1
 - Regla nueva: CM va directo a main (sin rama pruebas). Órbita sigue con pruebas.
 - Barbería 2.72 ✅ (campana, 🏪 ganchos, 🎤 dictar hora y corte, celular 320, limpieza) · Sigue: BiciTaller → Billetera → Estaciona, una a la vez (núcleo 2.57 + G20 + receta "Revisión celular").
 
+## G23 · Lanzamiento de la tienda ✅ (núcleo 2.58 · Órbita 5.97 bd 5.41 · CM 4.82 bd 4.27)
+- 📄 Políticas (Ley 19.496) ✅ · 📦 Despacho a todo Chile ✅ · ✉️ Correo al comprador ✅ · 🚚 Código de seguimiento ✅ · 📊 Medir anuncios 🧩 ✅ · 🌐 Dominio propio 🧩 ✅ · Boleta automática "beta" ✅
+- DESPUÉS: Khipu/Flow/Webpay · courier con etiquetas · stock con Mercado Libre · factura 33 · gift cards · sucursales · suscripciones.
+- Configuración paso a paso: SaaS/LANZAMIENTO.md
+
 ## Antes de lanzar (cuando Josué diga "listo")
 - Precios: CM → Pagos → negocio $3.000/mes y cliente $2.000/mes (Premium barato). CM → Apps → Órbita → 🧩 → 💰 Vender módulos (prendido) y revisar precios/packs; links de monto fijo de Mercado Pago por módulo y pack.
 - LIMPIEZA FINAL (cambió en G20): borrar TODAS las cuentas menos los administradores, con sus datos y avisos. Órbita y Barbería: supabase/limpieza/1_contar.sql (solo cuenta) y 2_borrar.sql; fotos: Storage → cada bucket → Delete.
