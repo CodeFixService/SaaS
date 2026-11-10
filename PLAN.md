@@ -63,6 +63,16 @@ G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C1
 - 🧠 Cerebro como MÓDULO del Centro de Mando (solo para Josué, en el panel): explico un video y genera ganchos visuales que retengan. NO recuperar la app Cerebro aparte. Cambiar la temática → verlo en otro chat.
 - Revisión global de la tienda en celular ✅ (núcleo 2.56, Órbita 5.94, CM 4.79; receta en MEMORIA → "Revisión celular de la tienda": pruebas/celular.js). Replicar en cada app en su turno.
 
+## G20 · Tienda (Órbita) a fondo, luego lo mismo en las otras apps (anotado 10/11/2026)
+- H1 Bootstrap (última versión) global y ultra responsivo: grillas y márgenes laterales bien definidos (el difuminado de la orilla no tapa nada). Íconos circulares; texto corto en botón y el largo abajo, solo.
+- H2 🔔 Campana (núcleo): ventana con avisos deslizables para borrar; tocar uno abre otra ventana con ✕ y el texto completo. ARREGLAR: el globito sigue marcando aunque se borre todo (revisar qué cuenta: tareas/ajustes pendientes).
+- H3 Deslizar el dedo a izquierda/derecha cambia de pestaña en la barra y en los menús de pestañas (núcleo).
+- H4 Caja: 🎤 pedido por voz en la misma ventana ("2 cortinas rojas, 50 globos rojos de 9 pulgadas") → interpreta, busca el producto (aproximado), arma la venta, descuenta stock y deja lista la boleta. Mejora con analisis.py (nombres y cantidades más vendidos).
+- H5 CM parte en el PANEL (no en la app). Nueva sección Negocios: filtro por app; acciones Premium 1 mes / 3 meses / 1 año / quitar Premium; ingresar key generada para ese cliente.
+- H6 🧪 Probar abre en ventana de incógnito (sin caché vieja).
+- H7 Limpieza de lo que sobra/viejo + LIMPIEZA FINAL: borrar TODOS los usuarios menos los administradores (y sus datos y notificaciones), desde cero.
+- Regla nueva: CM va directo a main (sin rama pruebas). Órbita sigue con pruebas.
+
 ## Antes de lanzar (cuando Josué diga "listo")
 - Precios: CM → Pagos → negocio $3.000/mes y cliente $2.000/mes (Premium barato). CM → Apps → Órbita → 🧩 → 💰 Vender módulos (prendido) y revisar precios/packs; links de monto fijo de Mercado Pago por módulo y pack.
 - LIMPIEZA FINAL: dejar TODOS los usuarios (auth + perfil + plan + módulos comprados cfx_modulos_negocio/cfx_modulos_pruebas) pero sin datos: productos, opciones/stock, fotos de buckets, diseño/tienda, pedidos, ventas, clientes, promociones, comprobantes. Primero un SQL que solo cuenta por usuario; luego el borrado.
