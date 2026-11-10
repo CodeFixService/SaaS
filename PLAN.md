@@ -78,6 +78,7 @@ G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C1
 - 📄 Políticas (Ley 19.496) ✅ · 📦 Despacho a todo Chile ✅ · ✉️ Correo al comprador ✅ · 🚚 Código de seguimiento ✅ · 📊 Medir anuncios 🧩 ✅ · 🌐 Dominio propio 🧩 ✅ · Boleta automática "beta" ✅
 - DESPUÉS: Khipu/Flow/Webpay · courier con etiquetas · stock con Mercado Libre · factura 33 · gift cards · sucursales · suscripciones.
 - Configuración paso a paso: SaaS/LANZAMIENTO.md
+- ⚠️ G24 revisar: Josué en pruebas → Despacho "Resto de Chile" vuelve a "No despacho" al guardar y no ve el código de seguimiento. Causa probable: base sin ⚡ Actualizar base (5.40 borra 'resto'). Si con bd 5.41 sigue igual → arreglar primero.
 
 ## Antes de lanzar (cuando Josué diga "listo")
 - Precios: CM → Pagos → negocio $3.000/mes y cliente $2.000/mes (Premium barato). CM → Apps → Órbita → 🧩 → 💰 Vender módulos (prendido) y revisar precios/packs; links de monto fijo de Mercado Pago por módulo y pack.
