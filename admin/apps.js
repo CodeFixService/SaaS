@@ -147,7 +147,7 @@
     n.innerHTML = '<div class="fila"><span class="app-ico">' + A.ico(a.ico, 24) + '</span><div class="grow"><h3 style="margin:0">' + esc(a.nombre) + '</h3>' +
       '<p class="sub" style="margin:2px 0 0">Publicada ' + (e.pub ? 'v' + esc(e.pub) : '—') + (a.liberar ? ' · Liberada ' + (e.lib ? 'v' + esc(e.lib) : '—') : '') +
       ' · Base de datos ' + (e.bd ? 'v' + esc(e.bd) : '—') + (e.bdPide && e.bd && s.faltaBd ? ' (pide v' + esc(e.bdPide) + ')' : '') +
-      ' · Núcleo ' + (e.nucleo ? 'v' + esc(e.nucleo) : '—') + (e.nucleo && NUCLEO && e.nucleo !== NUCLEO ? ' <span class="pill warn">falta sincronizar</span>' : '') + '</p></div></div>' +
+      ' · Núcleo ' + (e.nucleo ? 'v' + esc(e.nucleo) : '—') + (e.nucleo && NUCLEO && e.nucleo !== NUCLEO ? ' <span class="pill info" title="El núcleo nuevo le llega a esta app en su turno (lo hace Claude). No tienes que hacer nada.">v' + esc(NUCLEO) + ' en su turno</span>' : '') + '</p></div></div>' +
       '<div style="margin:8px 0">' + est + '</div>' +
       (e.prueba ? '<p class="sub" data-prueba style="margin:0 0 8px">🧪 En pruebas: v' + esc(e.prueba.version) + (e.prueba.notas ? ' · ' + esc(e.prueba.notas) : '') + '</p>' : '') +
       (e.error ? '<p class="sub warn">' + esc(e.error) + '</p>' : '') +
