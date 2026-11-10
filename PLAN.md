@@ -78,7 +78,15 @@ G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C1
 - 📄 Políticas (Ley 19.496) ✅ · 📦 Despacho a todo Chile ✅ · ✉️ Correo al comprador ✅ · 🚚 Código de seguimiento ✅ · 📊 Medir anuncios 🧩 ✅ · 🌐 Dominio propio 🧩 ✅ · Boleta automática "beta" ✅
 - DESPUÉS: Khipu/Flow/Webpay · courier con etiquetas · stock con Mercado Libre · factura 33 · gift cards · sucursales · suscripciones.
 - Configuración paso a paso: SaaS/LANZAMIENTO.md
-- ⚠️ G24 revisar: Josué en pruebas → Despacho "Resto de Chile" vuelve a "No despacho" al guardar y no ve el código de seguimiento. Causa probable: base sin ⚡ Actualizar base (5.40 borra 'resto'). Si con bd 5.41 sigue igual → arreglar primero.
+## G24 · Validar G23 + arreglos antes de 🚀 (anotado 10/11/2026) — Órbita 5.97 queda en pruebas, NO liberar
+- B1 ❌ Despacho "Resto de Chile" vuelve a "No despacho" al guardar (Josué hizo ⚡). Revisar: ¿db_version de pruebas = 5.41? (⚡ podría leer instalar.sql de main, que sigue en 5.40). Arreglar y probar como Josué: dueño guarda → recarga → sigue.
+- B2 ❌ No ve 🚚 Seguimiento: sale solo en Pedidos con un pedido CON despacho. Dejar pedido de ejemplo / explicarlo en la ayuda.
+- B3 ❌ Invita y gana: el link de invitado pide iniciar sesión (antes entraba). Revisar.
+- M1 🧩 Módulos: separar Free / Pro (lo básico del negocio) de los módulos (aparte, siempre visibles). Sin el módulo: "Probar" muestra una DEMO visual con datos de ejemplo (no usa su negocio) + Comprar.
+- M2 💳 Un solo link de pago ABIERTO (sin monto) para todo (Premium, módulos, packs): la pantalla muestra el monto con 📋 Copiar y guía "pega el monto y paga" + comprobante. Reemplaza los links de monto fijo (seguir aceptándolos si existen).
+- M3 🌐 Dominio: Josué compra UN dominio en Cloudflare para todas las apps (subdominios por app). Dominio del negocio: pega su dominio + pasos claros de DNS (CNAME) y llega directo a su tienda (web/PWA). Revisar si se automatiza con Cloudflare for SaaS (custom hostnames) o queda manual.
+- L1 🧹 LIMPIEZA FINAL con aviso: borrar productos/perfiles/datos de todas las cuentas menos admins; a los antiguos, aviso "Migramos a una versión nueva: vuelve a cargar tus productos" + guía; a los nuevos, guía "Tu negocio en 5 minutos" (crear cuenta, links de pago, despacho, políticas).
+- Luego: celular.js 320/360 claro/oscuro de todo G23, central.js, y recién ahí 🚀.
 
 ## Antes de lanzar (cuando Josué diga "listo")
 - Precios: CM → Pagos → negocio $3.000/mes y cliente $2.000/mes (Premium barato). CM → Apps → Órbita → 🧩 → 💰 Vender módulos (prendido) y revisar precios/packs; links de monto fijo de Mercado Pago por módulo y pack.
