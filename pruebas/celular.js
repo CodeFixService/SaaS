@@ -57,6 +57,40 @@ const APPS = {
     },
     antes: (ctx) => ctx.addInitScript(() => { try { localStorage.setItem('cfx:tour:orbita-inicio', '1'); } catch (e) { /* */ } }),
   },
+  barberia: {
+    repo: 'barberia', db: 'p_barberia',
+    async cuentas(t) {
+      await t.sim.crearUsuario(ADM, 'admin123');
+      const inv = (por, email, nombre, rol, tel, bar) => t.sim.su('select public.preparar_invitacion((select id from public.profiles where email = $1), $2, $3, $4, $5, $6)', [por, email, nombre, rol, tel, bar]);
+      await inv(ADM, 'dueno@x.cl', 'Rodrigo Andrés Valenzuela Fuentealba', 'owner', '+56911111111', 'Barbería Los Hermanos del Sur');
+      await t.sim.crearUsuario('dueno@x.cl', 'clave123');
+      await inv('dueno@x.cl', 'barbero@x.cl', 'Maximiliano Ignacio Contreras', 'barber', '+56922222222', null);
+      await t.sim.crearUsuario('barbero@x.cl', 'clave123');
+      await inv('dueno@x.cl', 'cli@x.cl', 'Pepe Cliente con Nombre Largo', 'client', '+56933333333', null);
+      await t.sim.crearUsuario('cli@x.cl', 'clave123');
+      await t.sim.su("update public.profiles set clave_temporal = false, tour_visto = true where true").catch(() => {});
+      await t.sim.su("update public.barberias set codigo = 'hermanos', direccion = 'Av. Libertador Bernardo O''Higgins 1234, Santiago', whatsapp = '+56911111111', datos_transferencia = 'Banco Estado 123' where owner_id = (select id from public.profiles where email = 'dueno@x.cl')");
+      const [b] = await t.sim.su("select id from public.barberias where codigo = 'hermanos'");
+      for (const [n, pr, d] of [['Corte con barba y perfilado de cejas premium', 1189990, 60], ['Corte', 10000, 30], ['Barba', 8000, 20]])
+        await t.sim.su('insert into public.servicios (barberia_id, nombre, precio, duracion) values ($1, $2, $3, $4)', [b.id, n, pr, d]).catch((e) => console.log('servicio', e.message));
+      await t.sim.su("insert into public.avisos (para, tipo, titulo, cuerpo) select id, 'aviso', 'Tu hora de mañana quedó confirmada con Maximiliano', 'Te esperamos en Av. Libertador Bernardo O''Higgins 1234' from public.profiles where email in ('dueno@x.cl', 'cli@x.cl')").catch(() => {});
+      return [
+        { rol: 'publico', url: null },
+        { rol: 'negocio', url: '/', email: 'dueno@x.cl', pass: 'clave123' },
+        { rol: 'barbero', url: '/', email: 'barbero@x.cl', pass: 'clave123' },
+        { rol: 'cliente', url: '/', email: 'cli@x.cl', pass: 'clave123' },
+        { rol: 'admin', url: '/', email: ADM, pass: 'admin123' },
+      ];
+    },
+    PAGINAS: {
+      publico: ['/b/?b=hermanos', '/', '/legal.html', '/registro/'],
+      negocio: ['/equipo/', '/equipo/#caja', '/equipo/#servicios', '/equipo/#equipo', '/equipo/#negocio', '/equipo/#links', '/equipo/#horario', '/equipo/#tiempos', '/equipo/#ofertas',
+        '/equipo/#estadisticas', '/equipo/#calificaciones', '/equipo/#resumen', '/equipo/#volver', '/equipo/#invitar', '/equipo/#respaldo', '/equipo/#plan', '/equipo/#perfil'],
+      barbero: ['/equipo/', '/equipo/#caja', '/equipo/#perfil', '/equipo/#tiempos'],
+      cliente: ['/cliente/', '/cliente/#plan', '/b/?b=hermanos'],
+      admin: ['/admin/'],
+    },
+  },
 };
 
 async function login(t, p, c) {

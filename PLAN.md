@@ -72,8 +72,8 @@ G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C1
 - H6 🧪 Probar abre "limpio" (?cfx-limpio: borra caché y service worker; incógnito real no se puede abrir desde una página) ✅
 - H7 Limpieza: docs/REQUISITOS.md (viejo) borrado ✅ · LIMPIEZA FINAL lista en Aplicaciones/supabase/limpieza/ (1_contar.sql → 2_borrar.sql) — la corre Josué
 - Regla nueva: CM va directo a main (sin rama pruebas). Órbita sigue con pruebas.
-- Sigue: Barbería → BiciTaller → resto, una a la vez (núcleo 2.57 + G20 + receta "Revisión celular").
+- Barbería 2.72 ✅ (campana, 🏪 ganchos, 🎤 dictar hora y corte, celular 320, limpieza) · Sigue: BiciTaller → Billetera → Estaciona, una a la vez (núcleo 2.57 + G20 + receta "Revisión celular").
 
 ## Antes de lanzar (cuando Josué diga "listo")
 - Precios: CM → Pagos → negocio $3.000/mes y cliente $2.000/mes (Premium barato). CM → Apps → Órbita → 🧩 → 💰 Vender módulos (prendido) y revisar precios/packs; links de monto fijo de Mercado Pago por módulo y pack.
-- LIMPIEZA FINAL (cambió en G20): borrar TODAS las cuentas menos los administradores, con sus datos y avisos. Órbita: supabase/limpieza/1_contar.sql (solo cuenta) y 2_borrar.sql; fotos: Storage → cada bucket → Delete.
+- LIMPIEZA FINAL (cambió en G20): borrar TODAS las cuentas menos los administradores, con sus datos y avisos. Órbita y Barbería: supabase/limpieza/1_contar.sql (solo cuenta) y 2_borrar.sql; fotos: Storage → cada bucket → Delete.
