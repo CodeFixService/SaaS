@@ -17,13 +17,13 @@ insert into public.catalog_items (owner_id, client_key, nombre, precio, stock, c
   ('00000000-0000-0000-0000-0000000000e1', 'an3', 'Mermelada', 3000, null, now() - interval '40 days'),
   ('00000000-0000-0000-0000-0000000000e1', 'an4', 'Recién llegado', 2000, 3, now() - interval '10 days'),
   ('00000000-0000-0000-0000-0000000000e1', 'an5', 'Café molido', 4000, 4, now() - interval '60 days');
--- Ana compraba cada 10 días y no compra hace 40 (en riesgo). Beto compra seguido (no). Invitada por teléfono: cada 30, hace 61 (en riesgo).
+-- Ana compraba cada 10 días y no compra hace 40 (en riesgo). Beto compra seguido (no). Invitada por teléfono: cada 30, hace 62 (en riesgo; con 1 día de margen por el cambio de hora).
 insert into public.pedidos (negocio_id, cliente_id, invitado_nombre, invitado_tel, lineas, subtotal, total, entrega, estado, created_at)
 select '00000000-0000-0000-0000-0000000000e1', c::uuid, n, t, jsonb_build_array(jsonb_build_object('clave', 'an1', 'cant', 1, 'nombre', 'Pan amasado', 'precio', m)), m, m, 'retiro', 'entregado', now() - (d || ' days')::interval
 from (values ('00000000-0000-0000-0000-0000000000e2', null, null, 70, 10000), ('00000000-0000-0000-0000-0000000000e2', null, null, 60, 10000),
              ('00000000-0000-0000-0000-0000000000e2', null, null, 50, 10000), ('00000000-0000-0000-0000-0000000000e2', null, null, 40, 10000),
              ('00000000-0000-0000-0000-0000000000e3', null, null, 12, 3000), ('00000000-0000-0000-0000-0000000000e3', null, null, 2, 3000),
-             (null, 'Carla', '+56 9 8765 4321', 91, 4000), (null, 'Carla', '+56 9 8765 4321', 61, 4000)) v(c, n, t, d, m);
+             (null, 'Carla', '+56 9 8765 4321', 92, 4000), (null, 'Carla', '+56 9 8765 4321', 62, 4000)) v(c, n, t, d, m);
 -- G16 · E28: Beto se llevó 8 cafés hace 5 días (4 en stock → alcanza para ~14 días). E29: Dora compró una vez hace 200 días (perdida).
 insert into public.pedidos (negocio_id, cliente_id, invitado_nombre, invitado_tel, lineas, subtotal, total, entrega, estado, created_at) values
   ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000e3', null, null, '[{"clave": "an5", "cant": 8, "nombre": "Café molido", "precio": 4000}]', 32000, 32000, 'retiro', 'entregado', now() - interval '5 days'),

@@ -49,15 +49,15 @@ Origen: análisis de Órbita del 05/11/2026. Marcar ✅ al terminar. Esta lista 
 
 ## G. Conexiones
 - G34 Pago automático Mercado Pago ✅ G4 (Webpay después)
-- G35 Enlaces directos a WhatsApp Business
-- G36 Catálogo para Google e Instagram
-- G37 API pública y webhooks
+- G35 Enlaces directos a WhatsApp Business ✅ G18 (Ajustes → 📲: link, bienvenida, respuesta rápida y wa.me para la bio; vitrina y ficha con mensaje listo)
+- G36 Catálogo para Google e Instagram ✅ G18 (/t/feed?s= RSS g:* para Merchant Center y Meta; &f=json; caché de Cloudflare 1 h)
+- G37 API pública y webhooks ✅ G18 (Pro: POST firmado HMAC por pedido nuevo/cambio de estado, cola con reintentos; lectura = feed JSON; docs/webhooks.md)
 
 ## Extras ya hechos (fuera de la lista)
 U1-U14 · Reparar la app · variantes + ficha · Te puede gustar · stock por opción · pedido nuevo · fotos WebP · inventario en Caja · equipo con roles · vitrina · boleta SII · respaldo + ping + errores (G8) · rama pruebas · comprobante WhatsApp + push potentes (G10)
 
 ## Grupos que siguen (uno por chat)
-G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C18 + B10-B11 ✅ · G14 B12-B13 + D21-22 ✅ · G15 E24-E25 + E27 ✅ · G16 E28-E29 + F30 ✅ · G17 F31-F33 ✅ · G18 G35-G37
+G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C18 + B10-B11 ✅ · G14 B12-B13 + D21-22 ✅ · G15 E24-E25 + E27 ✅ · G16 E28-E29 + F30 ✅ · G17 F31-F33 ✅ · G18 G35-G37 ✅
 
 ## Antes de lanzar (cuando Josué diga "listo")
 - LIMPIEZA FINAL: dejar TODOS los usuarios (auth + perfil + plan) pero sin datos: productos, opciones/stock, fotos de buckets, diseño/tienda, pedidos, ventas, clientes, promociones, comprobantes. Primero un SQL que solo cuenta por usuario; luego el borrado.

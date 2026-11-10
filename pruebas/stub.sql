@@ -43,10 +43,10 @@ create function extensions.http_set_curlopt(a text, b text) returns boolean lang
 -- http(request) (Mercado Pago): responde igual que http_get según la uri; anota cada llamada en extensions.http_log.
 create type extensions.http_header as (field text, value text);
 create type extensions.http_request as (method text, uri text, headers extensions.http_header[], content_type text, content text);
-create table extensions.http_log (n serial, method text, uri text, content text);
+create table extensions.http_log (n serial, method text, uri text, content text, headers text);
 create function extensions.http(r extensions.http_request) returns extensions.http_response language plpgsql as $$
 begin
-  insert into extensions.http_log (method, uri, content) values (r.method, r.uri, r.content);
+  insert into extensions.http_log (method, uri, content, headers) values (r.method, r.uri, r.content, r.headers::text);
   return extensions.http_get(r.uri);
 end $$;
 -- storage

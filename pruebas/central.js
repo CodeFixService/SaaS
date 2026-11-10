@@ -88,6 +88,16 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
           'Órbita G17: link de producto con su título, precio, foto y schema.org Product (escapado)');
         ok(g17ri.headers.get('content-type') === 'image/png' && g17img[0] === 0x89 && g17img.length > 20 && g17rl.headers.get('content-type') === 'image/png' && g17rl.status === 200,
           'Órbita G17: /t/og entrega la foto del producto y, sin logo, el ícono de la app ' + g17img.length);
+        // G18 · G36: /t/feed arma el catálogo para Google e Instagram (RSS con g:*) y en JSON; sin tienda 404; si Supabase no responde, 503 sin caché.
+        const [g18r, g18x] = await g17get('/t/feed?s=vitrina'), [g18rj, g18j] = await g17get('/t/feed?s=vitrina&f=json'), [g18rn] = await g17get('/t/feed?s=noexiste');
+        g17lento = true; const [g18rl] = await g17get('/t/feed?s=lenta-feed'); g17lento = false;
+        const g18p = JSON.parse(g18j).productos.find((i) => i.id === 'g17p');
+        ok(/^application\/xml/.test(g18r.headers.get('content-type')) && /xmlns:g="http:\/\/base\.google\.com\/ns\/1\.0"/.test(g18x) && /<g:id>g17p<\/g:id><g:title>Polerón &lt;Lana&gt;<\/g:title>/.test(g18x) &&
+          /<g:price>18990 CLP<\/g:price>/.test(g18x) && /<g:availability>in_stock<\/g:availability>/.test(g18x) && /<g:image_link>https:\/\/x\.dev\/t\/og\?s=vitrina&amp;p=g17p&amp;v=\d+<\/g:image_link>/.test(g18x) &&
+          /<g:link>https:\/\/x\.dev\/t\/\?s=vitrina&amp;p=g17p<\/g:link>/.test(g18x) && g18r.headers.get('cache-control') === 'public, max-age=3600' &&
+          g18p && g18p.precio === 18990 && g18p.moneda === 'CLP' && g18p.disponible && g18rj.headers.get('access-control-allow-origin') === '*' &&
+          g18rn.status === 404 && g18rl.status === 503 && g18rl.headers.get('cache-control') === 'no-store',
+          'Órbita G18: catálogo para Google e Instagram (feed XML y JSON) ' + JSON.stringify([g18r.status, g18rj.status, g18rn.status, g18rl.status, g18p]));
         g17lento = true; const g17t0 = Date.now(), [, g17hl] = await g17get('/t/?s=lenta'); g17lento = false;
         const [, g17hn] = await g17get('/t/?s=noexiste');
         global.fetch = g17f0;
@@ -98,6 +108,12 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         const g17fi = await p.evaluate(() => { const f = document.querySelector('.t-ficha'); return f && [f.querySelector('h3').textContent, !!f.querySelector('[data-f-comp]'), !!f.querySelector('img'),
           document.getElementById('grid').classList.contains('t-visto'), document.querySelectorAll('#grid .t-sk, #grid .foto-esq').length, CFX_LINK_PRODUCTO('g17p').endsWith('/t/?s=vitrina&p=g17p')]; });
         ok(g17fi && g17fi[0] === 'Polerón <Lana>' && g17fi[1] && g17fi[2] && g17fi[3] && g17fi[4] === 0 && g17fi[5], 'Órbita G17: link de producto abre su ficha con 🔗 Compartir ' + JSON.stringify(g17fi));
+        // G18 · G35: la ficha trae 💬 Pedir por WhatsApp (producto, precio y link) y el botón de la portada llega con el mensaje listo.
+        const g18wa = await p.evaluate(() => [(document.querySelector('.t-ficha [data-f-wa]') || {}).href || '', (document.querySelector('#perfil .pf-acc a[href*="wa.me"]') || {}).href || '']);
+        const g18m = decodeURIComponent((g18wa[0].split('?text=')[1] || ''));
+        ok(/^https:\/\/wa\.me\/56912345678\?text=/.test(g18wa[0]) && g18m.includes('Polerón <Lana>') && g18m.includes('$18.990') && g18m.includes('Vitrina Prueba') && /\/t\/\?s=vitrina&p=g17p$/.test(g18m) &&
+          /^https:\/\/wa\.me\/56912345678\?text=Hola/.test(g18wa[1]) && decodeURIComponent(g18wa[1]).includes('Vi tu tienda Vitrina Prueba'),
+          'Órbita G18: Pedir por WhatsApp con el mensaje listo ' + JSON.stringify([g18m, g18wa[1].slice(0, 60)]));
         await t.foto('vitrina-producto');
         await p.emulateMedia({ colorScheme: 'dark' }); await p.goto(t.base + '/t/?s=vitrina'); await p.waitForTimeout(1500);
         const g17os = await p.evaluate(() => [getComputedStyle(document.body).backgroundColor, getComputedStyle(document.documentElement).getPropertyValue('--brand').trim()]);
@@ -268,7 +284,7 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await q.click('[data-seg=riesgo]'); await q.waitForTimeout(300); await q.click('#bCampCupon'); await q.waitForTimeout(1500);
         const g16c = await q.evaluate(() => { const w = document.querySelector('#sSegL [data-wa]'); return [w && decodeURIComponent(w.href), document.getElementById('sSegL').textContent]; });
         await q.evaluate(() => document.getElementById('sSeg').scrollIntoView()); await t.foto('segmentos_g16', q);
-        const [g16d] = await t.sim.su("select porcentaje p, hasta - current_date d from cfx_descuentos where owner_id = $1 and codigo = 'VUELVE15'", [tid]);
+        const [g16d] = await t.sim.su("select porcentaje p, hasta - public.hoy_cl() d from cfx_descuentos where owner_id = $1 and codigo = 'VUELVE15'", [tid]);
         await q.goto(t.base + '/'); await q.waitForTimeout(3000); await t.sinModales(q); await q.waitForTimeout(800);
         const g16e = await q.evaluate(() => [document.getElementById('hoyRecuperar').textContent, document.getElementById('hoyHacerL').textContent]);
         ok(g16b[0] !== '$0' && g16b[1] === 30 && g16b[2] === 24 && /~\$35\.000/.test(g16b[3]) && /Café molido/.test(g16b[3]) && g16b[4] && /Tu mejor hora/.test(g16b[5]) && /hace|\d/.test(g16l) && /pedido/.test(g16l) &&
@@ -445,6 +461,44 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
           dte.Encabezado.IdDoc.TipoDTE === 39 && dte.Encabezado.Totales.MntTotal === 9000 && dte.Encabezado.Totales.MntNeto + dte.Encabezado.Totales.IVA === 9000 && dte.DscRcgGlobal[0].ValorDR === 1000,
           'Órbita: boleta SII ' + JSON.stringify([bq, bm, bn, bd.f, bd.u, bd.rut]));
         await t.foto('boleta', m);
+        // G18 · G35-G37: Ajustes → 📲 Vender en redes. Links listos, catálogo y (Pro) avisos firmados de cada pedido a otro sistema.
+        const [g18pl] = await t.sim.su('select plan, pro_until from public.profiles where id = $1', [tid]);
+        await t.sim.su("update public.profiles set plan = 'free', pro_until = null where id = $1", [tid]);
+        await q.goto(t.base + '/#redes'); await q.reload(); await q.waitForTimeout(2500);
+        const g18u0 = await q.evaluate(() => { const b = document.getElementById('redesBody'); return [!!b.offsetParent, /t\/\?s=/.test(b.querySelector('input').value), [...b.querySelectorAll('input')].some((i) => /\/t\/feed\?s=/.test(i.value)),
+          !document.getElementById('whUrl'), !!b.querySelector('[data-rd-ir="premium"]'), document.documentElement.scrollWidth <= innerWidth + 1]; });
+        await t.sim.su("update public.profiles set plan = 'pro', pro_until = null where id = $1", [tid]);
+        await t.sim.su("insert into extensions.http_respuestas (url_like, status, content) values ('%hooks.ejemplo.cl%', 200, 'ok') on conflict (url_like) do update set status = 200, content = 'ok'");
+        await q.reload(); await q.waitForTimeout(2500);
+        await q.evaluate(() => { document.getElementById('whUrl').value = 'http://127.0.0.1/x'; document.querySelector('#redesBody [data-rd="guardar"]').click(); }); await q.waitForTimeout(1200);
+        const g18malo = await q.evaluate(() => !document.getElementById('whSec'));
+        await q.evaluate(() => { document.getElementById('whUrl').value = 'https://hooks.ejemplo.cl/orbita'; document.querySelector('#redesBody [data-rd="guardar"]').click(); }); await q.waitForTimeout(1500);
+        await q.evaluate(() => document.querySelector('#redesBody [data-rd="probar"]').click()); await q.waitForTimeout(1500);
+        const g18u1 = await q.evaluate(() => [document.getElementById('whSec').value, document.getElementById('redesBody').textContent.includes('Prueba'), document.getElementById('redesBody').textContent.includes('Funcionando')]);
+        await t.foto('redes', q);
+        await q.evaluate(() => document.getElementById('whUrl').scrollIntoView({ block: 'start' })); await q.waitForTimeout(300); await t.foto('redes-avisos', q);
+        const [{ id: g18id }] = await t.sim.su("insert into public.pedidos (negocio_id, invitado_nombre, invitado_tel, lineas, subtotal, total, entrega, estado, token) values ($1, 'Rosa', '56911112222', '[{\"nombre\":\"Polera\",\"cant\":2,\"precio\":5000,\"subtotal\":10000,\"clave\":\"p1\"}]', 10000, 10000, 'retiro', 'recibido', $2) returning id", [tid, 'wh' + 'x'.repeat(22)]);
+        await t.sim.su("update public.pedidos set estado = 'preparando' where id = $1", [g18id]);
+        await t.sim.su("update public.pedidos set nota = 'sin cambio de estado' where id = $1", [g18id]);
+        const [{ n: g18n }] = await t.sim.su('select public.webhook_enviar() n');
+        const g18log = await t.sim.su("select content, headers from extensions.http_log where uri = 'https://hooks.ejemplo.cl/orbita' order by n");
+        const g18ev = g18log.map((l) => JSON.parse(l.content)).filter((x) => x.evento !== 'ping');
+        const g18firma = g18log.every((l) => { const m = /X-CodeFix-Firma,\\?"?t=(\d+),v1=([0-9a-f]{64})/.exec(l.headers);
+          return m && require('crypto').createHmac('sha256', g18u1[0]).update(m[1] + '.' + l.content).digest('hex') === m[2] && l.headers.includes('X-CodeFix-Id,' + JSON.parse(l.content).id); });
+        // Si la URL falla, queda para reintentar (no se pierde) y el pedido sigue igual.
+        await t.sim.su("update extensions.http_respuestas set status = 500 where url_like = '%hooks.ejemplo.cl%'");
+        await t.sim.su("update public.pedidos set estado = 'listo' where id = $1", [g18id]);
+        await t.sim.su('select public.webhook_enviar()');
+        const [g18f] = await t.sim.su("select v.estado, v.intentos, v.proximo > now() + interval '50 seconds' p, w.fallos, w.activo, (select estado from public.pedidos where id = $2) pe from public.webhook_envios v join public.webhooks w on w.owner_id = v.owner_id where v.owner_id = $1 and v.cuerpo #>> '{pedido,estado}' = 'listo'", [tid, g18id]);
+        const [g18s] = await t.sim.su("select has_function_privilege('anon', 'public.conexiones_estado()', 'execute') a, has_function_privilege('authenticated', 'public.webhook_enviar(uuid)', 'execute') e, has_function_privilege('authenticated', 'public.webhook_guardar(text, boolean)', 'execute') g, (select count(*) from cron.job where jobname = 'webhooks')::int c");
+        ok(g18u0.every(Boolean) && g18malo && /^whsec_[0-9a-f]{48}$/.test(g18u1[0]) && g18u1[1] && g18u1[2] && g18n === 2 && g18ev.length === 2 &&
+          g18ev[0].evento === 'pedido.creado' && g18ev[1].evento === 'pedido.estado' && g18ev[1].pedido.estado === 'preparando' && g18ev[1].pedido.estado_anterior === 'recibido' &&
+          g18ev[0].pedido.lineas[0].cantidad === 2 && g18ev[0].pedido.cliente.telefono === '56911112222' && g18ev[0].tienda.nombre === 'Tienda Ana' && g18firma &&
+          g18f && g18f.estado === 'pendiente' && g18f.intentos === 1 && g18f.p && g18f.fallos === 1 && g18f.activo && g18f.pe === 'listo' && !g18s.a && !g18s.e && g18s.g && g18s.c === 1,
+          'Órbita G18: avisos firmados de cada pedido a otro sistema (webhooks) con reintento ' + JSON.stringify([g18u0, g18malo, g18u1.slice(1), g18n, g18ev.map((x) => x.evento), g18firma, g18f, g18s]));
+        await q.emulateMedia({ colorScheme: 'dark' }); await q.reload(); await q.waitForTimeout(2500); await t.foto('redes-oscuro', q); await q.emulateMedia({ colorScheme: 'light' });
+        await t.sim.su('delete from public.webhooks where owner_id = $1', [tid]);
+        await t.sim.su('update public.profiles set plan = $2, pro_until = $3 where id = $1', [tid, g18pl.plan, g18pl.pro_until]);
       }
       if (app === 'saas') {
         // Mis datos y privacidad (núcleo): consentimiento de ofertas, copia de los datos y solicitud de rectificación; el admin responde y registra una brecha.
@@ -550,7 +604,7 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         ok(/Limpieza automática cada noche/.test(lm[0]) && /auto/.test(lm[0]) && /Carritos abandonados/.test(lm[0]) && lm[1] && lm[2] && la.v === 'false' && la.n === 0 && la.q === 1 && lb.n >= 1 && lb.q === 0 && !lb.au,
           'CM: 🧹 limpieza del núcleo + 🌙 automática (apagar/prender) ' + JSON.stringify([lm.slice(1), la, lb]));
       }
-      const e = t.errores.filter((x) => !/404|Failed to load resource|net::|Sin permiso para vender|G8 lanzado/.test(x));
+      const e = t.errores.filter((x) => !/404|Failed to load resource|net::|Sin permiso para vender|G8 lanzado|dominio público \(sin IP/.test(x));
       ok(!e.length, app + ': sin errores ' + e.join(' | ').slice(0, 200));
     } catch (x) { fallas++; console.log(x.message); await t.foto(app + '-central-error'); }
     await t.cerrar();
