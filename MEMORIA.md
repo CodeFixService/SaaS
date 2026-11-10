@@ -621,3 +621,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 **Órbita:** Caja → medios de pago con ícono arriba y precio en su propia fila (≤360 px) · vitrina: pestañas Productos/Ofertas/Pedido sin ícono ≤350 px.
 **Falsos positivos conocidos:** 409 al subir fichapro.json (dos subidas a la vez en el simulador) · auditoria "avatar visibles: 0" (el avatar ya no va en la cabecera) y "falta ⇄ Panel" (admin de prueba sin admin_email).
 **Núcleo 2.56 solo sincronizado a CM y Órbita;** las otras 5 siguen en 2.54 y lo reciben en su turno.
+
+## Cómo subir versión en cada app (copia de las reglas, 10/11/2026)
+- CM/Cerebro: shared/config.js VERSION/DB_VERSION + db_version en instalar.sql · Billetera: js/core.js VERSION y BD + version_bd · Órbita: shared/core.js APP_VERSION/DB_VERSION + db_version (bloque 5.26) y bloque "VERSIÓN x.y" arriba del último · Barbería: shared/core.js VERSION + db_version en instalar.sql, verificar_20.sql y verificar_actualizacion.sql · Estaciona: sw.js + js/config.js BD + version_bd · BiciTaller: sw.js CACHE + shared/config.js DB_VERSION + schema.sql + node supabase/generar.mjs.
+- SQL: set_config($1...) junto a otra función con $1 → castear $1::uuid. _headers solo en nucleo/_headers.
+- CM va directo a main desde G20 (sin 🧪 pruebas). ⚠️ Workers Builds "saas" falla al instante desde 92c0d2d (sin detalle en GitHub): ver error en Cloudflare.
