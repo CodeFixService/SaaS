@@ -511,7 +511,8 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         const g19u0 = await q.evaluate(() => { const b = document.getElementById('modTienda'); return [!!b.offsetParent, b.querySelectorAll('.cfxm-pack').length, !!b.querySelector('.cfxm-pack.top .cfxm-tag'),
           b.querySelectorAll('.cfxm-mod').length, !!b.querySelector('[data-probar="crecer"]'), /\$990\/mes/.test(b.textContent), document.documentElement.scrollWidth <= innerWidth + 1, Cuenta.puede('estadisticas')]; });
         await t.foto('modulos', q);
-        await q.evaluate(() => document.querySelector('#modTienda [data-probar="crecer"]').click()); await q.waitForTimeout(4500);
+        await q.evaluate(() => document.querySelector('#modTienda [data-probar="crecer"]').click()); await q.waitForTimeout(1500);
+        await q.evaluate(() => document.querySelector('dialog.cfxd [data-gratis]').click()); await q.waitForTimeout(4500);  // G24: Probar abre la demo; ahí se activa la prueba
         const g19u1 = await q.evaluate(() => [Cuenta.puede('estadisticas'), Cuenta.puede('equipo'), !!document.querySelector('#modTienda [data-probar="crecer"]'), !!document.querySelector('#modTienda [data-probar="completo"]'),
           document.getElementById('modTienda').textContent.includes('Prueba gratis hasta')]);
         await q.evaluate(() => document.querySelector('#modTienda [data-per="a"]').click()); await q.waitForTimeout(300);
@@ -541,7 +542,7 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await t.sim.su('update public.profiles set plan = $2, pro_until = $3 where id = $1', [tid, g18pl.plan, g18pl.pro_until]);
         await t.sim.su('delete from auth.users where id = $1', [g19adm.id]);
         ok(!g19w0.c.pro && g19w0.c.modulo && g19w0.m.estadisticas === false && g19u0.slice(0, 3).join() === 'true,3,true' && g19u0[3] >= 8 && g19u0[4] && g19u0[5] && g19u0[6] && !g19u0[7] &&
-          g19u1[0] && !g19u1[1] && !g19u1[2] && !g19u1[3] && g19u1[4] && g19an && /Mi equipo/.test(g19d[0]) && g19d[1] === 2 && /990/.test(g19d[2]) && g19d[3] && g19d[4] &&
+          g19u1[0] && !g19u1[1] && !g19u1[2] && g19u1[3] && g19u1[4] && g19an && /Mi equipo/.test(g19d[0]) && g19d[1] === 2 && /990/.test(g19d[2]) && g19d[3] && g19d[4] &&
           g19p && g19p.producto === 'equipo' && g19p.periodo === 'mensual' && g19p.monto === 990 && g19r.r.estado === 'aprobado' && g19e.o === 'pago' && g19e.d === 30 && !g19e.pro && g19e.eq > 0 && !g19e.wh && g19e.pr >= 5 &&
           g19u2.every(Boolean) && !g19s.a && !g19s.d && !g19s.r && g19s.c,
           'Órbita G19: 🧩 módulos de pago por negocio (prueba, compra y activación) ' + JSON.stringify([g19w0.m && g19w0.m.estadisticas, g19u0, g19u1, g19an, g19d, g19p, g19r.r, g19e, g19u2, g19s]));

@@ -17,6 +17,8 @@ Lo que YA está configurado no se toca (links de pago que pegaste, precios guard
 2. Precios recomendados (por mes): sueltos $990 · **📊 Medir anuncios $990** · **🌐 Dominio propio $1.990** (te pide trabajo a ti).
 3. Packs: 🌱 Básico $1.990 · 🚀 Crecer $2.990 ⭐ Más elegido · 💎 Completo $3.990 (trae los nuevos solo). Anual = 10 meses. Premium −20 %.
 4. 🔗 Links de monto fijo de Mercado Pago: uno de 1 mes y uno de 1 año por cada pack (y por Medir y Dominio). Mercado Pago → Cobrar → Link de pago → Monto fijo → pega aquí.
+5. Cómo lo ve el **negocio** (G24): Más → 🧩 Módulos → **▶️ Probar** abre una demo animada con datos de ejemplo (no toca su tienda) → 🎁 Activar 7 días gratis · Comprar · Cerrar (o ✕).
+   Si entra a un módulo que no tiene (ej. Más → Mensajes, Pedidos → Estadísticas/Promociones, Mi equipo, sellos) ve **▶️ Probar módulo**. Si TÚ lo apagas para todos (CM → 🧩) ve "no está disponible por ahora".
 
 ## 5 · Cuando un negocio pide 🌐 dominio (te llega aviso al CM)
 Cloudflare → Workers → **aplicaciones** → Settings → Domains & Routes → **Add → Custom domain** → escribe el dominio. (El dominio debe estar en tu Cloudflare o el cliente te pasa sus DNS.) Abre solo su tienda.
