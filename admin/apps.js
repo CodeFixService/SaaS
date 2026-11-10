@@ -10,6 +10,8 @@
   // https://pruebas-<worker>.<cuenta>.workers.dev (vista previa, con la misma base real). Se prueba ahí y después pasa a main → Liberar.
   const RAMA_PRUEBAS = 'pruebas', CUENTA_WORKERS = 'juanjosuecastilloloyola.workers.dev';
   const urlPrueba = (a) => 'https://' + RAMA_PRUEBAS + '-' + a.worker + '.' + CUENTA_WORKERS + '/';
+  // G24 · 🧹 Limpiar y abrir: abre la app publicada (main) borrando caché, service worker, datos guardados y sesión (núcleo carga.js ?cfx-cero), como en incógnito.
+  const urlLimpia = (a) => 'https://' + a.worker + '.' + CUENTA_WORKERS + '/?cfx-limpio=1&cfx-cero=1';
   // 🧪 Probar abre con ?cfx-limpio: la app borra su caché y service worker al entrar (como incógnito, sin versiones viejas; núcleo carga.js).
   // ✅ Confirmar se habilita después de abrir 🧪 Probar al menos una vez (por versión). ↩️ Deshacer siempre.
   const PROBO = (a) => 'cm-probo-' + a.id;
@@ -153,13 +155,14 @@
       (e.error ? '<p class="sub warn">' + esc(e.error) + '</p>' : '') +
       (e.bdMsg && (s.faltaBd || e.bdManual) ? '<p class="sub' + (e.bdMal ? ' warn' : '') + '">' + esc(e.bdMsg) + '</p>' : '') +
       '<div class="btns-s">' +
-        (e.prueba ? '<a class="btn small" data-a="probar" href="' + urlPrueba(a) + '?cfx-limpio=' + encodeURIComponent(e.prueba.version) + '" target="_blank" rel="noopener">🧪 Probar v' + esc(e.prueba.version) + '</a>' +
+        (e.prueba ? '<a class="btn small" data-a="probar" href="' + urlPrueba(a) + '?cfx-limpio=' + encodeURIComponent(e.prueba.version) + '&cfx-cero=1" target="_blank" rel="noopener">🧪 Probar v' + esc(e.prueba.version) + '</a>' +
           '<button type="button" class="small" data-a="pconf"' + (probo(a) && !e.pBusy ? '' : ' disabled') + ' title="Primero ábrela con 🧪 Probar">' + (e.pBusy === 'confirmar' ? 'Confirmando…' : '✅ Confirmar') + '</button>' +
           '<button type="button" class="small ghost" data-a="pdes"' + (e.pBusy ? ' disabled' : '') + '>' + (e.pBusy === 'deshacer' ? 'Deshaciendo…' : '↩️ Deshacer') + '</button>' : '') +
         (a.liberar && e.conectado ? '<button type="button" class="small" data-a="lib"' + (s.lista && !e.liberando ? '' : ' disabled') + '>' + (e.liberando ? 'Liberando…' : s.alDia ? A.ico('check', 15) + ' Liberada' : A.ico('cohete', 15) + ' Liberar v' + esc(e.pub || '?')) + '</button>' : '') +
         (e.conectado ? '<button type="button" class="small' + (s.faltaBd ? '' : ' ghost') + '" data-a="bd" title="Corre auto_actualizar() en la base de esta app"' + (e.bdProg ? ' disabled' : '') + '>' + (e.bdProg ? 'Actualizando la base…' : '⚡ Actualizar base ahora') + '</button>' : '') +
         (!a.propia && e.url ? (e.conectado ? '<button type="button" class="small ghost" data-a="salir">Desconectar</button>' : '<button type="button" class="small" data-a="con">' + A.ico('enchufe', 15) + ' Conectar</button>') : '') +
         (e.conectado && e.modulos && e.modulos.length ? '<button type="button" class="small ghost" data-a="mod">🧩 Módulos</button>' : '') +
+        (a.propia ? '' : '<a class="btn small" href="' + urlLimpia(a) + '" target="_blank" rel="noopener" title="Borra caché y sesión de la app y la abre como recién instalada">🧹 Limpiar y abrir</a>') +
         '<button type="button" class="small ghost" data-a="rec" aria-label="Revisar">' + A.ico('refrescar', 15) + '</button>' +
       '</div>';
   }

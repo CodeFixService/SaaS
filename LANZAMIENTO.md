@@ -37,3 +37,6 @@ Logo y nombre → WhatsApp → productos con foto → link de pago o ⚡ Mercado
 - LIMPIEZA FINAL de Órbita: supabase/limpieza/1_contar.sql → revisar → 2_borrar.sql → Storage → vaciar buckets.
 - Boleta automática (OpenFactura) va como **beta**: prueba 1 boleta real antes de ofrecerla.
 - Mercado Pago automático para tu cobro: falta tu **Access Token de producción**.
+
+## 🧹 Probar una app como recién instalada (sin incógnito)
+CM → Apps → tarjeta de la app → **🧹 Limpiar y abrir**. Borra caché, datos guardados y sesión de ESA app en tu teléfono y la abre al tiro (vuelves a iniciar sesión). Desde el 10/11 los cambios van directo a main: si algo sale mal, avísale a Claude y se revierte.

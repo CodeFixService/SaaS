@@ -613,9 +613,10 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
           const f = '/home/user/' + DIR[repo] + '/' + ruta; return fs.existsSync(f) ? r.fulfill({ body: fs.readFileSync(f) }) : r.fulfill({ status: 404, body: '' }); });
         await p.goto(t.base + '/admin/#apps'); await p.waitForTimeout(5000); await t.sinModales();
         const pr = await p.evaluate(() => ({ h: (document.querySelector('[data-app=aplicaciones] [data-a=probar]') || {}).href, t: (document.querySelector('[data-app=aplicaciones] [data-prueba]') || {}).textContent,
-          otras: document.querySelectorAll('[data-a=probar]').length, bd: !!document.querySelector('[data-app=cm] [data-a=bd]') }));
+          otras: document.querySelectorAll('[data-a=probar]').length, bd: !!document.querySelector('[data-app=cm] [data-a=bd]'),
+          limpia: (document.querySelector('[data-app=barberia] a[href*="cfx-cero"]') || {}).href, limpiaCm: !!document.querySelector('[data-app=cm] a[href*="cfx-cero"]') }));
         await t.foto('apps-probar');
-        ok(pr.h === 'https://pruebas-aplicaciones.juanjosuecastilloloyola.workers.dev/?cfx-limpio=99.1' && /v99\.1/.test(pr.t) && pr.otras === 1 && pr.bd, 'CM: Mis aplicaciones → 🧪 Probar (rama pruebas, abre limpio) y ⚡ Actualizar base siempre ' + JSON.stringify(pr));
+        ok(pr.h === 'https://pruebas-aplicaciones.juanjosuecastilloloyola.workers.dev/?cfx-limpio=99.1&cfx-cero=1' && /v99\.1/.test(pr.t) && pr.otras === 1 && pr.bd && pr.limpia === 'https://barberia.juanjosuecastilloloyola.workers.dev/?cfx-limpio=1&cfx-cero=1' && !pr.limpiaCm, 'CM: Mis aplicaciones → 🧹 Limpiar y abrir, → 🧪 Probar (rama pruebas, abre limpio) y ⚡ Actualizar base siempre ' + JSON.stringify(pr));
         // ✅ Confirmar: deshabilitado hasta abrir 🧪 Probar; con el token guardado, la base del CM mueve main a pruebas en GitHub (simulado con stub.sql).
         await t.sim.su("insert into extensions.http_respuestas (url_like, content) values ('%/repos/CodeFixService/Aplicaciones/git/ref/heads/main', '{\"object\":{\"sha\":\"aaa111\"}}'), ('%/repos/CodeFixService/Aplicaciones/git/ref/heads/pruebas', '{\"object\":{\"sha\":\"bbb222\"}}'), ('%/repos/CodeFixService/Aplicaciones/git/refs/heads/main', '{\"ref\":\"refs/heads/main\"}')");
         await p.click('#appsGh'); await p.waitForTimeout(600); await p.fill('dialog #ghT', 'github_pat_prueba'); await p.click('dialog [data-si]'); await p.waitForTimeout(1200);
