@@ -59,6 +59,10 @@ U1-U14 · Reparar la app · variantes + ficha · Te puede gustar · stock por op
 ## Grupos que siguen (uno por chat)
 G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C18 + B10-B11 ✅ · G14 B12-B13 + D21-22 ✅ · G15 E24-E25 + E27 ✅ · G16 E28-E29 + F30 ✅ · G17 F31-F33 ✅ · G18 G35-G37 ✅ · G19 🧩 módulos de pago por negocio ✅ (Órbita + CM; las otras apps en su turno)
 
+## Ideas nuevas (anotadas 10/11/2026)
+- 🧠 Cerebro como MÓDULO del Centro de Mando (solo para Josué, en el panel): explico un video y genera ganchos visuales que retengan. NO recuperar la app Cerebro aparte. Cambiar la temática → verlo en otro chat.
+- Revisión global de la tienda en celular ✅ (núcleo 2.56, Órbita 5.94, CM 4.79; receta en MEMORIA → "Revisión celular de la tienda": pruebas/celular.js). Replicar en cada app en su turno.
+
 ## Antes de lanzar (cuando Josué diga "listo")
 - Precios: CM → Pagos → negocio $3.000/mes y cliente $2.000/mes (Premium barato). CM → Apps → Órbita → 🧩 → 💰 Vender módulos (prendido) y revisar precios/packs; links de monto fijo de Mercado Pago por módulo y pack.
 - LIMPIEZA FINAL: dejar TODOS los usuarios (auth + perfil + plan + módulos comprados cfx_modulos_negocio/cfx_modulos_pruebas) pero sin datos: productos, opciones/stock, fotos de buckets, diseño/tienda, pedidos, ventas, clientes, promociones, comprobantes. Primero un SQL que solo cuenta por usuario; luego el borrado.

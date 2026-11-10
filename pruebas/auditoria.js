@@ -25,9 +25,10 @@ async function revisar(p, donde) {
         .forEach((e) => { const r = e.getBoundingClientRect(); const f = tapa(r); if (f) out.push(['medio', 'tapado por ' + (f.closest('nav.cfx-barra') ? (f.closest('.cfx-mas') ? 'el +' : 'la barra') : 'flotante "' + nom(f) + '"') + ': "' + nom(e) + '"']); });
     }
     // 3) botones encimados
+    const pegado = (e) => { for (let x = e; x && x !== document.body; x = x.parentElement) if (/sticky|fixed/.test(getComputedStyle(x).position)) return x; return null; };
     const bs = [...raiz.querySelectorAll('button, a.btn, .btn')].filter((e) => vis(e) && !e.closest('nav.cfx-barra, .cfx-cab, .cfx-pila, header'));
     for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) {
-      const a = bs[i], b = bs[j]; if (a.contains(b) || b.contains(a)) continue;
+      const a = bs[i], b = bs[j]; if (a.contains(b) || b.contains(a) || pegado(a) !== pegado(b)) continue; // lo que pasa por debajo de una franja fija/pegada no está encimado
       const r = a.getBoundingClientRect(), q = b.getBoundingClientRect(), w = Math.min(r.right, q.right) - Math.max(r.left, q.left), h = Math.min(r.bottom, q.bottom) - Math.max(r.top, q.top);
       if (w > 4 && h > 4 && w * h > 0.25 * Math.min(r.width * r.height, q.width * q.height)) out.push(['grave', 'botones encimados: "' + nom(a) + '" y "' + nom(b) + '"']);
     }
@@ -105,7 +106,8 @@ const APPS = {
   } },
 };
 
-(async () => {
+module.exports = { revisar };
+if (require.main === module) (async () => {
   const pedidas = process.argv.slice(2);
   const informe = [];
   for (const [nombre, A] of Object.entries(APPS)) {

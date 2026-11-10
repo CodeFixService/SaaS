@@ -607,3 +607,17 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - Pendiente (no hecho): cobro automático de módulos con Mercado Pago (preferencia con el monto exacto y activación sola) → necesita el Access Token de producción de CodeFix; hoy es link de monto fijo + comprobante + ✅ en CM → Pagos.
   Equipo con el módulo vencido: sus cuentas siguen entrando (solo no se pueden crear nuevas).
 - Pruebas: central.js "Órbita G19: …" (prueba de pack, compra con transferencia, aprobación, anual, seguridad) y "CM G19: …" (precio, guardar, regalar). Capturas modulos, modulos-pagar, modulos-oscuro, cm_modulos_venta.
+
+## Revisión celular de la tienda · núcleo 2.56 · Órbita 5.94 · CM 4.79 (10/11/2026)
+**Receta para replicar en cada app (rápido):**
+1. `ANCHO=360 node auditoria.js <app>` (barra + Ajustes) y `node celular.js <app>` (TODAS las páginas × 320/360 × claro/oscuro × cada cuenta). Para otra app: agregar su entrada en `APPS` de celular.js (cuentas, datos de ejemplo con nombres LARGOS y precios grandes, y `PAGINAS` por rol).
+2. Leer `capturas/celular-<app>.txt` y MIRAR las capturas 320 (lo que el script no ve: palabras partidas, placeholders cortados).
+3. Arreglar, repetir con `ANCHOS=320` hasta 0 hallazgos, y central.js.
+**Qué revisa celular.js:** se sale del ancho · cortado por el borde (fuera de tiras con scroll) · texto cortado en botón · botones encimados (auditoria.revisar, ahora ignora lo que pasa bajo una franja pegada/fija) · tapado por la barra.
+**Arreglos del núcleo (llegan a todas al sincronizar):**
+- tema.css: botones/.chip/.pill con `overflow-wrap: normal` (antes heredaban `anywhere` de .card y salía "Efectiv-o", "Comprob-ante"); ≤360 px menos relleno en botones de tarjeta.
+- ayuda.js: título de la hoja (.cfx-hm-cab h2) baja de línea en vez de cortarse (nombre largo del producto entero); `tiras()` no convierte en tira deslizable una fila con `flex-wrap: wrap`.
+- tienda.js: Agregar/Preguntar apilados y enteros en la grilla de 2 (≤360 px sin ícono).
+**Órbita:** Caja → medios de pago con ícono arriba y precio en su propia fila (≤360 px) · vitrina: pestañas Productos/Ofertas/Pedido sin ícono ≤350 px.
+**Falsos positivos conocidos:** 409 al subir fichapro.json (dos subidas a la vez en el simulador) · auditoria "avatar visibles: 0" (el avatar ya no va en la cabecera) y "falta ⇄ Panel" (admin de prueba sin admin_email).
+**Núcleo 2.56 solo sincronizado a CM y Órbita;** las otras 5 siguen en 2.54 y lo reciben en su turno.
