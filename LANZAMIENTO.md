@@ -17,7 +17,9 @@ Lo que YA está configurado no se toca (links de pago que pegaste, precios guard
 2. Precios recomendados (por mes): sueltos $990 · **📊 Medir anuncios $990** · **🌐 Dominio propio $1.990** (te pide trabajo a ti).
 3. Packs: 🌱 Básico $1.990 · 🚀 Crecer $2.990 ⭐ Más elegido · 💎 Completo $3.990 (trae los nuevos solo). Anual = 10 meses. Premium −20 %.
 4. 🔗 Links de monto fijo de Mercado Pago: uno de 1 mes y uno de 1 año por cada pack (y por Medir y Dominio). Mercado Pago → Cobrar → Link de pago → Monto fijo → pega aquí.
-5. Cómo lo ve el **negocio** (G24): Más → 🧩 Módulos → **▶️ Probar** abre una demo animada con datos de ejemplo (no toca su tienda) → 🎁 Activar 7 días gratis · Comprar · Cerrar (o ✕).
+5. Cómo lo ve el **negocio** (G25): Más → ⭐ **Mi plan y módulos** (Free/Pro arriba, 🧩 Módulos abajo) → **▶️ Probar** abre un ejemplo animado (no toca su tienda) → Comprar · Cerrar (o ✕). Sin prueba gratis.
+6. ⏰ **Todo vence solo** (G25): mensual a los 30 días, anual a los 365, regalo en los días que des. Nada queda permanente: el negocio renueva en Mi plan.
+7. 🧾 **Detalle de compra** (G25): el negocio lo ve en Pedidos (pedido pagado) y el cliente en Mis pedidos; si hay boleta SII, su N° va adentro. 🌐 **Mi dominio**: Más → Tu tienda → Mi dominio.
    Si entra a un módulo que no tiene (ej. Más → Mensajes, Pedidos → Estadísticas/Promociones, Mi equipo, sellos) ve **▶️ Probar módulo**. Si TÚ lo apagas para todos (CM → 🧩) ve "no está disponible por ahora".
 
 ## 5 · Cuando un negocio pide 🌐 dominio (te llega aviso al CM)
