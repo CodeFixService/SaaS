@@ -91,6 +91,7 @@ G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C1
 - B5 ✅ 🌐 (G25) Dominio propio escondido en Ajustes → Vender en redes: sacarlo a su propia fila "🌐 Mi dominio" en Tu tienda (y "Mi link" en Hoy). Con M3.
 - M4 ✅ 🗂️ (G25) Agrupar Ajustes: Tu tienda (Mi tienda+políticas, 💳 Pagos, 🚚 Despacho, 🧾 Boletas, 🌐 Mi dominio, 🧑‍🍳 Equipo) · Vender más (📲 Redes, 📊 Medir anuncios) · Tu plan (Mi plan + 🧩 Módulos en una sola hoja, con M1).
 - R1 ✅ ⏰ (G25) Renovación obligatoria: Órbita bd 5.42, todo Pro vence por fecha (sin permanente); módulos ya vencían. Falta revisar lo mismo en las otras apps cuando se retomen.
+- REGLA (G25, Josué): módulos 100% independientes (revisado: hoy ninguno depende de otro) y ultra intuitivo: en cada pantalla, qué está pasando + siguiente paso. Revisarlo en la pasada celular.
 - Luego: celular.js 320/360 claro/oscuro de todo G23, central.js, y recién ahí 🚀.
 
 ## Antes de lanzar (cuando Josué diga "listo")

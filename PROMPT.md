@@ -37,6 +37,7 @@ NÚCLEO 2.61 (CM, Órbita, Barbería; las otras en 2.54): modulos.js (probar/can
 ÓRBITA 6.01 (bd 5.42, bloques al FINAL de instalar.sql; 5.42 = profiles_vence): pedido_seguimiento, pedido_correo, set_mi_perfil con políticas, medicion/dominio; worker.js "/" dominio→vitrina. Ajustes por hash: #links #equipo #despacho #boleta #dominio #redes #plan (#modulos abre Mi plan).
 
 REGLAS:
+- 🧩 Cada módulo 100% independiente (ninguno pide otro; se revisa con su propio pro_o_modulo/Cuenta.puede). Ultra intuitivo: cliente y negocio siempre ven qué está pasando y cuál es el siguiente paso (estado + 1 botón claro).
 - No dañar lo existente; solo lo pedido; revisar si ya existe. Lo reutilizable va UNA vez en el núcleo; lo que se cobra va como 🧩 módulo; con la venta apagada no cambia nada.
 - Subir versión de cada app tocada: Órbita shared/core.js APP_VERSION/DB_VERSION + version.json (+ db_version y cabecera "VERSIÓN x.y" al final de instalar.sql si hay SQL). CM: shared/config.js + version.json. Barbería: shared/core.js VERSION + version.json. Núcleo: nucleo/nucleo.json.
 - Archivo nuevo en shared/ de Órbita → FILES de sw.js.
