@@ -22,8 +22,8 @@ const { abrir } = require('./h');
     ok(k1[0] && !k1[1], 'chat sin módulo → aviso ▶️ Probar módulo ' + JSON.stringify(k1));
     await t.foto('g24-chat-candado', q);
     await q.click('.cfxk button'); await q.waitForTimeout(400);
-    const d0 = await q.evaluate(() => { const d = document.querySelector('dialog.cfxd'); return d && [d.open, !!d.querySelector('.cfxd-x'), !!d.querySelector('.cerrar'), !!d.querySelector('[data-gratis]'), !!d.querySelector('[data-comprar]')]; });
-    ok(d0 && d0.every(Boolean), 'demo abierta con ✕, Cerrar, prueba gratis y Comprar ' + JSON.stringify(d0));
+    const d0 = await q.evaluate(() => { const d = document.querySelector('dialog.cfxd'); return d && [d.open, !!d.querySelector('.cfxd-x'), !!d.querySelector('.cerrar'), !d.querySelector('[data-gratis]'), !!d.querySelector('[data-comprar]')]; });
+    ok(d0 && d0.every(Boolean), 'demo abierta con ✕, Cerrar y Comprar (G25: sin prueba gratis) ' + JSON.stringify(d0));
     const op0 = await q.evaluate(() => [...document.querySelectorAll('.cfxd-p')].map((e) => +getComputedStyle(e).opacity));
     await q.waitForTimeout(3600);
     const op1 = await q.evaluate(() => [...document.querySelectorAll('.cfxd-p')].map((e) => +getComputedStyle(e).opacity));
@@ -40,7 +40,9 @@ const { abrir } = require('./h');
     await q.evaluate(() => { const d = document.querySelector('dialog.cfx-pago'); if (d) { d.close(); d.remove(); } });
 
     // 2) Activa la prueba gratis → recarga → el chat funciona (módulo prendido).
-    await q.click('.cfxk button'); await q.waitForTimeout(300); await q.click('dialog.cfxd [data-gratis]'); await q.waitForTimeout(4000); await t.sinModales(q);
+    // G25: sin botón de prueba gratis; la prueba la da el administrador (aquí, directo en la base).
+    await t.sim.su("insert into public.cfx_modulos_negocio (negocio, modulo, origen, hasta) values ($1, 'chat', 'prueba', now() + interval '7 days')", [id]);
+    await q.reload(); await q.waitForTimeout(4000); await t.sinModales(q);
     const [pr] = await t.sim.su("select origen, hasta > now() a from public.cfx_modulos_negocio where negocio = $1 and modulo = 'chat'", [id]);
     const k2 = await q.evaluate(() => [!document.querySelector('.cfxk'), !!document.getElementById('texto') || !!document.querySelector('main ul, main .list')]);
     ok(pr && pr.origen === 'prueba' && pr.a && k2.every(Boolean), 'prueba gratis activa el chat ' + JSON.stringify([pr, k2]));

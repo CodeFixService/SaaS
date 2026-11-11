@@ -187,7 +187,7 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await q.evaluate(() => document.getElementById('hoyAyuda').click()); await q.waitForTimeout(300);
         await q.click('.elegir button:has-text("Ver el recorrido")'); await q.waitForTimeout(500); await t.foto('recorrido', q);
         const tr2 = await q.evaluate(() => { const c = document.querySelector('.cfx-tour-caja'); const r = !!c && /^1 de/.test(c.querySelector('small').textContent); if (c) c.querySelector('[data-t=x]').click(); return r; });
-        ok(tr[0] && /^1 de 5/.test(tr[0]) && /^2 de/.test(tr[1]) && tr[2] && tr[3] === '1' && !qh[0] && /Responde 1 mensaje/.test(qh[1]) && fq === 7 && tr2,
+        ok(tr[0] && /^1 de 5/.test(tr[0]) && /^2 de/.test(tr[1]) && tr[2] && tr[3] === '1' && !qh[0] && /Responde 1 mensaje/.test(qh[1]) && fq === 9 && tr2,
           'Órbita: qué hacer hoy + ayuda y recorrido ' + JSON.stringify([tr, qh, fq, tr2]));
         await t.foto('hoy_hacer', q);
         // G15 · E24/E27: el análisis nocturno (Python) encuentra clientes que dejaron de venir y productos quietos; el stock que se mueve cuenta.
@@ -512,7 +512,7 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
           b.querySelectorAll('.cfxm-mod').length, !!b.querySelector('[data-probar="crecer"]'), /\$990\/mes/.test(b.textContent), document.documentElement.scrollWidth <= innerWidth + 1, Cuenta.puede('estadisticas')]; });
         await t.foto('modulos', q);
         await q.evaluate(() => document.querySelector('#modTienda [data-probar="crecer"]').click()); await q.waitForTimeout(1500);
-        await q.evaluate(() => document.querySelector('dialog.cfxd [data-gratis]').click()); await q.waitForTimeout(4500);  // G24: Probar abre la demo; ahí se activa la prueba
+        await q.evaluate(() => { document.querySelector('dialog.cfxd .cfxd-x').click(); return Cuenta.rpc('cfx_modulo_probar', { p_item: 'crecer' }); }); await q.reload(); await q.waitForTimeout(4500);  // G25: sin botón gratis (la prueba sigue existiendo en la base)
         const g19u1 = await q.evaluate(() => [Cuenta.puede('estadisticas'), Cuenta.puede('equipo'), !!document.querySelector('#modTienda [data-probar="crecer"]'), !!document.querySelector('#modTienda [data-probar="completo"]'),
           document.getElementById('modTienda').textContent.includes('Prueba gratis hasta')]);
         await q.evaluate(() => document.querySelector('#modTienda [data-per="a"]').click()); await q.waitForTimeout(300);
