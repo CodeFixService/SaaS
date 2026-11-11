@@ -9,8 +9,12 @@
   // 🧪 Probar: los cambios nuevos se suben primero a la rama fija "pruebas" de cada repo. Cloudflare Workers Builds la publica en
   // https://pruebas-<worker>.<cuenta>.workers.dev (vista previa, con la misma base real). Se prueba ahí y después pasa a main → Liberar.
   const RAMA_PRUEBAS = 'pruebas', CUENTA_WORKERS = 'juanjosuecastilloloyola.workers.dev';
+  // G26 · 🧪 Ramas de prueba APAGADAS por ahora (Josué las prende al terminar todas las apps: cambiar a true). Con false no se lee la rama
+  // "pruebas" ni aparecen 🧪 Probar / ✅ Confirmar / ↩️ Deshacer. (localStorage cm-ramas='1' las prende solo en ese navegador, para pruebas.)
+  const RAMAS_PRUEBA = false;
+  const ramas = () => { if (RAMAS_PRUEBA) return true; try { return localStorage.getItem('cm-ramas') === '1'; } catch (x) { return false; } };
   const urlPrueba = (a) => 'https://' + RAMA_PRUEBAS + '-' + a.worker + '.' + CUENTA_WORKERS + '/';
-  // G24 · 🧹 Limpiar y abrir: abre la app publicada (main) borrando caché, service worker, datos guardados y sesión (núcleo carga.js ?cfx-cero), como en incógnito.
+  // G24 · 🧹 Limpiar y abrir (G26: está en Resumen → Empresas, tarjeta de cada app): abre la app publicada (main) borrando caché, service worker, datos guardados y sesión (núcleo carga.js ?cfx-cero), como en incógnito.
   const urlLimpia = (a) => 'https://' + a.worker + '.' + CUENTA_WORKERS + '/?cfx-limpio=1&cfx-cero=1';
   // 🧪 Probar abre con ?cfx-limpio: la app borra su caché y service worker al entrar (como incógnito, sin versiones viejas; núcleo carga.js).
   // ✅ Confirmar se habilita después de abrir 🧪 Probar al menos una vez (por versión). ↩️ Deshacer siempre.
@@ -95,7 +99,7 @@
         fetch(RAW(a.repo, 'version.json'), { cache: 'no-store' }).then((r) => r.json()).catch(() => ({})),
         a.propia ? Promise.resolve('') : fetch(RAW(a.repo, a.cfg), { cache: 'no-store' }).then((r) => r.text()).catch(() => '')]);
       e.pub = String(vj.version || ''); e.notas = String(vj.notas || '');
-      e.prueba = await fetch(RAW(a.repo, 'version.json', RAMA_PRUEBAS), { cache: 'no-store' }).then((r) => r.ok ? r.json() : null).catch(() => null);
+      e.prueba = !ramas() ? null : await fetch(RAW(a.repo, 'version.json', RAMA_PRUEBAS), { cache: 'no-store' }).then((r) => r.ok ? r.json() : null).catch(() => null);
       if (e.prueba && !(e.prueba.version && (!e.pub || menor(e.pub, String(e.prueba.version))))) e.prueba = null;  // rama igual o más vieja que main: nada que probar
       e.nucleo = await fetch(RAW(a.repo, 'nucleo.json'), { cache: 'no-store' }).then((r) => r.json()).then((j) => String(j.nucleo || '')).catch(() => '');
       e.bdPide = vj.bd != null ? String(vj.bd) : a.propia ? String(global.BT_CONFIG.DB_VERSION || '') : ((conf.match(/DB_VERSION\s*:\s*'([^']+)'/) || [])[1] || '');
@@ -162,7 +166,6 @@
         (e.conectado ? '<button type="button" class="small' + (s.faltaBd ? '' : ' ghost') + '" data-a="bd" title="Corre auto_actualizar() en la base de esta app"' + (e.bdProg ? ' disabled' : '') + '>' + (e.bdProg ? 'Actualizando la base…' : '⚡ Actualizar base ahora') + '</button>' : '') +
         (!a.propia && e.url ? (e.conectado ? '<button type="button" class="small ghost" data-a="salir">Desconectar</button>' : '<button type="button" class="small" data-a="con">' + A.ico('enchufe', 15) + ' Conectar</button>') : '') +
         (e.conectado && e.modulos && e.modulos.length ? '<button type="button" class="small ghost" data-a="mod">🧩 Módulos</button>' : '') +
-        (a.propia ? '' : '<a class="btn small" href="' + urlLimpia(a) + '" target="_blank" rel="noopener" title="Borra caché y sesión de la app y la abre como recién instalada">🧹 Limpiar y abrir</a>') +
         '<button type="button" class="small ghost" data-a="rec" aria-label="Revisar">' + A.ico('refrescar', 15) + '</button>' +
       '</div>';
   }
@@ -424,7 +427,8 @@
   function render(el) {
     raiz = el;
     el.innerHTML = '<div class="titulo-v"><h2>Mis aplicaciones</h2><div class="btns-s"><button type="button" class="small ghost" id="appsGh">🔑 GitHub</button><button type="button" class="small ghost" id="appsTodo">' + A.ico('refrescar', 15) + ' Revisar todas</button></div></div>' +
-      '<p class="sub">La base de cada app se actualiza sola. Cuando aparezca 🧪 Probar, ábrela y revisa los cambios: si está bien, ✅ Confirmar y luego 🚀 Liberar; si no, ↩️ Deshacer (o Liberar todo): a sus usuarios se les actualiza sola.</p>' +
+      (ramas() ? '<p class="sub">La base de cada app se actualiza sola. Cuando aparezca 🧪 Probar, ábrela y revisa los cambios: si está bien, ✅ Confirmar y luego 🚀 Liberar; si no, ↩️ Deshacer (o Liberar todo): a sus usuarios se les actualiza sola.</p>'
+        : '<p class="sub">La base de cada app se actualiza sola. Para probar: Resumen → 🧹 Limpiar y abrir. Si está bien, aquí 🚀 Liberar.</p>') +
       '<div id="appsCab"></div>' + APPS.map((a) => '<div class="card app-card" data-app="' + a.id + '"></div>').join('');
     el.querySelector('#appsTodo').onclick = () => APPS.forEach(cargar);
     el.querySelector('#appsGh').onclick = tokenGitHub;
@@ -447,5 +451,5 @@
   }
   // Para el panel de Pagos: deja listas (y conectadas, si ya entraste) las 7 apps sin pintar las tarjetas.
   const preparar = () => Promise.all(APPS.filter((a) => !E[a.id] || !E[a.id].url).map(cargar));
-  global.MisApps = { render, APPS, cliente, estado: E, preparar, conectar, rpcDe, abrirAdmin, vincular, kpis, nombre, valor, peso, respaldar, limpieza };
+  global.MisApps = { render, APPS, urlLimpia, cliente, estado: E, preparar, conectar, rpcDe, abrirAdmin, vincular, kpis, nombre, valor, peso, respaldar, limpieza };
 })(window);

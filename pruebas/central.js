@@ -611,12 +611,20 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await p.route(/raw\.githubusercontent\.com\/CodeFixService\//, (r) => { const [, repo, rama, ruta] = new URL(r.request().url()).pathname.match(/^\/CodeFixService\/([^/]+)\/([^/]+)\/(.+)$/);
           if (rama === 'pruebas') return repo === 'Aplicaciones' && ruta === 'version.json' ? r.fulfill({ contentType: 'application/json', body: '{"version":"99.1","notas":"prueba rama"}' }) : r.fulfill({ status: 404, body: '' });
           const f = '/home/user/' + DIR[repo] + '/' + ruta; return fs.existsSync(f) ? r.fulfill({ body: fs.readFileSync(f) }) : r.fulfill({ status: 404, body: '' }); });
+        // G26: ramas de prueba apagadas → Apps sin 🧪 Probar y 🧹 Limpiar y abrir en Resumen → Empresas (no en el CM).
+        await p.goto(t.base + '/admin/#apps'); await p.waitForTimeout(5000); await t.sinModales();
+        const g26 = await p.evaluate(() => ({ probar: document.querySelectorAll('[data-a=probar]').length, enApps: document.querySelectorAll('#v-apps a[href*="cfx-cero"]').length }));
+        await p.goto(t.base + '/admin/#resumen'); await p.waitForTimeout(5000); await t.sinModales();
+        Object.assign(g26, await p.evaluate(() => ({ limpia: (document.querySelector('[data-emp=barberia] a[data-limpia]') || {}).href, cm: !!document.querySelector('[data-emp=cm] a[href*="cfx-cero"]'), ancho: document.documentElement.scrollWidth <= innerWidth + 1 })));
+        await t.foto('cm_resumen_limpiar');
+        ok(g26.probar === 0 && g26.enApps === 0 && g26.limpia === 'https://barberia.juanjosuecastilloloyola.workers.dev/?cfx-limpio=1&cfx-cero=1' && !g26.cm && g26.ancho, 'CM G26: 🧹 Limpiar y abrir en Resumen, ramas apagadas ' + JSON.stringify(g26));
+        await p.evaluate(() => localStorage.setItem('cm-ramas', '1'));
         await p.goto(t.base + '/admin/#apps'); await p.waitForTimeout(5000); await t.sinModales();
         const pr = await p.evaluate(() => ({ h: (document.querySelector('[data-app=aplicaciones] [data-a=probar]') || {}).href, t: (document.querySelector('[data-app=aplicaciones] [data-prueba]') || {}).textContent,
           otras: document.querySelectorAll('[data-a=probar]').length, bd: !!document.querySelector('[data-app=cm] [data-a=bd]'),
-          limpia: (document.querySelector('[data-app=barberia] a[href*="cfx-cero"]') || {}).href, limpiaCm: !!document.querySelector('[data-app=cm] a[href*="cfx-cero"]') }));
+        }));
         await t.foto('apps-probar');
-        ok(pr.h === 'https://pruebas-aplicaciones.juanjosuecastilloloyola.workers.dev/?cfx-limpio=99.1&cfx-cero=1' && /v99\.1/.test(pr.t) && pr.otras === 1 && pr.bd && pr.limpia === 'https://barberia.juanjosuecastilloloyola.workers.dev/?cfx-limpio=1&cfx-cero=1' && !pr.limpiaCm, 'CM: Mis aplicaciones → 🧹 Limpiar y abrir, → 🧪 Probar (rama pruebas, abre limpio) y ⚡ Actualizar base siempre ' + JSON.stringify(pr));
+        ok(pr.h === 'https://pruebas-aplicaciones.juanjosuecastilloloyola.workers.dev/?cfx-limpio=99.1&cfx-cero=1' && /v99\.1/.test(pr.t) && pr.otras === 1 && pr.bd, 'CM: Mis aplicaciones (cm-ramas=1) → 🧪 Probar (rama pruebas, abre limpio) y ⚡ Actualizar base siempre ' + JSON.stringify(pr));
         // ✅ Confirmar: deshabilitado hasta abrir 🧪 Probar; con el token guardado, la base del CM mueve main a pruebas en GitHub (simulado con stub.sql).
         await t.sim.su("insert into extensions.http_respuestas (url_like, content) values ('%/repos/CodeFixService/Aplicaciones/git/ref/heads/main', '{\"object\":{\"sha\":\"aaa111\"}}'), ('%/repos/CodeFixService/Aplicaciones/git/ref/heads/pruebas', '{\"object\":{\"sha\":\"bbb222\"}}'), ('%/repos/CodeFixService/Aplicaciones/git/refs/heads/main', '{\"ref\":\"refs/heads/main\"}')");
         await p.click('#appsGh'); await p.waitForTimeout(600); await p.fill('dialog #ghT', 'github_pat_prueba'); await p.click('dialog [data-si]'); await p.waitForTimeout(1200);

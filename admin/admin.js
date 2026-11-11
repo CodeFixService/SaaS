@@ -83,7 +83,9 @@
     const L = M.APPS;
     z.innerHTML = L.map((a) => { const e = M.estado[a.id] || {};
       return '<div class="card emp" data-emp="' + a.id + '" role="button" tabindex="0"><div class="fila"><span class="app-ico">' + App.ico(a.ico, 22) + '</span><h3 class="grow" style="margin:0">' + esc(a.nombre.split(' ·')[0]) + '</h3>' +
-        '<a class="btn small ghost" href="' + esc(a.web) + '" target="_blank" rel="noopener" data-ver>' + App.ico('abrir', 14) + ' Ver app</a></div>' +
+        // G26 · 🧹 Limpiar y abrir: la app publicada abre como recién instalada (sin caché, sin sesión, versión nueva). El CM se abre normal (limpiarlo cerraría tu sesión aquí).
+        (a.propia ? '<a class="btn small ghost" href="' + esc(a.web) + '" target="_blank" rel="noopener" data-ver>' + App.ico('abrir', 14) + ' Ver app</a>'
+          : '<a class="btn small" href="' + esc(M.urlLimpia(a)) + '" target="_blank" rel="noopener" data-ver data-limpia title="Borra caché y sesión de la app y la abre como recién instalada">🧹 Limpiar y abrir</a>') + '</div>' +
         (e.conectado && e.resumen ? M.kpis(e.resumen, 4) : '<p class="sub">' + (e.conectado ? 'Sin datos todavía.' : 'Conéctala en Apps para ver sus números.') + '</p>') + '</div>'; }).join('');
     z.onclick = (ev) => { if (ev.target.closest('[data-ver]')) return; const c = ev.target.closest('[data-emp]'); if (c) detalleEmpresa(L.find((a) => a.id === c.dataset.emp)); };
     z.onkeydown = (ev) => { if (ev.key === 'Enter') { const c = ev.target.closest('[data-emp]'); if (c) c.click(); } };
@@ -104,7 +106,8 @@
   async function detalleEmpresa(a) {
     const M = window.MisApps, e = M.estado[a.id] || {};
     const d = modal('<div class="fila" style="align-items:center"><span class="app-ico">' + App.ico(a.ico, 22) + '</span><h2 class="grow" style="margin:0">' + esc(a.nombre.split(' ·')[0]) + '</h2><button type="button" class="small ghost" data-cerrar aria-label="Cerrar">✕</button></div>' +
-      '<div id="empD"><p class="sub">Cargando…</p></div><div class="btns"><a class="btn" href="' + esc(a.web) + '" target="_blank" rel="noopener">' + App.ico('abrir', 15) + ' Ver app</a>' +
+      '<div id="empD"><p class="sub">Cargando…</p></div><div class="btns">' + (a.propia ? '' : '<a class="btn" href="' + esc(M.urlLimpia(a)) + '" target="_blank" rel="noopener">🧹 Limpiar y abrir</a>') +
+      '<a class="btn' + (a.propia ? '' : ' ghost') + '" href="' + esc(a.web) + '" target="_blank" rel="noopener">' + App.ico('abrir', 15) + ' Ver app</a>' +
       (e.conectado && !a.propia ? '<button type="button" class="ghost" data-adm>' + App.ico('abrir', 15) + ' Panel de la app</button>' : '') + (e.conectado ? '<button type="button" class="ghost" data-limp>' + App.ico('escoba', 15) + ' Respaldo y limpieza</button>' : '') + '</div>');
     if (d.querySelector('[data-adm]')) d.querySelector('[data-adm]').onclick = () => M.abrirAdmin(a);
     if (d.querySelector('[data-limp]')) d.querySelector('[data-limp]').onclick = () => { d.close(); M.limpieza(a); };
