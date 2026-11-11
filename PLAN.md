@@ -87,6 +87,9 @@ G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C1
 - M3 🌐 Dominio: Josué compra UN dominio en Cloudflare para todas las apps (subdominios por app). Dominio del negocio: pega su dominio + pasos claros de DNS (CNAME) y llega directo a su tienda (web/PWA). Revisar si se automatiza con Cloudflare for SaaS (custom hostnames) o queda manual.
 - L1 🧹 LIMPIEZA FINAL con aviso: borrar productos/perfiles/datos de todas las cuentas menos admins; a los antiguos, aviso "Migramos a una versión nueva: vuelve a cargar tus productos" + guía; a los nuevos, guía "Tu negocio en 5 minutos" (crear cuenta, links de pago, despacho, políticas).
 - T1 ✅ 🧹 CM → Apps → Limpiar y abrir (núcleo 2.60 carga.js ?cfx-cero: caché, SW, localStorage, sessionStorage, IndexedDB y cookies) · Barbería: faltaba wrangler.jsonc (ramas ≠ main fallaban al compilar).
+- B4 🧾 (G25, Josué) Boleta de COMPRA del pedido online: hoy hay 3 cosas sueltas (Comprobante de venta por WhatsApp en Caja/Pedidos, Boleta SII manual/OpenFactura, detalle del pedido). Unir en Pedidos: al quedar pagado se genera solo el "🧾 Detalle de compra" (cliente lo ve en Mis pedidos, se le avisa, 📤 compartir/🖨️) y si hay Boleta SII el folio va en ese mismo detalle. Caja (venta en el local) sigue con su comprobante. Legal: sin folio SII no es boleta → decir "Detalle de compra".
+- B5 🌐 (G25) Dominio propio escondido en Ajustes → Vender en redes: sacarlo a su propia fila "🌐 Mi dominio" en Tu tienda (y "Mi link" en Hoy). Con M3.
+- M4 🗂️ (G25) Agrupar Ajustes: Tu tienda (Mi tienda+políticas, 💳 Pagos, 🚚 Despacho, 🧾 Boletas, 🌐 Mi dominio, 🧑‍🍳 Equipo) · Vender más (📲 Redes, 📊 Medir anuncios) · Tu plan (Mi plan + 🧩 Módulos en una sola hoja, con M1).
 - Luego: celular.js 320/360 claro/oscuro de todo G23, central.js, y recién ahí 🚀.
 
 ## Antes de lanzar (cuando Josué diga "listo")
