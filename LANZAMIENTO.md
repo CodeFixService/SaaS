@@ -2,8 +2,8 @@
 Lo que YA está configurado no se toca (links de pago que pegaste, precios guardados). Solo llena lo que esté vacío.
 
 ## 1 · Publicar (tú, en el CM)
-1. **CM → Apps → Órbita** → 🧪 Probar → ✅ → **⚡ Actualizar base** → abrir en incógnito → 🚀 Liberar.
-2. **CM → Apps → Centro de Mando** y **Barbería**: suben solos (main). Barbería: 🚀 Liberar 2.73.
+1. **CM → Resumen → Empresas → Órbita → 🧹 Limpiar y abrir** → prueba → **CM → Apps → Órbita → 🚀 Liberar** (6.02; base 5.42, si no está: ⚡ Actualizar base).
+2. **CM** (4.87) y **Barbería** (2.77): suben solos (main) → 🧹 Limpiar y abrir → 🚀 Liberar.
 3. Edge Functions: **no hay que tocarlas** (el correo al comprador usa la función "enviar" que ya tienes).
 
 ## 2 · Correo (tú, si no está) — sin esto no salen los correos al comprador

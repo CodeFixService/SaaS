@@ -94,6 +94,9 @@ G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C1
 - R1 ✅ ⏰ (G25) Renovación obligatoria: Órbita bd 5.42, todo Pro vence por fecha (sin permanente); módulos ya vencían. Falta revisar lo mismo en las otras apps cuando se retomen.
 - REGLA (G25, Josué): módulos 100% independientes (revisado: hoy ninguno depende de otro) y ultra intuitivo: en cada pantalla, qué está pasando + siguiente paso. Revisarlo en la pasada celular.
 - Luego: celular.js 320/360 claro/oscuro de todo G23, central.js, y recién ahí 🚀.
+- G27 ✅ núcleo 2.62 · Órbita 6.02 · CM 4.87 · Barbería 2.77 (sin SQL):
+  - S1 👆 Deslizar: el gesto mueve SOLO el menú tocado (barra.js). Dedo en un menú que se corre → se corre él; que cabe → pestaña vecina de ESE menú. Dedo en la página → solo el menú principal (nav.tabs.sub / [role=tablist]); nunca Día/7 días/30 días. Causa extra: la pestañita ⌄ de la cuenta tapaba la orilla derecha del menú (ayuda.js la achica). tema.css: overscroll-behavior-x: contain en todos los menús. Prueba: pruebas/g27_deslizar.js (320/360, dedo real por CDP).
+  - S2 🎤 Micrófono: voz.js lo pone DENTRO de la página junto al campo (absoluto, z-index 2): se va con el campo, queda bajo cabecera/menú/barra y sale de la página al apagarse. Mismo voz.js en todos los campos. Prueba: pruebas/g27_micro.js.
 
 ## Antes de lanzar (cuando Josué diga "listo")
 - Precios: CM → Pagos → negocio $3.000/mes y cliente $2.000/mes (Premium barato). CM → Apps → Órbita → 🧩 → 💰 Vender módulos (prendido) y revisar precios/packs; links de monto fijo de Mercado Pago por módulo y pack.

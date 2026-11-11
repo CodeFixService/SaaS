@@ -46,7 +46,7 @@ async function abrir(repo, db, opts = {}) {
   const sim = crear({ db, funciones: opts.funciones, log: (m) => errores.push(m) });
   const browser = await chromium.launch();
   const nuevo = async () => {
-    const ctx = await browser.newContext({ viewport: { width: Number(process.env.ANCHO) || 360, height: Number(process.env.ALTO) || 740 }, serviceWorkers: 'block', locale: 'es-CL', timezoneId: 'America/Santiago', acceptDownloads: true });
+    const ctx = await browser.newContext({ viewport: { width: Number(process.env.ANCHO) || 360, height: Number(process.env.ALTO) || 740 }, serviceWorkers: 'block', locale: 'es-CL', timezoneId: 'America/Santiago', acceptDownloads: true, hasTouch: !!(opts.tactil || process.env.TACTIL), isMobile: !!(opts.tactil || process.env.TACTIL) });
     await ctx.route(/fonts\.(googleapis|gstatic)\.com|cdn\.jsdelivr\.net|unpkg\.com|tile|openstreetmap|cartocdn|challenges\.cloudflare/, (r) => {
       const u = r.request().url();
       // Turnstile simulado: entrega un token al tiro.

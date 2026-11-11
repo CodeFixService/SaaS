@@ -658,6 +658,12 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
   Dominio: Josué lo agrega en Cloudflare → Workers → aplicaciones → Settings → Domains & Routes → Add → Custom domain (el dominio debe estar en Cloudflare). Le llega aviso al CM.
 - Pruebas: scratchpad g23.sql (SQL) y pruebas/g23_ui.js (16 ✓: regiones, correo, seguimiento, Ajustes, sin errores). Guía para Josué: SaaS/LANZAMIENTO.md.
 
+## G27 · Deslizar y micrófono · núcleo 2.62 · Órbita 6.02 · CM 4.87 · Barbería 2.77 (11/11/2026)
+- barra.js: touchstart decide el menú bajo el dedo (closest o por posición, para cuando algo chico lo tapa). Si se corre de lado → nativo (o scrollBy si el dedo partió sobre algo encima). Si cabe → pasar(dir, ESE menú). Dedo en la página → grupoPagina() = primer nav.tabs.sub/[role=tablist]/[data-cfx-pestanas] visible; nunca .seg/.seg2 de adentro. Cabecera (header, .cfx-cab, .cfx-pest) no cambia de pestaña. pasar(dir, grupo) ya no recibe y.
+- ayuda.js: .cfx-pest::before sin extensión hacia abajo cuando hay nav.tabs.sub justo bajo la cabecera (tapaba la orilla derecha del menú y el navegador no lo corría).
+- voz.js: el botón ya no es position:fixed en body; va en el offsetParent posicionado del campo (o body), absoluto, z-index 2, y se quita del DOM al esconderse.
+- h.js: opts.tactil (o TACTIL=1) → hasTouch + isMobile. Para dedo real: CDP Input.dispatchTouchEvent (synthesizeScrollGesture no corre menús).
+
 ## Cómo subir versión en cada app (copia de las reglas, 10/11/2026)
 - CM/Cerebro: shared/config.js VERSION/DB_VERSION + db_version en instalar.sql · Billetera: js/core.js VERSION y BD + version_bd · Órbita: shared/core.js APP_VERSION/DB_VERSION + db_version (bloque 5.26) y bloque "VERSIÓN x.y" arriba del último · Barbería: shared/core.js VERSION + db_version en instalar.sql, verificar_20.sql y verificar_actualizacion.sql · Estaciona: sw.js + js/config.js BD + version_bd · BiciTaller: sw.js CACHE + shared/config.js DB_VERSION + schema.sql + node supabase/generar.mjs.
 - SQL: set_config($1...) junto a otra función con $1 → castear $1::uuid. _headers solo en nucleo/_headers.
