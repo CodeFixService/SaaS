@@ -34,7 +34,7 @@ PUBLICAR (todas las apps igual):
 EDGE FUNCTIONS: Órbita/Billetera/Barbería/Estaciona enviar; CM/BiciTaller/Cerebro servidor. Josué la borra, crea con el MISMO nombre, Verify JWT APAGADO, pega import 'https://raw.githubusercontent.com/CodeFixService/<repo>/<sha>/supabase/functions/<f>/index.ts'; → Deploy.
 
 NÚCLEO 2.61 (CM, Órbita, Barbería; las otras en 2.54): modulos.js (probar/candado), carga.js (?cfx-limpio, ?cfx-cero), despacho.js + carrito.sql resto de Chile; vitrina.js políticas; modulos_venta 'medicion','dominio'; pagos.js CFX_PAGOS.abrir({producto}); ayuda.js, barra.js, voz.js, tienda.js.
-ÓRBITA 6.01 (bd 5.42, bloques al FINAL de instalar.sql; 5.42 = profiles_vence): pedido_seguimiento, pedido_correo, set_mi_perfil con políticas, medicion/dominio; worker.js "/" dominio→vitrina. Ajustes por hash: #links #equipo #despacho #boleta #redes #modulos #plan.
+ÓRBITA 6.01 (bd 5.42, bloques al FINAL de instalar.sql; 5.42 = profiles_vence): pedido_seguimiento, pedido_correo, set_mi_perfil con políticas, medicion/dominio; worker.js "/" dominio→vitrina. Ajustes por hash: #links #equipo #despacho #boleta #dominio #redes #plan (#modulos abre Mi plan).
 
 REGLAS:
 - No dañar lo existente; solo lo pedido; revisar si ya existe. Lo reutilizable va UNA vez en el núcleo; lo que se cobra va como 🧩 módulo; con la venta apagada no cambia nada.
