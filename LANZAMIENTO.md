@@ -11,12 +11,13 @@ Lo que YA está configurado no se toca (links de pago que pegaste, precios guard
 
 ## 3 · Precios (tú, CM → Pagos)
 - Negocio: **$3.000/mes** · Cliente Premium: **$2.000/mes**. Prueba gratis 7 días (déjala: retiene).
+- 🔗 **Link de pago abierto** (G28): Mercado Pago → Cobrar → Link de pago → **sin monto** → pégalo en CM → Pagos → 🔗 Link de pago abierto → Guardar en las 7 apps. Sirve para TODO (Premium, módulos y packs): la app muestra el total con 📋 Copiar monto y el comprobante.
 
 ## 4 · 🧩 Venta de módulos (tú, CM → Apps → Órbita → 🧩)
 1. 💰 Vender módulos: **prendido**.
 2. Precios recomendados (por mes): sueltos $990 · **📊 Medir anuncios $990** · **🌐 Dominio propio $1.990** (te pide trabajo a ti).
 3. Packs: 🌱 Básico $1.990 · 🚀 Crecer $2.990 ⭐ Más elegido · 💎 Completo $3.990 (trae los nuevos solo). Anual = 10 meses. Premium −20 %.
-4. 🔗 Links de monto fijo de Mercado Pago: uno de 1 mes y uno de 1 año por cada pack (y por Medir y Dominio). Mercado Pago → Cobrar → Link de pago → Monto fijo → pega aquí.
+4. 🔗 Links de monto fijo: **opcionales** (G28). Con el link abierto de Pagos basta. Si ya tienes alguno, va en 🔗 Links con monto fijo (opcional) y ese plan lo usa.
 5. Cómo lo ve el **negocio** (G25): Más → ⭐ **Mi plan y módulos** (Free/Pro arriba, 🧩 Módulos abajo) → **▶️ Probar** abre un ejemplo animado (no toca su tienda) → Comprar · Cerrar (o ✕). Sin prueba gratis.
 6. ⏰ **Todo vence solo** (G25): mensual a los 30 días, anual a los 365, regalo en los días que des. Nada queda permanente: el negocio renueva en Mi plan.
 7. 🧾 **Detalle de compra** (G25): el negocio lo ve en Pedidos (pedido pagado) y el cliente en Mis pedidos; si hay boleta SII, su N° va adentro. 🌐 **Mi dominio**: Más → Tu tienda → Mi dominio.
