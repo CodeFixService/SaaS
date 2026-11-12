@@ -23,8 +23,16 @@ Lo que YA está configurado no se toca (links de pago que pegaste, precios guard
 7. 🧾 **Detalle de compra** (G25): el negocio lo ve en Pedidos (pedido pagado) y el cliente en Mis pedidos; si hay boleta SII, su N° va adentro. 🌐 **Mi dominio**: Más → Tu tienda → Mi dominio.
    Si entra a un módulo que no tiene (ej. Más → Mensajes, Pedidos → Estadísticas/Promociones, Mi equipo, sellos) ve **▶️ Probar módulo**. Si TÚ lo apagas para todos (CM → 🧩) ve "no está disponible por ahora".
 
-## 5 · Cuando un negocio pide 🌐 dominio (te llega aviso al CM)
-Cloudflare → Workers → **aplicaciones** → Settings → Domains & Routes → **Add → Custom domain** → escribe el dominio. (El dominio debe estar en tu Cloudflare o el cliente te pasa sus DNS.) Abre solo su tienda.
+## 5 · 🌐 Dominio de los negocios (Cloudflare for SaaS, G29)
+**Una sola vez (tú, en Cloudflare, con tu dominio ya comprado, ej. codefix.cl):**
+1. tu dominio → **DNS** → Add record: Tipo **AAAA** · Nombre **tiendas** · IPv6 **100::** · nube **naranja** (Proxied) → Save.
+2. **SSL/TLS → Custom Hostnames** → Enable (plan Free) → **Fallback origin** = `tiendas.codefix.cl` → Add.
+3. **Workers Routes** → Add route: `*/*` → Worker **aplicaciones** → Save. (Las otras apps con subdominio propio usan "Custom domain" en su Worker: tiene prioridad sobre esta ruta.)
+4. CM → **Control** → **Órbita** → **🌐 Dominio** → Destino del CNAME = `tiendas.codefix.cl` → **Guardar**.
+
+**Cada negocio (te llega aviso al CM "🌐 Dominio nuevo: www.sutienda.cl"):**
+- Cloudflare → tu dominio → **SSL/TLS → Custom Hostnames → Add custom hostname** → `www.sutienda.cl` → Add. (La lista está en CM → Control → Órbita → 🌐 Dominio.)
+- El negocio ya ve en Órbita → Más → Mi dominio: **CNAME www → tiendas.codefix.cl** (con 📋) + redirigir la raíz a www, y el estado ⏳ Pendiente → ✅ Activo (botón 🔄 Revisar).
 
 ## 6 · Textos listos para TU tienda / perfil CodeFix (pega donde falte)
 - **Descripción (Mi tienda → 📇 Perfil y políticas → Sobre tu negocio):**

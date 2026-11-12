@@ -1,1 +1,1 @@
-{"version": "4.88", "bd": "4.27", "funcion": "3.0", "notas": "💳 Un solo link de pago abierto (sin monto) sirve para Premium, módulos y packs: la app muestra el total con 📋 Copiar monto. Los links de monto fijo siguen sirviendo y ahora son opcionales."}
+{"version": "4.89", "bd": "4.27", "funcion": "3.0", "notas": "🌐 Control → 🌐 Dominio: pon el destino del CNAME para los dominios de los negocios de Órbita y ve qué dominios agregar en Cloudflare."}

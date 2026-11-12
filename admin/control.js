@@ -6,7 +6,7 @@
   const A = global.App, { esc, toast, modal, confirmar } = A;
   const M = () => global.MisApps;
   let raiz = null, actual = 'cm', seccion = 'negocios';
-  const SECC = [['negocios', '🏪 Negocios'], ['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['push', '🔔 Notificaciones'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['salud', '🩺 Salud'], ['registro', '📜 Registro']];
+  const SECC = [['negocios', '🏪 Negocios'], ['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['dominio', '🌐 Dominio'], ['push', '🔔 Notificaciones'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['salud', '🩺 Salud'], ['registro', '📜 Registro']];
   // Nombres legibles de las claves de los planes (las demás se muestran tal cual).
   const NOMBRE = { productos: 'Productos', clientes: 'Clientes', fichas: 'Fichas publicadas', equipo: 'Equipo', pedidos_mes: 'Pedidos al mes', respuestas: 'Respuestas rápidas',
     contactos: 'Contactos', favoritos: 'Favoritos', mensajes_seguidos: 'Mensajes seguidos', barberos: 'Barberos', servicios: 'Servicios', ofertas: 'Ofertas',
@@ -204,6 +204,21 @@
     };
   }
 
+  // 🌐 Dominio de los negocios (G29 · Cloudflare for SaaS): a dónde apunta el CNAME www del negocio + qué dominios agregar en Custom Hostnames.
+  async function dominio() {
+    if (actual !== 'aplicaciones') { caja().innerHTML = '<p class="sub">El dominio propio de los negocios es de Órbita: elige Órbita arriba.</p>'; return; }
+    let d;
+    try { d = await rpc('cfx_dominio'); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
+    const T = d.tiendas || [];
+    caja().innerHTML = '<div class="card"><h2>🌐 Dominio de los negocios</h2><p class="sub">El negocio pone en su DNS: <b>CNAME www → este destino</b>. Órbita se lo muestra con 📋 Copiar.</p>' +
+      '<label>Destino del CNAME<input id="doC" inputmode="url" maxlength="80" placeholder="tiendas.codefix.cl" value="' + esc(d.cname || '') + '"></label>' +
+      '<p class="sub">Vacío = el negocio ve "CodeFix te manda el dato por el chat".</p><button type="button" class="block" id="doG">Guardar</button></div>' +
+      '<h3>Dominios de tiendas</h3><p class="sub">Cada uno: Cloudflare → tu dominio → SSL/TLS → Custom Hostnames → Add custom hostname → www.dominio → Add.</p>' +
+      (T.length ? '<div class="card">' + T.map((t) => '<div class="fila"><span class="grow"><b>www.' + esc(t.dominio) + '</b><br><span class="sub">tienda ' + esc(t.slug || '—') + '</span></span>' +
+        (t.activo ? '<span class="pill ok">con módulo</span>' : '<span class="pill warn">sin módulo</span>') + '</div>').join('') + '</div>' : '<p class="empty">Ningún negocio ha puesto su dominio todavía.</p>');
+    raiz.querySelector('#doG').onclick = async () => { try { await rpc('cfx_dominio_guardar', { p_cname: raiz.querySelector('#doC').value.trim() }); toast('Destino guardado en Órbita'); dominio(); } catch (x) { toast(nf(x)); } };
+  }
+
   // 🛡️ Seguridad (A7): qué puede hacer alguien sin cuenta en esta app y cómo están sus buckets.
   async function seguridad() {
     let s;
@@ -366,7 +381,7 @@
     };
   }
 
-  const F = { negocios, avisar, planes, textos, keys, cupones, verif, humano, push, referidos, socios, datos, seguridad, salud, registro };
+  const F = { negocios, avisar, planes, textos, keys, cupones, verif, humano, dominio, push, referidos, socios, datos, seguridad, salud, registro };
   // Referidos: quién invitó a quién (con qué cuenta), ranking, premio automático y premio a mano (días + sticker).
   const STICKERS = ['🏆 ¡Eres un crack invitando!', '🚀 ¡Vas volando! Gracias por recomendarnos', '💪 ¡Sigue así, vas muy bien!', '🌟 ¡Gracias por correr la voz!'];
   async function referidos() {
