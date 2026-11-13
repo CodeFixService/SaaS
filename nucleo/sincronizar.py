@@ -46,7 +46,7 @@ TABLA = re.compile(r'create table (?:if not exists )?((?:public|privado)\.[a-z_]
 CABEZA = ('seguro.js', 'humano.js', 'carga.js')  # van primero en el <head> (antes de que la app cree su conexión a Supabase)
 JS = ('iconos.js', 'instalar.js', 'barra.js', 'auto.js', 'fotos.js', 'voz.js', 'respaldo.js', 'pagos.js', 'verificar.js', 'premium.js', 'ayuda.js', 'datos.js', 'vitrina.js')
 # Módulos de JS opcionales: se copian solo a las apps que los usan (la app los enlaza donde corresponde; no van en todas las páginas).
-OPCIONAL = {'Aplicaciones': ('tienda.js', 'despacho.js', 'modulos.js')}
+OPCIONAL = {'Aplicaciones': ('tienda.js', 'despacho.js', 'modulos.js', 'qr.js')}
 # CSS de terceros (G20): Bootstrap 5.3.8, SOLO utilidades (sin reboot, grid ni componentes: su .row/.card/.btn chocarían con core.css).
 # Va en <css>/vendor/ y se enlaza ANTES de la hoja propia de la app, así core.css y tema.css siguen mandando.
 VENDOR_CSS = ('vendor/bootstrap-utilities.min.css',)
@@ -115,7 +115,7 @@ def sql_comun(repo, nombre):
         print('  ⚠️ ', nombre, 'no tiene las marcas del SQL común en', archivo)
         return
     i, j = s.index(INI), s.index(FIN)
-    comun = ''.join(open(os.path.join(AQUI, 'sql', f), encoding='utf-8').read() for f in ('pagos.sql', 'admin.sql', 'ayuda.sql', 'legal.sql', 'referidos.sql', 'socios.sql', 'inventario.sql', 'salud.sql', 'modulos.sql', 'modulos_venta.sql', 'chat.sql', 'calificaciones.sql', 'fidelidad.sql', 'carrito.sql', 'limpieza.sql', 'analisis.sql', 'seguridad.sql'))
+    comun = ''.join(open(os.path.join(AQUI, 'sql', f), encoding='utf-8').read() for f in ('pagos.sql', 'admin.sql', 'ayuda.sql', 'legal.sql', 'referidos.sql', 'socios.sql', 'inventario.sql', 'salud.sql', 'modulos.sql', 'modulos_venta.sql', 'chat.sql', 'calificaciones.sql', 'fidelidad.sql', 'carrito.sql', 'limpieza.sql', 'analisis.sql', 'qr.sql', 'seguridad.sql'))
     tablas = sorted(set(TABLA.findall(s[:i] + s[j:])) | set(TABLA.findall(comun)))
     comun = comun.replace('<CHK>', chk).replace('<LISTA>', "array['" + "', '".join(tablas) + "']")
     nuevo = s[:i] + INI + '\n' + comun + s[j:]

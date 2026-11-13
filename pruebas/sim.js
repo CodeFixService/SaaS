@@ -289,6 +289,12 @@ function crear(opts) {
         if (!r.length) return json(403, { code: 403, error_code: 'user_not_found', msg: 'User from sub claim in JWT does not exist' });
         return json(200, sesion(r[0]).user);
       }
+      // Enlace mágico (verifyOtp con token_hash): en las pruebas el token es 'th-<id del usuario>'.
+      if (p === '/auth/v1/verify' && body && /^th-/.test(body.token_hash || '')) {
+        const r = await su('select id, email, raw_user_meta_data from auth.users where id::text = $1', [body.token_hash.slice(3)]);
+        if (!r.length) return json(403, { code: 403, error_code: 'otp_expired', msg: 'Token has expired or is invalid' });
+        return json(200, sesion(r[0]));
+      }
       if (p === '/auth/v1/logout') return json(204);
       if (p === '/auth/v1/recover' || p === '/auth/v1/otp' || p === '/auth/v1/resend') return json(200, {});
       if (p.startsWith('/rest/v1/')) {

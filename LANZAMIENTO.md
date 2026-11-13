@@ -5,6 +5,7 @@ Lo que YA está configurado no se toca (links de pago que pegaste, precios guard
 1. **CM → Resumen → Empresas → Órbita → 🧹 Limpiar y abrir** → prueba → **CM → Apps → Órbita → 🚀 Liberar** (6.02; base 5.42, si no está: ⚡ Actualizar base).
 2. **CM** (4.87) y **Barbería** (2.77): suben solos (main) → 🧹 Limpiar y abrir → 🚀 Liberar.
 3. Edge Functions: **no hay que tocarlas** (el correo al comprador usa la función "enviar" que ya tienes).
+4. 🔑 **Entrar con QR (Órbita 6.08)**: actualiza la Edge Function **"enviar"** de Órbita (Supabase → Edge Functions → borrar → crear con el mismo nombre, Verify JWT APAGADO, pegar la línea import que te doy → Deploy). Prueba: abre Órbita en el computador → escanea el QR con la cámara del celular (con sesión) → **Sí, entrar** → el computador entra solo.
 
 ## 2 · Correo (tú, si no está) — sin esto no salen los correos al comprador
 **Órbita (entra como admin) → Administración → Ajustes → Correo (Gmail)**: Gmail + contraseña de aplicación (myaccount.google.com → Seguridad → Contraseñas de aplicaciones). Límite ~450 correos al día.
