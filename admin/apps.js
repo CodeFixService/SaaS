@@ -49,6 +49,9 @@
   // Link de cada app: lo arma el núcleo (CFX_AYUDA.web) según dónde se abre el Centro de Mando.
   APPS.forEach((a) => { Object.defineProperty(a, 'web', { get: () => global.CFX_AYUDA.web(a.worker, a.sub) }); });
   let NUCLEO = ''; // versión del núcleo del Centro de Mando (la que se reparte a todas)
+  // El núcleo más nuevo = el mayor entre el del CM y el que tiene cada app en GitHub (así nunca marca "en su turno" a una app que ya está igual o más nueva).
+  const vcmp = (x, y) => { const p = String(x).split('.').map(Number), q = String(y).split('.').map(Number); for (let i = 0; i < Math.max(p.length, q.length); i++) { const d = (p[i] || 0) - (q[i] || 0); if (d) return d; } return 0; };
+  const nucleoMax = () => Object.values(E).map((x) => x && x.nucleo).filter(Boolean).reduce((m, v) => (!m || vcmp(v, m) > 0 ? v : m), NUCLEO);
   fetch(A.ROOT + 'nucleo.json', { cache: 'no-store' }).then((r) => r.json()).then((j) => { NUCLEO = String(j.nucleo || ''); }).catch(() => {});
   const E = {}; // estado de cada app
   let raiz = null;
@@ -153,7 +156,7 @@
     n.innerHTML = '<div class="fila"><span class="app-ico">' + A.ico(a.ico, 24) + '</span><div class="grow"><h3 style="margin:0">' + esc(a.nombre) + '</h3>' +
       '<p class="sub" style="margin:2px 0 0">Publicada ' + (e.pub ? 'v' + esc(e.pub) : '—') + (a.liberar ? ' · Liberada ' + (e.lib ? 'v' + esc(e.lib) : '—') : '') +
       ' · Base de datos ' + (e.bd ? 'v' + esc(e.bd) : '—') + (e.bdPide && e.bd && s.faltaBd ? ' (pide v' + esc(e.bdPide) + ')' : '') +
-      ' · Núcleo ' + (e.nucleo ? 'v' + esc(e.nucleo) : '—') + (e.nucleo && NUCLEO && e.nucleo !== NUCLEO ? ' <span class="pill info" title="El núcleo nuevo le llega a esta app en su turno (lo hace Claude). No tienes que hacer nada.">v' + esc(NUCLEO) + ' en su turno</span>' : '') + '</p></div></div>' +
+      ' · Núcleo ' + (e.nucleo ? 'v' + esc(e.nucleo) : '—') + (e.nucleo && nucleoMax() && vcmp(e.nucleo, nucleoMax()) < 0 ? ' <span class="pill info" title="Esta app tiene un núcleo más antiguo; el nuevo le llega en su turno (lo hace Claude). No tienes que hacer nada.">v' + esc(nucleoMax()) + ' en su turno</span>' : '') + '</p></div></div>' +
       '<div style="margin:8px 0">' + est + '</div>' +
       (e.prueba ? '<p class="sub" data-prueba style="margin:0 0 8px">🧪 En pruebas: v' + esc(e.prueba.version) + (e.prueba.notas ? ' · ' + esc(e.prueba.notas) : '') + '</p>' : '') +
       (e.error ? '<p class="sub warn">' + esc(e.error) + '</p>' : '') +
