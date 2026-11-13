@@ -11,7 +11,7 @@ Lo que YA está configurado no se toca (links de pago que pegaste, precios guard
 
 ## 3 · Precios (tú, CM → Pagos)
 - Negocio: **$3.000/mes** · Cliente Premium: **$2.000/mes**. Prueba gratis 7 días (déjala: retiene).
-- 🔗 **Link de pago abierto** (G28): Mercado Pago → Cobrar → Link de pago → **sin monto** → pégalo en CM → Pagos → 🔗 Link de pago abierto → Guardar en las 7 apps. Sirve para TODO (Premium, módulos y packs): la app muestra el total con 📋 Copiar monto y el comprobante.
+- 🔗 **Link de pago abierto** (G28): Mercado Pago → Cobrar → Link de pago → **sin monto** → pégalo en CM → Pagos → 🔗 **Link general de pago** → Guardar en las 7 apps. Sirve para TODO (pago de cada app, Premium, módulos y packs; G30: los links con monto fijo ya no se muestran, salvo los antiguos para borrarlos): la app muestra el total con 📋 Copiar monto y el comprobante.
 
 ## 4 · 🧩 Venta de módulos (tú, CM → Apps → Órbita → 🧩)
 1. 💰 Vender módulos: **prendido**.
@@ -45,7 +45,8 @@ Lo que YA está configurado no se toca (links de pago que pegaste, precios guard
 Logo y nombre → WhatsApp → productos con foto → link de pago o ⚡ Mercado Pago → 🚚 Despacho (comunas + resto de Chile) → 📄 RUT y política de cambios → compartir el link.
 
 ## 8 · Antes de abrir las ventas
-- LIMPIEZA FINAL de Órbita: supabase/limpieza/1_contar.sql → revisar → 2_borrar.sql → Storage → vaciar buckets.
+- LIMPIEZA FINAL de Órbita (tú, en Supabase de Órbita → SQL Editor): pega Aplicaciones/supabase/limpieza/1_contar.sql → Run → revisa los números → pega 2_borrar.sql → Run → Storage → cada bucket → seleccionar todo → Delete. Quedan solo los admins y la configuración.
+- G30 (Órbita 6.05): Pedidos → 🎟️ **Cupones y sellos** (la tarjeta de sellos se movió ahí desde Mi tienda) · Más → 🧾 Boletas y 🚚 Despacho traen **📖 ¿Cómo se usa?** · Más → 🧾 Boletas → **📋 Registro de ventas** → 🧾 Ver: formato boleta (logo, RUT, fecha, hora, total, firma) → 🖨️ Imprimir o guardar PDF.
 - Boleta automática (OpenFactura) va como **beta**: prueba 1 boleta real antes de ofrecerla.
 - Mercado Pago automático para tu cobro: falta tu **Access Token de producción**.
 

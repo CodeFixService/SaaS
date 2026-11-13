@@ -301,10 +301,10 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await q.evaluate(() => { window.__abrio = []; window.open = (u) => { window.__abrio.push(u); return null; }; document.dispatchEvent(new Event('visibilitychange')); }); await q.waitForTimeout(1500);
         const [{ rid }] = await t.sim.su("select id rid from public.pedidos where negocio_id = $1 and estado = 'recibido' order by created_at desc limit 1", [tid]);
         await q.locator('[data-recibo="' + rid + '"]').click(); await q.waitForTimeout(400);
-        const cpP = await q.evaluate(() => { const d = document.querySelector('.cfx-comp'); const r = [d && d.querySelector('pre').textContent]; d.querySelector('#compTel').value = '9 1234 5678';
-          d.querySelector('[data-a=wsp]').click(); return r.concat(window.__abrio[0] || '', !document.querySelector('.cfx-comp')); });
+        const cpP = await q.evaluate(() => { const d = document.querySelector('.cfx-comp'); const r = [d && !!d.querySelector('.cb-papel')]; d.querySelector('#compTel').value = '9 1234 5678';
+          d.querySelector('[data-a=wsp]').click(); const u = window.__abrio[0] || ''; return [decodeURIComponent(u.split('text=')[1] || ''), u, !document.querySelector('.cfx-comp'), r[0]]; });
         ok(/1 × Polera — \$10\.000/.test(cpP[0]) && /TOTAL: \$10\.000/.test(cpP[0]) && /Pago: Transferencia/.test(cpP[0]) && /No es boleta electrónica/.test(cpP[0]) &&
-          /^https:\/\/wa\.me\/56912345678\?text=/.test(cpP[1]) && cpP[2], 'Órbita: comprobante de pedido por WhatsApp ' + JSON.stringify(cpP));
+          /^https:\/\/wa\.me\/56912345678\?text=/.test(cpP[1]) && cpP[2] && cpP[3], 'Órbita: comprobante de pedido por WhatsApp ' + JSON.stringify(cpP));
         // Push de pedido abre ESE pedido: el aviso lleva ?p=<id> y la página lo busca y lo marca.
         await t.sim.su("begin; insert into public.pedidos (negocio_id, cliente_id, lineas, subtotal, total, entrega, estado) values ('" + tid + "', '" + cli + "', '[]', 5000, 5000, 'retiro', 'entregado'); select public.notify_user('" + tid + "', 'p', 'p', 'apps/pedidos/'); commit;");
         const [{ pid, url }] = await t.sim.su("select url, substr(url, 17) pid from public.notifications where title = 'p' order by created_at desc limit 1");
@@ -329,8 +329,8 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         // G10: 🧾 Comprobante de la venta de Caja (botón tras cobrar y 🧾 en el reporte).
         await q.evaluate(() => document.querySelector('[data-v=vender]').click()); await q.waitForTimeout(200);
         const cpC = await q.evaluate(() => { const b = document.getElementById('bComp'); const vis = !b.hidden; b.click(); const d = document.querySelector('.cfx-comp');
-          const r = [vis, d && d.querySelector('pre').textContent]; if (d) d.querySelector('[data-a=x]').click(); return r; });
-        ok(cpC[0] && /1 × Camisa \(Rojo\) — \$9\.500/.test(cpC[1]) && /Pago: Efectivo/.test(cpC[1]) && !/\(Rojo\) \(Rojo\)/.test(cpC[1]), 'Órbita: comprobante de venta en Caja ' + JSON.stringify(cpC));
+          const r = [vis, d && d.querySelector('.cb-papel').innerText.replace(/\n/g, ' ')]; if (d) d.querySelector('[data-a=x]').click(); return r; });
+        ok(cpC[0] && /1 × Camisa \(Rojo\) \$9\.500/.test(cpC[1]) && /Pago Efectivo/.test(cpC[1]) && !/\(Rojo\) \(Rojo\)/.test(cpC[1]), 'Órbita: comprobante de venta en Caja ' + JSON.stringify(cpC));
         await t.foto('inventario', q);
         // G14 · D21 + D22: cargar muchos productos (lista de WhatsApp, Excel y plantilla del rubro) y publicarlos de una vez.
         await q.evaluate(() => document.querySelector('[data-v=productos]').click()); await q.waitForTimeout(300);
