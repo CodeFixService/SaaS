@@ -689,3 +689,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - Solo textos visibles: menú inicio + barra de abajo (cuenta.js), apps/fichas (título, h1, botones, toasts, galería, campañas), catálogo, pedidos (estadísticas), admin, legal, landing n/, manifest. Ruta apps/fichas/, ids, clave 'fichas' del límite, bucket y publicar_ficha sin cambio.
 - SQL 5.47: mensajes de publicar_ficha (última versión), hoja "Diseños" del respaldo Excel, beneficios del plan "60 diseños" (replace después del update de beneficios l.~4072, para no romperlo en instalación nueva).
 - CM admin/control.js: límite "Diseños publicados". Prueba pruebas/g33b_disenos.js (9 ok).
+
+## L1 🧹 Empezar de cero (14/11, adelantada por Josué)
+- nucleo/sql/limpieza_l1.sql (NO lo reparte sincronizar.py; se pega a mano en Supabase SQL Editor, mismo texto en Despega, Barbería, Billetera, BiciTaller, Estaciona y CM). Se niega en Cerebro (base_contenido/guia_redes) y si no existe la cuenta admin.
+- Respaldo 1ª vez: esquema respaldo_l1 (<esquema>__<tabla> + auth__users/identities). Quedan admin + cfx_socios. Tablas nunca tocadas: config, secretos, planes, textos, versiones, socios, cupones, brechas, cm_puentes. Registros vaciados: cfx_errores/salud/cargas/analisis/login_fallos/registro, auditoria, compartido_log. Resto: borra filas con columna de usuario (uuid con FK a auth.users/profiles/perfiles o nombre owner_id, negocio, cuenta…; email/correo) que no sea admin/socio; 4 pasadas; luego auth.users. Archivos de Storage quedan (sin uso).
+- Prueba: pruebas/l1_limpieza.sh p_aplicaciones p_saas l1_barberia l1_emprendedor l1_taller l1_estacionamiento (6 ok).
