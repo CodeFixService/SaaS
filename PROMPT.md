@@ -1,4 +1,4 @@
-G37 · CodeFix (Josué, ing. informático, Chile)
+G38 · CodeFix (Josué, ing. informático, Chile)
 
 ROL: Respuestas CORTAS. Josué usa el teléfono: pasos uno por uno, lo que pega listo, QUIÉN (cliente/negocio/administrador) y DÓNDE (menú y botón exactos). Prompt actualizado SIEMPRE en bloque de código, COMPLETO (máx. ~8.000 caracteres). "No hagas código" = solo analizar. Si propone algo: 1 línea NECESARIO/ÚTIL/INNECESARIO + por qué. Si delega: decidir y avisar. "OK" → OK. Si Josué dice algo que no conviene o no tiene sentido: CORREGIRLO y decir la mejor forma. Chat largo → avisar y partir otro. Lento pero seguro: probar como Josué antes de decir "listo". AHORRAR: grep/sed -n, agrupar, no releer; Python largo → scratchpad. FUSIONAR: lo que vaya junto se hace en una pasada; lo que Josué pega va en UN paso al final.
 🧩 Cada módulo independiente (pro_o_modulo/Cuenta.puede). Ultra intuitivo: cada pantalla dice qué pasa + 1 botón claro. Lo reutilizable → núcleo (1 vez) para todas las apps.
@@ -9,17 +9,16 @@ REGLA G31: vender IGUAL con o sin RUT; solo cambia el comprobante. Nunca exigir 
 
 LISTA MAESTRA: SaaS/PLAN.md (grep -n "G3[2-9]\|L1", marcar ✅). Detalle: SaaS/MEMORIA.md (tail). Guía Josué: SaaS/LANZAMIENTO.md (actualizarla).
 
-ESTADO (14/11/2026, todo en main): núcleo 2.67 · CM 4.96 (bd 4.30) · Despega Pyme 6.11 (bd 5.48) · Barbería 2.83 (bd 2.76). central.js 132 ok.
-HECHO: G32 d+f (QR + 🔒) · G33 nombre Despega Pyme · G33b Fichas → Diseños.
-HECHO L1 🧹 (14/11): Josué pegó nucleo/sql/limpieza_l1.sql en Despega, Barbería, Billetera, BiciTaller, Estaciona (CM NO). Queda solo admin + socios + config. Respaldo en esquema respaldo_l1 → borrarlo ~21/11 (drop schema respaldo_l1 cascade).
-HECHO 💳 pago: "Could not choose the best candidate function cfx_pago_pedir" = quedaba la versión antigua de 7 parámetros junto a la de 8. Núcleo 2.67 pagos.sql la borra. LECCIÓN: nuevo parámetro con default → drop de TODAS las firmas viejas.
+ESTADO (13/11/2026, todo en main): núcleo 2.68 · CM 4.97 (bd 4.30) · Despega 6.12 (bd 5.48) · Barbería 2.84 (bd 2.76). central.js 132 ok.
+HECHO: G32 d+f (QR + 🔒) · G33 nombre Despega Pyme · G33b Fichas → Diseños · L1 🧹 (respaldo_l1: borrarlo ~21/11 con drop schema respaldo_l1 cascade; CM NO se limpió).
+HECHO 💳 pago (Josué probó: activó sus cuentas y compró módulos OK): núcleo 2.67 borra cfx_pago_pedir de 7 parámetros (LECCIÓN: nuevo parámetro con default → drop de TODAS las firmas viejas). Núcleo 2.68 pagos.js: si la red corta el envío del comprobante ("Sin conexión con el servidor"), revisa cfx_pago_estado y reintenta 2 veces (pruebas/g37_pago_red.js).
 
-PENDIENTE DE JOSUÉ: 0) Cloudflare saas: Retry build del commit f650716 (CM 4.96; falló por Cloudflare, Despega y Barbería OK). 1) ⚡ Actualizar base en Despega, Barbería y CM (arregla el pago) → crear cuenta nueva y pagar con comprobante. 2) SMTP Gmail en Supabase de las 3 apps (Authentication → Emails → SMTP Settings: smtp.gmail.com, 465, su Gmail, contraseña de aplicación de 16 letras; Sender name: Despega Pyme / CodeFix / Barbería). Redirect URLs YA están. 3) Probar QR + 🔒 → 🚀 Liberar.
+PENDIENTE DE JOSUÉ: 0) ⚠️ Cloudflare saas (CM) FALLA desde 0b888da (también f650716, bc22e05, 39be997; Despega y Barbería OK). Josué: Retry build de 39be997; si falla de nuevo, pega las líneas rojas del log → revisar (wrangler.jsonc assets "./" sube todo el repo). 1) ⚡ Actualizar base en Barbería y CM si falta. 2) SMTP Gmail en Supabase de las 3 apps (Authentication → Emails → SMTP Settings: smtp.gmail.com, 465, su Gmail, contraseña de aplicación de 16 letras; Sender name: Despega Pyme / CodeFix / Barbería). Redirect URLs YA están. 3) Probar QR + 🔒 → 🚀 Liberar.
 
 HACER AHORA (en orden, fusionando):
 1) G33 🌐 Dominio desde el panel (CM → Control → 🌐 Dominio). Josué AÚN NO compra el dominio: dejarlo listo para pegar después. Dominio CodeFix (codefix.cl o appcodefix.cl) + token Cloudflare 1 vez (secreto en "servidor") → Custom Domains por subdominio (despega., cm., barberia., billetera., bicitaller., estaciona.); links/QR/correos/manifest usan cfx_config 'dominio_base' (vacío = workers.dev). Checklist ⏳/✅ con los 2 nameservers para nic.cl. Dominio del negocio: CNAME tiendas.<dominio_base> + Custom Hostname por API.
 2) G34 🧭 Panel universal en el CM: inventariar paneles admin (Despega apps/admin, Barbería, Billetera, BiciTaller, Estaciona) → lo que falta a CM → Apps → cada app (+ QR) → probar → recién ahí quitar el panel. Admin NO se borra: si public.admin_email() entra en una app → directo al CM. Sin Cerebro.
-3) G35 🧩 Billetera, BiciTaller, Estaciona → núcleo 2.67 con modulos.js + qr.js (+ 🔒 clave en su ingreso, iniciar como CM app.js; ayuda.js trae "Despega Pyme"). Sin Cerebro.
+3) G35 🧩 Billetera, BiciTaller, Estaciona → núcleo 2.68 con modulos.js + qr.js (+ 🔒 clave en su ingreso, iniciar como CM app.js; ayuda.js trae "Despega Pyme"). Sin Cerebro.
 4) G36 🔄 Actualizaciones (núcleo): admin → se instala sola al publicar; usuarios → al liberar, aviso con botón "🔄 Actualizar". Ver Aplicaciones/shared/cuenta.js revisarActualizacion + núcleo auto.js; probar ambos roles en todas.
 DESPUÉS (ver PLAN): revisión celular · INDUCCION.md · G37 · G38 · G39 · Khipu/Flow/Webpay, courier, factura 33, sucursales. AL FINAL: G32 e) 💳 NFC.
 
@@ -45,5 +44,5 @@ ENTORNO /home/user: for p in saas:SaaS emprendedor:Emprendedor barberia:Barberia
 
 SUPABASE: CM vqevujjraisrcoirswuq · Despega gilsamacgappycibcqhq · Barbería gxlabxuttnxvzkucckef · Billetera zbgfvxsqajtixjzxoxeu · BiciTaller iwvjthcmufirbnotgixi · Estaciona wphxtspicejywwzlbuux.
 WORKERS: <nombre>.juanjosuecastilloloyola.workers.dev (saas, aplicaciones, barberia, emprendedor, taller, estacionamiento).
-VERSIONES: núcleo 2.67 · CM 4.96 · Despega 6.11 · Barbería 2.83 · Billetera 1.21.49 · BiciTaller 2.72 · Estaciona 2.14.51.
+VERSIONES: núcleo 2.68 · CM 4.97 · Despega 6.12 · Barbería 2.84 · Billetera 1.21.49 · BiciTaller 2.72 · Estaciona 2.14.51.
 OTROS DE JOSUÉ: dominio en nic.cl · INAPI "Despega Pyme" 35/42 · link general MP (CM → Pagos) · Gmail en Despega (remitente "Despega Pyme") · Access Token producción MP · openfactura.cl + 1 boleta real.
