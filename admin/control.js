@@ -8,7 +8,7 @@
   let raiz = null, actual = 'cm', seccion = 'negocios';
   const SECC = [['negocios', '🏪 Negocios'], ['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['dominio', '🌐 Dominio'], ['push', '🔔 Notificaciones'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['salud', '🩺 Salud'], ['registro', '📜 Registro']];
   // Nombres legibles de las claves de los planes (las demás se muestran tal cual).
-  const NOMBRE = { productos: 'Productos', clientes: 'Clientes', fichas: 'Fichas publicadas', equipo: 'Equipo', pedidos_mes: 'Pedidos al mes', respuestas: 'Respuestas rápidas',
+  const NOMBRE = { productos: 'Productos', clientes: 'Clientes', fichas: 'Diseños publicados', equipo: 'Equipo', pedidos_mes: 'Pedidos al mes', respuestas: 'Respuestas rápidas',
     contactos: 'Contactos', favoritos: 'Favoritos', mensajes_seguidos: 'Mensajes seguidos', barberos: 'Barberos', servicios: 'Servicios', ofertas: 'Ofertas',
     prueba_dias: 'Días de prueba', activas: 'Horas activas a la vez', dias: 'Días para reservar', mensajes: 'Mensajes seguidos', estadisticas: 'Estadísticas',
     recordatorios: 'Recordatorios', caja_reportes: 'Reportes de caja', colores: 'Colores', ofertas_vip: 'Ofertas VIP', sellos: 'Sellos', horario_barbero: 'Horario por barbero',

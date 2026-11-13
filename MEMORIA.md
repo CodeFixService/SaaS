@@ -684,3 +684,8 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - qr.js: CFX_QR.clave(email, () => signInWithPassword) envuelve el ingreso (Órbita Cuenta.signIn, CM App.entrar, Barbería Cuenta.entrar); al 3er error invalid_credentials → diálogo "🔒 Por seguridad pausamos la clave" → signInWithOtp(shouldCreateUser:false). Al volver con el enlace (amr otp, < 15 min): desbloquea y ofrece "Guardar clave" (updateUser). Dedupe por sesión (enCurso + sessionStorage cfx:enlace:<ts>).
 - Supabase: necesita SMTP propio (Gmail, gratis) para mandar el enlace a clientes, y Redirect URLs con el dominio de la app (LANZAMIENTO.md §1.4). Límite: el bloqueo es en la app (Supabase gratis no tiene hook de contraseña); igual frena a quien intenta desde la pantalla.
 - Pruebas: sim.js ahora pone amr (password/otp) e iat en el JWT y guarda ultimoAuth.otp. pruebas/g32_clave.js cm|bar|orb (22 ok cada una); g32_qr.js sigue 13 ok.
+
+## G33b ✏️ Fichas → Diseños (14/11, Despega 6.10 bd 5.47 · CM 4.95)
+- Solo textos visibles: menú inicio + barra de abajo (cuenta.js), apps/fichas (título, h1, botones, toasts, galería, campañas), catálogo, pedidos (estadísticas), admin, legal, landing n/, manifest. Ruta apps/fichas/, ids, clave 'fichas' del límite, bucket y publicar_ficha sin cambio.
+- SQL 5.47: mensajes de publicar_ficha (última versión), hoja "Diseños" del respaldo Excel, beneficios del plan "60 diseños" (replace después del update de beneficios l.~4072, para no romperlo en instalación nueva).
+- CM admin/control.js: límite "Diseños publicados". Prueba pruebas/g33b_disenos.js (9 ok).
