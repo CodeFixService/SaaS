@@ -25,6 +25,7 @@
   <div class="marca"><div class="logo"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></div><h1 id="nombreApp">Centro de Mando</h1><p class="muted" id="lema" style="margin:4px 0 0">Tu vida y tu trabajo, bajo control.</p></div>
   <section class="card" id="vEntrar">
     <div class="tabs2"><button type="button" id="tE">Entrar</button><button type="button" class="ghost" id="tR">Crear cuenta</button></div>
+    <div id="lQR" hidden></div>
     <form data-sin-apps id="fEntrar">
       <label for="eEmail">Correo</label><input id="eEmail" type="email" autocomplete="email" required>
       <label for="ePass">Contraseña</label><input id="ePass" type="password" autocomplete="current-password" required>
@@ -58,6 +59,7 @@
 <div id="toast" role="status"></div>
 <script src="shared/config.js"></script>
 <script src="shared/vendor/supabase.js"></script>
+<script src="shared/qr.js"></script>
 <script src="shared/app.js"></script>
 <script>
 (async function () {
@@ -67,7 +69,12 @@
   const ver = (id) => ['vEntrar', 'vRegistro', 'vOlvide', 'vNueva'].forEach((v) => $(v).classList.toggle('hidden', v !== id));
   App.cargarPublica().then((p) => { if (p.textos.app_nombre) { $('nombreApp').textContent = p.textos.app_nombre; document.title = p.textos.app_nombre; } if (p.textos.app_lema) $('lema').textContent = p.textos.app_lema; });
   App.pie();
-  function seguir(c) { if (volver && volver.startsWith('/') && !volver.startsWith('//')) location.replace(volver); else location.replace(App.ROOT + App.destino(c)); }
+  // G32 d/f: si el celular llegó por el QR del computador (?qr=), primero pregunta; si entró con el enlace del correo, ofrece clave nueva.
+  async function seguir(c) {
+    if (window.CFX_QR) { if (new URLSearchParams(location.search).get('qr')) await CFX_QR.revisar(); await CFX_QR.despues(); }
+    if (volver && volver.startsWith('/') && !volver.startsWith('//')) location.replace(volver); else location.replace(App.ROOT + App.destino(c));
+  }
+  if (window.CFX_QR) CFX_QR.iniciar({ alEntrar: async () => seguir(await App.refrescar()) });
   let recuperando = /type=recovery/.test(location.hash);
   App.sb.auth.onAuthStateChange((ev) => { if (ev === 'PASSWORD_RECOVERY') { recuperando = true; ver('vNueva'); } });
   $('tR').onclick = () => ver('vRegistro');
@@ -104,6 +111,7 @@
   // (antes se cortaba aquí arriba y "Guardar y entrar" no hacía nada).
   if (recuperando) { ver('vNueva'); return; }
   try { const c = await App.refrescar(); if (c && !recuperando) { seguir(c); return; } } catch (e) { /* sin sesión */ }
+  if (window.CFX_QR) CFX_QR.pc($('lQR'));  // 💻 computador: entrar con el QR del celular
 })();
 </script>
 <script src="shared/iconos.js"></script>

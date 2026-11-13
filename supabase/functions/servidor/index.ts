@@ -2,12 +2,13 @@
 //  1) { accion: 'crear_cuenta' }  El administrador crea socios y usuarios; el socio crea usuarios.
 //  2) { accion: 'borrar' }        Administrador o socio (con motivo): borra una cuenta y sus datos.
 //     { accion: 'borrar_mia' }    Cada persona borra su propia cuenta.
-//  3) { accion: 'ping' }          Diagnóstico.
+//  3) { accion: 'qr_entrar' }     G32 d: el computador entra con la sesión que aprobó el celular (QR).
+//  4) { accion: 'ping' }          Diagnóstico.
 //  3) sin acción (cada minuto, pg_cron): envía por push los avisos nuevos de la campanita.
 import webpush from 'npm:web-push@3.6.7';
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 
-const VERSION = '3.0';
+const VERSION = '3.1';
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -100,11 +101,26 @@ async function enviarPush() {
   return { enviados: ok, fallidos: malos };
 }
 
+// G32 d · 🔑 Entrar con QR: el celular aprobó; se canjea UNA vez y se entrega un enlace mágico de un solo uso al computador.
+async function qrEntrar(b: { token?: string; secreto?: string }) {
+  const s = db();
+  const { data: email, error } = await s.rpc('cfx_qr_canjear', { p_token: String(b.token || ''), p_secreto: String(b.secreto || '') });
+  if (error) return { ok: false, error: 'Actualiza la base de datos (falta Entrar con QR)' };
+  if (!email) return { ok: false, error: 'El código venció o ya se usó' };
+  const { data, error: e2 } = await s.auth.admin.generateLink({ type: 'magiclink', email: String(email) });
+  if (e2 || !data?.properties?.hashed_token) return { ok: false, error: 'No se pudo abrir la sesión' };
+  return { ok: true, token_hash: data.properties.hashed_token };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   try {
     const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
     if (body?.accion === 'ping') return json({ ok: true, version: VERSION, servicio: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') });
+    if (body?.accion === 'qr_entrar') {
+      try { return json(await qrEntrar(body)); }
+      catch (e) { return json({ ok: false, error: 'Error del servidor: ' + String((e as Error).message || e) }); }
+    }
     if (body?.accion === 'crear_cuenta') {
       const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
       try { return json(await crearCuenta(jwt, body)); }

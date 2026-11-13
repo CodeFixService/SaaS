@@ -1,11 +1,16 @@
-# 🚀 Lanzamiento de Órbita: configuración paso a paso (G23)
+# 🚀 Lanzamiento de Despega Pyme (antes Órbita): configuración paso a paso (G23)
 Lo que YA está configurado no se toca (links de pago que pegaste, precios guardados). Solo llena lo que esté vacío.
 
 ## 1 · Publicar (tú, en el CM)
 1. **CM → Resumen → Empresas → Órbita → 🧹 Limpiar y abrir** → prueba → **CM → Apps → Órbita → 🚀 Liberar** (6.02; base 5.42, si no está: ⚡ Actualizar base).
 2. **CM** (4.87) y **Barbería** (2.77): suben solos (main) → 🧹 Limpiar y abrir → 🚀 Liberar.
 3. Edge Functions: **no hay que tocarlas** (el correo al comprador usa la función "enviar" que ya tienes).
-4. 🔑 **Entrar con QR (Órbita 6.08)**: actualiza la Edge Function **"enviar"** de Órbita (Supabase → Edge Functions → borrar → crear con el mismo nombre, Verify JWT APAGADO, pegar la línea import que te doy → Deploy). Prueba: abre Órbita en el computador → escanea el QR con la cámara del celular (con sesión) → **Sí, entrar** → el computador entra solo.
+4. 🔑🔒 **Entrar con QR + clave protegida (Órbita 6.09 · CM 4.94 · Barbería 2.82)**: pega las **3 Edge Functions** (te paso las 3 líneas import juntas): Órbita **"enviar"**, CM **"servidor"**, Barbería **"enviar"** (Supabase → Edge Functions → borrar → crear con el MISMO nombre, Verify JWT APAGADO → pegar → Deploy).
+   - **Correo del enlace (1 vez por app: Órbita, CM, Barbería)**: Supabase → **Authentication → Emails → SMTP Settings** → Enable custom SMTP: host `smtp.gmail.com`, puerto `465`, usuario = tu Gmail, clave = contraseña de aplicación de Google → Save. Sin esto Supabase NO manda el enlace a tus clientes (solo a ti).
+   - **Authentication → URL Configuration → Redirect URLs** → Add: `https://<app>.juanjosuecastilloloyola.workers.dev/**` (aplicaciones, saas, barberia).
+   - Prueba QR: abre la app en el computador → escanea el QR con la cámara del celular (con sesión) → **Sí, entrar** → el computador entra solo.
+   - Prueba 🔒: en otro navegador pon 3 veces una clave mala → sale "🔒 Por seguridad pausamos la clave" → **📧 Enviarme el enlace** → abre el correo → entras y te ofrece clave nueva.
+5. ✏️ **Nombre Despega Pyme**: ya sale solo en la app, el CM y los correos. Tú: en Gmail de la app (Ajustes → Correo) si pusiste "Nombre del remitente" Órbita, cámbialo a **Despega Pyme**; en Supabase → SMTP Settings → Sender name: **Despega Pyme**. Quien ya instaló la app ve el nombre nuevo al actualizarse (el ícono no cambia).
 
 ## 2 · Correo (tú, si no está) — sin esto no salen los correos al comprador
 **Órbita (entra como admin) → Administración → Ajustes → Correo (Gmail)**: Gmail + contraseña de aplicación (myaccount.google.com → Seguridad → Contraseñas de aplicaciones). Límite ~450 correos al día.

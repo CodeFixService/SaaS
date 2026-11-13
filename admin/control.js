@@ -206,17 +206,17 @@
 
   // 🌐 Dominio de los negocios (G29 · Cloudflare for SaaS): a dónde apunta el CNAME www del negocio + qué dominios agregar en Custom Hostnames.
   async function dominio() {
-    if (actual !== 'aplicaciones') { caja().innerHTML = '<p class="sub">El dominio propio de los negocios es de Órbita: elige Órbita arriba.</p>'; return; }
+    if (actual !== 'aplicaciones') { caja().innerHTML = '<p class="sub">El dominio propio de los negocios es de Despega Pyme: elige Despega Pyme arriba.</p>'; return; }
     let d;
     try { d = await rpc('cfx_dominio'); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
     const T = d.tiendas || [];
-    caja().innerHTML = '<div class="card"><h2>🌐 Dominio de los negocios</h2><p class="sub">El negocio pone en su DNS: <b>CNAME www → este destino</b>. Órbita se lo muestra con 📋 Copiar.</p>' +
+    caja().innerHTML = '<div class="card"><h2>🌐 Dominio de los negocios</h2><p class="sub">El negocio pone en su DNS: <b>CNAME www → este destino</b>. Despega Pyme se lo muestra con 📋 Copiar.</p>' +
       '<label>Destino del CNAME<input id="doC" inputmode="url" maxlength="80" placeholder="tiendas.codefix.cl" value="' + esc(d.cname || '') + '"></label>' +
       '<p class="sub">Vacío = el negocio ve "CodeFix te manda el dato por el chat".</p><button type="button" class="block" id="doG">Guardar</button></div>' +
       '<h3>Dominios de tiendas</h3><p class="sub">Cada uno: Cloudflare → tu dominio → SSL/TLS → Custom Hostnames → Add custom hostname → www.dominio → Add.</p>' +
       (T.length ? '<div class="card">' + T.map((t) => '<div class="fila"><span class="grow"><b>www.' + esc(t.dominio) + '</b><br><span class="sub">tienda ' + esc(t.slug || '—') + '</span></span>' +
         (t.activo ? '<span class="pill ok">con módulo</span>' : '<span class="pill warn">sin módulo</span>') + '</div>').join('') + '</div>' : '<p class="empty">Ningún negocio ha puesto su dominio todavía.</p>');
-    raiz.querySelector('#doG').onclick = async () => { try { await rpc('cfx_dominio_guardar', { p_cname: raiz.querySelector('#doC').value.trim() }); toast('Destino guardado en Órbita'); dominio(); } catch (x) { toast(nf(x)); } };
+    raiz.querySelector('#doG').onclick = async () => { try { await rpc('cfx_dominio_guardar', { p_cname: raiz.querySelector('#doC').value.trim() }); toast('Destino guardado en Despega Pyme'); dominio(); } catch (x) { toast(nf(x)); } };
   }
 
   // 🛡️ Seguridad (A7): qué puede hacer alguien sin cuenta en esta app y cómo están sus buckets.

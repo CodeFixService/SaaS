@@ -3,7 +3,7 @@
 const { Pool } = require('pg');
 
 const b64u = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
-const jwt = (sub, email) => b64u({ alg: 'HS256', typ: 'JWT' }) + '.' + b64u({ sub, email, role: 'authenticated', aud: 'authenticated', exp: Math.floor(Date.now() / 1000) + 36000 }) + '.firma';
+const jwt = (sub, email, amr) => b64u({ alg: 'HS256', typ: 'JWT' }) + '.' + b64u({ sub, email, role: 'authenticated', aud: 'authenticated', iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 36000, amr: [{ method: amr || 'password', timestamp: Math.floor(Date.now() / 1000) }] }) + '.firma';
 const qi = (s) => '"' + String(s).replace(/"/g, '""') + '"';
 
 function crear(opts) {
@@ -21,7 +21,7 @@ function crear(opts) {
     const c = await pool.connect();
     try {
       await c.query('begin');
-      const claims = user ? JSON.stringify({ sub: user.sub, email: user.email, role: 'authenticated' }) : JSON.stringify({ role: 'anon' });
+      const claims = user ? JSON.stringify({ sub: user.sub, email: user.email, role: 'authenticated', iat: user.iat, amr: user.amr }) : JSON.stringify({ role: 'anon' });
       await c.query("select set_config('request.jwt.claim.sub', $1, true), set_config('request.jwt.claims', $2, true), set_config('request.jwt.claim.role', $3, true)",
         [user ? user.sub : '', claims, user ? 'authenticated' : 'anon']);
       await c.query('set local role ' + (user ? 'authenticated' : 'anon'));
@@ -238,7 +238,7 @@ function crear(opts) {
   }
 
   // ---- auth ----
-  const sesion = (u) => ({ access_token: jwt(u.id, u.email), token_type: 'bearer', expires_in: 36000, expires_at: Math.floor(Date.now() / 1000) + 36000, refresh_token: 'r-' + u.id,
+  const sesion = (u, amr) => ({ access_token: jwt(u.id, u.email, amr), token_type: 'bearer', expires_in: 36000, expires_at: Math.floor(Date.now() / 1000) + 36000, refresh_token: 'r-' + u.id,
     user: { id: u.id, email: u.email, aud: 'authenticated', role: 'authenticated', app_metadata: { provider: 'email' }, user_metadata: u.raw_user_meta_data || {}, created_at: new Date().toISOString(), email_confirmed_at: new Date().toISOString() } });
   async function crearUsuario(email, pass, data) {
     email = String(email || '').trim().toLowerCase();
@@ -293,10 +293,10 @@ function crear(opts) {
       if (p === '/auth/v1/verify' && body && /^th-/.test(body.token_hash || '')) {
         const r = await su('select id, email, raw_user_meta_data from auth.users where id::text = $1', [body.token_hash.slice(3)]);
         if (!r.length) return json(403, { code: 403, error_code: 'otp_expired', msg: 'Token has expired or is invalid' });
-        return json(200, sesion(r[0]));
+        return json(200, sesion(r[0], 'otp'));
       }
       if (p === '/auth/v1/logout') return json(204);
-      if (p === '/auth/v1/recover' || p === '/auth/v1/otp' || p === '/auth/v1/resend') return json(200, {});
+      if (p === '/auth/v1/recover' || p === '/auth/v1/otp' || p === '/auth/v1/resend') { ultimoAuth.otp = Object.assign({ ruta: p }, body); return json(200, {}); }
       if (p.startsWith('/rest/v1/')) {
         const esquema = headers['accept-profile'] || headers['content-profile'] || 'public';
         const resto = p.slice(9);

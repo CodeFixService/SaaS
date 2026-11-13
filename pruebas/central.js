@@ -101,7 +101,7 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         g17lento = true; const g17t0 = Date.now(), [, g17hl] = await g17get('/t/?s=lenta'); g17lento = false;
         const [, g17hn] = await g17get('/t/?s=noexiste');
         global.fetch = g17f0;
-        ok(/<title>Tienda · Órbita<\/title>/.test(g17hl) && Date.now() - g17t0 < 2500 && /<title>Tienda · Órbita<\/title>/.test(g17hn) && fs.readFileSync(g17dir + '/robots.txt', 'utf8').includes('Allow: /t/'),
+        ok(/<title>Tienda · Despega Pyme<\/title>/.test(g17hl) && Date.now() - g17t0 < 2500 && /<title>Tienda · Despega Pyme<\/title>/.test(g17hn) && fs.readFileSync(g17dir + '/robots.txt', 'utf8').includes('Allow: /t/'),
           'Órbita G17: si Supabase tarda o la tienda no existe, la página sale igual (y robots deja ver /t/) ' + (Date.now() - g17t0) + ' ms');
         // F32 + F31: ?p= abre la ficha del producto con 🔗 Compartir; las tarjetas animan solo la primera vez (sin parpadeo al llegar fotos).
         await p.goto(t.base + '/t/?s=vitrina&p=g17p'); await p.waitForTimeout(2500);
