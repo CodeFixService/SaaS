@@ -47,6 +47,7 @@ Logo y nombre → WhatsApp → productos con foto → link de pago o ⚡ Mercado
 ## 8 · Antes de abrir las ventas
 - LIMPIEZA FINAL de Órbita (tú, en Supabase de Órbita → SQL Editor): pega Aplicaciones/supabase/limpieza/1_contar.sql → Run → revisa los números → pega 2_borrar.sql → Run → Storage → cada bucket → seleccionar todo → Delete. Quedan solo los admins y la configuración.
 - G30 (Órbita 6.05): Pedidos → 🎟️ **Cupones y sellos** (la tarjeta de sellos se movió ahí desde Mi tienda) · Más → 🧾 Boletas y 🚚 Despacho traen **📖 ¿Cómo se usa?** · Más → 🧾 Boletas → **📋 Registro de ventas** → 🧾 Ver: formato boleta (logo, RUT, fecha, hora, total, firma) → 🖨️ Imprimir o guardar PDF.
+- G32 a/b (Órbita 6.06, bd 5.44): Caja → cobrar → **🧾 Boleta SII** (o Reporte → **SII** en cada venta). Automática = tu cuenta OpenFactura (API key en Más → 🧾 Boletas); Manual (gratis) = emites en sii.cl y escribes el N°. Más → 🧾 Boletas → **❓ ¿Necesito boleta?** y **⚡ Boleta automática paso a paso**.
 - Boleta automática (OpenFactura) va como **beta**: prueba 1 boleta real antes de ofrecerla.
 - Mercado Pago automático para tu cobro: falta tu **Access Token de producción**.
 
