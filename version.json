@@ -1,1 +1,1 @@
-{"version": "4.96", "bd": "4.30", "funcion": "3.1", "notas": "💳 Arreglado: al enviar el comprobante de pago salía \"Could not choose the best candidate function\"."}
+{"version": "4.97", "bd": "4.30", "funcion": "3.1", "notas": "💳 Pago con señal débil: si el envío del comprobante se corta, se reintenta solo (antes salía \"Sin conexión con el servidor\")."}
