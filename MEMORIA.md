@@ -669,3 +669,9 @@ Tabla `rubros` con modelo `reservas` | `catalogo` | `ordenes` + etiquetas (nombr
 - SQL: set_config($1...) junto a otra función con $1 → castear $1::uuid. _headers solo en nucleo/_headers.
 - CM va directo a main desde G20 (sin 🧪 pruebas). Workers Builds: main y pruebas compilan OK; las ramas ccr-*/claude/* fallan (vista previa de Cloudflare) → ignorar ese ❌ (GitHub muestra el de la última rama subida).
 - G21b: .cfx-redondo con tamaño fijo (--cfx-r) → sin óvalo; "falta sincronizar" → "v2.57 en su turno" (CM 4.81, Órbita 5.96).
+
+## G32 c · 🖨️ Impresora térmica Bluetooth (13/11/2026 · Órbita 6.07 · CM 4.91 · Barbería 2.80 · núcleo 2.64)
+- Órbita shared/impresora.js (en sw.js FILES; cargado junto a comprobante.js en index, caja, pedidos, catálogo). CFX_IMPRESORA.imprimir(CFX_COMPROBANTE.modelo(c)) → ESC/POS, tabla PC850 (ESC t 2: tildes y ñ), 32 col (58 mm) o 48 (80 mm, localStorage cfx:impresora:papel), trozos de 100 bytes, corte GS V.
+- Conexión: requestDevice acceptAllDevices + optionalServices (18f0, e7810a71, 49535343, ff00, fee7, ae30) → primera característica con write; id en cfx:impresora:id y getDevices() para no volver a preguntar. Sin Web Bluetooth (iPhone) → aviso + usar PDF.
+- Comprobante: 🖨️ Impresora Bluetooth (no en cliente_ve) + ⚙️ papel 58/80 · Usar otra impresora. Sin logo en papel térmico.
+- Núcleo _headers: Permissions-Policy bluetooth=(self) (antes bluetooth=() lo bloqueaba). Sincronizado solo a saas, Aplicaciones, barberia.
