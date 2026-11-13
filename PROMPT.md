@@ -1,57 +1,51 @@
-G26
+G36 · CodeFix (Josué, ing. informático, Chile)
 
-ROL: Proyecto CodeFix (Josué, ing. informático, Chile). Respuestas CORTAS y precisas. Josué usa el teléfono: pasos uno por uno, con lo que hay que pegar listo, diciendo QUIÉN lo ve (cliente/negocio/administrador) y DÓNDE (menú y botón exactos). Prompt actualizado SIEMPRE en bloque de código, COMPLETO (máx. ~8.000 caracteres). Si dice "no hagas código": solo analizar. Si propone algo: 1 línea NECESARIO/ÚTIL/INNECESARIO + por qué. Si delega: decidir con buenas prácticas y avisar. Si responde "OK" o pide solo OK: contestar OK. Si el chat se alarga, avisar y partir otro. Lento pero seguro: probar como lo prueba Josué antes de decir "listo".
+ROL: Respuestas CORTAS y precisas. Josué usa el teléfono: pasos uno por uno, con lo que hay que pegar listo, diciendo QUIÉN (cliente/negocio/administrador) y DÓNDE (menú y botón exactos). Prompt actualizado SIEMPRE en bloque de código, COMPLETO (máx. ~8.000 caracteres). "No hagas código" = solo analizar. Si propone algo: 1 línea NECESARIO/ÚTIL/INNECESARIO + por qué. Si delega: decidir con buenas prácticas y avisar. "OK" → OK. Chat largo → avisar y partir otro. Lento pero seguro: probar como Josué antes de decir "listo". AHORRAR: leer solo lo necesario (grep/sed -n), agrupar pasos, no releer; Python largo → scratchpad. FUSIONAR: lo que vaya junto se hace en una pasada; lo que Josué pega va en UN paso al final.
+🧩 Cada módulo independiente (pro_o_modulo/Cuenta.puede). Ultra intuitivo: cada pantalla dice qué pasa + 1 botón claro. Lo reutilizable → núcleo (1 vez) para todas las apps.
+PRIORIDAD: primero lo pendiente; mejoras nuevas → PLAN.md y al FINAL (salvo que convenga ya: avisar). Meta: TIENDA (Despega Pyme, ex Órbita) lista.
+REGLA G33: en boleta, pagos, NFC, impresora, dominio e integraciones, Claude ELIGE la opción más recomendada y avisa (una sola).
+REGLA G31: vender IGUAL con o sin RUT; solo cambia el comprobante. Nunca exigir RUT.
+⛔ CEREBRO (Contenido): NO tocar. Al sincronizar núcleo NUNCA incluir contenido.
 
-LISTA MAESTRA: SaaS/PLAN.md → sección "G24" (y G25) (leer al empezar, marcar ✅). Detalle: SaaS/MEMORIA.md (G20, G22, G23). Guía para Josué: SaaS/LANZAMIENTO.md (actualizarla con lo que cambie).
+LISTA MAESTRA: SaaS/PLAN.md (grep -n "G3[2-9]\|L1", marcar ✅). Detalle: SaaS/MEMORIA.md (tail). Guía Josué: SaaS/LANZAMIENTO.md (actualizarla).
 
-ESTADO (11/11/2026): TODO en main. núcleo 2.61 · CM 4.85 (bd 4.27) · Órbita 6.01 (bd 5.42) · Barbería 2.76. Builds OK. Cloudflare avisa por correo si un build falla; si sale mal: git revert en main (nunca force-push).
+ESTADO (14/11/2026, todo en main): núcleo 2.66 · CM 4.94 (bd 4.29) · Despega Pyme 6.09 (bd 5.46) · Barbería 2.82 (bd 2.75). central.js 132 ok.
+HECHO G32 d+f: 🔑 QR en CM y Barbería + 🔒 3 claves malas → se pausan clave y QR, se entra con enlace al correo (signInWithOtp), al volver desbloquea y ofrece "Guardar clave". Núcleo qr.sql (cfx_login_fallos, cfx_login_bloqueado/fallo/desbloquear con amr otp) + qr.js (CFX_QR.clave/despues). Edge: CM servidor 3.1, Barbería enviar 1.1, Despega enviar (BRAND nuevo). Prueba pruebas/g32_clave.js cm|bar|orb (22 ok c/u). Detalle MEMORIA "G32 d+f".
+HECHO G33 ✏️: nombre visible "Despega Pyme" (ids internos 'aplicaciones'/'orbita', repo, Worker y Supabase sin cambio; ícono igual).
+CM DESPLIEGUE: Workers Builds "saas" falló en todos los commits desde 11/11 (aea1f45) con "[ERROR] A request to the Cloudflare API … unknown error" al subir archivos (error de Cloudflare, no de código; wrangler deploy --dry-run pasa). Josué tocó "Reintentar" y eso volvió a publicar un commit VIEJO (89022a1, de hace 17 días). PRIMERO: confirmar con check-suites que el último commit de main del CM quedó "success" (curl api.github.com/repos/CodeFixService/SaaS/commits/<sha>/check-suites → app cloudflare-workers-and-pages). Si vuelve a fallar: Josué → Cloudflare → saas → Implementaciones → ⋯ de la fila del commit NUEVO (main, sha que le das) → Reintentar (nunca un commit viejo).
 
-HECHO EN G24:
-- M1 (parcial): núcleo modulos.js CFX_MODULOS_TIENDA.probar(clave,{rpc,alCambiar}) = hoja con DEMO animada (datos de ejemplo, no toca el negocio) + 🎁 Activar 7 días gratis + Comprar + Cerrar/✕; .candado(el,clave,o) = aviso "▶️ Probar módulo" (false si el módulo está apagado para todos → "no disponible"). Órbita: candado en Mensajes (chat), Pedidos (cupones/estadísticas), Ajustes (equipo, sellos), Hoy (📣 redes), Fichas (campañas); cuenta.js no esconde chat/cupones/sellos al dueño si se venden. Botones de packs "▶️ Probar"/"Comprar" en una línea; Mi plan: cada precio entero (no corta "al año").
-- T1 🧹 CM → Apps → "🧹 Limpiar y abrir" en cada app: abre https://<worker>.juanjosuecastilloloyola.workers.dev/?cfx-limpio=1&cfx-cero=1 → núcleo carga.js borra caché, service worker, localStorage, sessionStorage, IndexedDB y cookies y abre como recién instalada (sin incógnito).
-- Barbería: faltaba wrangler.jsonc (sus builds de ramas ≠ main fallaban). Agregado igual al de SaaS.
-- Pruebas: pruebas/g24_modulos.js, g24_limpiar.js.
+PENDIENTE DE JOSUÉ (paso 3-4 de G32): SMTP Gmail en Supabase de las 3 apps (contraseña de aplicación: myaccount.google.com/apppasswords) + Redirect URLs (Authentication → URL Configuration → Redirect URLs → Add URL: https://aplicaciones|saas|barberia.juanjosuecastilloloyola.workers.dev/** , una por proyecto, Site URL no se toca) → probar QR + 🔒 → 🚀 Liberar. Edge Functions ya pegadas.
 
-HECHO EN G25: ▶️ Probar = solo ejemplo (sin 🎁 gratis) · Ajustes: Tu tienda (Pagos, Despacho, Boletas, 🌐 Mi dominio, Equipo) / Vender más (Redes) / ⭐ Mi plan y módulos (una hoja; #modulos abre ahí) · 🧾 Detalle de compra (Pedidos y Mis pedidos del cliente, con N° boleta SII) · B1 ✅ B2 ✅ (FAQ) B3 ✅ (CFX_REF_RUTA='n/' en config.js) · ⏰ bd 5.42: todo Pro vence por fecha (trigger profiles_vence), nunca permanente. Pruebas: g25_ui.js, central.js 131 ok.
+HACER AHORA (en orden, fusionando):
+0) Verificar CM desplegado (arriba).
+1) G33b ✏️ "Fichas" → "Diseños" en Despega Pyme: menú index.html (l.~575), título apps/fichas, landing n/, catálogo, pedidos, planes ("60 diseños"), textos (~125, git grep -n -i ficha; concordancia: un diseño, tus diseños publicados). Ruta apps/fichas/ e ids sin cambio. Ajustar pruebas que busquen "Fichas".
+2) G33 🌐 Dominio desde el panel (CM → Control → 🌐 Dominio): dominio universal CodeFix (codefix.cl o appcodefix.cl en nic.cl) + token Cloudflare 1 vez (secreto en "servidor") → Custom Domains por subdominio (despega., cm., barberia., billetera., bicitaller., estaciona.); links/QR/correos/manifest usan cfx_config 'dominio_base' (vacío = workers.dev). Checklist ⏳/✅ con los 2 nameservers para nic.cl. Dominio del negocio: CNAME tiendas.<dominio_base> + Custom Hostname por API.
+3) G34 🧭 Panel universal en el CM: inventariar paneles admin (Despega apps/admin, Barbería, Billetera, BiciTaller, Estaciona) → llevar lo que falta a CM → Apps → cada app (+ QR) → probar → recién ahí quitar el panel. Admin NO se borra: si public.admin_email() entra en una app → directo al CM. Sin Cerebro.
+4) G35 🧩 Billetera, BiciTaller, Estaciona → núcleo 2.66 con modulos.js + qr.js (+ 🔒 clave en su ingreso, iniciar como CM app.js; ayuda.js trae "Despega Pyme"). Sin Cerebro.
+5) G36 🔄 Actualizaciones (núcleo): admin → se instala sola al publicar; usuarios → al liberar, aviso con botón "🔄 Actualizar". Ver Aplicaciones/shared/cuenta.js revisarActualizacion + núcleo auto.js; probar ambos roles en todas.
+DESPUÉS: Josué prueba → 🚀 · L1 limpieza · revisión celular · INDUCCION.md · G37 núcleo (comprobante/impresora/boleta Caja) · G38 admin ultra · G39 módulos para ganar más · Khipu/Flow/Webpay, courier, factura 33, sucursales. AL FINAL: G32 e) 💳 NFC (Caja abre Klap Tap on Phone/SumUp → vuelve y marca pagada).
 
-ORDEN (lo que falta):
-1. Josué prueba con 🧹: CM 4.85, Órbita 6.01, Barbería 2.76 + ⚡ Actualizar base (Órbita 5.42).
-2. M2 💳 UN link de pago ABIERTO (sin monto) para Premium, módulos y packs: muestra el monto con 📋 Copiar + comprobante; los de monto fijo siguen sirviendo.
-3. M3 🌐 Dominio: Josué compra dominio en Cloudflare; ver Cloudflare for SaaS (custom hostnames) para que el negocio solo pegue un CNAME.
-4. L1 🧹 LIMPIEZA FINAL con aviso (supabase/limpieza/1_contar → 2_borrar + Storage) + guía "Tu negocio en 5 minutos".
-5. Revisión celular (celular.js 320/360, claro/oscuro, MIRAR capturas) y central.js → 🚀.
-6. ⏰ Renovación obligatoria en las otras apps cuando se retomen.
-DESPUÉS: Khipu/Flow/Webpay, courier, stock con Mercado Libre, factura 33, gift cards, sucursales, suscripciones. Otras apps en pausa.
+REPOS (CodeFixService, /home/user): SaaS = CM (nucleo/ original; admin/apps.js = CM → Apps; admin/control.js = Control) · Aplicaciones = Despega Pyme · Emprendedor = Billetera · Barberia · Taller = BiciTaller · Estacionamiento = Estaciona · Contenido = Cerebro (NO tocar). Stack: Supabase gratis + Cloudflare Workers Builds + GitHub.
 
-REPOS (CodeFixService, en /home/user): SaaS = Centro de Mando (CM); nucleo/ es el original, sincronizar.py lo copia · Aplicaciones = Órbita (TIENDA) · Emprendedor = Billetera · Barberia · Taller = BiciTaller · Estacionamiento = Estaciona · Contenido = Cerebro. Stack: Supabase gratis + Cloudflare Workers (Workers Builds) + GitHub.
+PUBLICAR: 1) central.js OK 2) git push origin HEAD:main 3) check-suites del sha (app cloudflare-workers-and-pages: success; check-runs puede mostrar solo uno) 4) push a la rama de sesión. Error de código → git revert en main (nunca force-push). Error "Cloudflare API unknown error" → Josué reintenta ESE commit. Josué: CM → Resumen → Empresas → app → 🧹 Limpiar y abrir → prueba → CM → Apps → 🚀 Liberar. Con SQL: base se actualiza sola (máx. 10 min) o ⚡ Actualizar base ahora.
+EDGE: Despega/Billetera/Barbería/Estaciona "enviar"; CM/BiciTaller "servidor". Josué borra, crea con el MISMO nombre, Verify JWT APAGADO, pega import 'https://raw.githubusercontent.com/CodeFixService/<repo>/<sha>/supabase/functions/<f>/index.ts'; → Deploy.
 
-PUBLICAR (todas las apps igual):
-- central.js OK → git push origin HEAD:main → esperar check-runs de main → recién ahí rama de sesión (si se empuja la rama de sesión antes, el check que se ve es el de la rama ccr-*, que siempre falla).
-- Check-runs: curl api.github.com/repos/CodeFixService/<repo>/commits/<sha>/check-runs (script con until + sleep 15, sin sleep suelto).
-- Josué: CM → Apps → app → 🧹 Limpiar y abrir → prueba → 🚀 Liberar. Con SQL: la base se actualiza sola (máx. 10 min) o ⚡ Actualizar base ahora.
-- Si sale mal: git revert en main.
-
-EDGE FUNCTIONS: Órbita/Billetera/Barbería/Estaciona enviar; CM/BiciTaller/Cerebro servidor. Josué la borra, crea con el MISMO nombre, Verify JWT APAGADO, pega import 'https://raw.githubusercontent.com/CodeFixService/<repo>/<sha>/supabase/functions/<f>/index.ts'; → Deploy.
-
-NÚCLEO 2.61 (CM, Órbita, Barbería; las otras en 2.54): modulos.js (probar/candado), carga.js (?cfx-limpio, ?cfx-cero), despacho.js + carrito.sql resto de Chile; vitrina.js políticas; modulos_venta 'medicion','dominio'; pagos.js CFX_PAGOS.abrir({producto}); ayuda.js, barra.js, voz.js, tienda.js.
-ÓRBITA 6.01 (bd 5.42, bloques al FINAL de instalar.sql; 5.42 = profiles_vence): pedido_seguimiento, pedido_correo, set_mi_perfil con políticas, medicion/dominio; worker.js "/" dominio→vitrina. Ajustes por hash: #links #equipo #despacho #boleta #dominio #redes #plan (#modulos abre Mi plan).
+VERSIONES (dónde): Despega shared/core.js APP_VERSION/DB_VERSION + version.json; SQL: db_version() ~l.5362 + cabecera VERSIÓN ~5427 (cfx_tablas ~7067). CM shared/config.js VERSION/DB_VERSION + version.json, instalar.sql l.147. Barbería shared/core.js l.11 + version.json ("bd") + instalar.sql l.21. Núcleo nucleo/nucleo.json. SQL del núcleo cambia la bd de CM, Despega y Barbería.
 
 REGLAS:
-- 🧩 Cada módulo 100% independiente (ninguno pide otro; se revisa con su propio pro_o_modulo/Cuenta.puede). Ultra intuitivo: cliente y negocio siempre ven qué está pasando y cuál es el siguiente paso (estado + 1 botón claro).
-- No dañar lo existente; solo lo pedido; revisar si ya existe. Lo reutilizable va UNA vez en el núcleo; lo que se cobra va como 🧩 módulo; con la venta apagada no cambia nada.
-- Subir versión de cada app tocada: Órbita shared/core.js APP_VERSION/DB_VERSION + version.json (+ db_version y cabecera "VERSIÓN x.y" al final de instalar.sql si hay SQL). CM: shared/config.js + version.json. Barbería: shared/core.js VERSION + version.json. Núcleo: nucleo/nucleo.json.
-- Archivo nuevo en shared/ de Órbita → FILES de sw.js.
-- Núcleo tocado → sincronizar a CM, Órbita, Barbería (carpeta temporal con symlinks saas, Aplicaciones, barberia → python3 SaaS/nucleo/sincronizar.py <carpeta>; luego git checkout icons/badge.png).
-- innerHTML: CFX_ESC/CFX_URL o Core.esc. Tabla nueva → pruebas/inventario.py --verificar.
-- SQL: re-ejecutable; {error} sin raise; HTTP saliente con extensión http, nunca en trigger. Solo admin → perform <CHK>; interna → revoke from public, anon, authenticated.
-- UI: títulos cortos; texto largo → .cfx-nota-btn; probar 320 px y oscuro. No rm con globs.
+- No dañar lo existente; solo lo pedido; revisar si ya existe.
+- Subir versión de cada app tocada (ver arriba).
+- Archivo nuevo en shared/ → FILES de sw.js (sincronizar.py NO agrega los OPCIONAL a sw.js).
+- Núcleo tocado → scratchpad/sync con symlinks SOLO saas, Aplicaciones, barberia (+ emprendedor, taller, estacionamiento desde G35) → python3 SaaS/nucleo/sincronizar.py <carpeta>; luego git checkout icons/badge.png. OPCIONAL qr.js: Aplicaciones, saas, barberia.
+- innerHTML: CFX_ESC/CFX_URL o Core.esc. Tabla nueva → python3 pruebas/inventario.py <repo> --verificar.
+- SQL re-ejecutable; {error} sin raise; HTTP saliente con extensión http, nunca en trigger. Solo admin → perform public.cfx_es_admin(); interna → revoke from public, anon, authenticated.
+- UI: textos cortos; probar 320 px y oscuro. iconos.js cambia emojis por íconos (en pruebas no buscar el emoji).
 
-PRUEBAS: probar COMO JOSUÉ (guardar → recargar → ver). Script chico por punto en SaaS/pruebas. Antes: ./base.sh /home/user/Aplicaciones <bd>. central.js (131 ok) antes de cada push: ./base.sh /home/user/barberia barberia_prueba && node central.js; echo FIN (en fondo + until grep FIN). Órbita de prueba: localStorage cfx:tour:orbita-inicio='1'.
+PRUEBAS: como Josué (guardar → recargar → ver). Script por punto SaaS/pruebas/g3x_xxx.js (modelo g32_clave.js), que FALLE con el código viejo. Antes ./base.sh /home/user/<repo> <bd>. Edge simuladas: abrir(repo, bd, { funciones: { enviar: async (body, user, {su}) => … } }). Enlace mágico: fetch <sb.supabaseUrl>/auth/v1/verify {token_hash:'th-<id>'} → about:blank → /#access_token=…&type=magiclink. Despega: claves ≥ 6 y localStorage cfx:tour:orbita-inicio='1'. Barbería: usuario vía user_invites (role owner). RUT 76.123.456-0. Admin = public.admin_email(). URLs externas: page.route. central.js: (./base.sh /home/user/barberia barberia_prueba && node central.js; echo FIN) > log (~4 min, 132 ok). Capturas pruebas/capturas/<repo>/ (MIRARLAS).
 
-ENTORNO: ln -s en /home/user: saas→SaaS, emprendedor→Emprendedor, barberia→Barberia, taller→Taller, estacionamiento→Estacionamiento, contenido→Contenido. Postgres 16 (B=/usr/lib/postgresql/16/bin): useradd postgres; mkdir -p /var/tmp/pgdata /var/tmp/pgb; chown postgres; initdb -A trust; pg_ctl -o '-k /var/tmp/pgb -p 54329' start. cd SaaS/pruebas && npm i. wrangler para revisar builds: npm i wrangler@4 en /tmp y wrangler deploy --dry-run. Sin red a Supabase/workers.dev.
+ENTORNO: en /home/user: for p in saas:SaaS emprendedor:Emprendedor barberia:Barberia taller:Taller estacionamiento:Estacionamiento contenido:Contenido; do ln -s ${p#*:} ${p%%:*}; done. Postgres 16 (B=/usr/lib/postgresql/16/bin): mkdir -p /var/tmp/pgdata /var/tmp/pgb; chown postgres ambos; su postgres -c "$B/initdb -A trust -D /var/tmp/pgdata"; su postgres -c "$B/pg_ctl -D /var/tmp/pgdata -o '-k /var/tmp/pgb -p 54329' -l /var/tmp/pg.log start". cd SaaS/pruebas && npm i. Sin red a Supabase/workers.dev/nic.cl/dash.cloudflare.
 
-SUPABASE: CM vqevujjraisrcoirswuq · Órbita gilsamacgappycibcqhq · Barbería gxlabxuttnxvzkucckef · Billetera zbgfvxsqajtixjzxoxeu · BiciTaller iwvjthcmufirbnotgixi · Estaciona wphxtspicejywwzlbuux · Cerebro vndqseptmymgqyxumbqy.
-WORKERS: <nombre>.juanjosuecastilloloyola.workers.dev (saas, aplicaciones, barberia, emprendedor, taller, estacionamiento, contenido).
-VERSIONES: núcleo 2.61 · CM 4.85 (bd 4.27) · Órbita 6.01 (bd 5.42) · Barbería 2.76 · Billetera 1.21.49 · BiciTaller 2.72 · Estaciona 2.14.51 · Cerebro 1.56.
-
-PENDIENTE DE JOSUÉ: probar con 🧹 y avisar · Gmail en Órbita (Administración → Ajustes → Correo) · Access Token producción MP · probar 1 boleta real.
+SUPABASE: CM vqevujjraisrcoirswuq · Despega gilsamacgappycibcqhq · Barbería gxlabxuttnxvzkucckef · Billetera zbgfvxsqajtixjzxoxeu · BiciTaller iwvjthcmufirbnotgixi · Estaciona wphxtspicejywwzlbuux.
+WORKERS: <nombre>.juanjosuecastilloloyola.workers.dev (saas, aplicaciones, barberia, emprendedor, taller, estacionamiento).
+VERSIONES: núcleo 2.66 · CM 4.94 · Despega 6.09 · Barbería 2.82 · Billetera 1.21.49 · BiciTaller 2.72 · Estaciona 2.14.51.
+OTROS PENDIENTES DE JOSUÉ: comprar dominio universal en nic.cl · INAPI "Despega Pyme" clase 35/42 · link general MP en CM → Pagos · L1 limpieza · Gmail en Despega (Ajustes → Correo, remitente "Despega Pyme") · Access Token producción MP · precio openfactura.cl y 1 boleta real.
