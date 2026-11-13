@@ -204,19 +204,97 @@
     };
   }
 
-  // 🌐 Dominio de los negocios (G29 · Cloudflare for SaaS): a dónde apunta el CNAME www del negocio + qué dominios agregar en Custom Hostnames.
+  // 🌐 G33 · Dominio de CodeFix: 1 token de Cloudflare → la función "servidor" arma todo (dominio.ts) y aquí se ve el checklist ⏳/✅.
+  // Cada app guarda su dirección (cfx_sitio): links, QR y correos usan el dominio cuando está ✅; vacío = workers.dev como hoy.
+  const cmApp = () => M().APPS.find((a) => a.id === 'cm');
+  const rpcCM = (fn, args) => M().rpcDe(M().cliente(cmApp()), fn, args);
+  const despega = () => M().APPS.find((a) => a.id === 'aplicaciones');
+  const marca = (ok) => ok ? '✅' : '⏳';
+  async function armarDominio(dom) {
+    let tiendas = [];
+    if (conectada(despega())) { try { tiendas = ((await M().rpcDe(M().cliente(despega()), 'cfx_dominio')).tiendas || []).map((t) => t.dominio); } catch (x) { /* Despega sin la función: sin tiendas */ } }
+    const { data, error } = await A.sb.functions.invoke('servidor', { body: { accion: 'dominio', dominio: dom, tiendas } });
+    if (error || !data) throw new Error('La función "servidor" no responde: actualízala (CM → Apps → Centro de Mando).');
+    if (!data.ok) throw new Error(data.error || 'No se pudo');
+    // Cada app recibe su dirección (✅ solo si Cloudflare ya la sirve).
+    const res = [];
+    for (const a of M().APPS.filter(conectada)) {
+      const x = (data.apps || {})[a.id]; if (!x) continue;
+      try { await M().rpcDe(M().cliente(a), 'cfx_sitio_guardar', { p_dominio: data.dominio, p_url: x.url, p_activo: !!x.ok }); }
+      catch (e) { res.push(a.nombre.split(' ·')[0]); }
+    }
+    if (data.cname && conectada(despega()) && (data.pasos || []).some((q) => q.k === 'saas' && q.ok)) { try { await M().rpcDe(M().cliente(despega()), 'cfx_dominio_guardar', { p_cname: data.cname }); } catch (e) { /* se reintenta al volver */ } }
+    try { const c0 = (data.apps || {}).cm || {}; localStorage.setItem('cfx:sitio', JSON.stringify({ dominio: data.dominio, url: c0.url || '', activo: !!c0.ok })); } catch (e) { /* nada */ }
+    data.sinFuncion = res;
+    return data;
+  }
   async function dominio() {
-    if (actual !== 'aplicaciones') { caja().innerHTML = '<p class="sub">El dominio propio de los negocios es de Despega Pyme: elige Despega Pyme arriba.</p>'; return; }
+    let s = {}, hay = false;
+    try { [s, hay] = await Promise.all([rpcCM('cfx_sitio'), rpcCM('cfx_cf_token_hay')]); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
+    const dom = s.dominio || '';
+    caja().innerHTML = '<div class="card" id="dbCaja"><h2>🌐 Dominio de CodeFix</h2><p class="sub">Tus apps en tu dominio: despega.<i>tudominio</i>, cm., barberia.… Compra el .cl en nic.cl y escríbelo aquí.</p>' +
+      '<label>Dominio<input id="dbD" inputmode="url" maxlength="80" placeholder="codefix.cl" value="' + esc(dom) + '"></label>' +
+      (hay ? '<p class="sub">🔑 Token de Cloudflare guardado. <a href="#" id="dbTC">Cambiar</a></p>' : '') +
+      '<div id="dbTok"' + (hay ? ' hidden' : '') + '><details class="sub"><summary><b>Cómo sacar el token (1 vez)</b></summary><ol class="sub">' +
+        '<li>Cloudflare → arriba a la derecha 👤 → <b>My Profile</b> → <b>API Tokens</b> → <b>Create Token</b>.</li>' +
+        '<li>Plantilla <b>Edit Cloudflare Workers</b> → <b>Use template</b>.</li>' +
+        '<li><b>+ Add more</b> y agrega: Zone · <b>Zone</b> · Edit · Zone · <b>DNS</b> · Edit · Zone · <b>SSL and Certificates</b> · Edit.</li>' +
+        '<li>Zone Resources: <b>All zones</b>. Continue → Create Token → <b>Copy</b>.</li></ol></details>' +
+        '<label>Token de Cloudflare<input id="dbT" autocomplete="off" maxlength="80" data-sin-voz placeholder="pega aquí el token"></label></div>' +
+      '<button type="button" class="block" id="dbG">' + (dom ? '🔄 Revisar y armar' : 'Guardar y armar') + '</button><div id="dbR"></div></div><div id="dbNeg"></div>';
+    const $ = (q) => raiz.querySelector(q);
+    if ($('#dbTC')) $('#dbTC').onclick = (e) => { e.preventDefault(); $('#dbTok').hidden = false; };
+    const ir = async () => {
+      const d = $('#dbD').value.trim(), tk = $('#dbT').value.trim(), r = $('#dbR');
+      if (!d) { toast('Escribe tu dominio, ej: codefix.cl'); return; }
+      r.innerHTML = '<p class="sub">Armando en Cloudflare… (puede tardar 20 s)</p>'; $('#dbG').disabled = true;
+      try {
+        if (tk) { await rpcCM('cfx_cf_token_guardar', { p_token: tk }); $('#dbT').value = ''; }
+        pintarDominio(await armarDominio(d));
+      } catch (x) { r.innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; }
+      $('#dbG').disabled = false;
+    };
+    $('#dbG').onclick = ir;
+    await negociosDominio(dom);
+    if (dom && hay) ir();
+  }
+  function pintarDominio(d) {
+    const r = raiz.querySelector('#dbR'), P = d.pasos || [], A2 = d.apps || {};
+    const nom2 = { aplicaciones: 'Despega Pyme', cm: 'Centro de Mando', barberia: 'Barbería', billetera: 'Billetera', bicitaller: 'BiciTaller', estaciona: 'Estaciona' };
+    const ayuda = {
+      token: '<p class="sub">Revisa que el token tenga los permisos de "Cómo sacar el token" y pégalo de nuevo.</p>',
+      ns: '<div class="card"><p class="sub"><b>nic.cl</b> → Mis dominios → <b>' + esc(d.dominio) + '</b> → Servidores DNS → borra los que hay y pega estos 2 → Guardar:</p>' +
+        (d.ns || []).map((n) => '<div class="fila"><code class="grow">' + esc(n) + '</code><button type="button" class="alt" data-cop="' + esc(n) + '">📋 Copiar</button></div>').join('') +
+        '<p class="sub">Después vuelve aquí y toca 🔄 Revisar y armar.</p></div>',
+      saas: '<p class="sub">Cloudflare → ' + esc(d.dominio) + ' → SSL/TLS → <b>Custom Hostnames</b> → <b>Enable Cloudflare for SaaS</b> (gratis hasta 100) → vuelve y toca 🔄.</p>'
+    };
+    r.innerHTML = '<h3>Checklist</h3>' + P.map((q) => '<div class="fila" data-paso="' + esc(q.k) + '"><span>' + marca(q.ok) + '</span><span class="grow">' + esc(q.t) + '</span></div>' + (!q.ok && ayuda[q.ayuda] ? ayuda[q.ayuda] : '')).join('') +
+      (Object.keys(A2).length ? '<h3>Direcciones</h3>' + Object.keys(A2).map((k) => '<div class="fila"><span>' + marca(A2[k].ok) + '</span><span class="grow"><b>' + esc(nom2[k] || k) + '</b><br><span class="sub">' + esc(A2[k].url) + '</span></span></div>').join('') : '') +
+      ((d.sinFuncion || []).length ? '<p class="sub warn">Sin guardar en: ' + esc(d.sinFuncion.join(', ')) + ' (su base se actualiza sola en máx. 10 min; toca 🔄 después).</p>' : '') +
+      (P.length && P.every((q) => q.ok) ? '<p class="ok"><b>✅ Listo.</b> Falta 1 cosa en Supabase de cada app: Authentication → URL Configuration → Redirect URLs → Add URL → <code>https://*.' + esc(d.dominio) + '/**</code></p>' : '');
+    r.querySelectorAll('[data-cop]').forEach((b) => { b.onclick = () => navigator.clipboard.writeText(b.dataset.cop).then(() => toast('Copiado: ' + b.dataset.cop)); });
+    if (d.tiendas) pintarTiendas(d.tiendas);
+  }
+  // 🌐 Dominio de los negocios (G29 · Cloudflare for SaaS). Con el dominio de CodeFix ✅ el CNAME y los Custom Hostnames se arman solos.
+  async function negociosDominio(dom) {
+    const z = raiz.querySelector('#dbNeg');
+    if (actual !== 'aplicaciones') { z.innerHTML = '<p class="sub">Dominio propio de cada negocio: elige Despega Pyme arriba.</p>'; return; }
     let d;
-    try { d = await rpc('cfx_dominio'); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
+    try { d = await rpc('cfx_dominio'); } catch (x) { z.innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
     const T = d.tiendas || [];
-    caja().innerHTML = '<div class="card"><h2>🌐 Dominio de los negocios</h2><p class="sub">El negocio pone en su DNS: <b>CNAME www → este destino</b>. Despega Pyme se lo muestra con 📋 Copiar.</p>' +
-      '<label>Destino del CNAME<input id="doC" inputmode="url" maxlength="80" placeholder="tiendas.codefix.cl" value="' + esc(d.cname || '') + '"></label>' +
-      '<p class="sub">Vacío = el negocio ve "CodeFix te manda el dato por el chat".</p><button type="button" class="block" id="doG">Guardar</button></div>' +
-      '<h3>Dominios de tiendas</h3><p class="sub">Cada uno: Cloudflare → tu dominio → SSL/TLS → Custom Hostnames → Add custom hostname → www.dominio → Add.</p>' +
-      (T.length ? '<div class="card">' + T.map((t) => '<div class="fila"><span class="grow"><b>www.' + esc(t.dominio) + '</b><br><span class="sub">tienda ' + esc(t.slug || '—') + '</span></span>' +
-        (t.activo ? '<span class="pill ok">con módulo</span>' : '<span class="pill warn">sin módulo</span>') + '</div>').join('') + '</div>' : '<p class="empty">Ningún negocio ha puesto su dominio todavía.</p>');
-    raiz.querySelector('#doG').onclick = async () => { try { await rpc('cfx_dominio_guardar', { p_cname: raiz.querySelector('#doC').value.trim() }); toast('Destino guardado en Despega Pyme'); dominio(); } catch (x) { toast(nf(x)); } };
+    z.innerHTML = '<div class="card"><h2>🏪 Dominio de los negocios</h2><p class="sub">El negocio pone en su DNS: <b>CNAME www → ' + esc(d.cname || (dom ? 'tiendas.' + dom : '…')) + '</b>. Despega Pyme se lo muestra con 📋 Copiar.</p>' +
+      (dom ? '<p class="sub">Se conectan solos en Cloudflare cada vez que abres esta pantalla.</p>' :
+        '<label>Destino del CNAME<input id="doC" inputmode="url" maxlength="80" placeholder="tiendas.codefix.cl" value="' + esc(d.cname || '') + '"></label><button type="button" class="block" id="doG">Guardar</button>') + '</div>' +
+      '<div id="doT">' + (T.length ? '<div class="card">' + T.map((t) => '<div class="fila" data-host="www.' + esc(t.dominio) + '"><span class="grow"><b>www.' + esc(t.dominio) + '</b><br><span class="sub">tienda ' + esc(t.slug || '—') + '</span></span>' +
+        (t.activo ? '<span class="pill ok">con módulo</span>' : '<span class="pill warn">sin módulo</span>') + '</div>').join('') + '</div>' : '<p class="empty">Ningún negocio ha puesto su dominio todavía.</p>') + '</div>';
+    if (z.querySelector('#doG')) z.querySelector('#doG').onclick = async () => { try { await rpc('cfx_dominio_guardar', { p_cname: z.querySelector('#doC').value.trim() }); toast('Destino guardado en Despega Pyme'); negociosDominio(dom); } catch (x) { toast(nf(x)); } };
+  }
+  function pintarTiendas(L) {
+    L.forEach((t) => {
+      const f = raiz.querySelector('#doT [data-host="' + CSS.escape(t.host) + '"]'); if (!f) return;
+      let e = f.querySelector('.cf'); if (!e) { e = document.createElement('span'); e.className = 'sub cf'; f.querySelector('.grow').appendChild(e); }
+      e.textContent = ' · ' + marca(t.ok) + ' ' + t.estado;
+    });
   }
 
   // 🛡️ Seguridad (A7): qué puede hacer alguien sin cuenta en esta app y cómo están sus buckets.

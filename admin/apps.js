@@ -24,13 +24,13 @@
 
   // Cómo se lee y se libera la versión en cada app (cada una lo guarda a su manera).
   const APPS = [
-    { id: 'cm', nombre: 'Centro de Mando', ico: 'diana', repo: 'SaaS', propia: true, worker: 'saas', sub: 'mando', admin: 'admin/',
+    { id: 'cm', nombre: 'Centro de Mando', ico: 'diana', repo: 'SaaS', propia: true, worker: 'saas', sub: 'cm', admin: 'admin/',
       bd: { rpc: 'db_version' }, leer: { propia: true },
       liberar: (c, v) => c.rpc('admin_config_guardar', { p_clave: 'version_liberada', p_valor: v, p_motivo: 'Liberar desde Mis aplicaciones' }) },
     { id: 'billetera', nombre: 'Billetera · Libreta de Cobros', ico: 'billetera', clave: 'lc-auth', repo: 'Emprendedor', cfg: 'js/config.js', worker: 'emprendedor', sub: 'billetera', admin: 'admin/',
       bd: { rpc: 'config_publica', campo: 'version_bd' }, leer: { rpc: 'config_publica', campo: 'version_liberada' },
       liberar: (c, v) => c.rpc('admin_guardar_ajustes', { p: { version_liberada: v } }) },
-    { id: 'aplicaciones', nombre: 'Despega Pyme · Tienda, caja y pedidos', ico: 'bolsa', clave: 'cfx-auth', repo: 'Aplicaciones', cfg: 'shared/config.js', worker: 'aplicaciones', sub: 'apps', admin: 'apps/admin/',
+    { id: 'aplicaciones', nombre: 'Despega Pyme · Tienda, caja y pedidos', ico: 'bolsa', clave: 'cfx-auth', repo: 'Aplicaciones', cfg: 'shared/config.js', worker: 'aplicaciones', sub: 'despega', admin: 'apps/admin/',
       bd: { rpc: 'db_version' }, leer: { rpc: 'public_settings', campo: 'version_liberada' },
       liberar: (c, v) => c.rpc('admin_set_setting', { p_key: 'version_liberada', p_value: v }) },
     { id: 'barberia', nombre: 'Barbería', ico: 'tijeras', clave: 'barb-auth', repo: 'Barberia', cfg: 'shared/config.js', worker: 'barberia', sub: 'barberia', admin: 'admin/',

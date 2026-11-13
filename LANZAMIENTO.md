@@ -30,16 +30,20 @@ Lo que YA está configurado no se toca (links de pago que pegaste, precios guard
 7. 🧾 **Detalle de compra** (G25): el negocio lo ve en Pedidos (pedido pagado) y el cliente en Mis pedidos; si hay boleta SII, su N° va adentro. 🌐 **Mi dominio**: Más → Tu tienda → Mi dominio.
    Si entra a un módulo que no tiene (ej. Más → Mensajes, Pedidos → Estadísticas/Promociones, Mi equipo, sellos) ve **▶️ Probar módulo**. Si TÚ lo apagas para todos (CM → 🧩) ve "no está disponible por ahora".
 
-## 5 · 🌐 Dominio de los negocios (Cloudflare for SaaS, G29)
-**Una sola vez (tú, en Cloudflare, con tu dominio ya comprado, ej. codefix.cl):**
-1. tu dominio → **DNS** → Add record: Tipo **AAAA** · Nombre **tiendas** · IPv6 **100::** · nube **naranja** (Proxied) → Save.
-2. **SSL/TLS → Custom Hostnames** → Enable (plan Free) → **Fallback origin** = `tiendas.codefix.cl` → Add.
-3. **Workers Routes** → Add route: `*/*` → Worker **aplicaciones** → Save. (Las otras apps con subdominio propio usan "Custom domain" en su Worker: tiene prioridad sobre esta ruta.)
-4. CM → **Control** → **Órbita** → **🌐 Dominio** → Destino del CNAME = `tiendas.codefix.cl` → **Guardar**.
+## 5 · 🌐 Dominio de CodeFix + dominios de los negocios (G33, todo desde el CM)
+**1 vez (tú):**
+1. Compra el dominio en **nic.cl** (ej. codefix.cl).
+2. Token de Cloudflare: Cloudflare → 👤 → **My Profile → API Tokens → Create Token** → plantilla **Edit Cloudflare Workers** → **+ Add more**: Zone·Zone·Edit, Zone·DNS·Edit, Zone·SSL and Certificates·Edit → Zone Resources **All zones** → Create → **Copy**.
+3. CM → **Control** → **🌐 Dominio** → escribe `codefix.cl` + pega el token → **Guardar y armar**.
+4. Salen **2 servidores DNS** (📋). **nic.cl → Mis dominios → codefix.cl → Servidores DNS** → borra los que hay, pega los 2 → Guardar. (Tarda de minutos a 24 h.)
+5. Vuelve a CM → Control → 🌐 Dominio → **🔄 Revisar y armar** hasta ver todo ✅: despega., cm., barberia., billetera., bicitaller., estaciona. (+ codefix.cl y www = Despega Pyme).
+6. Si sale ⏳ "Dominios de negocios": Cloudflare → codefix.cl → **SSL/TLS → Custom Hostnames → Enable Cloudflare for SaaS** (gratis hasta 100) → 🔄.
+7. En **Supabase de cada app** (CM, Despega, Barbería, Billetera, BiciTaller, Estaciona): **Authentication → URL Configuration → Redirect URLs → Add URL** → `https://*.codefix.cl/**` → Save.
+- Los links, QR, "compartir" y correos usan el dominio solo cuando está ✅. Mientras tanto todo sigue en workers.dev (nada se rompe).
 
-**Cada negocio (te llega aviso al CM "🌐 Dominio nuevo: www.sutienda.cl"):**
-- Cloudflare → tu dominio → **SSL/TLS → Custom Hostnames → Add custom hostname** → `www.sutienda.cl` → Add. (La lista está en CM → Control → Órbita → 🌐 Dominio.)
-- El negocio ya ve en Órbita → Más → Mi dominio: **CNAME www → tiendas.codefix.cl** (con 📋) + redirigir la raíz a www, y el estado ⏳ Pendiente → ✅ Activo (botón 🔄 Revisar).
+**Cada negocio (módulo 🌐 Dominio propio):**
+- El negocio ve en Despega → Más → Mi dominio: **CNAME www → tiendas.codefix.cl** (📋) y el estado ⏳ → ✅.
+- Tú: abre CM → Control → **Despega Pyme** → 🌐 Dominio: se conecta solo en Cloudflare (ya no se agrega a mano).
 
 ## 6 · Textos listos para TU tienda / perfil CodeFix (pega donde falte)
 - **Descripción (Mi tienda → 📇 Perfil y políticas → Sobre tu negocio):**

@@ -3,12 +3,14 @@
 //  2) { accion: 'borrar' }        Administrador o socio (con motivo): borra una cuenta y sus datos.
 //     { accion: 'borrar_mia' }    Cada persona borra su propia cuenta.
 //  3) { accion: 'qr_entrar' }     G32 d: el computador entra con la sesión que aprobó el celular (QR).
-//  4) { accion: 'ping' }          Diagnóstico.
+//  4) { accion: 'dominio' }       G33: solo el admin. Arma el dominio de CodeFix en Cloudflare (dominio.ts).
+//  5) { accion: 'ping' }          Diagnóstico.
 //  3) sin acción (cada minuto, pg_cron): envía por push los avisos nuevos de la campanita.
 import webpush from 'npm:web-push@3.6.7';
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
+import { dominio } from './dominio.ts';
 
-const VERSION = '3.1';
+const VERSION = '3.2';
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -112,6 +114,18 @@ async function qrEntrar(b: { token?: string; secreto?: string }) {
   return { ok: true, token_hash: data.properties.hashed_token };
 }
 
+// G33 · 🌐 Solo el admin. El token de Cloudflare: Supabase → Edge Functions → Secrets (CF_API_TOKEN) o pegado en el CM (cfx_secretos, nunca sale de la base).
+async function dominioAdmin(jwt: string, b: { dominio?: string; tiendas?: string[] }) {
+  const s = db();
+  const { data: who, error: e0 } = await s.auth.getUser(jwt);
+  if (e0 || !who?.user) return { ok: false, error: 'Inicia sesión de nuevo' };
+  const { data: adm } = await s.rpc('admin_email');
+  if (!adm || String(who.user.email || '').toLowerCase() !== String(adm).toLowerCase()) return { ok: false, error: 'Solo el administrador' };
+  let token = Deno.env.get('CF_API_TOKEN') || '';
+  if (!token) { const { data } = await s.from('cfx_secretos').select('valor').eq('clave', 'cloudflare').maybeSingle(); token = data?.valor || ''; }
+  return await dominio({ token, dominio: String(b.dominio || ''), tiendas: Array.isArray(b.tiendas) ? b.tiendas.map(String) : [] });
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   try {
@@ -130,6 +144,11 @@ Deno.serve(async (req) => {
       const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
       try { return json(await borrar(jwt, body)); }
       catch (e) { return json({ ok: false, error: 'Error del servidor: ' + String((e as Error).message || e) }); }
+    }
+    if (body?.accion === 'dominio') {
+      const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+      try { return json(await dominioAdmin(jwt, body)); }
+      catch (e) { return json({ ok: false, error: 'Cloudflare: ' + String((e as Error).message || e) }); }
     }
     if (body?.accion === 'borrar_mia') {
       const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
