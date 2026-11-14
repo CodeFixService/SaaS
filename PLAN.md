@@ -170,9 +170,12 @@ Regla: FREE = lo que hace que la usen todos los días y la recomienden (sin lím
 
 ## ORDEN NUEVO (Josué 14/11/2026)
 ▶️ SIGUIENTE (Josué 14/11, antes de 1c): G44a y luego G44b.
-- G44a 🐞 Cero errores atrás (arreglar TODOS, categorizados; ninguno es crítico para vender):
+- ✅ G44a 🐞 Cero errores atrás (arreglar TODOS, categorizados; ninguno es crítico para vender):
   · ⚙️ Funcionamiento · Despega → Ajustes → Vender en redes: pruebas/g23_ui.js no puede escribir en #mdMeta (campo oculto/no visible) → revisar que se vea y guarde bien en el celular.
+    ✅ La app estaba bien: el dominio vive en su hoja propia (Ajustes → 🌐 Mi dominio, G25) y la prueba lo buscaba en Redes. Prueba corregida; probado a 320 px (guarda y recarga). Aviso "sigue los pasos de abajo" → "mira los pasos arriba" (Despega 6.20).
   · 🧪 Pruebas · pruebas/cm_apps.js espera otra cantidad de limpiezas ("4 limpiezas") → corregir la cuenta esperada.
+    ✅ Son 8 (4 del núcleo + 4 del CM). Prueba corregida.
+  · 🧪 Pruebas · g23_ui.js contaba como error la revisión del dominio sin internet (ERR_TUNNEL) → filtrado. ✅
   · Al arreglar: correr central.js + g23_ui + cm_apps y anotar aquí cualquier otro error que aparezca (nada queda pendiente).
 - G44b 🏷️ Avisos de actualización SOLO con categoría, sin decir qué se hizo: al liberar (CM → Apps → 🚀 Liberar) y en version.json "notas", el aviso dice p. ej. "🔄 Nueva versión: 🔒 Seguridad · ⚙️ Funcionamiento" — categorías: 🔒 Seguridad, ⚙️ Funcionamiento, 🖥️ Sistema, ✏️ Mejoras, 🎁 Premios/novedades. El detalle queda solo en el CM. En el CM: elegir categorías con casillas (no texto libre). Todas las apps (núcleo).
 1) CM + Despega Pyme QUEDAN LISTOS Y BACANES: pendientes viejos + G42 (a-k) + G37 + revisión celular. Lo universal se hace EN EL NÚCLEO en ese momento (no doble pega) y se sincroniza a las 6 apps.

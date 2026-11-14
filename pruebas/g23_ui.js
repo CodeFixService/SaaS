@@ -54,9 +54,11 @@ const { abrir } = require('./h');
     ok(c2.n === 1, 'correo "va en camino" con el código');
     // Ajustes: políticas en el perfil + medir anuncios y dominio (Pro)
     await q.goto(t.base + '/#redes'); await q.waitForTimeout(3000);
-    const aj = await q.evaluate(() => [!!document.getElementById('mdMeta'), !!document.getElementById('mdDom')]);
-    ok(aj.every(Boolean), 'Ajustes → Vender en redes: medir anuncios y dominio ' + JSON.stringify(aj));
+    const aj = await q.evaluate(() => [!!document.getElementById('mdMeta'), !!document.getElementById('mdGa')]);
+    ok(aj.every(Boolean), 'Ajustes → Vender en redes: medir anuncios ' + JSON.stringify(aj));
     await q.fill('#mdMeta', '123456789012'); await q.fill('#mdGa', 'G-AB12CD34'); await q.click('[data-rd="medir"]'); await q.waitForTimeout(1200);
+    // G25: el dominio tiene su propia hoja (Ajustes → 🌐 Mi dominio), ya no está en Vender en redes.
+    await q.goto(t.base + '/#dominio'); await q.waitForTimeout(3000);
     await q.fill('#mdDom', 'mitienda.cl'); await q.click('[data-rd="dominio"]'); await q.waitForTimeout(1200);
     const [m] = await t.sim.su('select medicion, dominio from public.profiles where id = $1', [id]);
     ok(m.medicion.meta === '123456789012' && m.medicion.ga === 'G-AB12CD34' && m.dominio === 'mitienda.cl', 'medición y dominio guardados ' + JSON.stringify(m));
@@ -67,7 +69,7 @@ const { abrir } = require('./h');
     await q.goto(t.base + '/#ajustes'); await q.waitForTimeout(2500);
     ok(await q.evaluate(() => !!document.querySelector('#tPerfil [data-pf="rut"]') && !!document.querySelector('#tPerfil [data-pf="sin_retracto"]')), 'Ajustes → Mi tienda: campos de políticas');
     await q.emulateMedia({ colorScheme: 'dark' }); await q.goto(t.base + '/#redes'); await q.waitForTimeout(2500); await t.foto('g23-redes-oscuro', q);
-    const errs = t.errores.filter((e) => !/fichapro\.json|favicon/.test(e));
+    const errs = t.errores.filter((e) => !/fichapro\.json|favicon|ERR_TUNNEL|ERR_PROXY|ERR_NAME/.test(e));
     ok(!errs.length, 'sin errores de consola ' + JSON.stringify(errs.slice(0, 5)));
   } catch (e) { console.log('✗ ' + e.stack); process.exitCode = 1; }
   await t.cerrar();

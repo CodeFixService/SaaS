@@ -12,7 +12,7 @@ const assert = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('
     // G42g: Respaldo y limpieza está en Apps (antes en Resumen → Empresas).
     await p.goto(t.base + '/admin/#apps'); await p.waitForTimeout(4000); await t.sinModales();
     await p.click('[data-app=cm] [data-a=limp]'); await p.waitForTimeout(1500);
-    assert(await p.locator('dialog [data-c]').count() === 4, '4 limpiezas');
+    assert(await p.locator('dialog [data-c]').count() === 8, '8 limpiezas (4 núcleo + 4 CM)');
     assert(await p.locator('dialog [data-tb]').count() === 2, '2 tablas sobrantes');
     await t.foto('limpieza');
     await p.click('dialog [data-tb="public.vacia"]'); await p.waitForTimeout(300); await p.locator('dialog button', { hasText: 'Borrar' }).last().click(); await p.waitForTimeout(1200);
