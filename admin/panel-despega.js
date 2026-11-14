@@ -158,7 +158,7 @@
           z.querySelector('#ngCt').textContent = l.length + ' negocio(s)';
           z.querySelector('#ngL').innerHTML = l.map((n) => '<div class="card"><b>' + esc(n.empresa || n.email) + '</b> ' + (n.pro ? '<span class="pill pro">PRO</span>' : '<span class="pill">GRATIS</span>') +
             (n.suspendido ? ' <span class="pill bad">Suspendido</span>' : '') + (n.pago_revision ? ' <span class="pill warn">🧾 Pago por revisar</span>' : '') + (n.link_pago ? '' : ' <span class="pill warn">Sin link de pago</span>') + (n.autoregistro ? ' <span class="pill ok">🆕 Se registró solo</span>' : '') +
-            (n.rubro ? '<div class="sub">🏷️ ' + esc(n.rubro) + '</div>' : '') + '<div class="sub" style="overflow-wrap:anywhere">' + esc(n.email) + (n.telefono ? ' · +' + esc(n.telefono) : '') + '</div>' +
+            (n.rubro ? '<div class="sub">🏷️ ' + esc(n.rubro) + '</div>' : '') + '<div class="sub" style="overflow-wrap:break-word">' + App.correo(n.email) + (n.telefono ? ' · +' + esc(n.telefono) : '') + '</div>' +
             '<div class="sub">' + (n.pro ? '⭐ Pro hasta ' + (n.pro_until ? fecha(n.pro_until) : 'siempre') : n.pro_until ? 'Pro venció el ' + fecha(n.pro_until) : 'Nunca fue Pro') + ' · 🟢 entró ' + hace(n.visto_at) + '</div>' +
             '<div class="sub">👥 ' + n.clientes + ' clientes · 🧑‍🍳 ' + n.equipo + ' equipo · 🛍️ ' + n.productos + ' productos · 🛒 ' + n.pedidos_mes + ' pedidos este mes' + (n.estrellas ? ' · ★ ' + n.estrellas : '') + '</div>' +
             '<div class="btns"><select data-acc="' + esc(n.id) + '" aria-label="Acciones"><option value="">Acción…</option><option value="30">⭐ Dar Pro 1 mes</option><option value="7">⭐ +7 días</option><option value="365">⭐ +1 año</option><option value="0">Quitar Pro</option>' +
@@ -219,7 +219,7 @@
           const l = C.filter((c) => (!t || ((c.nombre || '') + ' ' + c.email).toLowerCase().includes(t)) && (!neg || c.negocio_id === neg) && (f === 'equipo' ? c.rol === 'equipo' : c.rol === 'client') && (!f || f === 'equipo' || (f === 'pro' && c.pro) || (f === 'susp' && c.suspendido)));
           z.querySelector('#clCt').textContent = l.length + ' cuenta(s)';
           z.querySelector('#clL').innerHTML = l.map((c) => '<li style="flex-wrap:wrap"><div class="grow" style="min-width:200px"><b>' + esc(c.nombre || c.email) + '</b> ' + (c.rol === 'equipo' ? '<span class="pill">Equipo</span>' : c.pro ? '<span class="pill pro">PREMIUM</span>' : '<span class="pill">FREE</span>') +
-            (c.suspendido ? ' <span class="pill bad">Suspendido</span>' : '') + '<div class="sub" style="overflow-wrap:anywhere">' + esc(c.email) + ' · ' + esc(c.negocio || 'sin negocio') + ' · entró ' + hace(c.visto_at) + ' · ' + c.pedidos + ' pedidos</div></div>' +
+            (c.suspendido ? ' <span class="pill bad">Suspendido</span>' : '') + '<div class="sub" style="overflow-wrap:break-word">' + App.correo(c.email) + ' · ' + esc(c.negocio || 'sin negocio') + ' · entró ' + hace(c.visto_at) + ' · ' + c.pedidos + ' pedidos</div></div>' +
             '<select data-acc="' + esc(c.id) + '" style="width:auto" aria-label="Acciones"><option value="">Acción…</option>' + (c.rol === 'client' ? '<option value="30">⭐ Premium 1 mes</option><option value="0">Quitar Premium</option>' : '') +
             '<option value="' + (c.suspendido ? 'react' : 'susp') + '">' + (c.suspendido ? '✅ Reactivar' : '⛔ Inhabilitar') + '</option><option value="del">🗑️ Eliminar cuenta</option></select></li>').join('') || '<li class="empty">Sin cuentas en este filtro</li>';
         };

@@ -146,8 +146,11 @@ G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C1
 - G42d 🔐 Datos enmascarados (núcleo + todas): correos como j•••@gmail.com, teléfonos +56 9 ••••12, RUT ••.•••.456-0 en avisos de enlace/validación y donde el que mira no deba verlos completos; el dueño ve lo suyo completo solo con sesión. Revisar seguridad (PIN, catálogo, compras): RLS, límites de intentos, sin datos sensibles en logs/URL.
 - G42e 🌌 CM galáctico/orbital (diseño) + Bootstrap: hoy solo "Bootstrap Utilities 5.3.8" en CM y Despega (espaciado/flex), por eso casi no se nota. Llevar a todas y pulir estética.
 - G42f 🧭 Paneles sin repetir Control: el panel de cada app muestra SOLO lo propio del negocio/app (lo que Control no hace) + botón "Abrir app". SMTP: 1 solo del admin en el CM para todas las apps (correos de cuentas); cada negocio pone SU SMTP en su perfil para SUS clientes (no usar el de Josué).
+- G42g ✅ (14/11, CM 5.02; prueba pruebas/g42_cm.js) Empresas: solo 🧹 Limpiar (tarjeta y detalle; CM sin botón). Ver app, Respaldo y limpieza y Respaldar todas → Apps (🧭 Panel ya estaba).
 - G42g 📋 CM → Resumen → Empresas: dejar solo 🧹 Limpiar; "Limpiar y abrir"/acciones → pestaña Apps.
+- G42h ✅ (CM 5.02) Control = escudo con visto (shared/app.js 'control'); Ajustes sigue con las perillas.
 - G42h ⚙️ Íconos: Configuración del CM y Control usan el mismo → Control con otro ícono.
+- G42i ✅ (CM 5.02 · Despega 6.18; pruebas g42_cm.js y g42_apl.js en 320 px) App.correo / .correo: correo en 1 línea con … (nunca partido) en Control → Negocios, los 5 paneles, Negocios con módulos (1 módulo por línea) y saludo/equipo/fichas de Despega. Planes: columnas de 68 px, nombre sin partir. Las otras 4 apps: revisar en su revisión celular (paso 2). Fotos de Josué aún no llegan: si hay otra pantalla, se ajusta.
 - G42i 📐 Textos desordenados: textos de negocios con módulo (sale el correo cortado/corrido) y textos de Planes → ordenar/centrar/cortar con … en todas las pantallas (solo posición, sin cambiar funciones ni contenido).
 - G42j 📖 APP.md por repo (mapa corto: qué hace, pantallas, archivos clave, tablas, versiones) → leer eso antes que el código. Reemplaza a MEMORIA.md como fuente de consulta.
 

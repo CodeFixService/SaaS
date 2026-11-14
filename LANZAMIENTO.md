@@ -15,7 +15,8 @@ Lo que YA está configurado no se toca (links de pago que pegaste, precios guard
 7. 🧭🔒🔄 **Paneles, clave protegida y actualizaciones (CM 5.00 · Despega 6.15 · Barbería 2.87 · Billetera 1.21.50 · BiciTaller 2.73 · Estaciona 2.14.52)**: 🧹 Limpiar y abrir → 🚀 Liberar cada una. Sin Edge Functions. Bases de Billetera (34), BiciTaller (2.22) y Estaciona (27) se actualizan solas en 10 min.
    - 🧭 El panel de administrador de las 5 apps está en **CM → Apps → (app) → 🧭 Panel**. Si entras a una app como admin, te lleva al CM. Tus **socios** siguen usando el panel dentro de la app.
    - 🔒 Billetera, BiciTaller y Estaciona: haz el **SMTP** y las **Redirect URLs** del punto 4 también en sus 3 Supabase (emprendedor, taller, estacionamiento).
-   - 🔄 El **CM** se actualiza solo apenas se publica. Tus **clientes** ven "🔄 Versión nueva" con el botón **🔄 Actualizar** recién cuando tú liberas (no se instala sola).
+   - 🔄 El **CM** se actualiza solo apenas se publica.
+8. 📋 **CM 5.02 · Despega 6.18**: en **Resumen → Empresas** ahora hay solo **🧹 Limpiar** (antes "Limpiar y abrir"). **Ver app**, **🧭 Panel**, **Respaldo y limpieza** y **Respaldar todas** están en **CM → Apps**. Control tiene ícono propio (escudo). Correos y Planes ya no salen cortados a mitad. 🧹 Limpiar → 🚀 Liberar (sin base ni Edge). Tus **clientes** ven "🔄 Versión nueva" con el botón **🔄 Actualizar** recién cuando tú liberas (no se instala sola).
 
 ## 2 · Correo (tú, si no está) — sin esto no salen los correos al comprador
 **CM → Apps → Despega Pyme → 🧭 Panel → 🛰️ Servidor y correo** (G34: el panel del admin de Despega está en el CM; si entras a Despega como admin te lleva al CM): Gmail + contraseña de aplicación (myaccount.google.com → Seguridad → Contraseñas de aplicaciones). Límite ~450 correos al día.
@@ -67,4 +68,4 @@ Logo y nombre → WhatsApp → productos con foto → link de pago o ⚡ Mercado
 - Mercado Pago automático para tu cobro: falta tu **Access Token de producción**.
 
 ## 🧹 Probar una app como recién instalada (sin incógnito)
-CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar y abrir** (desde CM 4.86; ya no está en Apps). Las ramas 🧪 Probar están apagadas hasta terminar todas las apps. Borra caché, datos guardados y sesión de ESA app en tu teléfono y la abre al tiro (vuelves a iniciar sesión). Desde el 10/11 los cambios van directo a main: si algo sale mal, avísale a Claude y se revierte.
+CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desde CM 5.02 es lo único ahí; lo demás está en Apps). Las ramas 🧪 Probar están apagadas hasta terminar todas las apps. Borra caché, datos guardados y sesión de ESA app en tu teléfono y la abre al tiro (vuelves a iniciar sesión). Desde el 10/11 los cambios van directo a main: si algo sale mal, avísale a Claude y se revierte.

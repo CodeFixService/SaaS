@@ -120,7 +120,7 @@
         z.querySelector('#bbCt').textContent = l.length + ' barbería(s)';
         z.querySelector('#bbL').innerHTML = l.map((b) => { const rec = recomendaciones(b).length;
           return '<div class="card"><b>' + esc(b.nombre) + '</b> ' + (b.premium ? '<span class="pill pro">⭐ PREMIUM</span>' : '<span class="pill">FREE</span>') + (b.suspended ? ' <span class="pill bad">Suspendida</span>' : '') + nota(b.calificacion) + (rec ? ' <span class="pill warn">💡 ' + rec + '</span>' : '') +
-            '<div class="sub" style="overflow-wrap:anywhere">' + esc(b.dueno) + ' · ' + esc(b.email) + '</div><div class="sub">' + (b.ultima_actividad ? '🟢 entró ' + hace(b.ultima_actividad) : 'nunca entró') + (b.premium && b.premium_until ? ' · vence ' + fecha(b.premium_until) : '') +
+            '<div class="sub" style="overflow-wrap:break-word">' + esc(b.dueno) + ' · ' + App.correo(b.email) + '</div><div class="sub">' + (b.ultima_actividad ? '🟢 entró ' + hace(b.ultima_actividad) : 'nunca entró') + (b.premium && b.premium_until ? ' · vence ' + fecha(b.premium_until) : '') +
             (b.registro_solo ? ' · ✨ se registró sola' : '') + (b.referida ? ' · 🤝 por ' + esc(b.referida) : '') + (b.socio ? ' · socio ' + esc(b.socio) : '') + '</div>' +
             '<div class="sub">💰 ' + plata(b.ventas) + flecha(b.ventas, b.ventas_ant) + ' · 📅 ' + b.reservas + ' reservas · ' + b.invitados + ' sin cuenta · 🚫 ' + b.no_vino + ' no vino · 👥 ' + b.clientes + ' (⭐' + b.clientes_premium + ') · 💈 ' + b.barberos + ' barberos</div>' +
             '<div class="btns"><button type="button" class="small" data-ver="' + esc(b.id) + '">👁️ Ver ficha</button><button type="button" class="small ghost" data-msg="' + esc(b.id) + '">💬</button>' +
@@ -169,7 +169,7 @@
 
     async function ficha(b, recargar) {
       const d = X.modal('<div class="titulo-v"><h2 class="grow">💈 ' + esc(b.nombre) + nota(b.calificacion) + '</h2><button type="button" class="small ghost" data-cerrar>✕</button></div>' +
-        '<p class="sub" style="overflow-wrap:anywhere">' + esc(b.dueno) + ' · ' + esc(b.email) + (b.whatsapp ? ' · ' + esc(b.whatsapp) : '') + '<br>Código: <b>' + esc(b.codigo) + '</b> · creada ' + fecha(b.created_at) + ' · ' + (b.ultima_actividad ? 'entró ' + hace(b.ultima_actividad) : 'nunca entró') + '</p>' +
+        '<p class="sub" style="overflow-wrap:break-word">' + esc(b.dueno) + ' · ' + App.correo(b.email) + (b.whatsapp ? ' · ' + esc(b.whatsapp) : '') + '<br>Código: <b>' + esc(b.codigo) + '</b> · creada ' + fecha(b.created_at) + ' · ' + (b.ultima_actividad ? 'entró ' + hace(b.ultima_actividad) : 'nunca entró') + '</p>' +
         '<p><b>' + (b.premium ? '⭐ Premium hasta ' + fecha(b.premium_until) : 'Plan Free') + '</b></p>' +
         '<div class="btns"><button type="button" class="small" data-p="act">⭐ Activar 1 mes (pagado)</button><button type="button" class="small ghost" data-p="dias">🎁 Regalar días</button>' + (b.premium ? '<button type="button" class="small ghost" data-p="quitar">Quitar Premium</button>' : '') + '</div>' +
         '<div id="fbR"></div><div id="fbD"><p class="sub">Cargando detalle…</p></div>' +
@@ -236,7 +236,7 @@
         const t = z.querySelector('#usQ').value.trim().toLowerCase(), l = L.filter((u) => !t || (u.nombre + ' ' + u.email + ' ' + (u.barberia || '')).toLowerCase().includes(t));
         z.querySelector('#usCt').textContent = l.length + ' usuario(s) · ' + l.filter((u) => u.premium).length + ' Premium';
         z.querySelector('#usL').innerHTML = l.length ? '<ul class="list">' + l.slice(0, 500).map((u) => '<li><div class="grow"><b>' + esc(u.nombre) + '</b> ' + (u.premium ? '<span class="pill pro">⭐</span>' : '') + (u.suspended ? ' <span class="pill bad">Suspendido</span>' : '') +
-          '<div class="sub" style="overflow-wrap:anywhere">' + esc(u.email) + ' · ' + esc(u.barberia || '') + ' · ' + (ROL[u.rol] || u.rol) + (u.premium && u.premium_until ? ' · hasta ' + fecha(u.premium_until) : '') + ' · visto ' + hace(u.last_seen) + '</div></div>' +
+          '<div class="sub" style="overflow-wrap:break-word">' + App.correo(u.email) + ' · ' + esc(u.barberia || '') + ' · ' + (ROL[u.rol] || u.rol) + (u.premium && u.premium_until ? ' · hasta ' + fecha(u.premium_until) : '') + ' · visto ' + hace(u.last_seen) + '</div></div>' +
           '<button type="button" class="small ghost" data-u="' + esc(u.id) + '">›</button></li>').join('') + '</ul>' : vacio('Nadie aún.');
       };
       const cargar = async () => { try { L = await rpc('admin_usuarios', { p_rol: modo === 'clientes' ? 'client' : null, p_barberia: null }); if (modo === 'equipo') L = L.filter((u) => u.rol !== 'client'); pintar(); } catch (x) { fallo(z.querySelector('#usL'), x); } };
@@ -247,7 +247,7 @@
     function fichaUsuario(u, recargar) {
       const conPlan = u.rol === 'owner' || u.rol === 'client';
       const d = X.modal('<div class="titulo-v"><h2 class="grow">' + esc(u.nombre) + (u.premium ? ' <span class="pill pro">⭐ Premium</span>' : '') + '</h2><button type="button" class="small ghost" data-cerrar>✕</button></div>' +
-        '<p class="sub" style="overflow-wrap:anywhere">' + esc(u.email) + '<br>' + (ROL[u.rol] || u.rol) + ' · ' + esc(u.barberia || '') + (u.telefono ? ' · ' + esc(u.telefono) : '') + '<br>Creado ' + fecha(u.created_at) + ' · visto ' + hace(u.last_seen) +
+        '<p class="sub" style="overflow-wrap:break-word">' + App.correo(u.email) + '<br>' + (ROL[u.rol] || u.rol) + ' · ' + esc(u.barberia || '') + (u.telefono ? ' · ' + esc(u.telefono) : '') + '<br>Creado ' + fecha(u.created_at) + ' · visto ' + hace(u.last_seen) +
         (u.premium && u.premium_until ? '<br>⭐ Premium hasta ' + fecha(u.premium_until) : '') + (u.trial_used && u.rol === 'client' ? '<br>🎁 Ya usó su prueba' : '') + '</p>' +
         '<div class="btns">' + (conPlan ? '<button type="button" class="small" data-p="act">⭐ Activar 1 mes</button><button type="button" class="small ghost" data-p="dias">🎁 Regalar días</button>' + (u.premium ? '<button type="button" class="small ghost" data-p="quitar">Quitar Premium</button>' : '') : '') +
         '<button type="button" class="small ghost" data-x="clave">🔑 Restablecer clave</button><button type="button" class="small ' + (u.suspended ? '' : 'danger') + '" data-x="sus">' + (u.suspended ? '✅ Reactivar' : '⛔ Suspender') + '</button>' +
@@ -315,7 +315,7 @@
           '<label>Correo (con este entra)<input id="soE" type="email" autocomplete="off"></label><label>WhatsApp<input id="soT" inputmode="tel" placeholder="+56 9…"></label><p class="sub">Parte con todos los permisos.</p>' +
           '<div class="btns"><button type="button" id="soOk">Crear socio</button></div><p class="err" id="soErr"></p></div>' +
           (l.map((x) => '<div class="card" data-socio="' + esc(x.id) + '"><b>' + esc(x.nombre) + '</b> ' + (x.suspended ? '<span class="pill bad">Suspendido</span>' : '<span class="pill ok">Activo</span>') +
-            '<div class="sub" style="overflow-wrap:anywhere">' + esc(x.email) + ' · visto ' + hace(x.last_seen) + ' · trajo ' + x.barberias + ' barbería(s), ' + x.premium + ' Premium</div>' +
+            '<div class="sub" style="overflow-wrap:break-word">' + App.correo(x.email) + ' · visto ' + hace(x.last_seen) + ' · trajo ' + x.barberias + ' barbería(s), ' + x.premium + ' Premium</div>' +
             PERMISOS.map(([k, t]) => '<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" style="width:auto" data-pm="' + k + '"' + ((x.permisos || {})[k] ? ' checked' : '') + '> ' + esc(t) + '</label>').join('') +
             '<div class="btns"><button type="button" class="small" data-g>💾 Guardar permisos</button><button type="button" class="small ghost" data-qr>🔳 Su link</button><button type="button" class="small ' + (x.suspended ? '' : 'danger') + '" data-s>' + (x.suspended ? 'Reactivar' : 'Suspender') + '</button></div><div data-lk></div></div>').join('') || vacio('Aún no tienes socios.'));
         z.querySelector('#soMas').onclick = () => { const f = z.querySelector('#soForm'); f.hidden = !f.hidden; };

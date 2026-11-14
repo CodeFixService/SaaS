@@ -171,6 +171,9 @@
         (e.conectado ? '<button type="button" class="small' + (s.faltaBd ? '' : ' ghost') + '" data-a="bd" title="Corre auto_actualizar() en la base de esta app"' + (e.bdProg ? ' disabled' : '') + '>' + (e.bdProg ? 'Actualizando la base…' : '⚡ Actualizar base ahora') + '</button>' : '') +
         (!a.propia && e.url ? (e.conectado ? '<button type="button" class="small ghost" data-a="salir">Desconectar</button>' : '<button type="button" class="small" data-a="con">' + A.ico('enchufe', 15) + ' Conectar</button>') : '') +
         (e.conectado && e.modulos && e.modulos.length ? '<button type="button" class="small ghost" data-a="mod">🧩 Módulos</button>' : '') +
+        // G42g: Ver app y Respaldo y limpieza pasaron de Resumen → Empresas a aquí.
+        '<a class="btn small ghost" data-a="ver" href="' + esc(a.web) + '" target="_blank" rel="noopener">' + A.ico('abrir', 15) + ' Ver app</a>' +
+        (e.conectado ? '<button type="button" class="small ghost" data-a="limp">' + A.ico('escoba', 15) + ' Respaldo y limpieza</button>' : '') +
         '<button type="button" class="small ghost" data-a="rec" aria-label="Revisar">' + A.ico('refrescar', 15) + '</button>' +
       '</div>';
   }
@@ -380,8 +383,8 @@
         '<label>Módulo o pack<select id="rItem">' + items.map(([k, n]) => '<option value="' + esc(k) + '">' + esc(n) + '</option>').join('') + '</select></label>' +
         '<label>Días (0 = quitar)<input id="rDias" inputmode="numeric" value="30"></label><p class="err" id="rErr"></p>' +
         '<div class="btns"><button type="button" id="rOk">🎁 Aplicar</button></div></div>' +
-        '<div class="card"><h3>Negocios con módulos</h3>' + (V.negocios.length ? '<ul class="list">' + V.negocios.map((n) => '<li><div class="grow" style="min-width:0"><b>' + esc(n.email || n.negocio) + '</b>' +
-          '<div class="sub">' + n.modulos.map((m) => esc(m.modulo) + (m.origen === 'prueba' ? ' 🎁' : m.origen === 'regalo' ? ' 🎁R' : '') + ' ' + (new Date(m.hasta) < new Date() ? 'venció' : 'hasta ' + new Date(m.hasta).toLocaleDateString('es-CL'))).join(' · ') + '</div></div></li>').join('') + '</ul>'
+        '<div class="card"><h3>Negocios con módulos</h3>' + (V.negocios.length ? '<ul class="list">' + V.negocios.map((n) => '<li><div class="grow" style="min-width:0"><b class="una" title="' + esc(n.email || n.negocio) + '">' + esc(n.email || n.negocio) + '</b>' +
+          n.modulos.map((m) => '<div class="sub una">' + esc(m.modulo) + (m.origen === 'prueba' ? ' 🎁' : m.origen === 'regalo' ? ' 🎁R' : '') + ' ' + (new Date(m.hasta) < new Date() ? 'venció' : 'hasta ' + new Date(m.hasta).toLocaleDateString('es-CL')) + '</div>').join('') + '</div></li>').join('') + '</ul>'
           : '<p class="sub">Aún nadie.</p>') + '</div>';
     };
     const cargarVenta = async () => { try { V = await rpcDe(c, 'cfx_venta_admin'); } catch (x) { V = null; } pintar(); };
@@ -431,15 +434,21 @@
   }
   function render(el) {
     raiz = el;
-    el.innerHTML = '<div class="titulo-v"><h2>Mis aplicaciones</h2><div class="btns-s"><button type="button" class="small ghost" id="appsGh">🔑 GitHub</button><button type="button" class="small ghost" id="appsTodo">' + A.ico('refrescar', 15) + ' Revisar todas</button></div></div>' +
+    el.innerHTML = '<div class="titulo-v"><h2>Mis aplicaciones</h2><div class="btns-s"><button type="button" class="small ghost" id="appsGh">🔑 GitHub</button><button type="button" class="small ghost" id="appsTodo">' + A.ico('refrescar', 15) + ' Revisar todas</button><button type="button" class="small ghost" id="resTodo">' + A.ico('bajar', 15) + ' Respaldar todas</button></div></div>' +
       (ramas() ? '<p class="sub">La base de cada app se actualiza sola. Cuando aparezca 🧪 Probar, ábrela y revisa los cambios: si está bien, ✅ Confirmar y luego 🚀 Liberar; si no, ↩️ Deshacer (o Liberar todo): a sus usuarios se les actualiza sola.</p>'
-        : '<p class="sub">La base de cada app se actualiza sola. Para probar: Resumen → 🧹 Limpiar y abrir. Si está bien, aquí 🚀 Liberar.</p>') +
+        : '<p class="sub">La base de cada app se actualiza sola. Para probar: Resumen → Empresas → 🧹 Limpiar. Si está bien, aquí 🚀 Liberar.</p>') +
       '<div id="appsCab"></div>' + APPS.map((a) => '<div class="card app-card" data-app="' + a.id + '"></div>').join('');
     el.querySelector('#appsTodo').onclick = () => APPS.forEach(cargar);
     el.querySelector('#appsGh').onclick = tokenGitHub;
+    el.querySelector('#resTodo').onclick = async () => {
+      const con = APPS.filter((a) => (E[a.id] || {}).conectado);
+      let n = 0; for (const a of con) { if (await respaldar(a)) n++; await new Promise((r) => setTimeout(r, 700)); }
+      toast(n + ' de ' + con.length + ' respaldos descargados' + (con.length < APPS.length ? ' (conecta las demás aquí)' : ''));
+    };
     el.onclick = (ev) => {
       const b = ev.target.closest('[data-a]'), c = ev.target.closest('[data-app]'); if (!b || !c) return;
       const a = APPS.find((x) => x.id === c.dataset.app), act = b.dataset.a;
+      if (act === 'ver') return;
       if (act === 'probar') { try { localStorage.setItem(PROBO(a), String(E[a.id].prueba.version)); } catch (x) { /* sin guardar */ } setTimeout(() => pintarTarjeta(a), 300); return; }
       if (act === 'pconf' || act === 'pdes') return accionPrueba(a, act === 'pconf' ? 'confirmar' : 'deshacer');
       if (act === 'lib') liberar(a);

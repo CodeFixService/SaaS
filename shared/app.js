@@ -17,6 +17,8 @@
   /* ---------- Utilidades ---------- */
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // G42i: correo en 1 línea, cortado con … si no cabe (completo al mantener el dedo/pasar el mouse). Nunca partido a mitad.
+  const correo = (s) => '<span class="correo" title="' + esc(s) + '">' + esc(s) + '</span>';
   const plata = (n) => '$' + Math.round(Number(n) || 0).toLocaleString('es-CL');
   const numero = (v) => { const n = Number(String(v == null ? '' : v).replace(/[^\d-]/g, '')); return isFinite(n) ? n : 0; };
   const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -229,6 +231,7 @@
     enchufe: '<path d="M9 2v6M15 2v6M6 8h12v3a6 6 0 0 1-12 0zM12 17v5"/>',
     refrescar: '<path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/>',
     check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    control: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.8 12.2l2.2 2.2 4.4-4.6"/>',  // G42h: Control (escudo con visto), distinto de Ajustes
     cerebro: '<path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 5 2V4.5A2.5 2.5 0 0 0 9 4zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-5 2V4.5A2.5 2.5 0 0 1 15 4z"/>'
   };
   const ico = (n, s) => '<svg class="ic" width="' + (s || 20) + '" height="' + (s || 20) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (IC[n] || '') + '</svg>';
@@ -484,7 +487,7 @@
   }
 
   global.App = {
-    sb, ROOT, $, esc, plata, numero, iso, fechaDe, sumarDias, hoy, fCorta, fLarga, fHora, hace, DIAS, telNorm, wa, estrellas, nota,
+    sb, ROOT, $, esc, correo, plata, numero, iso, fechaDe, sumarDias, hoy, fCorta, fLarga, fHora, hace, DIAS, telNorm, wa, estrellas, nota,
     toast, modal, confirmar, friendly, rpc, q, cargarPublica, txt, refrescar, requerir, entrar, salir, crearCuenta, registrar,
     perfil, clave, mensajeAcceso, descargar, verImagen, campana, irA, activarPush, ofrecerPush,
     pushSoportado, registrarSW, pedirInstalar, pie, pestanas, ico, ponerIconos, destino, revisarVersion, actualizar, repararApp, versionMenor, borrarCuenta, borrarMiCuenta,

@@ -45,11 +45,13 @@
     try { L = await rpc('cfx_planes'); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
     const grupos = [...new Set(L.map((x) => x.grupo))];
     const celda = (x, k) => typeof x[k] === 'boolean' ? '<input type="checkbox" data-k="' + k + '"' + (x[k] ? ' checked' : '') + ' style="width:auto">'
-      : '<input type="number" data-k="' + k + '" value="' + esc(x[k] == null ? '' : x[k]) + '" style="max-width:90px">';
+      : '<input type="number" data-k="' + k + '" value="' + esc(x[k] == null ? '' : x[k]) + '" style="width:100%;padding-left:6px;padding-right:6px;text-align:center">';
+    // G42i: nombre a la izquierda (baja por palabra, nunca partido) y 2 columnas angostas centradas.
+    const col = 'style="flex:0 0 68px;text-align:center"';
     caja().innerHTML = '<p class="sub">Interruptores (sí/no) y límites de cada plan. Se guarda al cambiar. Las apps los aplican al instante.</p>' +
-      grupos.map((g) => '<div class="card"><h2>' + (g === 'negocio' ? 'Negocio' : 'Cliente') + '</h2><div class="fila sub" style="font-weight:700"><span class="grow">Función</span><span style="width:90px;text-align:center">Gratis</span><span style="width:90px;text-align:center">Premium</span></div>' +
-        L.filter((x) => x.grupo === g).map((x) => '<div class="fila" data-g="' + esc(x.grupo) + '" data-c="' + esc(x.clave) + '" style="padding:4px 0;border-top:1px solid var(--line)"><span class="grow">' + esc(nom(x.clave)) + '</span>' +
-          '<span style="width:90px;text-align:center">' + celda(x, 'free') + '</span><span style="width:90px;text-align:center">' + celda(x, 'premium') + '</span></div>').join('') + '</div>').join('');
+      grupos.map((g) => '<div class="card"><h2>' + (g === 'negocio' ? 'Negocio' : 'Cliente') + '</h2><div class="fila sub" style="font-weight:700;gap:8px"><span class="grow">Función</span><span ' + col + '>Gratis</span><span ' + col + '>Premium</span></div>' +
+        L.filter((x) => x.grupo === g).map((x) => '<div class="fila" data-g="' + esc(x.grupo) + '" data-c="' + esc(x.clave) + '" style="padding:4px 0;border-top:1px solid var(--line);gap:8px"><span class="grow" style="overflow-wrap:normal;hyphens:auto" lang="es">' + esc(nom(x.clave)) + '</span>' +
+          '<span ' + col + '>' + celda(x, 'free') + '</span><span ' + col + '>' + celda(x, 'premium') + '</span></div>').join('') + '</div>').join('');
     caja().onchange = async (ev) => {
       const f = ev.target.closest('[data-c]'); if (!f) return;
       const v = (k) => { const i = f.querySelector('[data-k="' + k + '"]'); return i.type === 'checkbox' ? i.checked : Number(i.value || 0); };
@@ -83,7 +85,7 @@
       try { L = await rpc('cfx_negocios', { p_q: negQ, p_rol: negRol }); } catch (x) { el.innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
       if (L && L.error) { el.innerHTML = '<p class="sub warn">' + esc(L.error) + '</p>'; return; }
       el.innerHTML = '<p class="sub">' + L.length + (L.length >= 300 ? '+ (afina la búsqueda)' : '') + ' cuenta(s)</p>' + (L.map((n, i) => '<div class="ng-f" style="padding:10px 0;border-top:1px solid var(--line)">' +
-        '<b style="display:block;overflow-wrap:anywhere">' + esc(n.nombre || n.email) + '</b><span class="sub" style="display:block;overflow-wrap:anywhere">' + esc(n.email) + ' · desde ' + fecha(n.creado) + (n.suspendido ? ' · ⛔ suspendida' : '') + '</span>' +
+        '<b style="display:block;overflow-wrap:break-word">' + esc(n.nombre || n.email) + '</b><span class="sub" style="display:block;overflow-wrap:break-word">' + App.correo(n.email) + ' · desde ' + fecha(n.creado) + (n.suspendido ? ' · ⛔ suspendida' : '') + '</span>' +
         '<span class="sub" style="display:block">' + (n.premium_hasta ? '⭐ Premium hasta ' + fecha(n.premium_hasta) : 'Gratis') + '</span>' +
         '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"><button type="button" class="small" data-p="30" data-i="' + i + '">+1 mes</button><button type="button" class="small" data-p="90" data-i="' + i + '">+3 meses</button>' +
         '<button type="button" class="small" data-p="365" data-i="' + i + '">+1 año</button>' + (n.premium_hasta ? '<button type="button" class="small ghost" data-p="0" data-i="' + i + '">Quitar</button>' : '') +

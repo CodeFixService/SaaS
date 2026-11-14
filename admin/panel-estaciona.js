@@ -37,7 +37,7 @@
         z.innerHTML = '<p class="sub">Cargando…</p>'; let r; try { r = await rpc('admin_verificaciones'); } catch (x) { return fallo(z, x); }
         if (!r.length) { z.innerHTML = vacio('No hay verificaciones pendientes 🎉'); return; }
         z.innerHTML = '<p class="sub">Revisa que el RUT y la foto coincidan con la selfie. Confirma en el Registro Civil que el documento esté <b>vigente</b>. Al aprobar o rechazar, las fotos se borran.</p>' +
-          r.map((v) => '<div class="card" data-u="' + esc(v.usuario) + '"><b>' + esc(v.nombre) + '</b><div class="sub" style="overflow-wrap:anywhere">' + esc(v.email) + ' · ' + hace(v.enviada) + '</div>' +
+          r.map((v) => '<div class="card" data-u="' + esc(v.usuario) + '"><b>' + esc(v.nombre) + '</b><div class="sub" style="overflow-wrap:break-word">' + App.correo(v.email) + ' · ' + hace(v.enviada) + '</div>' +
             '<p class="sub">RUT <b>' + esc(rut(v.rut)) + '</b> <button type="button" class="small ghost" data-copiar="' + esc(rut(v.rut)) + '">📋</button> · N° documento <b>' + esc(v.serie) + '</b> <button type="button" class="small ghost" data-copiar="' + esc(v.serie) + '">📋</button></p>' +
             '<a class="btn small ghost" target="_blank" rel="noopener" href="https://portal.sidiv.registrocivil.cl/usuarios-portal/pages/DocumentRequestStatus.xhtml">🔎 Consultar vigencia en el Registro Civil</a>' +
             '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' + [['frente', 'Frente'], ['reverso', 'Reverso'], ['selfie', 'Selfie']].map((f) => '<div><div class="sub">' + f[1] + '</div><img ' + img + ' data-priv="' + esc(v[f[0]] || '') + '" alt="' + f[1] + '"></div>').join('') + '</div>' +
@@ -83,7 +83,7 @@
           '<div id="usL"><p class="sub">Cargando…</p></div><div class="btns"><button type="button" class="small ghost" id="usMas" hidden>Ver más</button></div>';
         let off = 0, f = '', t, U = [];
         const card = (u) => '<div class="card" data-id="' + esc(u.id) + '"><b>' + esc(u.nombre) + '</b>' + (u.verificado ? ' 🪪' : '') + (u.suspendido ? ' <span class="pill bad">Suspendido</span>' : '') +
-          '<div class="sub" style="overflow-wrap:anywhere">' + esc(u.email) + (u.rut && u.rut[0] !== 'X' ? ' · RUT ' + esc(rut(u.rut)) : '') + '</div>' +
+          '<div class="sub" style="overflow-wrap:break-word">' + App.correo(u.email) + (u.rut && u.rut[0] !== 'X' ? ' · RUT ' + esc(rut(u.rut)) : '') + '</div>' +
           '<div class="sub">' + (u.admin ? 'Administrador' : u.premium ? '⭐ ' + (u.plan_origen === 'prueba' ? 'Prueba' : 'Premium') + (u.premium_hasta && !/infinity/i.test(String(u.premium_hasta)) ? ' hasta ' + fecha(u.premium_hasta) : ' de por vida') : 'Gratis') +
           ' · ' + u.publicados + ' publicados' + (u.denuncias ? ' · <b>' + u.denuncias + ' denuncias</b>' : '') + ' · registro ' + fecha(u.creado) + '</div>' +
           (u.admin ? '' : '<div class="btns"><select data-prem aria-label="Premium"><option value="">⭐ Premium…</option><option value="7">+7 días</option><option value="30">+30 días</option><option value="90">+90 días</option><option value="365">+365 días</option><option value="0">De por vida</option><option value="-1">Quitar Premium</option></select>' +
