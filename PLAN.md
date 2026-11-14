@@ -140,10 +140,10 @@ G11 A4 + A5 + A6 + A9 ✅ · G12 C19 + C14 ✅ · G12b C15-C16 ✅ · G13 C17-C1
 
 
 ## G42 (anotado 14/11/2026, Josué) · después de G37, uno a uno
-- G42a ⬆️ Botón "subir" universal (núcleo, todas menos Cerebro): aparece al pasar el 30% de la página; toca → sube suave.
-- G42b 🪟 Ventanas universales (núcleo): ventana principal = ✕ arriba + "Cerrar" abajo. Subventana (opción dentro de la ventana) = reemplaza a la principal y muestra "← Volver" (no ✕/Cerrar); Volver regresa a la principal.
-- G42c ✋ Ordenar a gusto (núcleo): mantener presionado una sección (ej. Ajustes → Mi negocio, Boleta, Cuenta) y arrastrarla arriba/abajo; dentro de cada sección, también sus opciones (ej. Seguridad primero en Cuenta). Se guarda por usuario.
-- G42d 🔐 Datos enmascarados (núcleo + todas): correos como j•••@gmail.com, teléfonos +56 9 ••••12, RUT ••.•••.456-0 en avisos de enlace/validación y donde el que mira no deba verlos completos; el dueño ve lo suyo completo solo con sesión. Revisar seguridad (PIN, catálogo, compras): RLS, límites de intentos, sin datos sensibles en logs/URL.
+- ✅ G42a ⬆️ Botón "subir" universal (núcleo, todas menos Cerebro): aparece al pasar el 30% de la página; toca → sube suave.
+- ✅ G42b 🪟 Ventanas universales (núcleo): ventana principal = ✕ arriba + "Cerrar" abajo. Subventana (opción dentro de la ventana) = reemplaza a la principal y muestra "← Volver" (no ✕/Cerrar); Volver regresa a la principal.
+- ✅ G42c ✋ Ordenar a gusto (núcleo): mantener presionado una sección (ej. Ajustes → Mi negocio, Boleta, Cuenta) y arrastrarla arriba/abajo; dentro de cada sección, también sus opciones (ej. Seguridad primero en Cuenta). Se guarda por usuario.
+- ✅ G42d 🔐 Datos enmascarados (núcleo + todas): correos como j•••@gmail.com, teléfonos +56 9 ••••12, RUT ••.•••.456-0 en avisos de enlace/validación y donde el que mira no deba verlos completos; el dueño ve lo suyo completo solo con sesión. Revisar seguridad (PIN, catálogo, compras): RLS, límites de intentos, sin datos sensibles en logs/URL.
 - G42e 🌌 CM galáctico/orbital (diseño) + Bootstrap: hoy solo "Bootstrap Utilities 5.3.8" en CM y Despega (espaciado/flex), por eso casi no se nota. Llevar a todas y pulir estética.
 - G42f ✅ (14/11, CM 5.03 · Despega 6.19 bd 5.50 · enviar 3.5; pruebas g42f.js, g42f_apl.js) Paneles: solo lo propio + ↗ Abrir app; 🔔 claves push → Control (en el panel queda 🛰️ Servidor: probar y aviso de prueba); 📜 Registro → Control (junta el común y el del panel, sin repetir); Gmail → Control → ✉️ Correo (1 para todas; hoy solo Despega manda correos propios; las otras solo Supabase). Despega: Mi tienda → ✉️ Correo (Gmail del negocio, clave nunca legible; tabla negocio_correo; notif_correo decide: admin → CodeFix, negocio → el suyo, sin él → no se manda). Socios de Barbería/BiciTaller siguen en su panel (Control no los maneja).
 - G42f (pedido original) 🧭 Paneles sin repetir Control: el panel de cada app muestra SOLO lo propio del negocio/app (lo que Control no hace) + botón "Abrir app". SMTP: 1 solo del admin en el CM para todas las apps (correos de cuentas); cada negocio pone SU SMTP en su perfil para SUS clientes (no usar el de Josué).
@@ -163,13 +163,20 @@ Regla: FREE = lo que hace que la usen todos los días y la recomienden (sin lím
 - 🅿️ Estaciona (marketplace) · FREE: buscar y arrendar, 1 publicación, chat. PRO: 10 publicaciones (ya existe). 🧩: 📅 arriendo mensual/abono recurrente · ⭐ destacar en el mapa · ⏰ recordatorios de término · 🔔 alerta "se liberó cerca" · ⭐ calificaciones.
 - 🛍️ Despega: se mantiene lo de hoy (13 módulos + 3 packs) y suma de la lista G39 (📦 stock, 🎁 gift cards, 🚚 courier, 🔁 suscripciones, 🏬 sucursales).
 - Hoy (revisado 14/11): Barbería, Billetera, BiciTaller y Estaciona tienen modulos.js pero NO venden ninguno (falta cfx_modulos_app + candado en cada pantalla) → se hace en G39, junto con R1 (Pro vence por fecha) en esas 4.
-- G42k 📌 Títulos fijos (núcleo, todas menos Cerebro): el título de cada sección queda pegado arriba (position: sticky bajo cabecera/menú) y solo se mueve lo de adentro; al llegar a la sección siguiente, su título reemplaza al anterior. Compacto en 320 px (1 línea, …), fondo opaco en claro/oscuro. Lo apilado de hoy no se toca.
+- ✅ G42k 📌 Títulos fijos (núcleo, todas menos Cerebro): el título de cada sección queda pegado arriba (position: sticky bajo cabecera/menú) y solo se mueve lo de adentro; al llegar a la sección siguiente, su título reemplaza al anterior. Compacto en 320 px (1 línea, …), fondo opaco en claro/oscuro. Lo apilado de hoy no se toca.
 - G43 ✅ (14/11, núcleo 2.73) 🧭 Guía directa: cada "Hacerlo" lleva AL CAMPO (lo marca + "💡 Cómo se hace" motivador; también entre páginas). Tarjeta "🚀 Termina de armar tu negocio" en el Resumen (no ventana encima): 1 vez por inicio de sesión (✕ = hasta volver a entrar; recargar no la saca), "No mostrar más" = nunca. 👆 Pistas animadas de deslizar (barras, pantallas, avisos, apilado; máx. 2 veces). Despega: "Tu tienda en 5 minutos" directo a cada campo; sin tarjetas repetidas de Instalar/Notificaciones. Pruebas: g43_guia.js, g43_taller.js. Falta por app → su APP.md (paso 2).
 - G43b ✅ (Josué 14/11) Despega: el paso "Políticas" de la guía sigue pendiente hasta poner RUT + política de cambios (obligatorio, lo pide la ley de venta por internet). Igual se puede vender mientras tanto (G31: no se bloquea la venta).
 - ⛔ CM NO lleva módulos (es de Josué): todo incluido.
 
 ## ORDEN NUEVO (Josué 14/11/2026)
-▶️ SIGUIENTE: ✅ G44a y ✅ G44b listos → sigue 1c (núcleo universal).
+▶️ SIGUIENTE: ✅ 1c listo → sigue 1d (G37 🧠 comprobante/impresora/boleta de Caja + login QR al núcleo).
+- ✅ 1c Núcleo universal (núcleo 2.75, archivo nuevo nucleo/ui.js en las 6 menos Cerebro; sin SQL → bd igual). Pruebas: pruebas/g42_nucleo.js (Despega) y g42_nucleo_cm.js (CM), 320 px.
+  · G42a ⬆️ ui.js: botón redondo al pasar el 30% (página o ventana), sobre la barra de abajo; toca → sube suave.
+  · G42b 🪟 ayuda.js hoja(): principal = ✕ arriba + "Cerrar" abajo (siempre al final); abierta encima de otra = subventana: tapa a la principal y muestra "← Volver".
+  · G42k 📌 ui.js: título (h2 primero) de tarjeta larga y títulos de grupo del menú quedan pegados bajo la cabecera (o arriba de la ventana), 1 línea con …, fondo opaco solo mientras está pegado. .cfx-pila no se toca.
+  · G42c ✋ ui.js: mantener presionado ~0,5 s y arrastrar; secciones y opciones de todo CFX_AJUSTES/CFX_MENU (Más de Despega, Ajustes del CM, paneles). Guardado por usuario (localStorage). Otras listas: data-cfx-orden / CFX_ORDEN.lista(el, clave).
+  · G42d 🔐 seguro.js CFX_TAPAR.correo/tel/rut/texto; usado en el aviso "Revisa tu correo" (qr.js) y en "Te enviamos un enlace" de Despega. Seguridad: links de boleta y de pago de Despega (r/, catálogo, pedidos) pasan por CFX_URL (solo http/https); sin datos sensibles en logs ni URL (revisado).
+  · 🧪 Pruebas · perfil_ui.js buscaba el menú de avatar viejo (.cfx-av) → corregido para abrir Mi perfil con CFX_PERFIL.abrir().
 - ✅ G44a 🐞 Cero errores atrás (arreglar TODOS, categorizados; ninguno es crítico para vender):
   · ⚙️ Funcionamiento · Despega → Ajustes → Vender en redes: pruebas/g23_ui.js no puede escribir en #mdMeta (campo oculto/no visible) → revisar que se vea y guarde bien en el celular.
     ✅ La app estaba bien: el dominio vive en su hoja propia (Ajustes → 🌐 Mi dominio, G25) y la prueba lo buscaba en Redes. Prueba corregida; probado a 320 px (guarda y recarga). Aviso "sigue los pasos de abajo" → "mira los pasos arriba" (Despega 6.20).

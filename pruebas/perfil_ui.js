@@ -31,7 +31,7 @@ const APPS = {
       await p.goto(t.base + A.url); await p.waitForTimeout(1200);
       await p.fill('input[type=email]:visible', email); await p.fill('input[type=password]:visible', 'clave123'); await p.press('input[type=password]:visible', 'Enter');
       await p.waitForTimeout(3000); await t.sinModales(p);
-      const menu = async () => { await t.sinModales(p); await p.locator('.cfx-av:visible').first().click(); await p.waitForTimeout(500); await p.click('dialog [data-a=perfil]'); await p.waitForTimeout(700); };
+      const menu = async () => { await t.sinModales(p); await p.evaluate(() => window.CFX_PERFIL.abrir()); await p.waitForTimeout(900); };
       // Mi perfil abre una hoja con la lista; cada sección abre otra hoja encima (la de arriba es la última).
       const seccion = async (n) => { await p.locator('.cfx-hoja-m').first().locator('.cfx-aj > .cfx-fila').nth(n).evaluate((b) => b.click()); await p.waitForTimeout(600); };
       const volver = async () => { await p.locator('.cfx-hoja-m').last().locator('.cfx-hm-x').click(); await p.waitForTimeout(400); };
