@@ -401,8 +401,8 @@ function crear(opts) {
 
   return {
     pool, su, rpc, crearUsuario, archivos, ultimoAuth,
-    async conectar(contexto) {
-      await contexto.route(/https:\/\/[a-z0-9]+\.supabase\.co\//, manejar);
+    async conectar(contexto, patron) {  // patron: solo ese proyecto (para simular 2 bases a la vez, p. ej. CM + una app)
+      await contexto.route(patron || /https:\/\/[a-z0-9]+\.supabase\.co\//, manejar);
       if (contexto.routeWebSocket) await contexto.routeWebSocket(/supabase\.co\/realtime/, realtime);
     },
     cerrar: () => pool.end(),

@@ -5,7 +5,7 @@
 const ARCHIVOS = ['./', 'index.html', 'manifest.webmanifest', 'version.json', 'icons/icon-192.png', 'icons/icon-512.png',
   'shared/app.css', 'shared/app.js', 'shared/vendor/bootstrap-utilities.min.css', 'shared/seguro.js', 'shared/vitrina.js', 'shared/datos.js', 'shared/carga.js', 'shared/ayuda.js', 'shared/premium.js', 'shared/humano.js', 'shared/verificar.js', 'shared/pagos.js', 'shared/respaldo.js', 'shared/voz.js', 'shared/fotos.js', 'shared/auto.js', 'shared/barra.js', 'shared/tema.css', 'shared/config.js', 'shared/vendor/supabase.js',
   'app/', 'app/index.html', 'app/cm.css', 'app/cm.js', 'app/estilo.js', 'app/m-hoy.js', 'app/m-tablero.js', 'app/m-metas.js', 'app/m-cerebro.js',
-  'app/m-insights.js', 'app/m-pedidos.js', 'shared/vendor/qrcode.js', 'shared/qr.js', 'app/m-panel.js', 'app/m-mas.js', 'admin/', 'admin/index.html', 'admin/admin.js', 'admin/apps.js', 'admin/pagos.js', 'admin/control.js', 'admin/analitica.js', 'admin/mensajes.js', 'shared/iconos.js', 'shared/instalar.js'];
+  'app/m-insights.js', 'app/m-pedidos.js', 'shared/vendor/qrcode.js', 'shared/qr.js', 'app/m-panel.js', 'app/m-mas.js', 'admin/', 'admin/index.html', 'admin/admin.js', 'admin/apps.js', 'admin/panel.js', 'admin/panel-despega.js', 'admin/pagos.js', 'admin/control.js', 'admin/analitica.js', 'admin/mensajes.js', 'shared/iconos.js', 'shared/instalar.js'];
 const META = 'cm-meta';
 let reinstalando = null;
 // "?t=" evita copias viejas del CDN (GitHub guarda archivos hasta 10 minutos).

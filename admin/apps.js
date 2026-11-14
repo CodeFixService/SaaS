@@ -166,6 +166,8 @@
           '<button type="button" class="small" data-a="pconf"' + (probo(a) && !e.pBusy ? '' : ' disabled') + ' title="Primero ábrela con 🧪 Probar">' + (e.pBusy === 'confirmar' ? 'Confirmando…' : '✅ Confirmar') + '</button>' +
           '<button type="button" class="small ghost" data-a="pdes"' + (e.pBusy ? ' disabled' : '') + '>' + (e.pBusy === 'deshacer' ? 'Deshaciendo…' : '↩️ Deshacer') + '</button>' : '') +
         (a.liberar && e.conectado ? '<button type="button" class="small" data-a="lib"' + (s.lista && !e.liberando ? '' : ' disabled') + '>' + (e.liberando ? 'Liberando…' : s.alDia ? A.ico('check', 15) + ' Liberada' : A.ico('cohete', 15) + ' Liberar v' + esc(e.pub || '?')) + '</button>' : '') +
+        // G34 · 🧭 Panel universal: el panel de administrador de la app, aquí mismo (sin entrar a la app). Cerebro no.
+        (e.conectado && !a.propia && a.id !== 'contenido' && global.PanelApps ? '<button type="button" class="small" data-a="panel">🧭 Panel</button>' : '') +
         (e.conectado ? '<button type="button" class="small' + (s.faltaBd ? '' : ' ghost') + '" data-a="bd" title="Corre auto_actualizar() en la base de esta app"' + (e.bdProg ? ' disabled' : '') + '>' + (e.bdProg ? 'Actualizando la base…' : '⚡ Actualizar base ahora') + '</button>' : '') +
         (!a.propia && e.url ? (e.conectado ? '<button type="button" class="small ghost" data-a="salir">Desconectar</button>' : '<button type="button" class="small" data-a="con">' + A.ico('enchufe', 15) + ' Conectar</button>') : '') +
         (e.conectado && e.modulos && e.modulos.length ? '<button type="button" class="small ghost" data-a="mod">🧩 Módulos</button>' : '') +
@@ -448,11 +450,19 @@
       else if (act === 'mod') modulos(a);
       else if (act === 'limp') limpieza(a);
       else if (act === 'adm') abrirAdmin(a);
+      else if (act === 'panel') abrirPanel(a);
     };
     pintarCabecera();
     APPS.forEach(cargar);
   }
+  // G34 · 🧭 Abre el panel de la app dentro de Apps (← Apps vuelve a las tarjetas).
+  function abrirPanel(a) {
+    const el = raiz; if (!el || !global.PanelApps) return;
+    if (!(E[a.id] || {}).conectado) return conectar(a, () => abrirPanel(a));
+    global.PanelApps.abrir(a, cliente(a), el, () => render(el));
+    try { global.scrollTo(0, 0); } catch (x) { /* nada */ }
+  }
   // Para el panel de Pagos: deja listas (y conectadas, si ya entraste) las 7 apps sin pintar las tarjetas.
   const preparar = () => Promise.all(APPS.filter((a) => !E[a.id] || !E[a.id].url).map(cargar));
-  global.MisApps = { render, APPS, urlLimpia, cliente, estado: E, preparar, conectar, rpcDe, abrirAdmin, vincular, kpis, nombre, valor, peso, respaldar, limpieza };
+  global.MisApps = { render, APPS, urlLimpia, cliente, estado: E, preparar, conectar, rpcDe, abrirAdmin, abrirPanel, vincular, kpis, nombre, valor, peso, respaldar, limpieza };
 })(window);

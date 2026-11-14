@@ -109,7 +109,8 @@
       '<div id="empD"><p class="sub">Cargando…</p></div><div class="btns">' + (a.propia ? '' : '<a class="btn" href="' + esc(M.urlLimpia(a)) + '" target="_blank" rel="noopener">🧹 Limpiar y abrir</a>') +
       '<a class="btn' + (a.propia ? '' : ' ghost') + '" href="' + esc(a.web) + '" target="_blank" rel="noopener">' + App.ico('abrir', 15) + ' Ver app</a>' +
       (e.conectado && !a.propia ? '<button type="button" class="ghost" data-adm>' + App.ico('abrir', 15) + ' Panel de la app</button>' : '') + (e.conectado ? '<button type="button" class="ghost" data-limp>' + App.ico('escoba', 15) + ' Respaldo y limpieza</button>' : '') + '</div>');
-    if (d.querySelector('[data-adm]')) d.querySelector('[data-adm]').onclick = () => M.abrirAdmin(a);
+    // G34: si la app ya tiene su panel en el CM, se abre aquí (Apps → 🧭 Panel); si no, su panel propio.
+    if (d.querySelector('[data-adm]')) d.querySelector('[data-adm]').onclick = () => { if (window.PanelApps && window.PanelApps.tiene(a.id)) { d.close(); show('apps'); M.abrirPanel(a); } else M.abrirAdmin(a); };
     if (d.querySelector('[data-limp]')) d.querySelector('[data-limp]').onclick = () => { d.close(); M.limpieza(a); };
     const z = d.querySelector('#empD');
     if (!e.conectado) { z.innerHTML = '<p class="sub">Conéctala en Apps para ver su detalle.</p>'; return; }

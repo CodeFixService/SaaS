@@ -14,7 +14,7 @@ Lo que YA está configurado no se toca (links de pago que pegaste, precios guard
 6. ✏️ **Fichas → Diseños (Despega 6.10, base 5.47 · CM 4.95)**: solo cambia el nombre; tus diseños guardados siguen. 🧹 Limpiar y abrir → 🚀 Liberar (la base se actualiza sola en 10 min o ⚡ Actualizar base).
 
 ## 2 · Correo (tú, si no está) — sin esto no salen los correos al comprador
-**Órbita (entra como admin) → Administración → Ajustes → Correo (Gmail)**: Gmail + contraseña de aplicación (myaccount.google.com → Seguridad → Contraseñas de aplicaciones). Límite ~450 correos al día.
+**CM → Apps → Despega Pyme → 🧭 Panel → 🛰️ Servidor y correo** (G34: el panel del admin de Despega está en el CM; si entras a Despega como admin te lleva al CM): Gmail + contraseña de aplicación (myaccount.google.com → Seguridad → Contraseñas de aplicaciones). Límite ~450 correos al día.
 
 ## 3 · Precios (tú, CM → Pagos)
 - Negocio: **$3.000/mes** · Cliente Premium: **$2.000/mes**. Prueba gratis 7 días (déjala: retiene).
