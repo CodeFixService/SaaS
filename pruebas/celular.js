@@ -57,6 +57,24 @@ const APPS = {
     },
     antes: (ctx) => ctx.addInitScript(() => { try { localStorage.setItem('cfx:tour:orbita-inicio', '1'); } catch (e) { /* */ } }),
   },
+  saas: {
+    repo: 'saas', db: 'p_saas',
+    async cuentas(t) {
+      await t.sim.crearUsuario(ADM, 'admin123');
+      await t.sim.crearUsuario('socio@x.cl', 'clave123');
+      await t.sim.su('update public.profiles set terms_at = now()').catch(() => {});
+      return [
+        { rol: 'publico', url: null },
+        { rol: 'usuario', url: '/', email: 'socio@x.cl', pass: 'clave123' },
+        { rol: 'admin', url: '/', email: ADM, pass: 'admin123' },
+      ];
+    },
+    PAGINAS: {
+      publico: ['/'],
+      usuario: ['/app/#hoy', '/app/#pedidos', '/app/#metas', '/app/#tablero', '/app/#insights', '/app/#panel', '/app/#mas'],
+      admin: ['/admin/#resumen', '/admin/#apps', '/admin/#usuarios', '/admin/#pagos', '/admin/#mensajes', '/admin/#analitica', '/admin/#control', '/admin/#ajustes'],
+    },
+  },
   barberia: {
     repo: 'barberia', db: 'p_barberia',
     async cuentas(t) {
