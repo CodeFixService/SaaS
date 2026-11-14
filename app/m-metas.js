@@ -40,7 +40,7 @@
         else if (b.dataset.act === 'ficha') CM.ficha(id);
         else if (b.dataset.act === 'nueva') CM.ficha(null, b.dataset.t);
         else if (b.dataset.act === 'hab') await CM.toggleHabito(it, hoy());
-        else if (b.dataset.act === 'kr') { const v = prompt('Avance actual de "' + it.titulo + '"', it.datos.actual || 0); if (v !== null) await CM.datos(id, { actual: Number(String(v).replace(',', '.')) || 0 }); }
+        else if (b.dataset.act === 'kr') { const q = 'Avance actual de "' + it.titulo + '"', v = await (window.CFX_DIALOGO ? CFX_DIALOGO.pedir(q, it.datos.actual || 0, { tipo: 'number' }) : prompt(q, it.datos.actual || 0)); if (v !== null) await CM.datos(id, { actual: Number(String(v).replace(',', '.')) || 0 }); }
         else if (b.dataset.act === 'nkr') CM.ficha(null, 'resultado', { padre: id, espacio_id: it.espacio_id });
         else if (b.dataset.act === 'ntk') CM.ficha(null, 'tarea', { padre: id, espacio_id: it.espacio_id });
       } catch (er) { toast(er.message); }

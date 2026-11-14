@@ -100,6 +100,10 @@ const CAP = __dirname + '/capturas/Aplicaciones/';
     for (let i = 0; i < 24 && !vio; i++) { vio = await q.locator('.cfx-pz').count() > 0; if (!vio) await q.waitForTimeout(250); }
     ok(vio, '👆 sale la pista animada de deslizar');
     if (vio) await t.foto('g43_pista', q);
+    // G52a: la pista va abajo, a lo ancho, letra chica y hasta 2 líneas (antes salía cortada con "…").
+    const pz = await q.evaluate(() => { const p = document.querySelector('.cfx-pz'); if (!p) return null; const r = p.getBoundingClientRect(), x = p.lastChild, cs = getComputedStyle(x);
+      return { ws: cs.whiteSpace, fs: parseFloat(getComputedStyle(p).fontSize), abajo: r.bottom > innerHeight - 200, dentro: r.left >= 0 && r.right <= innerWidth, entero: x.scrollWidth <= x.clientWidth + 1 }; });
+    ok(pz && pz.ws !== 'nowrap' && pz.fs <= 13 && pz.abajo && pz.dentro && pz.entero, 'G52a pista abajo, entera y sin cortar ' + JSON.stringify(pz));
     const veces = await q.evaluate(() => Object.keys(localStorage).filter((k) => /^cfx:pista:/.test(k)).map((k) => k + '=' + localStorage.getItem(k)));
     ok(veces.length >= 1, 'la pista queda contada (máx. 2 veces) ' + veces.join(','));
     await q.evaluate(() => ['barra', 'pantallas', 'pila', 'borrar'].forEach((k) => localStorage.setItem('cfx:pista:' + k, '2')));
