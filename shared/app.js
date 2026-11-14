@@ -386,9 +386,12 @@
     const c = ((await cargarPublica()) || {}).config || {};
     const lib = c.version_liberada, min = c.version_min;
     const forzada = !!(min && versionMenor(cfg.VERSION, min));
-    if (!forzada && !(lib && versionMenor(cfg.VERSION, lib))) return;
+    // G36: el CM es solo del admin → la versión PUBLICADA se instala sola (no espera a liberarla).
+    let pub = ''; try { pub = String((await (await fetch(ROOT + 'version.json?_=' + Date.now(), { cache: 'no-store' })).json()).version || ''); } catch (e) { /* sin red */ }
+    const meta = pub && versionMenor(cfg.VERSION, pub) && (!lib || versionMenor(lib, pub)) ? pub : lib;
+    if (!forzada && !(meta && versionMenor(cfg.VERSION, meta))) return;
     avisada = true;
-    if (!forzada) { actualizarSola(lib); return; }
+    if (!forzada) { actualizarSola(meta); return; }
     const d = modal('<h2>' + (forzada ? '⚠️ Actualiza la app' : '✨ Hay una versión nueva') + '</h2><p class="muted" style="margin-top:0">' +
       (forzada ? 'Tu versión (v' + esc(cfg.VERSION) + ') ya no funciona bien. Actualízala para seguir.' : 'Tienes la v' + esc(cfg.VERSION) + ' y ya está disponible la v' + esc(lib) + '. Actualiza para tener las últimas mejoras.') +
       '</p><p class="err" id="btMsg" style="margin:0 0 10px"></p><div class="btns">' + (forzada ? '' : '<button class="ghost" data-cerrar>Después</button>') +

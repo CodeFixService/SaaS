@@ -12,6 +12,10 @@ Lo que YA está configurado no se toca (links de pago que pegaste, precios guard
    - Prueba 🔒: en otro navegador pon 3 veces una clave mala → sale "🔒 Por seguridad pausamos la clave" → **📧 Enviarme el enlace** → abre el correo → entras y te ofrece clave nueva.
 5. ✏️ **Nombre Despega Pyme**: ya sale solo en la app, el CM y los correos. Tú: en Gmail de la app (Ajustes → Correo) si pusiste "Nombre del remitente" Órbita, cámbialo a **Despega Pyme**; en Supabase → SMTP Settings → Sender name: **Despega Pyme**. Quien ya instaló la app ve el nombre nuevo al actualizarse (el ícono no cambia).
 6. ✏️ **Fichas → Diseños (Despega 6.10, base 5.47 · CM 4.95)**: solo cambia el nombre; tus diseños guardados siguen. 🧹 Limpiar y abrir → 🚀 Liberar (la base se actualiza sola en 10 min o ⚡ Actualizar base).
+7. 🧭🔒🔄 **Paneles, clave protegida y actualizaciones (CM 5.00 · Despega 6.15 · Barbería 2.87 · Billetera 1.21.50 · BiciTaller 2.73 · Estaciona 2.14.52)**: 🧹 Limpiar y abrir → 🚀 Liberar cada una. Sin Edge Functions. Bases de Billetera (34), BiciTaller (2.22) y Estaciona (27) se actualizan solas en 10 min.
+   - 🧭 El panel de administrador de las 5 apps está en **CM → Apps → (app) → 🧭 Panel**. Si entras a una app como admin, te lleva al CM. Tus **socios** siguen usando el panel dentro de la app.
+   - 🔒 Billetera, BiciTaller y Estaciona: haz el **SMTP** y las **Redirect URLs** del punto 4 también en sus 3 Supabase (emprendedor, taller, estacionamiento).
+   - 🔄 El **CM** se actualiza solo apenas se publica. Tus **clientes** ven "🔄 Versión nueva" con el botón **🔄 Actualizar** recién cuando tú liberas (no se instala sola).
 
 ## 2 · Correo (tú, si no está) — sin esto no salen los correos al comprador
 **CM → Apps → Despega Pyme → 🧭 Panel → 🛰️ Servidor y correo** (G34: el panel del admin de Despega está en el CM; si entras a Despega como admin te lleva al CM): Gmail + contraseña de aplicación (myaccount.google.com → Seguridad → Contraseñas de aplicaciones). Límite ~450 correos al día.
