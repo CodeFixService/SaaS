@@ -67,7 +67,25 @@
   // Abre el panel de la app dentro de la vista (el) con "← Apps" para volver.
   function abrir(a, c, el, volver) {
     const rpc = async (fn, args) => { const { data, error } = await c.rpc(fn, args || {}); if (error) throw new Error(error.message); return data; };
-    const ctx = { a, c, rpc, enviar: () => { try { c.functions.invoke('enviar').catch(() => {}); } catch (e) { /* sin función */ } }, esc, toast, modal, confirmar, pedir, fecha, fechaHora, dias, hace, plata, item, vacio, fallo, tarjetaLink, qrCanvas };
+    // G34 parte 2 · ayudas comunes: función del servidor de la app, filtros, acceso por WhatsApp y chat de soporte (CM → Mensajes).
+    const fn = async (nombre, body) => {
+      const { data, error } = await c.functions.invoke(nombre, { body: body || {} });
+      if (error) { let st = 0; try { st = error.context && error.context.status; } catch (e) { /* nada */ } throw new Error(st === 401 ? 'En la función "' + nombre + '" apaga "Verify JWT"' : 'No responde la función "' + nombre + '" de la app'); }
+      if (data && (data.ok === false || data.error) && !data.version) throw new Error(data.error || 'No se pudo completar');
+      return data || {};
+    };
+    const seg = (z, sel, f) => { z.querySelector(sel).onclick = (ev) => { const b = ev.target.closest('[data-f]'); if (!b) return; z.querySelectorAll(sel + ' [data-f]').forEach((x) => x.classList.toggle('on', x === b)); f(b.dataset.f); }; };
+    const wa = (tel, t) => { const n = String(tel || '').replace(/\D/g, ''); return 'https://wa.me/' + (n.length === 9 ? '56' + n : n) + '?text=' + encodeURIComponent(t || ''); };
+    function acceso(titulo, msg, tel) {
+      const d = modal('<h2>' + esc(titulo) + '</h2><p class="sub">Envíale estos datos:</p><textarea readonly rows="8">' + esc(msg) + '</textarea>' +
+        '<div class="btns"><button type="button" class="ghost" data-cerrar>Cerrar</button><button type="button" class="ghost" id="acCp">📋 Copiar</button><a class="btn" target="_blank" rel="noopener" href="' + esc(tel ? wa(tel, msg) : 'https://wa.me/?text=' + encodeURIComponent(msg)) + '">💬 WhatsApp</a></div>');
+      d.querySelector('#acCp').onclick = async () => { try { await navigator.clipboard.writeText(msg); toast('📋 Copiado'); } catch (e) { toast(msg); } };
+    }
+    async function soporte(cuenta, nombre, texto) {
+      const t = await pedir('💬 Mensaje para ' + nombre, { largo: true, si: 'Enviar', max: 1000, valor: texto || '', texto: 'Llega a su chat de soporte y la respuesta queda en CM → Mensajes.' }); if (!t || !t.trim()) return false;
+      try { await rpc('cfx_chat_iniciar', { p_cuenta: cuenta, p_texto: t.trim(), p_nombre: nombre, p_rol: 'negocio' }); ctx.enviar(); toast('💬 Enviado a ' + nombre); return true; } catch (x) { toast('⚠️ ' + x.message); return false; }
+    }
+    const ctx = { a, c, rpc, fn, seg, wa, acceso, soporte, enviar: () => { try { c.functions.invoke('enviar').catch(() => {}); } catch (e) { /* sin función */ } }, esc, toast, modal, confirmar, pedir, fecha, fechaHora, dias, hace, plata, item, vacio, fallo, tarjetaLink, qrCanvas };
     const L = (P[a.id] ? P[a.id](ctx) : []).concat([seccionLink(ctx)]);
     el.innerHTML = '<div class="titulo-v"><button type="button" class="small ghost" id="pnVolver">← Apps</button><h2 class="grow" style="margin:0 0 0 8px">🧭 ' + esc(a.nombre.split(' ·')[0]) + '</h2></div><div id="pnZ"></div>';
     el.querySelector('#pnVolver').onclick = volver;
