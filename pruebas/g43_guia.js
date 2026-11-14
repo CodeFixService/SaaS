@@ -70,6 +70,14 @@ const CAP = __dirname + '/capturas/Aplicaciones/';
     const iw = await q.evaluate(() => { const b = [...document.querySelectorAll('dialog[open] .ca-it')].findIndex((x) => /WhatsApp/.test(x.textContent)); return b; });
     await q.click('dialog[open] .ca-it:nth-child(' + (iw + 1) + ') [data-i]'); await q.waitForTimeout(1600);
     ok(await q.evaluate(() => !!document.querySelector('#eTel.cfx-guia-foco')), '🧭 Guía del menú → WhatsApp directo al campo');
+    // Políticas: RUT obligatorio (lo pide la ley) → la guía abre el campo RUT
+    await q.goto(t.base + '/'); await q.waitForTimeout(2500);
+    await q.evaluate(() => window.CFX_AYUDA.guia()); await q.waitForTimeout(500);
+    const ip = await q.evaluate(() => [...document.querySelectorAll('dialog[open] .ca-it')].findIndex((x) => /Políticas/.test(x.textContent)));
+    await q.click('dialog[open] .ca-it:nth-child(' + (ip + 1) + ') [data-i]'); await q.waitForTimeout(2500);
+    const pr = await q.evaluate(() => ({ m: !!document.querySelector('#pf-rut.cfx-guia-foco'), tip: (document.querySelector('.cfx-guia-tip') || {}).textContent || '' }));
+    ok(pr.m && /obligatorio/.test(pr.tip), 'Políticas → campo RUT marcado y dice que es obligatorio');
+    await t.foto('g43_rut', q);
     // 2) ✕: recargar no la vuelve a sacar; cerrar sesión y entrar → vuelve
     await q.goto(t.base + '/'); await q.waitForTimeout(2500);
     await q.click('#hoyFaltaX'); await q.waitForTimeout(300);
