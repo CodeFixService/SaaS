@@ -3,7 +3,8 @@
 const { Pool } = require('pg');
 
 const b64u = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
-const jwt = (sub, email, amr) => b64u({ alg: 'HS256', typ: 'JWT' }) + '.' + b64u({ sub, email, role: 'authenticated', aud: 'authenticated', iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 36000, amr: [{ method: amr || 'password', timestamp: Math.floor(Date.now() / 1000) }] }) + '.firma';
+// session_id: como Supabase, uno por inicio de sesión (se mantiene al refrescar el token).
+const jwt = (sub, email, amr, sid) => b64u({ alg: 'HS256', typ: 'JWT' }) + '.' + b64u({ sub, email, session_id: sid || undefined, role: 'authenticated', aud: 'authenticated', iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 36000, amr: [{ method: amr || 'password', timestamp: Math.floor(Date.now() / 1000) }] }) + '.firma';
 const qi = (s) => '"' + String(s).replace(/"/g, '""') + '"';
 
 function crear(opts) {
@@ -238,7 +239,8 @@ function crear(opts) {
   }
 
   // ---- auth ----
-  const sesion = (u, amr) => ({ access_token: jwt(u.id, u.email, amr), token_type: 'bearer', expires_in: 36000, expires_at: Math.floor(Date.now() / 1000) + 36000, refresh_token: 'r-' + u.id,
+  const sids = {};
+  const sesion = (u, amr, nueva = true) => ({ access_token: jwt(u.id, u.email, amr, (nueva || !sids[u.id]) ? (sids[u.id] = require('crypto').randomUUID()) : sids[u.id]), token_type: 'bearer', expires_in: 36000, expires_at: Math.floor(Date.now() / 1000) + 36000, refresh_token: 'r-' + u.id,
     user: { id: u.id, email: u.email, aud: 'authenticated', role: 'authenticated', app_metadata: { provider: 'email' }, user_metadata: u.raw_user_meta_data || {}, created_at: new Date().toISOString(), email_confirmed_at: new Date().toISOString() } });
   async function crearUsuario(email, pass, data) {
     email = String(email || '').trim().toLowerCase();
@@ -268,7 +270,7 @@ function crear(opts) {
           const id = String(body.refresh_token || '').replace(/^r-/, '');
           const r = await su('select id, email, raw_user_meta_data from auth.users where id::text = $1', [id]);
           if (!r.length) return json(400, { error: 'invalid_grant', error_description: 'Invalid Refresh Token', msg: 'Invalid Refresh Token' });
-          return json(200, sesion(r[0]));
+          return json(200, sesion(r[0], undefined, false));
         }
         const r = await su('select u.id, u.email, u.raw_user_meta_data from auth.users u join auth.claves m on m.email = u.email where u.email = $1 and m.pass = $2', [String(body.email || '').toLowerCase(), body.password]);
         if (!r.length) return json(400, { code: 400, error_code: 'invalid_credentials', error: 'invalid_grant', error_description: 'Invalid login credentials', msg: 'Invalid login credentials' });
@@ -287,7 +289,7 @@ function crear(opts) {
         if (metodo === 'PUT' && body && body.data) await su('update auth.users set raw_user_meta_data = raw_user_meta_data || $2 where id = $1', [user.sub, JSON.stringify(body.data)]);
         const r = await su('select id, email, raw_user_meta_data from auth.users where id = $1', [user.sub]);
         if (!r.length) return json(403, { code: 403, error_code: 'user_not_found', msg: 'User from sub claim in JWT does not exist' });
-        return json(200, sesion(r[0]).user);
+        return json(200, sesion(r[0], undefined, false).user);
       }
       // Enlace mágico (verifyOtp con token_hash): en las pruebas el token es 'th-<id del usuario>'.
       if (p === '/auth/v1/verify' && body && /^th-/.test(body.token_hash || '')) {

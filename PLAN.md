@@ -160,6 +160,8 @@ Regla: FREE = lo que hace que la usen todos los días y la recomienden (sin lím
 - 🛍️ Despega: se mantiene lo de hoy (13 módulos + 3 packs) y suma de la lista G39 (📦 stock, 🎁 gift cards, 🚚 courier, 🔁 suscripciones, 🏬 sucursales).
 - Hoy (revisado 14/11): Barbería, Billetera, BiciTaller y Estaciona tienen modulos.js pero NO venden ninguno (falta cfx_modulos_app + candado en cada pantalla) → se hace en G39, junto con R1 (Pro vence por fecha) en esas 4.
 - G42k 📌 Títulos fijos (núcleo, todas menos Cerebro): el título de cada sección queda pegado arriba (position: sticky bajo cabecera/menú) y solo se mueve lo de adentro; al llegar a la sección siguiente, su título reemplaza al anterior. Compacto en 320 px (1 línea, …), fondo opaco en claro/oscuro. Lo apilado de hoy no se toca.
+- G43 ✅ (14/11, núcleo 2.73) 🧭 Guía directa: cada "Hacerlo" lleva AL CAMPO (lo marca + "💡 Cómo se hace" motivador; también entre páginas). Tarjeta "🚀 Termina de armar tu negocio" en el Resumen (no ventana encima): 1 vez por inicio de sesión (✕ = hasta volver a entrar; recargar no la saca), "No mostrar más" = nunca. 👆 Pistas animadas de deslizar (barras, pantallas, avisos, apilado; máx. 2 veces). Despega: "Tu tienda en 5 minutos" directo a cada campo; sin tarjetas repetidas de Instalar/Notificaciones. Pruebas: g43_guia.js, g43_taller.js. Falta por app → su APP.md (paso 2).
+- G43b ⏳ Despega SQL: el paso "Políticas" de la guía exige RUT para marcarse listo (choca con G31) → en la próxima bd marcar listo solo con la política de cambios.
 - ⛔ CM NO lleva módulos (es de Josué): todo incluido.
 
 ## ORDEN NUEVO (Josué 14/11/2026)
