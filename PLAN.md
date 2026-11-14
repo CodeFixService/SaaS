@@ -170,7 +170,9 @@ Regla: FREE = lo que hace que la usen todos los días y la recomienden (sin lím
 - ⛔ CM NO lleva módulos (es de Josué): todo incluido.
 
 ## ORDEN NUEVO (Josué 14/11/2026)
-▶️ SIGUIENTE: ✅ 1e listo → sigue 1f (revisión celular de CM y Despega en 320 px y oscuro con pruebas/celular.js + central.js; INDUCCION.md; APP.md de SaaS y Aplicaciones).
+▶️ SIGUIENTE: ✅ 1f listo → sigue 2) Barbería (leer su APP.md → núcleo + revisión celular + G39 módulos + R1).
+- ✅ 1f (14/11, CM 5.09): celular.js ahora revisa también el CM (`node celular.js saas Aplicaciones`): 320/360, claro/oscuro, público/usuario/admin del CM y público/negocio/cliente/admin de Despega → 0 hallazgos. 🐞 ⚙️ Funcionamiento: en CM → Apps "Respaldar todas" y "🧹 Respaldo y limpieza" salían SIN ícono (el CM tiene su propia lista en shared/app.js sin "bajar"/"escoba") → ahora App.ico toma del núcleo (iconos.js) lo que falte. Prueba: pruebas/g1f_iconos_cm.js. Nuevos: SaaS/INDUCCION.md, SaaS/APP.md y Aplicaciones/APP.md con mapa completo.
+  · Visto, no es error de la app: el simulador local da 409 al re-subir respaldos (fichapro.json/caja.json) en la misma sesión; en Supabase se sube con upsert.
 - ✅ 1d G37 🧠 (núcleo 2.76 · CM 5.06 · Despega 6.22 · Barbería 2.91 · Billetera 1.21.54 · BiciTaller 2.77 · Estaciona 2.14.56; sin SQL → bd igual; prueba pruebas/g37_comprobante.js ANCHO=320):
   · nucleo/comprobante.js + impresora.js (OPCIONAL en sincronizar.py: Aplicaciones y saas). Hoja propia (.cfx-comp, claro/oscuro), c.titulo opcional, la app da logo/firma con window.CFX_COMPROBANTE_DATOS (Despega: shared/cuenta.js).
   · CM → Pagos → Todos → pago aprobado → 🧾 Comprobante (de pago): WhatsApp, 🖨️ Bluetooth, PDF, Copiar. Sin RUT = "No es boleta electrónica" (G31).

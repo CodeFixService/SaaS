@@ -34,7 +34,7 @@ perfiles, espacios, items, pedidos/pagos, planes, config, textos, notificaciones
 
 ## Versiones
 `shared/config.js` VERSION/DB_VERSION + `version.json` (notas = SOLO categorías G44b) + `instalar.sql` l.147.
-Ahora: app 5.08 · bd 4.32 · función 3.2 · núcleo 2.78.
+Ahora: app 5.09 · bd 4.32 · función 3.2 · núcleo 2.78.
 
 ## Reglas propias
 - Bootstrap: solo utilidades (`vendor/`), nunca el completo (choca .btn/.card/.modal/.row/.toast). tema.css mapea --bs-* → --cfx-*.

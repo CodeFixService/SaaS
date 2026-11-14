@@ -234,7 +234,7 @@
     control: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.8 12.2l2.2 2.2 4.4-4.6"/>',  // G42h: Control (escudo con visto), distinto de Ajustes
     cerebro: '<path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 5 2V4.5A2.5 2.5 0 0 0 9 4zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-5 2V4.5A2.5 2.5 0 0 1 15 4z"/>'
   };
-  const ico = (n, s) => '<svg class="ic" width="' + (s || 20) + '" height="' + (s || 20) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (IC[n] || '') + '</svg>';
+  const ico = (n, s) => '<svg class="ic" width="' + (s || 20) + '" height="' + (s || 20) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (IC[n] || ((global.CodeFixIconos && global.CodeFixIconos.svg(n)) || '').replace(/^<svg[^>]*>|<\/svg>$/g, '')) + '</svg>';  // si falta aquí, lo toma del núcleo (iconos.js)
   // Pone los íconos en los elementos con data-ico (menús fijos en el HTML).
   const ponerIconos = (raiz) => (raiz || document).querySelectorAll('[data-ico]').forEach((n) => { n.innerHTML = ico(n.dataset.ico, Number(n.dataset.tam) || 22); });
 
