@@ -159,3 +159,10 @@ Regla: FREE = lo que hace que la usen todos los días y la recomienden (sin lím
 - 🅿️ Estaciona (marketplace) · FREE: buscar y arrendar, 1 publicación, chat. PRO: 10 publicaciones (ya existe). 🧩: 📅 arriendo mensual/abono recurrente · ⭐ destacar en el mapa · ⏰ recordatorios de término · 🔔 alerta "se liberó cerca" · ⭐ calificaciones.
 - 🛍️ Despega: se mantiene lo de hoy (13 módulos + 3 packs) y suma de la lista G39 (📦 stock, 🎁 gift cards, 🚚 courier, 🔁 suscripciones, 🏬 sucursales).
 - Hoy (revisado 14/11): Barbería, Billetera, BiciTaller y Estaciona tienen modulos.js pero NO venden ninguno (falta cfx_modulos_app + candado en cada pantalla) → se hace en G39, junto con R1 (Pro vence por fecha) en esas 4.
+- G42k 📌 Títulos fijos (núcleo, todas menos Cerebro): el título de cada sección queda pegado arriba (position: sticky bajo cabecera/menú) y solo se mueve lo de adentro; al llegar a la sección siguiente, su título reemplaza al anterior. Compacto en 320 px (1 línea, …), fondo opaco en claro/oscuro. Lo apilado de hoy no se toca.
+- ⛔ CM NO lleva módulos (es de Josué): todo incluido.
+
+## ORDEN NUEVO (Josué 14/11/2026)
+1) CM + Despega Pyme QUEDAN LISTOS Y BACANES: pendientes viejos + G42 (a-k) + G37 + revisión celular. Lo universal se hace EN EL NÚCLEO en ese momento (no doble pega) y se sincroniza a las 6 apps.
+2) Cada APP.md tiene "🧠 Del núcleo: falta aplicar aquí" (lo sincronizado que esa app aún no usa: botón, ventanas, títulos fijos, ordenar, datos tapados, comprobante/impresora/QR…). Al retomar una app: leer su APP.md → aplicar eso + G39 (módulos) + R1.
+3) Luego, una a una: Barbería → BiciTaller → Billetera → Estaciona. Después G38 y AL FINAL G32 e) NFC.
