@@ -162,26 +162,15 @@
         };
         feriados().catch(() => {});
       } },
-      { k: 'push', ico: '🔔', t: 'Notificaciones', d: 'Claves push y servidor', abrir: async (z) => {
+      { k: 'servidor', ico: '🛰️', t: 'Servidor', d: 'Probar la función y avisos de prueba', abrir: async (z) => {
         let cfg = {}; try { cfg = await rpc('config_publica'); } catch (e) { /* nada */ }
-        z.innerHTML = '<div class="card"><p>' + (cfg.vapid_public ? '✅ Claves push configuradas' : '⚠️ Falta generar las claves push') + '</p><div class="btns"><button type="button" class="small ghost" id="puV">' + (cfg.vapid_public ? 'Regenerar claves push' : 'Generar claves push') + '</button>' +
+        z.innerHTML = '<div class="card"><p>' + (cfg.vapid_public ? '✅ Claves push configuradas' : '⚠️ Falta generar las claves push') + '</p><p class="sub">Las claves push se crean una sola vez en Control → 🔔 Notificaciones.</p><div class="btns">' +
           '<button type="button" class="small ghost" id="puP">🩺 Probar servidor</button><button type="button" class="small ghost" id="puF">📋 Copiar código de la función "enviar"</button></div><p class="sub" id="puR"></p></div>';
-        z.querySelector('#puV').onclick = async () => {
-          if (cfg.vapid_public && !(await confirmar('Todos tendrán que volver a activar las notificaciones. ¿Seguir?', 'Regenerar'))) return;
-          try { const kp = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']), b64u = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-            await rpc('admin_set_secret', { p_nombre: 'vapid_private', p_valor: (await crypto.subtle.exportKey('jwk', kp.privateKey)).d }); await rpc('admin_set_secret', { p_nombre: 'vapid_public', p_valor: b64u(await crypto.subtle.exportKey('raw', kp.publicKey)) });
-            toast('🔔 Claves push listas'); L.find((x) => x.k === 'push').abrir(z); } catch (x) { toast('⚠️ ' + x.message); }
-        };
         z.querySelector('#puP').onclick = async () => { const r = z.querySelector('#puR'); try { const x = await funcion({ accion: 'ping' }); r.textContent = '✅ Conectado: función "enviar" v' + x.version + (x.servicio ? '' : ' · falta clave de servicio'); } catch (x) { r.textContent = '❌ ' + x.message; } };
         z.querySelector('#puF').onclick = async () => {
           try { const t = await (await fetch('https://raw.githubusercontent.com/CodeFixService/Emprendedor/main/supabase/functions/enviar/corto.ts?t=' + Date.now(), { cache: 'no-store' })).text(); if (!/^import /m.test(t)) throw new Error('No se pudo leer corto.ts');
             await navigator.clipboard.writeText(t.split('\n').filter((x) => !x.startsWith('--') && !x.startsWith('//')).join('\n').trim()); toast('📋 Código copiado: pégalo en Edge Functions → enviar → Deploy'); } catch (x) { toast('No se pudo copiar: ' + x.message); }
         };
-      } },
-      { k: 'auditoria', ico: '📜', t: 'Registro de cambios', d: 'Lo que se hizo en el panel', abrir: async (z) => {
-        const l = await rpc('admin_auditoria').catch(() => []);
-        z.innerHTML = '<ul class="list">' + (l.map((x) => '<li><div class="grow"><b>' + esc(x.accion + (x.negocio ? ' · ' + x.negocio : '')) + '</b><div class="sub">' + esc(JSON.stringify(x.detalle || {}).slice(0, 160)) + '</div></div><span class="sub">' + fechaHora(x.at) + '</span></li>').join('') || '<li class="empty">Sin registros.</li>') + '</ul>';
-        if (global.CFX_AJUSTES && global.CFX_AJUSTES.registro) global.CFX_AJUSTES.registro(z, (fn, a) => rpc(fn, a), { recargar: () => L.find((x) => x.k === 'auditoria').abrir(z) });
       } }
     ];
     return L;

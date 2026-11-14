@@ -18,8 +18,9 @@ Lo que YA está configurado no se toca (links de pago que pegaste, precios guard
    - 🔄 El **CM** se actualiza solo apenas se publica.
 8. 📋 **CM 5.02 · Despega 6.18**: en **Resumen → Empresas** ahora hay solo **🧹 Limpiar** (antes "Limpiar y abrir"). **Ver app**, **🧭 Panel**, **Respaldo y limpieza** y **Respaldar todas** están en **CM → Apps**. Control tiene ícono propio (escudo). Correos y Planes ya no salen cortados a mitad. 🧹 Limpiar → 🚀 Liberar (sin base ni Edge). Tus **clientes** ven "🔄 Versión nueva" con el botón **🔄 Actualizar** recién cuando tú liberas (no se instala sola).
 
-## 2 · Correo (tú, si no está) — sin esto no salen los correos al comprador
-**CM → Apps → Despega Pyme → 🧭 Panel → 🛰️ Servidor y correo** (G34: el panel del admin de Despega está en el CM; si entras a Despega como admin te lleva al CM): Gmail + contraseña de aplicación (myaccount.google.com → Seguridad → Contraseñas de aplicaciones). Límite ~450 correos al día.
+## 2 · Correo (tú, si no está) — G42f: 1 solo Gmail tuyo para todas las apps
+**CM → Control → ✉️ Correo**: tu Gmail + contraseña de aplicación (myaccount.google.com → Seguridad → Contraseñas de aplicaciones) → **Guardar en todas las apps**. Abajo, en la misma pantalla, están los botones a Supabase → SMTP de cada app (correos de entrar y cambiar clave). Límite ~450 correos al día.
+Los correos de cada tienda a SUS clientes salen con el Gmail de la tienda: **Despega → Más → 🏪 Mi tienda → ✉️ Correo de tu tienda** (lo hace cada negocio; sin él sus clientes solo reciben notificaciones).
 
 ## 3 · Precios (tú, CM → Pagos)
 - Negocio: **$3.000/mes** · Cliente Premium: **$2.000/mes**. Prueba gratis 7 días (déjala: retiene).
@@ -58,7 +59,7 @@ Lo que YA está configurado no se toca (links de pago que pegaste, precios guard
 - **Bienvenida de WhatsApp Business:** la copias en Ajustes → 📲 Vender en redes (ya viene armada con tu link).
 
 ## 7 · Lo que debe hacer CADA negocio nuevo (lo guía "Lo que me falta")
-Logo y nombre → WhatsApp → productos con foto → link de pago o ⚡ Mercado Pago → 🚚 Despacho (comunas + resto de Chile) → 📄 RUT y política de cambios → compartir el link.
+Logo y nombre → WhatsApp → productos con foto → link de pago o ⚡ Mercado Pago → 🚚 Despacho (comunas + resto de Chile) → 📄 RUT y política de cambios → ✉️ su Gmail (Mi tienda → ✉️ Correo) → compartir el link.
 
 ## 8 · Antes de abrir las ventas
 - LIMPIEZA FINAL de Órbita (tú, en Supabase de Órbita → SQL Editor): pega Aplicaciones/supabase/limpieza/1_contar.sql → Run → revisa los números → pega 2_borrar.sql → Run → Storage → cada bucket → seleccionar todo → Delete. Quedan solo los admins y la configuración.

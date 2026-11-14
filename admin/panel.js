@@ -87,11 +87,13 @@
     }
     const ctx = { a, c, rpc, fn, seg, wa, acceso, soporte, enviar: () => { try { c.functions.invoke('enviar').catch(() => {}); } catch (e) { /* sin función */ } }, esc, toast, modal, confirmar, pedir, fecha, fechaHora, dias, hace, plata, item, vacio, fallo, tarjetaLink, qrCanvas };
     const L = (P[a.id] ? P[a.id](ctx) : []).concat([seccionLink(ctx)]);
-    el.innerHTML = '<div class="titulo-v"><button type="button" class="small ghost" id="pnVolver">← Apps</button><h2 class="grow" style="margin:0 0 0 8px">🧭 ' + esc(a.nombre.split(' ·')[0]) + '</h2></div><div id="pnZ"></div>';
+    el.innerHTML = '<div class="titulo-v"><button type="button" class="small ghost" id="pnVolver">← Apps</button><h2 class="grow una" style="margin:0 0 0 8px;min-width:0">🧭 ' + esc(a.nombre.split(' ·')[0]) + '</h2></div><div id="pnZ"></div>';
     el.querySelector('#pnVolver').onclick = volver;
-    const nota = P[a.id] ? '<p class="sub">Panel de administrador de esta app. Los cambios se guardan en su base al tiro.</p>'
+    const nota = P[a.id] ? '<p class="sub">Solo lo propio de esta app (se guarda al tiro). Lo común a todas (Premium, avisos, notificaciones, correo, registro…) está en Control.</p>'
       : '<p class="sub">Esta app todavía tiene su panel propio (llega aquí en su turno). Ábrelo en Resumen → Empresas → Panel de la app.</p>';
-    global.CFX_AJUSTES.montar(el.querySelector('#pnZ'), L, { arriba: nota });
+    // G42f: ↗ Abrir app arriba (la app en otra pestaña), sin apretar el título.
+    const abrirApp = /^https?:\/\//.test(a.web || '') ? '<div class="btns" style="margin:0 0 6px"><a class="btn small" id="pnAbrir" target="_blank" rel="noopener" href="' + esc(a.web) + '">↗ Abrir app</a></div>' : '';
+    global.CFX_AJUSTES.montar(el.querySelector('#pnZ'), L, { arriba: abrirApp + nota });
   }
   global.PanelApps = { registrar, tiene, abrir, qrCanvas };
 })(window);

@@ -9,6 +9,8 @@ const { abrir } = require('./h');
     await t.sim.su("update public.profiles set slug = 'ana', telefono = '56912345678', plan = 'pro', pro_until = now() + interval '30 days', despacho = $2, perfil = $3 where id = $1",
       [id, JSON.stringify({ retiro: true, gratis_desde: 0, zonas: [{ comuna: 'Ñuñoa', precio: 2500 }], resto: { modo: 'fijo', precio: 6000 } }), JSON.stringify({ rut: '11111111-1', razon: 'Ana SpA', cambios: 'Cambios hasta 30 días con boleta.' })]);
     await t.sim.su("insert into public.app_secrets (name, value) values ('gmail_user', 'x@gmail.com') on conflict (name) do update set value = excluded.value");
+    // G42f: el correo al comprador sale con el Gmail de la tienda (Mi tienda → ✉️ Correo), no con el de CodeFix.
+    await t.sim.su("insert into public.negocio_correo (negocio_id, usuario, clave) values ($1, 'ana@gmail.com', 'abcdefghijklmnop')", [id]);
     await t.sim.su("insert into public.catalog_items (owner_id, client_key, nombre, precio, stock) values ($1, 'pol', 'Polera estampada de algodón orgánico', 12990, 10)", [id]);
     const p = t.page;
     await p.goto(t.base + '/t/?s=ana'); await p.waitForTimeout(2500);

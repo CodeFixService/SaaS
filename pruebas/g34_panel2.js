@@ -66,7 +66,7 @@ const REPOS = { SaaS: '/home/user/SaaS', Aplicaciones: '/home/user/Aplicaciones'
     const pedirOk = async (v) => { await p.fill('dialog[open] #pd', v); await p.click('dialog[open] #pdOk'); await p.waitForTimeout(1500); };
 
     // 💈 Barbería
-    await panel('barberia', ['resumen', 'barberias', 'usuarios', 'registro_abierto', 'limpieza', 'reglas', 'push', 'calificaciones', 'socios', 'auditoria']);
+    await panel('barberia', ['resumen', 'barberias', 'usuarios', 'registro_abierto', 'limpieza', 'reglas', 'servidor', 'calificaciones', 'socios']);
     await hoja('barberias');
     assert(await p.locator('.cfx-hm-zona', { hasText: 'Barbería Ana' }).count() === 1, 'barbería listada');
     await p.click('.cfx-hm-zona [data-ver]'); await p.waitForTimeout(1500);
@@ -87,12 +87,12 @@ const REPOS = { SaaS: '/home/user/SaaS', Aplicaciones: '/home/user/Aplicaciones'
     await hoja('reglas'); await p.fill('.cfx-hm-zona [data-rg=dias_regalo]', '9'); await p.click('.cfx-hm-zona #rgOk'); await p.waitForTimeout(1500);
     await hoja('reglas'); assert(await p.inputValue('.cfx-hm-zona [data-rg=dias_regalo]') === '9', 'regla de Barbería guardada y se ve al reabrir');
     await hoja('registro_abierto'); assert(/\/registro\/$/.test(await p.inputValue('.cfx-hm-zona input[readonly]')), 'link de registro de barberías');
-    await hoja('push'); await p.click('.cfx-hm-zona #puP'); await p.waitForTimeout(1000); assert(/Conectado/.test(await p.textContent('.cfx-hm-zona #puR')), 'ping a la función "enviar" de Barbería');
+    await hoja('servidor'); await p.click('.cfx-hm-zona #puP'); await p.waitForTimeout(1000); assert(/Conectado/.test(await p.textContent('.cfx-hm-zona #puR')), 'ping a la función "enviar" de Barbería');
     assert(await t.anchoOk(), 'Barbería sin scroll horizontal (360 px)');
     await volver();
 
     // 🚲 BiciTaller
-    await panel('bicitaller', ['resumen', 'talleres', 'clientes', 'registro_abierto', 'limpieza', 'reglas', 'push', 'calificaciones', 'socios', 'auditoria']);
+    await panel('bicitaller', ['resumen', 'talleres', 'clientes', 'registro_abierto', 'limpieza', 'reglas', 'servidor', 'calificaciones', 'socios']);
     await hoja('talleres');
     await p.evaluate((id) => { const s = document.querySelector('.cfx-hm-zona select[data-prem="' + id + '"]'); s.value = '30'; s.dispatchEvent(new Event('change', { bubbles: true })); }, tid); await p.waitForTimeout(1500);
     const ph = (await tal.su('select premium_hasta from public.talleres where id = $1', [tid]))[0].premium_hasta;
@@ -102,11 +102,11 @@ const REPOS = { SaaS: '/home/user/SaaS', Aplicaciones: '/home/user/Aplicaciones'
     await t.sinModales();
     await hoja('reglas'); await p.fill('.cfx-hm-zona [data-c=dias_saldo]', '45'); await p.click('.cfx-hm-zona #rgOk'); await p.waitForTimeout(1500);
     await hoja('reglas'); assert(await p.inputValue('.cfx-hm-zona [data-c=dias_saldo]') === '45', 'regla de BiciTaller guardada y se ve al reabrir');
-    await hoja('push'); await p.click('.cfx-hm-zona #puP'); await p.waitForTimeout(1000); assert(/Conectado/.test(await p.textContent('.cfx-hm-zona #puR')), 'ping a la función "servidor" de BiciTaller');
+    await hoja('servidor'); await p.click('.cfx-hm-zona #puP'); await p.waitForTimeout(1000); assert(/Conectado/.test(await p.textContent('.cfx-hm-zona #puR')), 'ping a la función "servidor" de BiciTaller');
     await volver();
 
     // 🅿️ Estaciona
-    await panel('estaciona', ['resumen', 'verificaciones', 'denuncias', 'usuarios', 'estacionamientos', 'reglas', 'push', 'mant', 'auditoria']);
+    await panel('estaciona', ['resumen', 'verificaciones', 'denuncias', 'usuarios', 'estacionamientos', 'reglas', 'servidor', 'mant']);
     await hoja('usuarios'); assert(await p.locator('.cfx-hm-zona', { hasText: 'Pedro' }).count() === 1, 'usuario listado');
     await p.evaluate((id) => { const s = document.querySelector('.cfx-hm-zona [data-id="' + id + '"] select[data-prem]'); s.value = '30'; s.dispatchEvent(new Event('change', { bubbles: true })); }, eu.id); await p.waitForTimeout(1500);
     const eph = (await est.su('select premium_hasta from public.perfiles where id = $1', [eu.id]))[0].premium_hasta;
@@ -116,7 +116,7 @@ const REPOS = { SaaS: '/home/user/SaaS', Aplicaciones: '/home/user/Aplicaciones'
     await volver();
 
     // 👛 Billetera
-    await panel('billetera', ['resumen', 'negocios', 'limpieza', 'conexiones', 'reglas', 'push', 'auditoria']);
+    await panel('billetera', ['resumen', 'negocios', 'limpieza', 'conexiones', 'reglas', 'servidor']);
     await hoja('negocios'); assert(await p.locator('.cfx-hm-zona', { hasText: 'Almacén Ana' }).count() === 1, 'billetera listada');
     await p.click('.cfx-hm-zona [data-id="' + neg + '"]'); await p.waitForTimeout(1200);
     await p.click('dialog[open] [data-a=dias]'); await p.waitForTimeout(300); await pedirOk('30');

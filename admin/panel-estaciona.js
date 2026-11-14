@@ -144,16 +144,10 @@
         z.querySelector('#rgOk').onclick = async (ev) => { const p = {}; z.querySelectorAll('[data-rg]').forEach((i) => { if (i.value !== '') p[i.dataset.rg] = +i.value; });
           ev.target.disabled = true; try { await rpc('admin_guardar_config', { p }); toast('✅ Reglas guardadas'); } catch (x) { toast('⚠️ ' + x.message); } ev.target.disabled = false; };
       } },
-      { k: 'push', ico: '🔔', t: 'Notificaciones', d: 'Claves push y función "enviar"', abrir: async (z) => {
+      { k: 'servidor', ico: '🛰️', t: 'Servidor', d: 'Probar la función y avisos de prueba', abrir: async (z) => {
         let a; try { a = await rpc('admin_config'); } catch (x) { return fallo(z, x); }
-        z.innerHTML = '<div class="card"><p>' + (a.vapid_public && a.push ? '✅ Claves configuradas.' : 'Genera las claves una sola vez para enviar notificaciones al celular.') + '</p>' +
-          '<div class="btns"><button type="button" class="small ghost" id="puV">' + (a.vapid_public ? 'Regenerar claves' : 'Generar claves push') + '</button><button type="button" class="small ghost" id="puP">🩺 Probar función "enviar"</button><button type="button" class="small ghost" id="puY">Prueba: aviso solo a mí</button></div><p class="sub" id="puR"></p></div>';
-        z.querySelector('#puV').onclick = async () => {
-          if (a.vapid_public && !(await confirmar('Si regeneras las claves, cada persona deberá activar de nuevo las notificaciones. ¿Seguir?', 'Regenerar'))) return;
-          try { const k = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']), raw = new Uint8Array(await crypto.subtle.exportKey('raw', k.publicKey));
-            const pub = btoa(String.fromCharCode(...raw)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''), priv = (await crypto.subtle.exportKey('jwk', k.privateKey)).d;
-            await rpc('admin_guardar_ajustes', { p: { vapid_public: pub, vapid_private: priv } }); toast('🔔 Claves creadas'); L.find((x) => x.k === 'push').abrir(z); } catch (x) { toast('⚠️ ' + x.message); }
-        };
+        z.innerHTML = '<div class="card"><p>' + (a.vapid_public && a.push ? '✅ Claves configuradas.' : 'Genera las claves una sola vez para enviar notificaciones al celular.') + '</p><p class="sub">Las claves push se crean una sola vez en Control → 🔔 Notificaciones.</p>' +
+          '<div class="btns"><button type="button" class="small ghost" id="puP">🩺 Probar función "enviar"</button><button type="button" class="small ghost" id="puY">Prueba: aviso solo a mí</button></div><p class="sub" id="puR"></p></div>';
         z.querySelector('#puP').onclick = async () => { const r = z.querySelector('#puR'); try { const x = await funcion('ping'); r.textContent = '✅ Conectado: función "enviar" v' + x.version + (x.servicio ? ' lista' : ' sin clave de servidor'); } catch (x) { r.textContent = '❌ ' + x.message; } };
         z.querySelector('#puY').onclick = async () => { try { await rpc('admin_prueba_push'); const r = await funcion('push'); toast('Push enviados: ' + (r.enviados || 0) + (r.error ? ' · ' + r.error : '')); } catch (x) { toast('⚠️ ' + x.message); } };
       } },
@@ -162,11 +156,6 @@
         z.innerHTML = '<div class="card"><p class="sub">Los mensajes se borran solos a los 30 días y las fotos se guardan comprimidas. Borra ahora mensajes y comprobantes viejos y fotos que ya no se usan, según las reglas.</p><div class="btns"><button type="button" id="mtL">🧹 Limpiar ahora</button></div></div>' +
           '<div class="card"><h2>🗄️ Base de datos</h2><p class="sub">Instalada: <b>' + esc(v) + '</b>. Se actualiza sola cuando hay una versión nueva (máximo 10 minutos, no borra datos).</p></div>';
         z.querySelector('#mtL').onclick = async (ev) => { ev.target.disabled = true; try { const x = await funcion('limpiar'); toast('Listo: ' + (x.borrados || 0) + ' archivos borrados'); } catch (x) { toast('⚠️ ' + x.message); } ev.target.disabled = false; };
-      } },
-      { k: 'auditoria', ico: '📜', t: 'Registro de cambios', d: 'Lo que se hizo en el panel', abrir: (z) => {
-        z.innerHTML = '';
-        if (global.CFX_AJUSTES && global.CFX_AJUSTES.registro) return global.CFX_AJUSTES.registro(z, (fn, a) => rpc(fn, a), { lista: true });
-        z.innerHTML = vacio('Sin registros.');
       } }
     ];
     return L;

@@ -34,7 +34,7 @@ const REPOS = { SaaS: '/home/user/SaaS', Aplicaciones: '/home/user/Aplicaciones'
     assert(await p.locator('[data-app=contenido] [data-a=panel]').count() === 0, 'Cerebro sin panel');
     await card.locator('[data-a=panel]').click(); await p.waitForTimeout(1200);
     const filas = await p.locator('.cfx-aj [data-k]').evaluateAll((l) => l.map((x) => x.dataset.k));
-    assert(['resumen', 'actividad', 'negocios', 'registro_abierto', 'inactivas', 'clientes', 'reglas', 'servidor', 'marca', 'auditoria', 'link'].every((k) => filas.includes(k)), 'secciones: ' + filas.join(','));
+    assert(['resumen', 'actividad', 'negocios', 'registro_abierto', 'inactivas', 'clientes', 'reglas', 'servidor', 'marca', 'link'].every((k) => filas.includes(k)), 'secciones: ' + filas.join(','));
     await t.foto('g34_panel_grilla'); await p.screenshot({ path: __dirname + '/capturas/saas/g34_panel_arriba.png' });
     const app_url = (await ap.su("select value from public.app_settings where key = 'app_url'").catch(() => [{}]))[0] || {};
     console.log('  app_url =', JSON.stringify(app_url.value || null));
@@ -73,7 +73,7 @@ const REPOS = { SaaS: '/home/user/SaaS', Aplicaciones: '/home/user/Aplicaciones'
     await hoja('servidor');
     await p.click('.cfx-hm-zona #svP'); await p.waitForTimeout(1200);
     assert(/Conectado/.test(await p.textContent('.cfx-hm-zona #svR')), 'ping a la función enviar');
-    for (const k of ['actividad', 'clientes', 'auditoria', 'marca', 'link', 'inactivas']) { await hoja(k); assert(!(await p.locator('.cfx-hm-zona .warn').count()), k + ' abre sin error'); }
+    for (const k of ['actividad', 'clientes', 'marca', 'link', 'inactivas']) { await hoja(k); assert(!(await p.locator('.cfx-hm-zona .warn').count()), k + ' abre sin error'); }
     assert(await t.anchoOk(), 'sin scroll horizontal (360 px)');
     await t.sinModales(); await p.evaluate(() => document.querySelectorAll('.cfx-hoja-m').forEach((x) => x.remove())); await p.click('#pnVolver'); await p.waitForTimeout(800);
     assert(await p.locator('[data-app=aplicaciones]').count() === 1, '← Apps vuelve a las tarjetas');

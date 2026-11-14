@@ -243,22 +243,14 @@
           ev.target.disabled = false;
         };
       } },
-      { k: 'servidor', ico: '🛰️', t: 'Servidor y correo', d: 'Función "enviar", push y Gmail', abrir: async (z) => {
+      { k: 'servidor', ico: '🛰️', t: 'Servidor', d: 'Probar la función "enviar"', abrir: async (z) => {
         z.innerHTML = '<p class="sub">Cargando…</p>';
         let s; try { s = await rpc('admin_secret_status'); } catch (x) { return fallo(z, x); }
-        z.innerHTML = '<div class="card"><h2>🛰️ Función "enviar"</h2><p class="sub">Envía las notificaciones y crea cuentas.</p><div class="btns"><button type="button" class="small" id="svP">Probar conexión</button></div><p class="sub" id="svR"></p></div>' +
-          '<div class="card"><h2>🔔 Notificaciones push</h2><p class="sub">' + (s.vapid_public && s.vapid_private ? '✅ Claves push configuradas' : '⚠️ Faltan las claves push: créalas en Control → 🔔 Notificaciones.') + '</p></div>' +
-          '<div class="card"><h2>✉️ Correo (Gmail)</h2><p class="sub">' + (s.gmail_user && s.gmail_app_password ? '✅ Gmail configurado' : '⚠️ Falta configurar Gmail') + '</p>' +
-          '<label>Tu Gmail<input id="gmU" type="email" autocomplete="off" placeholder="tucorreo@gmail.com"></label><label>Contraseña de aplicación (16 letras)<input id="gmP" autocomplete="off" data-sin-voz></label><label>Nombre del remitente<input id="gmN" maxlength="60" value="Despega Pyme"></label>' +
-          '<div class="btns"><button type="button" id="gmOk">Guardar Gmail</button></div></div>';
+        z.innerHTML = '<div class="card"><h2>🛰️ Función "enviar"</h2><p class="sub">Envía las notificaciones y correos, y crea cuentas.</p><div class="btns"><button type="button" class="small" id="svP">Probar conexión</button></div><p class="sub" id="svR"></p></div>' +
+          '<p class="sub">' + (s.vapid_public && s.vapid_private ? '✅ Claves push listas' : '⚠️ Faltan las claves push') + ' (Control → 🔔 Notificaciones) · ' + (s.gmail_user && s.gmail_app_password ? '✅ Correo de CodeFix listo' : '⚠️ Falta el correo de CodeFix') + ' (Control → ✉️ Correo).</p>';
         z.querySelector('#svP').onclick = async () => { const o = z.querySelector('#svR'); o.textContent = 'Probando…';
           try { const { data, error } = await X.c.functions.invoke('enviar', { body: { accion: 'ping' } }); if (error) throw error; if (!data || !data.version) throw new Error('La función "enviar" responde, pero es una versión antigua.'); o.textContent = '✅ Conectado. Versión ' + data.version + (data.servicio ? '' : ' · ⚠️ falta la clave de servidor'); }
           catch (x) { o.textContent = '❌ ' + (x.message || x); } };
-        z.querySelector('#gmOk').onclick = async () => {
-          const u = z.querySelector('#gmU').value.trim(), p = z.querySelector('#gmP').value.replace(/\s/g, ''), n = z.querySelector('#gmN').value.trim();
-          if (!/@/.test(u) || p.length < 16) return toast('Revisa el correo y la contraseña de aplicación (16 letras)');
-          try { await rpc('admin_set_secret', { p_name: 'gmail_user', p_value: u }); await rpc('admin_set_secret', { p_name: 'gmail_app_password', p_value: p }); if (n) await rpc('admin_set_secret', { p_name: 'mail_from_name', p_value: n }); toast('✅ Gmail guardado'); L.find((x) => x.k === 'servidor').abrir(z); } catch (x) { toast('⚠️ ' + x.message); }
-        };
       } },
       { k: 'marca', ico: '🎨', t: 'Contacto y marca', d: 'WhatsApp de soporte, nombre y logo de CodeFix', abrir: async (z) => {
         z.innerHTML = '<p class="sub">Cargando…</p>';
@@ -274,15 +266,6 @@
           try { const url = await new Promise((ok, no) => { const i = new Image(); i.onload = () => { const k = Math.min(1, 160 / Math.max(i.width, i.height)), c = document.createElement('canvas'); c.width = Math.round(i.width * k); c.height = Math.round(i.height * k); c.getContext('2d').drawImage(i, 0, 0, c.width, c.height); URL.revokeObjectURL(i.src); ok(c.toDataURL('image/webp', 0.85)); }; i.onerror = no; i.src = URL.createObjectURL(f); });
             await rpc('set_mi_logo', { p_logo: url }); toast('✅ Logo guardado'); } catch (x) { toast('⚠️ ' + (x.message || 'No se pudo leer la imagen')); }
         };
-      } },
-      { k: 'auditoria', ico: '📜', t: 'Registro de cambios', d: 'Lo que se hizo en el panel', abrir: async (z) => {
-        z.innerHTML = '<p class="sub">Cargando…</p>';
-        let l; try { l = await rpc('admin_auditoria'); } catch (x) { return fallo(z, x); }
-        z.innerHTML = '<div class="btns"><button type="button" class="small ghost" data-d="30">Borrar los de +30 días</button><button type="button" class="small danger" data-d="0">Borrar todo</button></div><ul class="list">' +
-          (l.map((x) => '<li><div class="grow"><b>' + esc(x.accion) + '</b><div class="sub">' + esc(x.detalle) + '</div></div><span class="sub">' + fechaHora(x.created_at) + '</span></li>').join('') || '<li class="empty">Sin cambios registrados</li>') + '</ul>';
-        z.querySelector('.btns').onclick = async (ev) => { const b = ev.target.closest('[data-d]'); if (!b) return; const d = +b.dataset.d;
-          if (!(await confirmar(d ? '¿Borrar los cambios de hace más de ' + d + ' días?' : '¿Borrar todo el registro de cambios?', 'Borrar'))) return;
-          try { toast('🧹 Borrados: ' + await rpc('admin_limpiar_auditoria', { p_dias: d })); L.find((x) => x.k === 'auditoria').abrir(z); } catch (x) { toast('⚠️ ' + x.message); } };
       } }
     ];
     return L;

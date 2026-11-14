@@ -287,16 +287,10 @@
         z.querySelector('#rgOk').onclick = async (ev) => { const p = {}; z.querySelectorAll('[data-rg]').forEach((i) => { p[i.dataset.rg] = i.value; });
           ev.target.disabled = true; try { await rpc('admin_guardar_reglas', { p }); await cargarAj(); toast('✅ Reglas guardadas'); } catch (x) { toast('⚠️ ' + x.message); } ev.target.disabled = false; };
       } },
-      { k: 'push', ico: '🔔', t: 'Notificaciones', d: 'Claves push y servidor', abrir: async (z) => {
+      { k: 'servidor', ico: '🛰️', t: 'Servidor', d: 'Probar la función y avisos de prueba', abrir: async (z) => {
         let s = {}; try { s = await rpc('admin_secretos_estado'); } catch (e) { /* nada */ }
-        z.innerHTML = '<div class="card"><p>' + (s.vapid_public && s.vapid_private ? '✅ Claves push configuradas' : '⚠️ Falta generar las claves push (una sola vez)') + '</p>' +
-          '<div class="btns"><button type="button" class="small ghost" id="puV">' + (s.vapid_public ? 'Regenerar claves' : 'Generar claves push') + '</button><button type="button" class="small ghost" id="puP">🩺 Probar servidor</button><button type="button" class="small ghost" id="puA">Enviarme un aviso de prueba</button></div><p class="sub" id="puR"></p></div>';
-        z.querySelector('#puV').onclick = async () => {
-          if (s.vapid_public && !(await confirmar('Si regeneras las claves, todos deberán volver a activar las notificaciones.', 'Regenerar'))) return;
-          try { const kp = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']), jwk = await crypto.subtle.exportKey('jwk', kp.privateKey), raw = new Uint8Array(await crypto.subtle.exportKey('raw', kp.publicKey));
-            const b64u = (u8) => btoa(String.fromCharCode(...u8)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-            await rpc('admin_secreto', { p_name: 'vapid_private', p_value: jwk.d }); await rpc('admin_secreto', { p_name: 'vapid_public', p_value: b64u(raw) }); toast('🔔 Claves push listas'); L.find((x) => x.k === 'push').abrir(z); } catch (x) { toast('⚠️ ' + x.message); }
-        };
+        z.innerHTML = '<div class="card"><p>' + (s.vapid_public && s.vapid_private ? '✅ Claves push configuradas' : '⚠️ Faltan las claves push') + '</p><p class="sub">Las claves push se crean una sola vez en Control → 🔔 Notificaciones.</p>' +
+          '<div class="btns"><button type="button" class="small ghost" id="puP">🩺 Probar servidor</button><button type="button" class="small ghost" id="puA">Enviarme un aviso de prueba</button></div><p class="sub" id="puR"></p></div>';
         z.querySelector('#puP').onclick = async () => { const r = z.querySelector('#puR'); try { const x = await X.fn('enviar', { accion: 'ping' }); r.textContent = x.servicio ? '✅ Conectado: función "enviar" v' + x.version : '⚠️ La función responde, pero le falta la clave de servidor'; } catch (x) { r.textContent = '❌ ' + x.message; } };
         z.querySelector('#puA').onclick = async () => { try { await rpc('aviso_prueba'); X.enviar(); toast('🔔 Aviso de prueba enviado (llega a tu cuenta de Barbería)'); } catch (x) { toast('⚠️ ' + x.message); } };
       } },
@@ -333,19 +327,6 @@
           c.querySelector('[data-qr]').onclick = () => { const k = c.querySelector('[data-lk]'); if (k.innerHTML) { k.innerHTML = ''; return; }
             X.tarjetaLink(k, { titulo: '🔳 Link de ' + x.nombre, texto: 'Las barberías que se registren con este link quedan a nombre de ' + x.nombre + '.', link: linkRegistro(x.ref_codigo), archivo: 'qr-' + x.ref_codigo, mensaje: '💈 Crea gratis la app de reservas de tu barbería' }); };
         });
-      } },
-      { k: 'auditoria', ico: '📜', t: 'Registro de cambios', d: 'Lo que se hizo en el panel', abrir: async (z) => {
-        let l; try { l = await rpc('admin_auditoria'); } catch (x) { return fallo(z, x); }
-        let fl = 'todo';
-        const pintar = () => {
-          const f = l.filter((a) => fl === 'todo' || (fl === 'socios' && a.rol === 'socio') || (fl === 'borrados' && /Eliminar|Limpieza|borrada|Quitar|Suspender/.test(a.accion)));
-          z.innerHTML = '<p class="sub">Todo lo que hacen tú, tus socios y los dueños al eliminar cuentas, con quién y cuándo.</p><div class="seg" id="auF"><button type="button" data-f="todo">Todo</button><button type="button" data-f="socios">🤝 Socios</button><button type="button" data-f="borrados">🗑️ Borrados y cortes</button></div>' +
-            '<ul class="list">' + (f.map((a) => '<li><div class="grow"><b>' + esc(a.accion) + '</b> <span class="sub">' + esc(a.detalle) + '</span><div class="sub">por ' + esc(a.quien) + (a.rol === 'socio' ? ' <span class="pill">socio</span>' : '') + '</div></div><span class="sub">' + fechaHora(a.created_at) + '</span></li>').join('') || '<li class="empty">Nada por aquí.</li>') + '</ul>';
-          z.querySelectorAll('#auF [data-f]').forEach((b) => b.classList.toggle('on', b.dataset.f === fl));
-          X.seg(z, '#auF', (v) => { fl = v; pintar(); });
-          if (global.CFX_AJUSTES && global.CFX_AJUSTES.registro) global.CFX_AJUSTES.registro(z, (fn, a) => rpc(fn, a), { recargar: () => L.find((x) => x.k === 'auditoria').abrir(z) });
-        };
-        pintar();
       } }
     ];
     return L;

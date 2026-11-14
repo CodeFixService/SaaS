@@ -6,7 +6,7 @@
   const A = global.App, { esc, toast, modal, confirmar } = A;
   const M = () => global.MisApps;
   let raiz = null, actual = 'cm', seccion = 'negocios';
-  const SECC = [['negocios', '🏪 Negocios'], ['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['dominio', '🌐 Dominio'], ['push', '🔔 Notificaciones'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['salud', '🩺 Salud'], ['registro', '📜 Registro']];
+  const SECC = [['negocios', '🏪 Negocios'], ['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['dominio', '🌐 Dominio'], ['push', '🔔 Notificaciones'], ['correo', '✉️ Correo'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['salud', '🩺 Salud'], ['registro', '📜 Registro']];
   // Nombres legibles de las claves de los planes (las demás se muestran tal cual).
   const NOMBRE = { productos: 'Productos', clientes: 'Clientes', fichas: 'Diseños publicados', equipo: 'Equipo', pedidos_mes: 'Pedidos al mes', respuestas: 'Respuestas rápidas',
     contactos: 'Contactos', favoritos: 'Favoritos', mensajes_seguidos: 'Mensajes seguidos', barberos: 'Barberos', servicios: 'Servicios', ofertas: 'Ofertas',
@@ -356,6 +356,14 @@
     try { L = await rpc('cfx_registro_lista', { p_limite: 200 }); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
     setTimeout(() => window.CFX_AJUSTES && window.CFX_AJUSTES.registro(caja(), rpc, { recargar: registro }), 0);
     caja().innerHTML = '<div class="card"><h2>Lo que se hizo en ' + esc(app().nombre) + '</h2>' + (L.map((r) => '<div style="padding:4px 0;border-top:1px solid var(--line)"><b>' + esc(r.accion) + '</b> <span class="sub">' + esc(r.quien) + ' · ' + A.hace(r.creado) + '</span><div class="sub">' + esc(r.detalle) + '</div></div>').join('') || '<p class="empty">Sin registros</p>') + '</div>';
+    let P = []; try { P = await rpc('admin_auditoria'); } catch (x) { P = []; }
+    // Hay apps cuyo registro del panel ES el común (Despega): no repetir lo que ya está arriba.
+    const ya = new Set(L.map((r) => r.accion + '|' + Math.round(new Date(r.creado) / 1000)));
+    P = (Array.isArray(P) ? P : []).filter((r) => !ya.has(r.accion + '|' + Math.round(new Date(r.created_at || r.at || r.creado) / 1000)));
+    if (!P.length) return;
+    const det = (d) => d == null ? '' : typeof d === 'string' ? d : JSON.stringify(d).slice(0, 160);
+    caja().insertAdjacentHTML('beforeend', '<div class="card"><h2>En el 🧭 Panel de ' + esc(app().nombre.split(' ·')[0]) + '</h2>' + P.slice(0, 200).map((r) => '<div style="padding:4px 0;border-top:1px solid var(--line)"><b>' + esc(r.accion + (r.negocio ? ' · ' + r.negocio : '')) + '</b>' +
+      ((r.rol || r.quien_rol) === 'socio' ? ' <span class="pill">socio</span>' : '') + ' <span class="sub">' + esc(r.quien || r.quien_nombre || '') + ' · ' + A.hace(r.created_at || r.at || r.creado) + '</span>' + (det(r.detalle) ? '<div class="sub">' + esc(det(r.detalle)) + '</div>' : '') + '</div>').join('') + '</div>');
   }
 
   // 🔔 Notificaciones: revisa en cada app si tiene las claves push y, si faltan, las crea desde aquí (una sola vez por app).
@@ -392,6 +400,47 @@
         await PUSH[a.id].crear(M().cliente(a), pu, pr);
         toast('🔔 Claves creadas en ' + a.nombre.split(' ·')[0]); push();
       } catch (x) { b.disabled = false; b.textContent = 'Crear claves'; toast(nf(x)); }
+    };
+  }
+
+  // G42f ✉️ Correo: UN solo Gmail de Josué para los correos de CodeFix (cuentas y avisos) de todas las apps.
+  // Los correos de cada negocio a SUS clientes salen con el Gmail del propio negocio (en su app), nunca con este.
+  const CORREO = {
+    aplicaciones: { leer: (c) => M().rpcDe(c, 'admin_secret_status').then((r) => !!(r.gmail_user && r.gmail_app_password)),
+      guardar: async (c, u, k, n) => { await M().rpcDe(c, 'admin_set_secret', { p_name: 'gmail_user', p_value: u }); await M().rpcDe(c, 'admin_set_secret', { p_name: 'gmail_app_password', p_value: k }); await M().rpcDe(c, 'admin_set_secret', { p_name: 'mail_from_name', p_value: n }); } }
+  };
+  const refDe = (a) => { try { const u = (M().cliente(a) || {}).supabaseUrl || ''; const m = /^https:\/\/([a-z0-9]+)\.supabase\.co/.exec(u); return m ? m[1] : ''; } catch (e) { return ''; } };
+  async function correo() {
+    const L = M().APPS.filter((a) => a.id !== 'contenido');
+    caja().innerHTML = '<div class="card"><h2>✉️ Correo de CodeFix</h2><p class="sub">Un solo Gmail tuyo para todas las apps: correos de cuenta (entrar, cambiar clave) y avisos de CodeFix. Lo que cada negocio manda a SUS clientes sale con el Gmail del negocio (lo pone en su app).</p>' +
+      '<label>Tu Gmail<input id="coU" type="email" autocomplete="off" maxlength="120" placeholder="tucorreo@gmail.com"></label>' +
+      '<label>Contraseña de aplicación (16 letras)<input id="coP" autocomplete="off" maxlength="40" data-sin-voz></label>' +
+      '<label>Nombre del remitente<input id="coN" maxlength="60" value="CodeFix"></label>' +
+      '<button type="button" class="block" id="coOk">Guardar en todas las apps</button><p class="sub">La contraseña se crea en Google → Seguridad → Contraseñas de aplicaciones. No se puede volver a leer.</p></div>' +
+      '<div class="card"><h2>Estado por app</h2><div id="coL"><p class="sub">Revisando…</p></div></div>' +
+      '<div class="card"><h2>🔐 Correos de cuenta (Supabase)</h2><p class="sub">Supabase manda los correos de entrar y cambiar clave. En cada app, una vez: Authentication → Emails → SMTP Settings → Enable custom SMTP → host <b>smtp.gmail.com</b>, puerto <b>465</b>, usuario = tu Gmail, clave = la contraseña de aplicación → Save.</p><div id="coS"></div></div>';
+    caja().querySelector('#coS').innerHTML = L.map((a) => { const r = refDe(a); return r ? '<a class="btn small ghost" style="margin:4px 4px 0 0" target="_blank" rel="noopener" href="https://supabase.com/dashboard/project/' + esc(r) + '/auth/smtp">' + esc(a.nombre.split(' ·')[0]) + ' ↗</a>' : ''; }).join('');
+    const pintar = async () => {
+      const filas = await Promise.all(L.map(async (a) => {
+        if (!CORREO[a.id]) return [a, 'Solo correos de cuenta: Supabase (abajo)'];
+        if (!conectada(a)) return [a, 'sin conectar'];
+        try { return [a, (await CORREO[a.id].leer(M().cliente(a))) ? '✅ Listo' : '⚠️ Falta']; } catch (x) { return [a, nf(x)]; }
+      }));
+      const el = raiz.querySelector('#coL'); if (!el) return;
+      el.innerHTML = filas.map(([a, t]) => '<div style="padding:8px 0;border-top:1px solid var(--line)"><b class="una" style="display:block">' + esc(a.nombre.split(' ·')[0]) + '</b><span class="sub">' + esc(t) + '</span></div>').join('');
+    };
+    pintar();
+    caja().querySelector('#coOk').onclick = async () => {
+      const u = caja().querySelector('#coU').value.trim(), k = caja().querySelector('#coP').value.replace(/\s/g, ''), n = caja().querySelector('#coN').value.trim() || 'CodeFix';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u)) { toast('Escribe tu Gmail'); return; }
+      if (k.length !== 16) { toast('La contraseña de aplicación tiene 16 letras'); return; }
+      const res = [];
+      for (const a of L.filter((x) => CORREO[x.id])) {
+        if (!conectada(a)) { res.push(a.nombre.split(' ·')[0] + ': sin conectar'); continue; }
+        try { await CORREO[a.id].guardar(M().cliente(a), u, k, n); res.push(a.nombre.split(' ·')[0] + ': ✓'); } catch (x) { res.push(a.nombre.split(' ·')[0] + ': ' + nf(x)); }
+      }
+      caja().querySelector('#coP').value = '';
+      toast('✉️ ' + res.join(' · ')); pintar();
     };
   }
 
@@ -461,7 +510,7 @@
     };
   }
 
-  const F = { negocios, avisar, planes, textos, keys, cupones, verif, humano, dominio, push, referidos, socios, datos, seguridad, salud, registro };
+  const F = { negocios, avisar, planes, textos, keys, cupones, verif, humano, dominio, push, correo, referidos, socios, datos, seguridad, salud, registro };
   // Referidos: quién invitó a quién (con qué cuenta), ranking, premio automático y premio a mano (días + sticker).
   const STICKERS = ['🏆 ¡Eres un crack invitando!', '🚀 ¡Vas volando! Gracias por recomendarnos', '💪 ¡Sigue así, vas muy bien!', '🌟 ¡Gracias por correr la voz!'];
   async function referidos() {

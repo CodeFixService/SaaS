@@ -162,16 +162,10 @@
           ev.target.disabled = false;
         };
       } },
-      { k: 'push', ico: '🔔', t: 'Notificaciones', d: 'Claves push y función "servidor"', abrir: async (z) => {
+      { k: 'servidor', ico: '🛰️', t: 'Servidor', d: 'Probar la función y avisos de prueba', abrir: async (z) => {
         await cargarPub(); const pk = pub.config.vapid_publica;
-        z.innerHTML = '<div class="card"><p>' + (pk ? '✅ Las claves están creadas.' : '⚠️ Falta crear las claves.') + ' La función "servidor" las usa para enviar los avisos.</p>' +
-          '<div class="btns"><button type="button" class="small ghost" id="puG">' + (pk ? 'Crear claves nuevas' : 'Crear claves') + '</button><button type="button" class="small ghost" id="puP">🩺 Probar función servidor</button><button type="button" class="small ghost" id="puF">📋 Copiar código de la función</button></div><p class="sub" id="puR"></p></div>';
-        z.querySelector('#puG').onclick = async () => {
-          if (pk && !(await confirmar('Al crear claves nuevas, todos deberán activar las notificaciones de nuevo. ¿Seguir?', 'Crear'))) return;
-          try { const k = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']), raw = new Uint8Array(await crypto.subtle.exportKey('raw', k.publicKey)), jwk = await crypto.subtle.exportKey('jwk', k.privateKey);
-            const b64u = (u) => btoa(String.fromCharCode.apply(null, u)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-            await rpc('admin_push_claves', { p_publica: b64u(raw), p_privada: jwk.d }); toast('🔔 Claves creadas'); L.find((x) => x.k === 'push').abrir(z); } catch (x) { toast('⚠️ ' + x.message); }
-        };
+        z.innerHTML = '<div class="card"><p>' + (pk ? '✅ Las claves están creadas.' : '⚠️ Falta crear las claves.') + ' La función "servidor" las usa para enviar los avisos.</p><p class="sub">Las claves push se crean una sola vez en Control → 🔔 Notificaciones.</p>' +
+          '<div class="btns"><button type="button" class="small ghost" id="puP">🩺 Probar función servidor</button><button type="button" class="small ghost" id="puF">📋 Copiar código de la función</button></div><p class="sub" id="puR"></p></div>';
         z.querySelector('#puP').onclick = async () => { const r = z.querySelector('#puR'); try { const x = await servidor({ accion: 'ping' }); r.textContent = x.servicio ? '✅ Conectado: funciona (versión ' + x.version + ').' : '⚠️ Responde, pero sin clave de servicio.'; } catch (x) { r.textContent = '❌ No responde: créala en Supabase (guía, paso 4).'; } };
         z.querySelector('#puF').onclick = async () => {
           try { const t = (await (await fetch('https://raw.githubusercontent.com/CodeFixService/Taller/main/supabase/functions/servidor/corto.ts?_=' + Date.now(), { cache: 'no-store' })).text()).trim();
@@ -204,11 +198,6 @@
             if (b.dataset.sd) { if (!(await confirmar('¿Eliminar al socio "' + b.dataset.n + '"? Ya no podrá entrar. El registro de sus cambios se mantiene.', 'Sí, eliminar'))) return; await borrar('perfil', b.dataset.sd); toast('🗑️ Socio eliminado'); L.find((x) => x.k === 'socios').abrir(z); }
           } catch (x) { if (b.id === 'soOk') { z.querySelector('#soErr').textContent = x.message; b.disabled = false; } else toast('⚠️ ' + x.message); }
         };
-      } },
-      { k: 'auditoria', ico: '📜', t: 'Registro de cambios', d: 'Lo que se hizo en el panel', abrir: async (z) => {
-        let l; try { l = await rpc('admin_auditoria'); } catch (x) { return fallo(z, x); }
-        z.innerHTML = '<ul class="list">' + (l.map((a) => '<li><div class="grow"><b>' + esc(a.accion) + '</b> ' + (a.quien_rol === 'socio' ? '<span class="pill info">👥 ' + esc(a.quien_nombre) + '</span> ' : '') + '<span class="sub">' + esc(a.detalle) + '</span></div><span class="sub">' + fechaHora(a.created_at) + '</span></li>').join('') || '<li class="empty">Sin registros.</li>') + '</ul>';
-        if (global.CFX_AJUSTES && global.CFX_AJUSTES.registro) global.CFX_AJUSTES.registro(z, (fn, a) => rpc(fn, a), { recargar: () => L.find((x) => x.k === 'auditoria').abrir(z) });
       } }
     ];
     return L;
