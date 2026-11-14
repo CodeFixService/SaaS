@@ -91,10 +91,12 @@
         ' · ' + A.hace(g.creado) + (g.aprobados ? ' · ya pagó ' + g.aprobados + ' vez/veces' : ' · primer pago') + (g.nota ? '<br>' + esc(g.nota) : '') + (g.motivo ? '<br>Motivo: ' + esc(g.motivo) : '') +
         (g.estado === 'aprobado' && g.dias ? '<br>' + g.dias + ' días de Premium' : '') + '</p>' +
         (g.estado === 'pendiente' ? '<div class="btns-s">' + (g.con_comprobante ? '<button type="button" class="small ghost" data-v="' + i + '">Ver comprobante</button>' : '') +
-          '<button type="button" class="small" data-ok="' + i + '">Aprobar</button><button type="button" class="small ghost" data-no="' + i + '">Rechazar</button></div>' : '') + '</div>').join('') ||
+          '<button type="button" class="small" data-ok="' + i + '">Aprobar</button><button type="button" class="small ghost" data-no="' + i + '">Rechazar</button></div>' :
+          g.estado === 'aprobado' && global.CFX_COMPROBANTE ? '<div class="btns-s"><button type="button" class="small ghost" data-cb="' + i + '">🧾 Comprobante</button></div>' : '') + '</div>').join('') ||
         '<p class="empty">' + (filtro === 'pendiente' ? 'No hay pagos por revisar 🎉' : 'Sin pagos') + '</p>');
     cont.onclick = async (ev) => {
-      const b = ev.target.closest('[data-v],[data-ok],[data-no]'); if (!b) return;
+      const b = ev.target.closest('[data-v],[data-ok],[data-no],[data-cb]'); if (!b) return;
+      if (b.dataset.cb) return comprobante(filas[+b.dataset.cb]);
       const g = filas[+(b.dataset.v || b.dataset.ok || b.dataset.no)], c = M().cliente(g.app);
       try {
         if (b.dataset.v && g.conexiones) { const { data: u } = await c.storage.from('pagos').createSignedUrl(g.path, 600); if (u) A.verImagen(u.signedUrl, 'Comprobante', 'comprobante.jpg'); }
@@ -118,6 +120,15 @@
         }
       } catch (x) { toast(x.message); }
     };
+  }
+
+  /* G37: comprobante del pago aprobado (núcleo comprobante.js: WhatsApp, Bluetooth o PDF). No es boleta. */
+  function comprobante(g) {
+    const app = g.app.nombre.split(' ·')[0];
+    const nom = g.conexiones ? 'Conexiones extra' : g.producto ? 'Módulo ' + g.producto : 'Plan Premium · ' + (PERIODO[g.periodo] || g.periodo || '');
+    global.CFX_COMPROBANTE.abrir({ titulo: 'Comprobante de pago', negocio: 'CodeFix · ' + app, fecha: g.resuelto || g.creado, numero: String(g.id || '').slice(0, 8).toUpperCase(), cliente: g.nombre || g.email,
+      items: [{ cant: 1, nombre: nom + (g.meses ? ' (' + g.meses + ' meses)' : ''), precio: Number(g.monto) || 0 }], total: Number(g.monto) || 0,
+      medio: g.medio === 'link' ? 'Link de pago' : g.medio });
   }
 
   async function exento(si) {

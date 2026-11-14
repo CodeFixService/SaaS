@@ -169,7 +169,12 @@ Regla: FREE = lo que hace que la usen todos los días y la recomienden (sin lím
 - ⛔ CM NO lleva módulos (es de Josué): todo incluido.
 
 ## ORDEN NUEVO (Josué 14/11/2026)
-▶️ SIGUIENTE: ✅ 1c listo → sigue 1d (G37 🧠 comprobante/impresora/boleta de Caja + login QR al núcleo).
+▶️ SIGUIENTE: ✅ 1d listo → sigue 1e (G42e 🌌 CM galáctico/orbital + Bootstrap 5.3 completo y pulido en CM y Despega).
+- ✅ 1d G37 🧠 (núcleo 2.76 · CM 5.06 · Despega 6.22 · Barbería 2.91 · Billetera 1.21.54 · BiciTaller 2.77 · Estaciona 2.14.56; sin SQL → bd igual; prueba pruebas/g37_comprobante.js ANCHO=320):
+  · nucleo/comprobante.js + impresora.js (OPCIONAL en sincronizar.py: Aplicaciones y saas). Hoja propia (.cfx-comp, claro/oscuro), c.titulo opcional, la app da logo/firma con window.CFX_COMPROBANTE_DATOS (Despega: shared/cuenta.js).
+  · CM → Pagos → Todos → pago aprobado → 🧾 Comprobante (de pago): WhatsApp, 🖨️ Bluetooth, PDF, Copiar. Sin RUT = "No es boleta electrónica" (G31).
+  · 🔑 QR: funciones con qr_entrar → Billetera enviar 1.3.0 · BiciTaller servidor 2.0 · Estaciona enviar 1.1 (el botón en cada app = paso 2, ver su APP.md).
+  · 🧾 Boleta SII (decidido G33): queda en el SQL de Despega (amarrada a pedidos); pasa a nucleo/sql/boleta.sql cuando la 1ª otra app la use (paso 2), así no se toca la base de las 6 por algo que hoy usa 1.
 - ✅ 1c Núcleo universal (núcleo 2.75, archivo nuevo nucleo/ui.js en las 6 menos Cerebro; sin SQL → bd igual). Pruebas: pruebas/g42_nucleo.js (Despega) y g42_nucleo_cm.js (CM), 320 px.
   · G42a ⬆️ ui.js: botón redondo al pasar el 30% (página o ventana), sobre la barra de abajo; toca → sube suave.
   · G42b 🪟 ayuda.js hoja(): principal = ✕ arriba + "Cerrar" abajo (siempre al final); abierta encima de otra = subventana: tapa a la principal y muestra "← Volver".
