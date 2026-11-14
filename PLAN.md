@@ -170,7 +170,10 @@ Regla: FREE = lo que hace que la usen todos los días y la recomienden (sin lím
 - ⛔ CM NO lleva módulos (es de Josué): todo incluido.
 
 ## ORDEN NUEVO (Josué 14/11/2026)
-▶️ SIGUIENTE: ✅ 1f listo → sigue 2) Barbería (leer su APP.md → núcleo + revisión celular + G39 módulos + R1).
+▶️ SIGUIENTE: ✅ 2) Barbería listo → sigue BiciTaller (leer su APP.md → mapa completo → núcleo + revisión celular + G39 módulos + R1).
+- ✅ 2) 💈 Barbería (14/11, 2.94 · bd 2.79 · sin cambio de función; prueba pruebas/g39_barberia.js ANCHO=320): APP.md con mapa completo · G39 🧩 módulos recordatorios/sellos/campanas (bar_tiene = Premium o módulo; Más → 🧩 Módulos solo Free con venta prendida; aviso Premium con "🧩 O activa solo esta función"; packs propios Básico 1.490 / Completo 1.990) · R1 trigger profiles_vence · G37 🧾 comprobante en Caja (tocar un corte) · links de pago con CFX_URL · celular.js barberia con #modulos.
+  🐞 Errores arreglados (⚙️ Funcionamiento): (1) auto_actualizar de Barbería comparaba con "version" de version.json en vez de "bd" → reinstalaba la base cada 10 min; (2) supabase/pruebas/stub.sql de Barbería se cortaba desde G32 (faltaban pgcrypto, storage, cron y auth.jwt) → correr.sh vuelve a "TODAS LAS PRUEBAS PASARON"; (3) 🔐 link de pago del negocio sin CFX_URL en cliente/ y r/.
+  📝 Próxima pasada del núcleo: SVG para ▶️ (botón Probar de modulos.js, también Despega) y texto genérico de 📣 Campañas en cfx_modulos_catalogo.
 - ✅ 1f (14/11, CM 5.09): celular.js ahora revisa también el CM (`node celular.js saas Aplicaciones`): 320/360, claro/oscuro, público/usuario/admin del CM y público/negocio/cliente/admin de Despega → 0 hallazgos. 🐞 ⚙️ Funcionamiento: en CM → Apps "Respaldar todas" y "🧹 Respaldo y limpieza" salían SIN ícono (el CM tiene su propia lista en shared/app.js sin "bajar"/"escoba") → ahora App.ico toma del núcleo (iconos.js) lo que falte. Prueba: pruebas/g1f_iconos_cm.js. Nuevos: SaaS/INDUCCION.md, SaaS/APP.md y Aplicaciones/APP.md con mapa completo.
   · Visto, no es error de la app: el simulador local da 409 al re-subir respaldos (fichapro.json/caja.json) en la misma sesión; en Supabase se sube con upsert.
 - ✅ 1d G37 🧠 (núcleo 2.76 · CM 5.06 · Despega 6.22 · Barbería 2.91 · Billetera 1.21.54 · BiciTaller 2.77 · Estaciona 2.14.56; sin SQL → bd igual; prueba pruebas/g37_comprobante.js ANCHO=320):

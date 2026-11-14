@@ -89,6 +89,7 @@ const APPS = {
       await t.sim.su("update public.profiles set clave_temporal = false, tour_visto = true where true").catch(() => {});
       await t.sim.su("update public.barberias set codigo = 'hermanos', direccion = 'Av. Libertador Bernardo O''Higgins 1234, Santiago', whatsapp = '+56911111111', datos_transferencia = 'Banco Estado 123' where owner_id = (select id from public.profiles where email = 'dueno@x.cl')");
       const [b] = await t.sim.su("select id from public.barberias where codigo = 'hermanos'");
+      await t.sim.su("update public.cfx_config set valor = valor || '{\"activo\": true}' where clave = 'modulos_venta'");  // G39: 🧩 Módulos a la venta
       for (const [n, pr, d] of [['Corte con barba y perfilado de cejas premium', 1189990, 60], ['Corte', 10000, 30], ['Barba', 8000, 20]])
         await t.sim.su('insert into public.servicios (barberia_id, nombre, precio, duracion) values ($1, $2, $3, $4)', [b.id, n, pr, d]).catch((e) => console.log('servicio', e.message));
       await t.sim.su("insert into public.avisos (para, tipo, titulo, cuerpo) select id, 'aviso', 'Tu hora de mañana quedó confirmada con Maximiliano', 'Te esperamos en Av. Libertador Bernardo O''Higgins 1234' from public.profiles where email in ('dueno@x.cl', 'cli@x.cl')").catch(() => {});
@@ -103,7 +104,7 @@ const APPS = {
     PAGINAS: {
       publico: ['/b/?b=hermanos', '/', '/legal.html', '/registro/'],
       negocio: ['/equipo/', '/equipo/#caja', '/equipo/#servicios', '/equipo/#equipo', '/equipo/#negocio', '/equipo/#links', '/equipo/#horario', '/equipo/#tiempos', '/equipo/#ofertas',
-        '/equipo/#estadisticas', '/equipo/#calificaciones', '/equipo/#resumen', '/equipo/#volver', '/equipo/#invitar', '/equipo/#respaldo', '/equipo/#plan', '/equipo/#perfil'],
+        '/equipo/#estadisticas', '/equipo/#calificaciones', '/equipo/#resumen', '/equipo/#volver', '/equipo/#invitar', '/equipo/#respaldo', '/equipo/#plan', '/equipo/#modulos', '/equipo/#perfil'],
       barbero: ['/equipo/', '/equipo/#caja', '/equipo/#perfil', '/equipo/#tiempos'],
       cliente: ['/cliente/', '/cliente/#plan', '/b/?b=hermanos'],
       admin: ['/admin/'],

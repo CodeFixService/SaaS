@@ -71,3 +71,8 @@ Logo y nombre → WhatsApp → productos con foto → link de pago o ⚡ Mercado
 
 ## 🧹 Probar una app como recién instalada (sin incógnito)
 CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desde CM 5.02 es lo único ahí; lo demás está en Apps). Las ramas 🧪 Probar están apagadas hasta terminar todas las apps. Borra caché, datos guardados y sesión de ESA app en tu teléfono y la abre al tiro (vuelves a iniciar sesión). Desde el 10/11 los cambios van directo a main: si algo sale mal, avísale a Claude y se revierte.
+
+## 💈 Barbería 2.94 (bd 2.79) · 🧩 módulos, 🧾 comprobante y Premium con fecha
+1. Cloudflare → Barbería en **Listo** → CM → Resumen → Empresas → Barbería → **🧹 Limpiar** → prueba: Más → Caja → toca un corte → **🧾 Comprobante**.
+2. (Cuando quieras vender módulos) CM → Apps → 💈 Barbería → **🧩** → prender "Vender módulos". Sin prenderlo todo sigue igual (solo Premium).
+3. CM → Apps → **🚀 Liberar**. La base se actualiza sola (ya no se reinstala cada 10 min).

@@ -46,7 +46,7 @@ TABLA = re.compile(r'create table (?:if not exists )?((?:public|privado)\.[a-z_]
 CABEZA = ('seguro.js', 'humano.js', 'carga.js')  # van primero en el <head> (antes de que la app cree su conexión a Supabase)
 JS = ('iconos.js', 'instalar.js', 'barra.js', 'ui.js', 'auto.js', 'fotos.js', 'voz.js', 'respaldo.js', 'pagos.js', 'verificar.js', 'premium.js', 'ayuda.js', 'datos.js', 'vitrina.js')
 # Módulos de JS opcionales: se copian solo a las apps que los usan (la app los enlaza donde corresponde; no van en todas las páginas).
-OPCIONAL = {'Aplicaciones': ('tienda.js', 'despacho.js', 'modulos.js', 'qr.js', 'comprobante.js', 'impresora.js'), 'saas': ('qr.js', 'comprobante.js', 'impresora.js'), 'barberia': ('qr.js',),  # G37: comprobante + impresora
+OPCIONAL = {'Aplicaciones': ('tienda.js', 'despacho.js', 'modulos.js', 'qr.js', 'comprobante.js', 'impresora.js'), 'saas': ('qr.js', 'comprobante.js', 'impresora.js'), 'barberia': ('qr.js', 'modulos.js', 'comprobante.js', 'impresora.js'),  # G37: comprobante + impresora · G39: módulos
             'emprendedor': ('modulos.js', 'qr.js'), 'taller': ('modulos.js', 'qr.js'), 'estacionamiento': ('modulos.js', 'qr.js')}  # G35
 # CSS de terceros (G20): Bootstrap 5.3.8, SOLO utilidades (sin reboot, grid ni componentes: su .row/.card/.btn chocarían con core.css).
 # Va en <css>/vendor/ y se enlaza ANTES de la hoja propia de la app, así core.css y tema.css siguen mandando.
