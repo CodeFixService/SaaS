@@ -1,0 +1,111 @@
+/* Centro de Mando · G42e 🌌 Diseño galáctico / orbital (solo el CM; se carga DESPUÉS de tema.css).
+   - Fondo de espacio (estrellas + nebulosa + órbitas) y colores "noche profunda" SOLO si la persona no eligió
+     🎨 Colores a tu gusto (esos se escriben en línea en <html style="--cfx-fondo…">, y ahí este fondo se apaga).
+   - Todo usa var(--brand)/var(--cfx-*): respeta el color de marca, Pro (dorado), claro/oscuro y los colores propios.
+   - Sin animación si el celular pide "reducir movimiento". */
+:root { --gx-violeta: #8b5cf6; --gx-cian: #22d3ee; --gx-grad: linear-gradient(135deg, var(--brand, #3d63ff), color-mix(in srgb, var(--brand, #3d63ff) 45%, var(--gx-violeta))); }
+
+/* ---------- Colores del espacio (solo sin Colores a tu gusto) ---------- */
+html:not([style*="--cfx-fondo"]) { --cfx-fondo: #f4f6fd; --cfx-campo: #f3f5fc; --cfx-borde: #dfe4f3; }
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]):not(.claro):not(.light):not([style*="--cfx-fondo"]) {
+    --cfx-fondo: #060a14; --cfx-tarjeta: #0e1527; --cfx-campo: #131c31; --cfx-borde: #1f2b45; --cfx-texto-2: #9aa7c2;
+  }
+}
+html[data-theme="dark"]:not([style*="--cfx-fondo"]), html.dark:not([style*="--cfx-fondo"]), html.oscuro:not([style*="--cfx-fondo"]) {
+  --cfx-fondo: #060a14; --cfx-tarjeta: #0e1527; --cfx-campo: #131c31; --cfx-borde: #1f2b45; --cfx-texto-2: #9aa7c2;
+}
+
+/* Órbitas finas arriba a la derecha (claro y oscuro) */
+html:not([style*="--cfx-fondo"]) body::after { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; background-image: var(--gx-orbitas); }
+html:not([style*="--cfx-fondo"]) {
+  --gx-orbitas:
+    radial-gradient(circle at 104% -4%, transparent 0 150px, color-mix(in srgb, var(--brand, #3d63ff) 22%, transparent) 151px 152px, transparent 153px 250px,
+      color-mix(in srgb, var(--gx-violeta) 16%, transparent) 251px 252px, transparent 253px 370px, color-mix(in srgb, var(--brand, #3d63ff) 10%, transparent) 371px 372px, transparent 373px),
+    radial-gradient(circle at -6% 108%, transparent 0 120px, color-mix(in srgb, var(--gx-violeta) 12%, transparent) 121px 122px, transparent 123px 210px,
+      color-mix(in srgb, var(--brand, #3d63ff) 9%, transparent) 211px 212px, transparent 213px);
+}
+/* Oscuro: + estrellas que titilan */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]):not(.claro):not(.light):not([style*="--cfx-fondo"]) body::after { background-image: var(--gx-estrellas), var(--gx-orbitas); }
+}
+html:not([style*="--cfx-fondo"]) {
+  --gx-estrellas:
+    radial-gradient(1.4px 1.4px at 8% 14%, #fff, transparent), radial-gradient(1px 1px at 22% 62%, #cbd5ff, transparent),
+    radial-gradient(1.6px 1.6px at 37% 28%, #fff, transparent), radial-gradient(1px 1px at 48% 82%, #e9d5ff, transparent),
+    radial-gradient(1.2px 1.2px at 61% 12%, #fff, transparent), radial-gradient(1px 1px at 72% 47%, #bae6fd, transparent),
+    radial-gradient(1.8px 1.8px at 86% 22%, #fff, transparent), radial-gradient(1px 1px at 93% 71%, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 15% 90%, #c7d2fe, transparent), radial-gradient(1px 1px at 30% 8%, #fff, transparent),
+    radial-gradient(1.3px 1.3px at 55% 55%, #fff, transparent), radial-gradient(1px 1px at 79% 92%, #ddd6fe, transparent),
+    radial-gradient(1px 1px at 4% 46%, #fff, transparent), radial-gradient(1.4px 1.4px at 67% 74%, #fff, transparent),
+    radial-gradient(1px 1px at 42% 40%, #a5b4fc, transparent), radial-gradient(1.2px 1.2px at 97% 4%, #fff, transparent),
+    radial-gradient(600px 380px at 85% 30%, color-mix(in srgb, var(--gx-violeta) 10%, transparent), transparent 70%),
+    radial-gradient(520px 340px at 10% 75%, color-mix(in srgb, var(--brand, #3d63ff) 9%, transparent), transparent 70%);
+}
+html[data-theme="dark"]:not([style*="--cfx-fondo"]) body::after, html.dark:not([style*="--cfx-fondo"]) body::after, html.oscuro:not([style*="--cfx-fondo"]) body::after { background-image: var(--gx-estrellas), var(--gx-orbitas); }
+@media (prefers-color-scheme: dark) and (prefers-reduced-motion: no-preference) {
+  html:not([data-theme="light"]):not(.claro):not(.light):not([style*="--cfx-fondo"]) body::after { animation: gxTitila 7s ease-in-out infinite alternate; }
+}
+@keyframes gxTitila { from { opacity: .75; } to { opacity: 1; } }
+
+/* ---------- Tarjetas con brillo de nebulosa (las de contenido; los títulos fijos siguen opacos) ---------- */
+main .card, dialog .card { border-color: color-mix(in srgb, var(--brand, #3d63ff) 10%, var(--cfx-borde)); }
+.stats .card, .kpis > div {
+  position: relative; overflow: hidden;
+  background-image: linear-gradient(160deg, color-mix(in srgb, var(--brand, #3d63ff) 9%, transparent), transparent 55%);
+}
+.stats .card::before, .kpis > div::before {  /* línea de órbita arriba */
+  content: ''; position: absolute; left: 14px; right: 14px; top: 0; height: 2px; border-radius: 0 0 2px 2px; opacity: .7;
+  background: linear-gradient(90deg, transparent, var(--brand, #3d63ff), var(--gx-violeta), transparent);
+}
+.stats b { font-variant-numeric: tabular-nums; }
+
+/* Títulos de cada vista con degradado de marca (texto sigue legible: 2 tonos del color de marca) */
+.titulo-v h2 {
+  background: var(--gx-grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) { .titulo-v h2 { color: var(--cfx-texto); -webkit-text-fill-color: currentColor; } }
+
+/* Botón principal (los que no tienen clase propia): degradado + brillo suave */
+:is(main, dialog) button:is(:not([class]), .block, [type=submit]):not(.ghost):not(.alt):not(.lnk):not([style*="background"]), .big, .tabs2 button:not(.ghost) {
+  background-image: var(--gx-grad); box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--brand, #3d63ff) 60%, transparent);
+}
+.chip.on { background-image: var(--gx-grad); border-color: transparent; box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--brand, #3d63ff) 55%, transparent); }
+
+/* Cabecera: vidrio + línea de luz abajo (el título lo maneja el núcleo) */
+header.top { border-bottom-color: transparent !important; box-shadow: 0 1px 0 color-mix(in srgb, var(--brand, #3d63ff) 22%, transparent); }
+
+/* ---------- Barra de abajo: vidrio y el + con su órbita ---------- */
+@media (max-width: 899px) {
+  html nav.cfx-barra {
+    background: color-mix(in srgb, var(--cfx-tarjeta) 84%, transparent) !important;
+    backdrop-filter: blur(14px) saturate(1.3) !important; -webkit-backdrop-filter: blur(14px) saturate(1.3) !important;
+    border-top-color: color-mix(in srgb, var(--brand, #3d63ff) 18%, var(--cfx-borde)) !important;
+  }
+  html:not(.cfx-premium) nav.cfx-barra > .cfx-mas > span:first-child { background-image: var(--gx-grad) !important; }
+  nav.cfx-barra > .cfx-mas > span:first-child { position: relative !important; }
+  nav.cfx-barra > .cfx-mas > span:first-child::after {
+    content: ''; position: absolute; inset: -8px; border-radius: 50%; pointer-events: none;
+    border: 1.5px solid color-mix(in srgb, var(--brand, #3d63ff) 35%, transparent);
+    background: radial-gradient(circle at 50% 0, var(--gx-cian) 0 2.6px, transparent 3.2px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  nav.cfx-barra > .cfx-mas > span:first-child::after { animation: gxGira 9s linear infinite; }
+}
+@keyframes gxGira { to { transform: rotate(360deg); } }
+
+/* ---------- Entrada (index.html): logo con 2 órbitas y planetas ---------- */
+.marca .logo { position: relative; margin: 30px auto 36px !important; background: var(--gx-grad) !important;
+  box-shadow: 0 10px 34px -8px color-mix(in srgb, var(--brand, #3d63ff) 70%, transparent); }
+.marca .logo::before, .marca .logo::after { content: ''; position: absolute; border-radius: 50%; pointer-events: none; }
+.marca .logo::before { inset: -16px; border: 1.5px solid color-mix(in srgb, var(--brand, #3d63ff) 40%, transparent);
+  background: radial-gradient(circle at 50% 0, var(--gx-cian) 0 3.5px, transparent 4px); }
+.marca .logo::after { inset: -30px; border: 1px dashed color-mix(in srgb, var(--gx-violeta) 35%, transparent);
+  background: radial-gradient(circle at 100% 50%, var(--gx-violeta) 0 3px, transparent 3.6px); }
+@media (prefers-reduced-motion: no-preference) {
+  .marca .logo::before { animation: gxGira 12s linear infinite; }
+  .marca .logo::after { animation: gxGira 22s linear infinite reverse; }
+}
+.marca h1 { background: var(--gx-grad); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
