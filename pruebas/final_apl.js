@@ -26,13 +26,16 @@ async function botones(t, p, url, quien) {
       if (r.width > 0 && r.height > 0 && !b.disabled && !R.test(tx) && !b.closest('.cfx-barra,nav.cfx-barra')) b.dataset.fin = i++; }); return i; }, PELIGRO.source);
   for (let i = 0; i < n; i++) {
     const antes = t.errores.length;
-    if (i) { await p.goto(t.base + url).catch(() => {}); await p.waitForTimeout(1300); await t.sinModales(p);
+    // Solo recarga si el botón anterior cambió de página o dejó algo abierto que no se cierra.
+    const sucio = i && (p.url() !== t.base + url || !(await p.locator('[data-fin="' + i + '"]').isVisible().catch(() => false)));
+    if (i) { await p.keyboard.press('Escape').catch(() => {}); await t.sinModales(p).catch(() => {}); }
+    if (sucio) { await p.goto(t.base + url).catch(() => {}); await p.waitForTimeout(1100); await t.sinModales(p);
       await p.evaluate((re) => { const R = new RegExp(re, 'i'); let k = 0; document.querySelectorAll('button, [role=button], summary').forEach((b) => { const r = b.getBoundingClientRect(), tx = (b.textContent || b.getAttribute('aria-label') || '').trim();
         if (r.width > 0 && r.height > 0 && !b.disabled && !R.test(tx) && !b.closest('.cfx-barra,nav.cfx-barra')) b.dataset.fin = k++; }); }, PELIGRO.source); }
     const b = p.locator('[data-fin="' + i + '"]').first();
     const tx = ((await b.textContent().catch(() => '')) || (await b.getAttribute('aria-label').catch(() => '')) || '?').trim().replace(/\s+/g, ' ').slice(0, 40);
     try { await b.click({ timeout: 2000 }); } catch (e) { continue; }
-    await p.waitForTimeout(700);
+    await p.waitForTimeout(450);
     const nuevos = t.errores.slice(antes).filter((x) => !/ERR_|status of 404|favicon/.test(x));
     const ancho = await t.anchoOk(p).catch(() => true);
     if (nuevos.length || !ancho) malos.push('"' + tx + '": ' + (nuevos[0] || 'se sale del ancho').slice(0, 160));
