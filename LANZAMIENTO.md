@@ -17,6 +17,7 @@ Lo que YA está configurado no se toca (links de pago que pegaste, precios guard
    - 🔒 Billetera, BiciTaller y Estaciona: haz el **SMTP** y las **Redirect URLs** del punto 4 también en sus 3 Supabase (emprendedor, taller, estacionamiento).
    - 🔄 El **CM** se actualiza solo apenas se publica.
 8. 📋 **CM 5.02 · Despega 6.18**: en **Resumen → Empresas** ahora hay solo **🧹 Limpiar** (antes "Limpiar y abrir"). **Ver app**, **🧭 Panel**, **Respaldo y limpieza** y **Respaldar todas** están en **CM → Apps**. Control tiene ícono propio (escudo). Correos y Planes ya no salen cortados a mitad. 🧹 Limpiar → 🚀 Liberar (sin base ni Edge). Tus **clientes** ven "🔄 Versión nueva" con el botón **🔄 Actualizar** recién cuando tú liberas (no se instala sola).
+9. 🏷️ **Avisos por categoría (núcleo 2.74 · CM 5.04 · Despega 6.20 · las 6 con base nueva)**: en **CM → Apps → 🚀 Liberar** ahora marcas casillas (🔒 Seguridad · ⚙️ Funcionamiento · 🖥️ Sistema · ✏️ Mejoras · 🎁 Premios/novedades). Tus usuarios solo ven eso, nunca qué se hizo. El **📝 Detalle** es opcional y solo lo ves tú en Control → 📜 Registro.
 
 ## 2 · Correo (tú, si no está) — G42f: 1 solo Gmail tuyo para todas las apps
 **CM → Control → ✉️ Correo**: tu Gmail + contraseña de aplicación (myaccount.google.com → Seguridad → Contraseñas de aplicaciones) → **Guardar en todas las apps**. Abajo, en la misma pantalla, están los botones a Supabase → SMTP de cada app (correos de entrar y cambiar clave). Límite ~450 correos al día.
