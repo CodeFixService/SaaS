@@ -169,7 +169,7 @@ Regla: FREE = lo que hace que la usen todos los días y la recomienden (sin lím
 - ⛔ CM NO lleva módulos (es de Josué): todo incluido.
 
 ## ORDEN NUEVO (Josué 14/11/2026)
-▶️ SIGUIENTE (Josué 14/11, antes de 1c): G44a y luego G44b.
+▶️ SIGUIENTE: ✅ G44a y ✅ G44b listos → sigue 1c (núcleo universal).
 - ✅ G44a 🐞 Cero errores atrás (arreglar TODOS, categorizados; ninguno es crítico para vender):
   · ⚙️ Funcionamiento · Despega → Ajustes → Vender en redes: pruebas/g23_ui.js no puede escribir en #mdMeta (campo oculto/no visible) → revisar que se vea y guarde bien en el celular.
     ✅ La app estaba bien: el dominio vive en su hoja propia (Ajustes → 🌐 Mi dominio, G25) y la prueba lo buscaba en Redes. Prueba corregida; probado a 320 px (guarda y recarga). Aviso "sigue los pasos de abajo" → "mira los pasos arriba" (Despega 6.20).
@@ -177,7 +177,8 @@ Regla: FREE = lo que hace que la usen todos los días y la recomienden (sin lím
     ✅ Son 8 (4 del núcleo + 4 del CM). Prueba corregida.
   · 🧪 Pruebas · g23_ui.js contaba como error la revisión del dominio sin internet (ERR_TUNNEL) → filtrado. ✅
   · Al arreglar: correr central.js + g23_ui + cm_apps y anotar aquí cualquier otro error que aparezca (nada queda pendiente).
-- G44b 🏷️ Avisos de actualización SOLO con categoría, sin decir qué se hizo: al liberar (CM → Apps → 🚀 Liberar) y en version.json "notas", el aviso dice p. ej. "🔄 Nueva versión: 🔒 Seguridad · ⚙️ Funcionamiento" — categorías: 🔒 Seguridad, ⚙️ Funcionamiento, 🖥️ Sistema, ✏️ Mejoras, 🎁 Premios/novedades. El detalle queda solo en el CM. En el CM: elegir categorías con casillas (no texto libre). Todas las apps (núcleo).
+- ✅ G44b 🏷️ Avisos de actualización SOLO con categoría, sin decir qué se hizo: al liberar (CM → Apps → 🚀 Liberar) y en version.json "notas", el aviso dice p. ej. "🔄 Nueva versión: 🔒 Seguridad · ⚙️ Funcionamiento" — categorías: 🔒 Seguridad, ⚙️ Funcionamiento, 🖥️ Sistema, ✏️ Mejoras, 🎁 Premios/novedades. El detalle queda solo en el CM. En el CM: elegir categorías con casillas (no texto libre). Todas las apps (núcleo).
+  ✅ Hecho (núcleo 2.74, SQL admin.sql → bd de las 6): cfx_version_categorias() deja pasar SOLO las 5 categorías (el texto libre nunca llega); aviso "🔄 Nueva versión" · "App vX: 🔒 Seguridad · ✏️ Mejoras". CM → Apps → 🚀 Liberar = 5 casillas (marcadas según version.json "notas") + 📝 Detalle solo para el admin (cfx_versiones.detalle sin políticas + 📜 Registro). version.json "notas" = solo categorías. Prueba pruebas/g44b.js (ANCHO=320).
 1) CM + Despega Pyme QUEDAN LISTOS Y BACANES: pendientes viejos + G42 (a-k) + G37 + revisión celular. Lo universal se hace EN EL NÚCLEO en ese momento (no doble pega) y se sincroniza a las 6 apps.
 2) Cada APP.md tiene "🧠 Del núcleo: falta aplicar aquí" (lo sincronizado que esa app aún no usa: botón, ventanas, títulos fijos, ordenar, datos tapados, comprobante/impresora/QR…). Al retomar una app: leer su APP.md → aplicar eso + G39 (módulos) + R1.
 3) Luego, una a una: Barbería → BiciTaller → Billetera → Estaciona. Después G38 y AL FINAL G32 e) NFC.

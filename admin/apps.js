@@ -194,16 +194,24 @@
   // Liberar: queda para todos y les llega "🚀 Nueva versión disponible" (push) con una línea de novedades
   // (la de version.json → "notas", que se puede cambiar antes de liberar). El aviso sale una sola vez por versión.
   const corto = (a) => a.nombre.split(' · ')[0];
+  // G44b: el aviso a los usuarios dice SOLO categorías (casillas). El detalle queda en el CM (📜 Registro), nunca les llega.
+  const CATS = [['seg', '🔒', 'Seguridad', /seguridad|🔒/i], ['func', '⚙️', 'Funcionamiento', /funcionamiento|⚙/i], ['sis', '🖥️', 'Sistema', /sistema|🖥/i],
+    ['mej', '✏️', 'Mejoras', /mejora|✏/i], ['pre', '🎁', 'Premios/novedades', /premio|novedad|🎁/i]];
   function pedirNotas(a, e) {
     return new Promise((ok) => {
       let r = null;
       const d = modal('<h2 style="margin:0 0 6px">' + A.ico('cohete', 20) + ' Liberar ' + esc(corto(a)) + ' v' + esc(e.pub) + '</h2>' +
-        '<p class="sub" style="margin:0 0 10px">A todos les llega "Nueva versión disponible". Escribe en una línea lo nuevo (opcional).</p>' +
-        '<input id="libNotas" maxlength="140" placeholder="Ej: Agenda más rápida y avisos de pago">' +
+        '<p class="sub" style="margin:0 0 10px">A todos les llega "🔄 Nueva versión" con las categorías que marques (no ven qué se hizo).</p>' +
+        '<div class="cats-lib" style="display:grid;gap:4px">' + CATS.map(([k, ico, t, re]) => '<label class="fila" style="gap:8px;align-items:center;padding:6px 0"><input type="checkbox" data-cat="' + k + '" style="width:auto"' + (re.test(e.notas || '') ? ' checked' : '') + '> <span>' + ico + ' ' + t + '</span></label>').join('') + '</div>' +
+        '<label for="libDet" style="margin-top:8px">📝 Detalle <span class="sub">(solo lo ves tú, en 📜 Registro)</span></label>' +
+        '<input id="libDet" maxlength="400" placeholder="Ej: arreglé el dominio">' +
         '<div class="btns" style="margin-top:12px"><button class="ghost" data-no type="button">Cancelar</button><button data-si type="button">Liberar</button></div>');
-      d.querySelector('#libNotas').value = e.notas || '';
       d.querySelector('[data-no]').onclick = () => d.close();
-      d.querySelector('[data-si]').onclick = () => { r = d.querySelector('#libNotas').value.trim(); d.close(); };
+      d.querySelector('[data-si]').onclick = () => {
+        const marc = CATS.filter(([k]) => d.querySelector('[data-cat="' + k + '"]').checked);
+        r = { notas: marc.map(([, ico, t]) => ico + ' ' + t).join(' · '), detalle: d.querySelector('#libDet').value.trim() };
+        d.close();
+      };
       d.addEventListener('close', () => ok(r));
     });
   }
@@ -211,13 +219,13 @@
   const aTiempo = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('no respondió en ' + ms / 1000 + ' s (revisa la conexión o vuelve a conectarte)')), ms))]);
   async function liberar(a, sinPreguntar) {
     const e = E[a.id];
-    const notas = sinPreguntar ? (e.notas || '') : await pedirNotas(a, e);
-    if (notas === null) return;
+    const sel = sinPreguntar ? { notas: e.notas || '', detalle: '' } : await pedirNotas(a, e);
+    if (sel === null) return;
     e.liberando = true; pintarTarjeta(a);
     try {
       const { error } = await aTiempo(a.liberar(cliente(a), e.pub), 20000); if (error) throw new Error(error.message);
       let n = 0;
-      try { const r = await cliente(a).rpc('cfx_avisar_version', { p_version: e.pub, p_notas: notas, p_app: corto(a) }); if (!r.error) n = r.data || 0; } catch (x) { /* base aún sin la función: se avisa la próxima */ }
+      try { const r = await cliente(a).rpc('cfx_avisar_version', { p_version: e.pub, p_notas: sel.notas, p_app: corto(a), p_detalle: sel.detalle }); if (!r.error) n = r.data || 0; } catch (x) { /* base aún sin la función: se avisa la próxima */ }
       if (!sinPreguntar) toast(corto(a) + ' v' + e.pub + ' liberada' + (n ? ' · aviso a ' + n : ''));
     } catch (x) { toast(a.nombre + ': ' + x.message); }
     e.liberando = false;
