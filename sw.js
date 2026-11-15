@@ -76,9 +76,15 @@ self.addEventListener('fetch', (e) => {
 // v4.4: los avisos de algo con hora traen botones "Listo" y "1 hora más": funcionan sin abrir la app.
 self.window = self;
 try { importScripts('shared/config.js'); } catch (err) { /* sin conexión: los botones abren la app */ }
+// G61 a 📲 Confirma al servidor que el aviso llegó (así deja de reenviarlo). Sin red: el servidor reintenta.
+function cfxAck(e, d) {
+  if (!d || !d.ack || !/^https:\/\//.test(d.ackUrl || '')) return;
+  e.waitUntil(fetch(d.ackUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: d.ackKey || '', Authorization: 'Bearer ' + (d.ackKey || '') }, body: JSON.stringify({ p_grupo: d.ack }) }).catch(() => {}));
+}
 self.addEventListener('push', (e) => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (err) { d = { title: e.data && e.data.text() }; }
+  cfxAck(e, d);
   const conItem = /item=[0-9a-f-]{36}/.test(d.url || '');
   e.waitUntil(self.registration.showNotification(d.title || 'Centro de Mando', {
     body: d.body || '', icon: 'icons/icon-192.png', badge: 'icons/badge.png', tag: d.tag, data: { url: d.url || '/', id: d.tag },
