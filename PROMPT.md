@@ -17,6 +17,7 @@ PENDIENTE DE JOSUÉ: 1) Cloudflare Listo (6 apps) → CM → 🧹 Limpiar → CM
 ORDEN:
 0) Josué revisa G61 + G59 + G59b + G65 + G59c + G59d + G59e en el celular.
 1) G59 🚲 BiciTaller "bestia" MODULAR (PLAN.md G59: ✅ hasta G59e → SIGUE 🧩 🪪 pasaporte QR de la bici (QR pegado al cuadro: historial, dueño, robo reportado) → 🚐 mecánico a domicilio (reserva con dirección + ruta del día) → 🛠️ garantías → 🔁 plan mensual; catálogo del núcleo: nucleo/sql/modulos_venta.sql + demo en modulos.js; ver Taller/APP.md) → G60 Billetera → Estaciona (mismo análisis modular: catálogo del núcleo + APP.md + celular.js + G39 + R1).
+2) G67 🧾 boleta en Barbería y BiciTaller. 3) G66 🎯 centrar íconos de la barra de abajo (núcleo barra.js, las 6). 4) G38 Khipu/Flow/Webpay, courier, factura 33, sucursales. AL FINAL: G32 e) NFC + 🧹 barrido de todo lo pendiente/a medias (Josué).
 
 REPOS (CodeFixService, /home/user): SaaS = CM (nucleo/ original) · Aplicaciones = Despega Pyme · Emprendedor = Billetera · Barberia · Taller = BiciTaller · Estacionamiento = Estaciona · Contenido = Cerebro (NO tocar). Ids: mando, orbita, barberia, billetera, taller, estaciona. Supabase: CM vqevujjraisrcoirswuq · Despega gilsamacgappycibcqhq · Barbería gxlabxuttnxvzkucckef · Billetera zbgfvxsqajtixjzxoxeu · BiciTaller iwvjthcmufirbnotgixi · Estaciona wphxtspicejywwzlbuux.
 
