@@ -465,6 +465,8 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         const [g18pl] = await t.sim.su('select plan, pro_until from public.profiles where id = $1', [tid]);
         await t.sim.su("update public.profiles set plan = 'free', pro_until = null where id = $1", [tid]);
         await q.goto(t.base + '/#redes'); await q.reload(); await q.waitForTimeout(2500);
+        // Con el celular lento la hoja a veces no terminaba de abrir (falla intermitente G18): se espera hasta 6 s.
+        await q.waitForFunction(() => { const b = document.getElementById('redesBody'); return b && b.offsetParent; }, null, { timeout: 6000 }).catch(() => {});
         const g18u0 = await q.evaluate(() => { const b = document.getElementById('redesBody'); return [!!b.offsetParent, /t\/\?s=/.test(b.querySelector('input').value), [...b.querySelectorAll('input')].some((i) => /\/t\/feed\?s=/.test(i.value)),
           !document.getElementById('whUrl'), !!b.querySelector('[data-rd-ir="premium"]'), document.documentElement.scrollWidth <= innerWidth + 1]; });
         await t.sim.su("update public.profiles set plan = 'pro', pro_until = null where id = $1", [tid]);
