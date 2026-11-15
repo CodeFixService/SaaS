@@ -29,6 +29,8 @@ let fallas = 0; const ok = (c, m) => { console.log((c ? '✓ ' : '✗ ') + m); i
     const antes = t.errores.length;
     await p.click('#bCupon'); await p.waitForTimeout(800);
     ok(!t.errores.slice(antes).some((x) => /cfx_desc_guardar|400/.test(x)), 'd) Guardar cupón vacío no va al servidor (sin error 400)');
+    await p.fill('#cCodigo', 'ver-ano'); await p.fill('#cPct', '15'); await p.click('#bCupon'); await p.waitForTimeout(1200);
+    ok((await t.sim.su("select count(*)::int n from public.cfx_descuentos where codigo = 'VERANO'"))[0].n === 1, 'd) código con guion se guarda igual que antes (ver-ano → VERANO)');
     await p.evaluate(() => alert('Hola')); await p.waitForTimeout(300);
     ok(await p.locator('.cfx-dlg', { hasText: 'Hola' }).count() === 1 && nativos.length === 0, 'b) alert() usa la ventana de la app');
   } catch (e) { fallas++; console.log('✗ ' + e.message.split('\n')[0]); }
@@ -38,6 +40,7 @@ let fallas = 0; const ok = (c, m) => { console.log((c ? '✓ ' : '✗ ') + m); i
   try {
     await t.sim.su("create table if not exists auth.claves (email text primary key, pass text not null)");
     await t.sim.su("insert into auth.claves select email, 'clave123' from auth.users on conflict do nothing");
+    await t.sim.su('alter table auth.users add column if not exists last_sign_in_at timestamptz');
     await t.sim.su("delete from cfx_exentos").catch(() => {});
     await p.setViewportSize({ width: 320, height: 680 });
     await p.goto(t.base + '/'); await p.waitForTimeout(1500); await p.click('text=Entrar').catch(() => {}); await p.waitForTimeout(500);
