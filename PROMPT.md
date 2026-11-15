@@ -15,7 +15,7 @@ PENDIENTE DE JOSUÉ: 0) EDGE G61 (las 6, reemplaza shas viejos; pega el import d
 
 ORDEN:
 0) Josué revisa G61 en el celular.
-1) G59 🚲 BiciTaller "bestia" (PLAN.md G59: tablero+fotos+checklist FREE → presupuesto por link → aviso lista → recordatorio km/meses → repuestos+stock → bicis certificadas+trade-in → pasaporte QR → domicilio) → G60 Billetera → Estaciona (mismo análisis modular, reusar catálogo del núcleo + APP.md mapa + celular.js + íconos + G39 + R1 + auto_actualizar 'bd'). 3) G38 Khipu/Flow/Webpay, courier, factura 33, sucursales. AL FINAL: G32 e) NFC.
+1) G59 🚲 BiciTaller "bestia" (PLAN.md G59: tablero+fotos+checklist FREE → presupuesto por link → aviso lista → recordatorio km/meses → repuestos+stock → bicis certificadas+trade-in → pasaporte QR → domicilio) → G60 Billetera → Estaciona (mismo análisis modular, reusar catálogo del núcleo + APP.md mapa + celular.js + íconos + G39 + R1 + auto_actualizar 'bd'). 2) G38 Khipu/Flow/Webpay, courier, factura 33, sucursales. AL FINAL: G32 e) NFC.
 
 REPOS (CodeFixService, /home/user): SaaS = CM (nucleo/ original) · Aplicaciones = Despega Pyme · Emprendedor = Billetera · Barberia · Taller = BiciTaller · Estacionamiento = Estaciona · Contenido = Cerebro (NO tocar). Ids: mando, orbita, barberia, billetera, taller, estaciona. Supabase: CM vqevujjraisrcoirswuq · Despega gilsamacgappycibcqhq · Barbería gxlabxuttnxvzkucckef · Billetera zbgfvxsqajtixjzxoxeu · BiciTaller iwvjthcmufirbnotgixi · Estaciona wphxtspicejywwzlbuux.
 
