@@ -6,7 +6,7 @@
 const { abrir } = require('./h');
 let fallas = 0; const ok = (c, m) => { console.log((c ? '✓ ' : '✗ ') + m); if (!c) fallas++; };
 (async () => {
-  let t = await abrir('/home/user/Aplicaciones', 'p_aplicaciones', { dialogo: (d) => { nativos.push(d.message()); d.accept(); } });
+  let t = await abrir('/home/user/Aplicaciones', 'p_aplicaciones', { dialogosApp: true, dialogo: (d) => { nativos.push(d.message()); d.accept(); } });
   const nativos = [];
   let p = t.page;
   try {
@@ -34,7 +34,7 @@ let fallas = 0; const ok = (c, m) => { console.log((c ? '✓ ' : '✗ ') + m); i
   } catch (e) { fallas++; console.log('✗ ' + e.message.split('\n')[0]); }
   await t.cerrar();
   // c) Barbería
-  t = await abrir('/home/user/barberia', 'barberia_prueba'); p = t.page;
+  t = await abrir('/home/user/barberia', 'barberia_prueba', { dialogosApp: true }); p = t.page;
   try {
     await t.sim.su("create table if not exists auth.claves (email text primary key, pass text not null)");
     await t.sim.su("insert into auth.claves select email, 'clave123' from auth.users on conflict do nothing");

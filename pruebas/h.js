@@ -57,6 +57,10 @@ async function abrir(repo, db, opts = {}) {
     await sim.conectar(ctx);
     if (!opts.conHola) await ctx.addInitScript(() => { window.CFX_SIN_HOLA = true; });
     if (!opts.conAvisos) await ctx.addInitScript(() => { window.CFX_SIN_OBLIGAR = true; });
+    // G52b: las pruebas antiguas contestan los avisos con confirm/prompt de Chrome; aquí CFX_DIALOGO los usa (g52_final.js pide los reales con dialogosApp).
+    if (!opts.dialogosApp) await ctx.addInitScript(() => { const A = window.alert.bind(window); let D;
+      Object.defineProperty(window, 'CFX_DIALOGO', { configurable: true, get: () => D, set: (v) => { D = v;
+        v.confirmar = async (t) => window.confirm(t); v.pedir = async (t, x) => window.prompt(t, x == null ? '' : x); v.avisar = async (t) => A(t); } }); });
     const page = await ctx.newPage();
     page.on('console', (m) => { if (m.type() === 'error') errores.push('[consola] ' + m.text()); });
     page.on('pageerror', (e) => errores.push('[página] ' + e.message));
