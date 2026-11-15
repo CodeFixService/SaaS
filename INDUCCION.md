@@ -1,6 +1,6 @@
 # INDUCCION.md · Cómo trabajar en CodeFix (leer en 5 minutos)
 
-Para una sesión nueva (Claude o persona). Lo de cada app está en su `APP.md`; la lista de tareas en `PLAN.md`; lo que hace Josué en `LANZAMIENTO.md`.
+Para una sesión nueva (Claude o persona). 🧠 Memoria viva y prompt: `PROMPT.md` (leer primero). Lo de cada app está en su `APP.md`; la lista de tareas en `PLAN.md`; lo que hace Josué en `LANZAMIENTO.md`.
 
 ## 1. Mapa
 | Repo | App | id | Notas |
