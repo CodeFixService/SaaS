@@ -170,7 +170,7 @@ Regla: FREE = lo que hace que la usen todos los días y la recomienden (sin lím
 - ⛔ CM NO lleva módulos (es de Josué): todo incluido.
 
 ## ORDEN NUEVO (Josué 14/11/2026)
-▶️ AHORA (Josué 14/11 noche): G52 ANÁLISIS FINAL CM + Despega (pruebas/final_apl.js = venta de punta a punta + TODOS los botones de 21 pantallas negocio, 4 cliente, 2 público; final_cm.js = todos los botones admin/usuario) → arreglar todo ❌ → núcleo 2.79 → publicar.
+✅ HECHO y PUBLICADO 15/11 (núcleo 2.79): G52 ANÁLISIS FINAL CM + Despega (pruebas/final_apl.js = venta de punta a punta + TODOS los botones de 21 pantallas negocio, 4 cliente, 2 público; final_cm.js = todos los botones admin/usuario) → arreglar todo ❌ → núcleo 2.79 → publicar.
 - RESULTADO G52 (14/11): central.js TODO OK · final_apl: venta de punta a punta ✅ (producto → Caja descuenta stock → vitrina → pedido → Pedidos avanza estado → seguimiento) + 27 pantallas, ~600 botones ✅ salvo 1 · final_cm: 25 pantallas admin/usuario ✅ sin errores.
 - ✅ G52a ✏️ (núcleo 2.79) pistas "👉 Desliza…" salían CORTADAS (nowrap + …) → abajo sobre la barra, ancho completo, 12.5 px, hasta 2 líneas. Prueba: g43_guia.js (G52a).
 - ✅ G52b 🖥️ (núcleo 2.79, Josué: "todavía hay avisos de Chrome") → CFX_DIALOGO en ui.js: confirmar/pedir/avisar con la tarjeta, colores y letra de la app (botón rojo dice la acción: Eliminar, Quitar…); window.alert reemplazado. Despega: 34 confirm/prompt → Core.confirmar/Core.pedir (core.js); CM metas, BiciTaller admin, Barbería/Estaciona copiar → CFX_DIALOGO. Caja "☁️ Nube": antes "Aceptar = guardar / Cancelar = recuperar" → botones ⬆️ Guardar / ⬇️ Recuperar.
