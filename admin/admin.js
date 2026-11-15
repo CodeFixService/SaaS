@@ -43,18 +43,19 @@
       // Servidores en carrusel (núcleo): el del Centro de Mando y el de cada app conectada.
       if ($('rSrv') && window.CFX_SERVIDORES) window.CFX_SERVIDORES.montar($('rSrv'), [{ nombre: 'Centro de Mando', cargar: () => rpc('cfx_servidor') }]
         .concat(con.filter((a) => a.id !== 'cm').map((a) => ({ nombre: a.nombre.split(' ·')[0], cargar: () => M.rpcDe(M.cliente(a), 'cfx_servidor') }))));
-      let pagos = 0, verif = 0, msjs = 0; const lib = [];
+      let pagos = 0, verif = 0, msjs = 0, fallas = 0; const lib = [];
       await Promise.all(con.map(async (a) => {
         const c = M.cliente(a);
         try { pagos += (await M.rpcDe(c, 'cfx_pagos_lista', { p_estado: 'pendiente' })).length; } catch (x) { /* base sin actualizar */ }
         try { verif += (await M.rpcDe(c, 'cfx_verif_lista', { p_estado: 'pendiente' })).length; } catch (x) { /* nada */ }
         try { msjs += (await M.rpcDe(c, 'cfx_chat_bandeja')).reduce((n, x) => n + (+x.sin_leer || 0), 0); } catch (x) { /* nada */ }
+        try { fallas += (await M.rpcDe(c, 'cfx_fallas_lista', { p_estado: 'nuevo' })).length; } catch (x) { /* base sin G55 aún */ }
         const e = M.estado[a.id]; if (e.pub && e.lib && App.versionMenor(e.lib, e.pub)) lib.push(a.nombre.split(' ·')[0]);
       }));
       const r6 = $('r6'); if (!r6) return;
       // Carrusel: tarjetas compactas que se deslizan (número arriba, texto abajo).
       r6.innerHTML = '<h2>Las 7 apps</h2><div class="car-apps">' +
-        [['Pagos por revisar', pagos, 'pagos'], ['Mensajes sin leer', msjs, 'mensajes'], ['Verificaciones', verif, 'control'], ['Por liberar', lib.length, 'apps'], ['Conectadas', con.length + '/' + M.APPS.length, 'apps']]
+        [['Pagos por revisar', pagos, 'pagos'], ['Mensajes sin leer', msjs, 'mensajes'], ['🐞 Fallas nuevas', fallas, 'mensajes'], ['Verificaciones', verif, 'control'], ['Por liberar', lib.length, 'apps'], ['Conectadas', con.length + '/' + M.APPS.length, 'apps']]
           .map((x) => '<button type="button" class="car-it' + (+String(x[1]).split('/')[0] && x[2] !== 'apps' ? ' hay' : '') + '" data-ir="' + x[2] + '"><b>' + x[1] + '</b><span>' + x[0] + '</span></button>').join('') + '</div>' +
         (lib.length ? '<p class="sub">Listas para liberar: ' + esc(lib.join(', ')) + '</p>' : '') +
         (con.length < M.APPS.length ? '<p class="sub">Conecta las demás en Apps para verlas aquí.</p>' : '');

@@ -13,7 +13,7 @@ Leer esto antes que el código (G42j). Repo SaaS · id `mando` · Supabase vqevu
 | `/` | Entrada (logo con 2 órbitas 🌌). Admin/socio → `/admin/`, el resto → `/app/` |
 | `/admin/#resumen` | Resumen · Empresas · 🧹 Limpiar |
 | `/admin/#apps` | Una tarjeta por app: versión, bd, 🚀 Liberar, ↗ Abrir app, 🧭 panel de la app |
-| `/admin/#usuarios` `#pagos` `#mensajes` `#analitica` | Usuarios, pagos, soporte y análisis nocturno de las 6 apps |
+| `/admin/#usuarios` `#pagos` `#mensajes` `#analitica` | Usuarios, pagos, soporte (💬 chat + 🐞 Fallas reportadas con 🎁 15 días, G55) y análisis nocturno de las 6 apps |
 | `/admin/#control` | 🔔 claves push, 📜 Registro, ✉️ Correo (Gmail + clave 16 letras), funciones cfx_* comunes |
 | `/admin/#ajustes` | Ajustes (Registro y Versiones también por `#registro` / `#versiones`) |
 | `/app/#hoy` `#pedidos` `#metas` `#tablero` `#insights` `#panel` `#mas` | App personal (CM.ir(hash)) |
