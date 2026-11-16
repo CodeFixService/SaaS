@@ -36,6 +36,9 @@ Los correos de cada tienda a SUS clientes salen con el Gmail de la tienda: **Des
 6. ⏰ **Todo vence solo** (G25): mensual a los 30 días, anual a los 365, regalo en los días que des. Nada queda permanente: el negocio renueva en Mi plan.
 7. 🧾 **Detalle de compra** (G25): el negocio lo ve en Pedidos (pedido pagado) y el cliente en Mis pedidos; si hay boleta SII, su N° va adentro. 🌐 **Mi dominio**: Más → Tu tienda → Mi dominio.
    Si entra a un módulo que no tiene (ej. Más → Mensajes, Pedidos → Estadísticas/Promociones, Mi equipo, sellos) ve **▶️ Probar módulo**. Si TÚ lo apagas para todos (CM → 🧩) ve "no está disponible por ahora".
+8. 🎁 **Campaña de lanzamiento** (G74 b, las 6): CM → Apps → <app> → 🧩 → tarjeta **🎁 Campaña de lanzamiento** → marca los módulos → Meses de regalo (3 sugerido) → Termina el (fecha) → **🎁 Lanzar campaña**.
+   Negocio: Más → 🧩 Módulos ve arriba "Lanzamiento: N módulos GRATIS por 3 meses" y en cada uno **GRATIS 3 meses** → **🎁 Activar gratis** (o desde ▶️ Probar) → lo tiene al tiro ("🎁 Regalo hasta el…"). Una vez por módulo.
+   El día después de "Termina el" se apaga sola (o **⏹️ Terminar hoy**): los nuevos ven el precio; los que activaron siguen hasta su fecha y 7 días antes les llega el aviso para pagar (Premium −20 %).
 
 ## 5 · 🌐 Dominio de CodeFix + dominios de los negocios (G33, todo desde el CM)
 **1 vez (tú):**

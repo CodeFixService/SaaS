@@ -363,6 +363,25 @@
       '<div class="btns"><button class="ghost" data-cerrar type="button">Cerrar</button></div>');
     let V = null;  // cfx_venta_admin (null = la base aún no tiene el G19)
     const num = (id) => { const x = d.querySelector('#' + id); return x && x.value.trim() !== '' ? Math.round(Number(x.value)) : null; };
+    // G74 b · 🎁 Campaña de lanzamiento: módulos + meses de regalo + fecha de término (se apaga sola ese día).
+    const hoy = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    const enDias = (n) => new Date(Date.now() - new Date().getTimezoneOffset() * 60000 + n * 864e5).toISOString().slice(0, 10);
+    const dma = (f) => f ? f.split('-').reverse().join('/') : '';
+    const campana = (cfg) => {
+      const C = cfg.campana || null, sel = (C && C.modulos) || [], meses = (C && C.meses) || 3;
+      const mods = (V.catalogo || []).filter((x) => (e.modulos.find((m) => m.clave === x.clave) || {}).activo);
+      return '<div class="card" id="campCard"><h3>🎁 Campaña de lanzamiento</h3>' +
+        '<p class="sub">' + (V.campana_on ? '🟢 Activa hasta el ' + esc(dma(C.hasta)) + ' · ' + (V.campana_usos || 0) + ' negocio(s) ya la activaron.'
+          : C ? '⚪ Terminó el ' + esc(dma(C.hasta)) + ' · ' + (V.campana_usos || 0) + ' negocio(s) la activaron. Ellos siguen con su regalo hasta su fecha.'
+          : 'Elige módulos y meses de regalo. El negocio toca 🎁 Activar gratis y lo tiene al tiro. El día de término se apaga sola.') + '</p>' +
+        (mods.length ? '<div style="display:grid;gap:2px;margin:6px 0">' + mods.map((x) => '<label class="fila" style="gap:8px;align-items:center;min-width:0;margin:4px 0"><input type="checkbox" data-camp="' + esc(x.clave) + '"' +
+          (sel.includes(x.clave) ? ' checked' : '') + '><span class="grow" style="min-width:0;overflow-wrap:anywhere">' + esc(x.nombre) + '</span></label>').join('') + '</div>' : '<p class="sub">Prende algún módulo arriba.</p>') +
+        '<label>Meses de regalo<select id="cMeses">' + [1, 3, 6, 12].map((n) => '<option value="' + n + '"' + (n === meses ? ' selected' : '') + '>' + n + (n === 1 ? ' mes' : ' meses') + (n === 3 ? ' (sugerido)' : '') + '</option>').join('') + '</select></label>' +
+        '<label>Termina el<input id="cHasta" type="date" min="' + hoy() + '" value="' + esc(V.campana_on ? C.hasta : enDias(30)) + '"></label>' +
+        '<p class="err" id="cErr"></p><div class="btns" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr))">' +
+        (V.campana_on ? '<button type="button" class="ghost" id="cFin">⏹️ Terminar hoy</button>' : '') +
+        '<button type="button" id="cOk"' + (V.campana_on ? '' : ' style="grid-column:1/-1"') + '>' + (V.campana_on ? '💾 Guardar' : '🎁 Lanzar campaña') + '</button></div></div>';
+    };
     const pintar = () => {
       const cfg = (V && V.config) || {}, on = !!cfg.activo, pr = cfg.precios || {}, L = cfg.links || {};
       d.querySelector('#venta').innerHTML = !V ? '' :
@@ -387,6 +406,7 @@
           items.map(([k, n]) => '<p style="margin:10px 0 4px"><b>' + esc(n) + '</b></p><input data-lk="' + esc(k) + '" data-per="m" placeholder="Link 1 mes (https://…)" value="' + esc(((L[k] || {}).m) || '') + '">' +
             '<input data-lk="' + esc(k) + '" data-per="a" placeholder="Link 1 año (https://…)" style="margin-top:6px" value="' + esc(((L[k] || {}).a) || '') + '">').join('') + '</details>' +
         '<p class="err" id="vErr"></p><div class="btns"><button type="button" id="vGuardar">💾 Guardar precios</button></div></div>' +
+        campana(cfg) +
         '<div class="card"><h3>🎁 Regalar o quitar</h3><label>Correo del negocio<input id="rEmail" type="email" placeholder="tienda@correo.cl"></label>' +
         '<label>Módulo o pack<select id="rItem">' + items.map(([k, n]) => '<option value="' + esc(k) + '">' + esc(n) + '</option>').join('') + '</select></label>' +
         '<label>Días (0 = quitar)<input id="rDias" inputmode="numeric" value="30"></label><p class="err" id="rErr"></p>' +
@@ -421,6 +441,16 @@
         ev.target.disabled = true;
         try { V = await rpcDe(c, 'cfx_venta_guardar', { p }); e.modulos = await rpcDe(c, 'cfx_modulos_admin'); toast('💾 Precios guardados'); pintar(); }
         catch (x) { d.querySelector('#vErr').textContent = x.message; ev.target.disabled = false; }
+      } else if (ev.target.id === 'cOk' || ev.target.id === 'cFin') {
+        const fin = ev.target.id === 'cFin';
+        if (fin && !(await window.CFX_DIALOGO.confirmar('¿Terminar la campaña hoy? Los que ya la activaron siguen con su regalo hasta su fecha.'))) return;
+        const camp = fin ? null : { modulos: [...d.querySelectorAll('[data-camp]:checked')].map((x) => x.dataset.camp), meses: Number(d.querySelector('#cMeses').value), hasta: d.querySelector('#cHasta').value };
+        ev.target.disabled = true;
+        try {
+          // Terminar hoy: el servidor deja la fecha de término en ayer (queda el historial de la campaña).
+          const p = { campana: fin ? { fin: true } : camp };
+          V = await rpcDe(c, 'cfx_venta_guardar', { p }); toast(fin ? '⏹️ Campaña terminada' : '🎁 Campaña guardada'); pintar();
+        } catch (x) { d.querySelector('#cErr').textContent = x.message; ev.target.disabled = false; }
       } else if (ev.target.id === 'rOk') {
         ev.target.disabled = true;
         try { V = await rpcDe(c, 'cfx_modulo_regalar', { p_email: d.querySelector('#rEmail').value, p_item: d.querySelector('#rItem').value, p_dias: num('rDias') || 0 }); toast('🎁 Listo'); pintar(); }
