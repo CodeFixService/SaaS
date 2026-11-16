@@ -76,3 +76,11 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 1. Cloudflare → Barbería en **Listo** → CM → Resumen → Empresas → Barbería → **🧹 Limpiar** → prueba: Más → Caja → toca un corte → **🧾 Comprobante**.
 2. (Cuando quieras vender módulos) CM → Apps → 💈 Barbería → **🧩** → prender "Vender módulos". Sin prenderlo todo sigue igual (solo Premium).
 3. CM → Apps → **🚀 Liberar**. La base se actualiza sola (ya no se reinstala cada 10 min).
+
+## 🚲 Probar módulos BiciTaller (tú, en el celular; antes CM → Apps → 🚲 → 🧩 venta prendida)
+- G59c 🚦 Tablero → Lista → 📲 Avisar
+- G59d Más → 📦 Repuestos → ✨ → entregar → 🛒 pedido → 📥 Llegó
+- G59e Más → 🏷️ Bicis usadas → ＋ → ✅ Todo bien → 📷 → 📣 Publicar → 👀 Ver en mi página · Más → 🔄 Parte de pago
+- G59f orden → 🪪 Pasaporte → Crear → 🖨️ Sticker QR → 📲 Enviar al dueño → (como cliente) 🚨 Me la robaron
+- G59g Más → 🚐 A domicilio → ⚙️ prender + recargo → Guardar → (como cliente) tu página → 🏠 Que vengan a mi casa → Reservar → (taller) Ruta del día → 🗺️ Abrir la ruta → 🚐 Voy en camino
+- G59h orden lista → 🛡️ Garantía → Dar garantía → 📲 Enviar al cliente → (cliente) 🛡️ Usar mi garantía → (taller) Hoy → ✅ Lo arreglé
