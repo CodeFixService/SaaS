@@ -207,10 +207,16 @@
     } catch (x) { err(x); }
   };
   function nueva() {
-    const d = modal('<h2>Nueva cuenta</h2><label>Nombre<input id="nn"></label><label>Correo<input id="ne" type="email"></label><label>Rol<select id="nr"><option value="usuario">Usuario</option><option value="socio">Socio</option></select></label><p class="sub">Le llega un correo para crear su contraseña.</p><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="nk" type="button">Crear</button></div>');
-    d.querySelector('#nk').onclick = async () => { try { await App.crearCuenta({ email: d.querySelector('#ne').value.trim(), nombre: d.querySelector('#nn').value.trim(), rol: d.querySelector('#nr').value }); d.close(); toast('Cuenta creada'); usuarios(); } catch (x) { err(x); } };
+    const d = modal('<h2>Nueva cuenta</h2><label>Nombre<input id="nn"></label><label>Correo<input id="ne" type="email"></label><label>Rol<select id="nr"><option value="usuario">Usuario</option><option value="socio">Socio</option></select></label><label>Contraseña inicial<input id="np" autocomplete="off" value="' + App.clave() + '"></label><p class="sub">Al crear te mostramos el mensaje con su correo y contraseña para enviárselo.</p><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="nk" type="button">Crear</button></div>');
+    d.querySelector('#nk').onclick = async () => { try { const k = { email: d.querySelector('#ne').value.trim(), nombre: d.querySelector('#nn').value.trim(), rol: d.querySelector('#nr').value, password: d.querySelector('#np').value.trim() };
+      if (k.password.length < 6) return err(new Error('La contraseña debe tener al menos 6 caracteres'));
+      await App.crearCuenta(k); d.close(); toast('Cuenta creada'); usuarios(); acceso(App.mensajeAcceso({ nombre: k.nombre || k.email, email: k.email, password: k.password })); } catch (x) { err(x); } };
   }
 
+  function acceso(m) {
+    const d = modal('<h2>✅ Cuenta creada</h2><p class="sub">Envíale este mensaje:</p><textarea rows="8" readonly>' + esc(m) + '</textarea><div class="btns"><button class="ghost" data-cerrar type="button">Cerrar</button><button id="nkC" type="button">📋 Copiar</button></div>');
+    d.querySelector('#nkC').onclick = async () => { try { await navigator.clipboard.writeText(m); } catch (x) { const t = d.querySelector('textarea'); t.select(); document.execCommand('copy'); } toast('Copiado'); };
+  }
   // Precios, links y transferencia ya no van aquí: se editan una vez para las 7 apps en Pagos.
   const CFG = [['dias_prueba', 'Días de prueba Pro'], ['soporte_whatsapp', 'WhatsApp de soporte', 1], ['dias_comprobantes', 'Guardar comprobantes (días)'], ['limite_db_mb', 'Límite de base de datos (MB)'], ['auditoria_max', 'Máximo de filas del registro']];
   function ajustes() {
