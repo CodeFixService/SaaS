@@ -4,7 +4,7 @@ ROL: Respuestas CORTAS y ECONÓMICAS. Josué usa el teléfono: pasos uno por uno
 🧩 Módulos independientes. ⛔ El CM NO lleva módulos. Ultra intuitivo: cada pantalla dice qué pasa + 1 botón claro. Lo reutilizable → núcleo.
 💰 REGLA G39 (14/11): FREE opera completo · PREMIUM = funciones avanzadas + -20% en módulos, NO trae todos los módulos (los módulos son la plata) · MÓDULOS sueltos = el "boom". 👤 Clientes del negocio NO pagan (sin Premium ni módulos de cliente): ven todo cómodo, pero cada función solo si SU negocio tiene el módulo (🛟 chat con soporte SIEMPRE). Sin publicidad.
 🧾 REGLA G67 (Josué 15/11): BOLETA sí en todas (Barbería, BiciTaller…: sus clientes piden boleta). FACTURA (33) solo Despega (pymes que facturan) y, en talleres, solo al pedir repuestos a un proveedor (esa factura la emite el proveedor, no la app). Plan: pasar boleta_* de Despega a nucleo/sql/boleta.sql y activarla en las apps de servicio.
-REGLA G33: boleta, pagos, NFC, impresora, dominio, integraciones → Claude elige la más recomendada y avisa. REGLA G31: vender igual con o sin RUT. ⛔ CEREBRO (Contenido): NO tocar ni sincronizar.
+REGLA G33: boleta, pagos, NFC, impresora, dominio, integraciones → Claude elige la más recomendada y avisa. REGLA G31: vender igual con o sin RUT. 🧠 CEREBRO (Contenido): Josué 16/11 quiere pasarlo al CM como módulo 🎬 Estudio de contenido (PLAN.md G74 c); hasta que se exporten sus datos: NO borrar ni sincronizar.
 💬 Avisos: NUNCA confirm/prompt/alert de Chrome → CFX_DIALOGO.confirmar/pedir/avisar (núcleo ui.js; Despega: await Core.confirmar/Core.pedir).
 
 LISTA MAESTRA: SaaS/PLAN.md (grep -n "G5[2-9]\|G6[0-9]\|ORDEN NUEVO\|AHORA"). Guía Josué: SaaS/LANZAMIENTO.md. Entorno/reglas: SaaS/INDUCCION.md. Cada repo: APP.md antes que el código.
@@ -16,6 +16,7 @@ PENDIENTE DE JOSUÉ: 1) Cloudflare Listo (6 apps) → CM → 🧹 Limpiar → CM
 
 ORDEN:
 0) Josué revisa G61 + G59 + G59b + G65 + G59c + G59d + G59e + G59f + G59g + G59h + G59i en el celular.
+0b) G74 (PLAN.md): esperar respuestas de Josué (clave API de IA, archivos de ejemplo, qué conservar de Cerebro, orden). Recomendado: a) 🧾 ＋ Nueva orden + Caja/Mostrador FREE en BiciTaller → ⭐ reseñas → b) 🎁 Campaña de lanzamiento (gratis 3 meses a quien lo active) → c) 🎬 Estudio de contenido en el CM.
 1) G59 🚲 BiciTaller "bestia" MODULAR (PLAN.md G59: ✅ hasta G59i → SIGUE ⭐ reseñas Google (el ÚLTIMO de G59; Barbería ya tiene 'resenas': reutilizar); catálogo del núcleo: nucleo/sql/modulos_venta.sql + demo en modulos.js; ver Taller/APP.md) → G60 Billetera → Estaciona (mismo análisis modular: catálogo del núcleo + APP.md + G39).
 2) G67 🧾 boleta en Barbería y BiciTaller. 3) G66 🎯 centrar íconos de la barra de abajo (núcleo barra.js, las 6). 4) G38 Khipu/Flow/Webpay, courier, factura 33, sucursales. AL FINAL: G32 e) NFC + 🧹 barrido de todo lo pendiente/a medias (Josué).
 
