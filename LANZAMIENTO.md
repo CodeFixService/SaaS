@@ -78,6 +78,7 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 3. CM → Apps → **🚀 Liberar**. La base se actualiza sola (ya no se reinstala cada 10 min).
 
 ## 🚲 Probar módulos BiciTaller (tú, en el celular; antes CM → Apps → 🚲 → 🧩 venta prendida)
+- G74a Hoy → ＋ Nueva orden → agrega arreglos → ✅ Lista → 💵 Cobrar y entregar · Hoy → 🧾 Presupuesto → 📲 Enviar presupuesto · Hoy → 💵 Caja → ＋ Nueva venta → 💵 Cobrar → Cierre del día
 - G59c 🚦 Tablero → Lista → 📲 Avisar
 - G59d Más → 📦 Repuestos → ✨ → entregar → 🛒 pedido → 📥 Llegó
 - G59e Más → 🏷️ Bicis usadas → ＋ → ✅ Todo bien → 📷 → 📣 Publicar → 👀 Ver en mi página · Más → 🔄 Parte de pago
