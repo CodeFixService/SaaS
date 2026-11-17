@@ -40,6 +40,9 @@
     };
   }
 
+  // G90: el socio (demo/vendedor) solo mira Planes y Textos: el servidor le rechaza cambiarlos, así que no se le muestran los controles.
+  const SOCIO = () => !!global.CM_SOCIO;
+  const soloVer = '<p class="sub">👀 Solo para mirar: los cambios los hace el administrador.</p>';
   async function planes() {
     let L;
     try { L = await rpc('cfx_planes'); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
@@ -48,10 +51,11 @@
       : '<input type="number" data-k="' + k + '" value="' + esc(x[k] == null ? '' : x[k]) + '" style="width:100%;padding-left:6px;padding-right:6px;text-align:center">';
     // G42i: nombre a la izquierda (baja por palabra, nunca partido) y 2 columnas angostas centradas.
     const col = 'style="flex:0 0 68px;text-align:center"';
-    caja().innerHTML = '<p class="sub">Interruptores (sí/no) y límites de cada plan. Se guarda al cambiar. Las apps los aplican al instante.</p>' +
+    caja().innerHTML = (SOCIO() ? soloVer : '<p class="sub">Interruptores (sí/no) y límites de cada plan. Se guarda al cambiar. Las apps los aplican al instante.</p>') +
       grupos.map((g) => '<div class="card"><h2>' + (g === 'negocio' ? 'Negocio' : 'Cliente') + '</h2><div class="fila sub" style="font-weight:700;gap:8px"><span class="grow">Función</span><span ' + col + '>Gratis</span><span ' + col + '>Premium</span></div>' +
         L.filter((x) => x.grupo === g).map((x) => '<div class="fila" data-g="' + esc(x.grupo) + '" data-c="' + esc(x.clave) + '" style="padding:4px 0;border-top:1px solid var(--line);gap:8px"><span class="grow" style="overflow-wrap:normal;hyphens:auto" lang="es">' + esc(nom(x.clave)) + '</span>' +
           '<span ' + col + '>' + celda(x, 'free') + '</span><span ' + col + '>' + celda(x, 'premium') + '</span></div>').join('') + '</div>').join('');
+    if (SOCIO()) { caja().querySelectorAll('[data-k]').forEach((i) => { i.disabled = true; }); caja().onchange = null; return; }
     caja().onchange = async (ev) => {
       const f = ev.target.closest('[data-c]'); if (!f) return;
       const v = (k) => { const i = f.querySelector('[data-k="' + k + '"]'); return i.type === 'checkbox' ? i.checked : Number(i.value || 0); };
@@ -64,7 +68,8 @@
     let L;
     try { L = await rpc('cfx_textos'); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
     caja().innerHTML = L.length ? L.map((t) => '<div class="card"><label>' + esc(t.nombre || nom(t.clave)) + '<textarea data-t="' + esc(t.clave) + '" rows="' + Math.min(6, Math.max(2, Math.ceil(String(t.valor).length / 40))) + '">' + esc(t.valor) + '</textarea></label>' +
-      '<button type="button" class="small" data-g="' + esc(t.clave) + '">Guardar</button></div>').join('') : '<p class="empty">Esta app no tiene textos editables.</p>';
+      (SOCIO() ? '' : '<button type="button" class="small" data-g="' + esc(t.clave) + '">Guardar</button>') + '</div>').join('') : '<p class="empty">Esta app no tiene textos editables.</p>';
+    if (SOCIO()) { caja().insertAdjacentHTML('afterbegin', soloVer); caja().querySelectorAll('[data-t]').forEach((i) => { i.readOnly = true; }); caja().onclick = null; return; }
     caja().onclick = async (ev) => {
       const b = ev.target.closest('[data-g]'); if (!b) return;
       try { await rpc('cfx_texto_guardar', { p_clave: b.dataset.g, p_valor: caja().querySelector('[data-t="' + b.dataset.g + '"]').value }); toast('Texto guardado'); } catch (x) { toast(nf(x)); }
@@ -583,13 +588,14 @@
 
   async function render(el) {
     raiz = el;
+    if (SOCIO() && /^(planes|textos)$/.test(seccion)) seccion = 'negocios';
     try { const s0 = sessionStorage.getItem('cm-control-secc'); if (s0) { sessionStorage.removeItem('cm-control-secc'); if (F[s0]) seccion = s0; } } catch (x) { /* nada */ }  // G85: desde Pagos → 🏷️ Cupones
     el.innerHTML = '<div class="titulo-v"><h2>Control</h2><span class="sub">Las 7 apps</span></div><p class="sub">Cargando…</p>';
     await M().preparar();
     const a = app();
     el.innerHTML = '<div class="titulo-v"><h2>Control</h2><span class="sub">Las 7 apps</span></div>' +
       '<div id="ctlApps"></div>' +  // G85: caja de apps (antes, 7 botones que bajaban de línea)
-      '<div class="chips" data-cfx-pestanas>' + SECC.map((s) => '<button type="button" class="chip' + (s[0] === seccion ? ' on' : '') + '" data-s="' + s[0] + '">' + s[1] + '</button>').join('') + '</div><div id="ctlCuerpo"></div>';
+      '<div class="chips" data-cfx-pestanas>' + SECC.filter((s) => !(SOCIO() && /^(planes|textos)$/.test(s[0]))).map((s) => '<button type="button" class="chip' + (s[0] === seccion ? ' on' : '') + '" data-s="' + s[0] + '">' + s[1] + '</button>').join('') + '</div><div id="ctlCuerpo"></div>';
     await M().cajaApps(el.querySelector('#ctlApps'), actual, (id) => { actual = id; render(el); }, { sub: (x) => conectada(x) ? '' : '🔌 Sin conectar' });
     el.querySelectorAll('[data-s]').forEach((b) => { b.onclick = () => { seccion = b.dataset.s; render(el); }; });
     if (!conectada(a)) {

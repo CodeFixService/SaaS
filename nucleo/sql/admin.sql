@@ -493,3 +493,63 @@ begin
 end $$;
 revoke all on function public.cfx_negocios(text, text), public.cfx_premium_cuenta(uuid, text, int), public.cfx_key_aplicar(uuid, text, text, text) from public, anon;
 grant execute on function public.cfx_negocios(text, text), public.cfx_premium_cuenta(uuid, text, int), public.cfx_key_aplicar(uuid, text, text, text) to authenticated;
+
+-- ---------- G38 · 💰 Dinero (CM → Resumen): ingresos del mes por Premium/módulo, pruebas por vencer y morosos con su WhatsApp ----------
+-- Moroso = su último pago aprobado (Premium o módulo) dejó de cubrir en los últimos 60 días, no tiene otro pago en revisión,
+-- no está exento y hoy no tiene Premium activo. Solo lee: no cambia nada.
+create or replace function public.cfx_tel_de(p_cuenta uuid) returns text
+language plpgsql stable security definer set search_path = '' as $$
+declare t text; x record;
+begin
+  for x in select c.table_name, c.column_name from information_schema.columns c
+    where c.table_schema = 'public' and c.table_name in ('perfiles', 'profiles') and c.column_name in ('telefono', 'whatsapp', 'phone') order by c.table_name, c.column_name loop
+    begin
+      execute format('select nullif(trim(%I::text), %L) from public.%I where id = $1', x.column_name, '', x.table_name) into t using p_cuenta;
+    exception when others then t := null; end;
+    if t is not null then return left(t, 30); end if;
+  end loop;
+  select coalesce(nullif(u.phone, ''), u.raw_user_meta_data ->> 'telefono', u.raw_user_meta_data ->> 'whatsapp') into t from auth.users u where u.id = p_cuenta;
+  return left(nullif(trim(t), ''), 30);
+end $$;
+create or replace function public.cfx_dinero() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare z text := 'America/Santiago'; m0 timestamptz := date_trunc('month', now() at time zone z) at time zone z;
+        m1 timestamptz := date_trunc('month', (now() at time zone z) - interval '1 month') at time zone z;
+        d timestamptz := public.cfx_ingresos_desde(); cu jsonb := '[]'; activos uuid[] := '{}'; ve jsonb; mo jsonb;
+begin
+  perform <CHK>;
+  if to_regprocedure('public.cfx_cuentas_app(text,text)') is not null then
+    begin
+      execute 'select coalesce(public.cfx_cuentas_app(''negocio'', ''''), ''[]''::jsonb) || coalesce(public.cfx_cuentas_app(''cliente'', ''''), ''[]''::jsonb)' into cu;
+    exception when others then cu := '[]'; end;
+  end if;
+  select coalesce(array_agg((e ->> 'id')::uuid), '{}') into activos from jsonb_array_elements(cu) e
+    where e ->> 'premium_hasta' is not null and (e ->> 'premium_hasta')::timestamptz > now();
+  -- Por vencer en 7 días (sin "para siempre"): prueba = nunca ha pagado; renovación = ya pagó antes.
+  select coalesce(jsonb_agg(jsonb_build_object('id', e ->> 'id', 'nombre', coalesce(nullif(e ->> 'nombre', ''), e ->> 'email'), 'email', e ->> 'email', 'rol', e ->> 'rol',
+      'hasta', e ->> 'premium_hasta', 'tel', public.cfx_tel_de((e ->> 'id')::uuid),
+      'pago', exists (select 1 from public.cfx_pagos p where p.cuenta = (e ->> 'id')::uuid and p.estado = 'aprobado')) order by (e ->> 'premium_hasta')::timestamptz), '[]')
+    into ve from (select e from jsonb_array_elements(cu) e where e ->> 'premium_hasta' is not null and e ->> 'premium_hasta' <> 'infinity'
+      and (e ->> 'premium_hasta')::timestamptz between now() and now() + interval '7 days' and coalesce((e ->> 'suspendido')::boolean, false) = false limit 100) q;
+  select coalesce(jsonb_agg(jsonb_build_object('id', u.cuenta, 'nombre', coalesce(nullif(u.nombre, ''), u.email), 'email', u.email, 'rol', u.rol, 'producto', u.prod,
+      'vencio', u.fin, 'monto', u.monto, 'periodo', u.periodo, 'tel', public.cfx_tel_de(u.cuenta)) order by u.fin desc), '[]') into mo
+  from (select distinct on (p.cuenta, coalesce(p.producto, '')) p.cuenta, p.nombre, p.email, p.rol, p.producto as prod, p.monto, p.periodo,
+          coalesce(p.resuelto, p.creado) + make_interval(days => coalesce(p.dias, 0)) as fin
+        from public.cfx_pagos p where p.estado = 'aprobado' and coalesce(p.dias, 0) > 0 and not coalesce(p.regalo, false) and p.key_regalo is null
+        order by p.cuenta, coalesce(p.producto, ''), coalesce(p.resuelto, p.creado) + make_interval(days => coalesce(p.dias, 0)) desc) u
+  where u.fin between now() - interval '60 days' and now()
+    and not (u.prod is null and u.cuenta = any (activos))
+    and not exists (select 1 from public.cfx_pagos g where g.cuenta = u.cuenta and g.estado = 'pendiente')
+    and not exists (select 1 from public.cfx_exentos x where x.cuenta = u.cuenta);
+  return jsonb_build_object('desde', nullif(d, '-infinity'::timestamptz),
+    'mes', (select jsonb_build_object('monto', coalesce(sum(monto), 0), 'n', count(*)) from public.cfx_pagos where estado = 'aprobado' and creado >= greatest(m0, d)),
+    'anterior', (select jsonb_build_object('monto', coalesce(sum(monto), 0), 'n', count(*)) from public.cfx_pagos where estado = 'aprobado' and creado >= greatest(m1, d) and creado < m0),
+    'por', (select coalesce(jsonb_agg(jsonb_build_object('producto', k, 'monto', s, 'n', n) order by s desc), '[]') from (
+      select coalesce(producto, 'premium') k, sum(monto) s, count(*) n from public.cfx_pagos where estado = 'aprobado' and creado >= greatest(m0, d) group by 1) q),
+    'medios', (select coalesce(jsonb_object_agg(medio, s), '{}') from (select medio, sum(monto) s from public.cfx_pagos where estado = 'aprobado' and creado >= greatest(m0, d) group by 1) q),
+    'pendientes', (select count(*) from public.cfx_pagos where estado = 'pendiente' and medio <> 'mp'),
+    'premium', coalesce(cardinality(activos), 0), 'vencen', ve, 'morosos', mo);
+end $$;
+revoke all on function public.cfx_tel_de(uuid) from public, anon, authenticated;
+revoke all on function public.cfx_dinero() from public, anon;
+grant execute on function public.cfx_dinero() to authenticated;

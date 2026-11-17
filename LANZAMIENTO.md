@@ -124,3 +124,11 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 - 🪪 Verificación: el RUT se escribe sin el dígito final (sale solo) y las fotos de la cédula abren la cámara.
 - 🛰️ Función del CM (1 vez, ANTES de probar 🔑 Clave): Supabase (CM vqevujjraisrcoirswuq) → Edge Functions → servidor → Code → borra todo y pega:
   `import 'https://raw.githubusercontent.com/CodeFixService/SaaS/b9c0a0ab3d044d167984cb1282de25120a5a0a8d/supabase/functions/servidor/index.ts';` → Deploy (Verify JWT APAGADO).
+
+## G90 💰🔔🔑 CM 5.32 · las 7 apps (probar, después de CM → Apps → ⬆️ Actualizar base en las 7)
+1. CM → Resumen → tarjeta 💰 Dinero: toca una app (detalle por Premium/módulo) · 🔴 Morosos → 💬 Cobrar por WhatsApp · ⏳ Vencen.
+2. CM → Usuarios → + Cuenta → elige Barbería: se abre su 🧭 panel con ➕ Crear barbería listo.
+3. Con Mercado Pago conectado: en una app → Premium → marca 🎁 "Es para otra cuenta" → paga poco con cupón → al volver: key + 📋 Copiar + 🧾 Ver comprobante. Canjéala en otra cuenta (Premium → 🔑 Tengo una key).
+4. Entra como socio al CM: no ve 💰 Dinero, 🚀 Liberar ni Planes/Textos.
+5. A los 15 min de un negocio nuevo te llega 🔔 "🆕 Negocio nuevo".
+

@@ -105,3 +105,33 @@ begin
 end $$;
 revoke all on function public.cfx_errores_borrar(bigint) from public, anon;
 grant execute on function public.cfx_errores_borrar(bigint) to authenticated;
+
+-- ---------- G38 · 🔔 Alertas al celular del admin (vía Centro de Mando): negocio nuevo y errores nuevos ----------
+-- Cada 15 minutos mira lo nuevo desde la última vez (la primera vez solo marca, no avisa de lo viejo). Un aviso por tipo y vuelta.
+-- Los pagos ya avisan solos (💳 por revisar / ⚡ aprobado). La caída de una app la ve 🩺 salud diaria (GitHub) y el carrusel de servidores.
+create or replace function public.cfx_alertas_revisar() returns int
+language plpgsql security definer set search_path = '' as $$
+declare v jsonb := (select valor from public.cfx_salud where clave = 'alertas'); h timestamptz := now(); desde timestamptz; cu jsonb := '[]';
+        n int := 0; k int; t text;
+begin
+  if v is null or (v ->> 'desde') is null then perform public.cfx_salud_marca('alertas', jsonb_build_object('desde', h)); return 0; end if;
+  desde := (v ->> 'desde')::timestamptz;
+  if to_regprocedure('public.cfx_cuentas_app(text,text)') is not null then
+    begin execute 'select coalesce(public.cfx_cuentas_app(''negocio'', ''''), ''[]''::jsonb)' into cu; exception when others then cu := '[]'; end;
+    select count(*), min(coalesce(nullif(e ->> 'nombre', ''), e ->> 'email')) into k, t from jsonb_array_elements(cu) e
+      where (e ->> 'creado')::timestamptz > desde and (e ->> 'creado')::timestamptz <= h;
+    if k > 0 then perform public.cfx_al_cm('🆕 Negocio nuevo', coalesce(t, '') || case when k > 1 then ' y ' || (k - 1) || ' más' else '' end, 'negocio'); n := n + 1; end if;
+  end if;
+  select count(*), min(left(mensaje, 120)) into k, t from public.cfx_errores where creado > desde and creado <= h;
+  if k > 0 then perform public.cfx_al_cm('🩺 ' || k || case when k = 1 then ' error nuevo' else ' errores nuevos' end, coalesce(t, ''), 'error'); n := n + 1; end if;
+  perform public.cfx_salud_marca('alertas', jsonb_build_object('desde', h));
+  return n;
+end $$;
+revoke all on function public.cfx_alertas_revisar() from public, anon, authenticated;
+do $$
+begin
+  perform cron.unschedule(jobid) from cron.job where jobname = 'cfx-alertas';
+  perform cron.schedule('cfx-alertas', '*/15 * * * *', 'select public.cfx_alertas_revisar()');
+exception when others then
+  raise notice 'Alertas no programadas (%).', sqlerrm;
+end $$;

@@ -108,7 +108,9 @@
         '<span class="pill ' + (g.estado === 'aprobado' ? 'ok' : g.estado === 'rechazado' ? 'bad' : 'warn') + '">' + g.estado + '</span></div>' +
         '<p class="sub">' + esc(g.email) + ' · ' + (g.rol === 'negocio' ? 'Negocio' : g.rol === 'cliente' ? 'Cliente' : 'Otro') + ' · ' + (PERIODO[g.periodo] || g.periodo) + (g.meses ? ' (' + g.meses + ')' : '') + (g.producto ? ' · 🧩 ' + esc(g.producto) : '') + ' · <b>' + pesos(g.monto) + '</b> por ' + (MEDIO[g.medio] || g.medio) +
         ' · ' + A.hace(g.creado) + (g.aprobados ? ' · ya pagó ' + g.aprobados + ' vez/veces' : ' · primer pago') + (g.nota ? '<br>' + esc(g.nota) : '') + (g.motivo ? '<br>Motivo: ' + esc(g.motivo) : '') +
-        (g.estado === 'aprobado' && g.dias ? '<br>' + g.dias + ' días de Premium' : '') + '</p>' +
+        (g.estado === 'aprobado' && g.dias ? '<br>' + g.dias + ' días de ' + (g.producto ? 'módulo' : 'Premium') + (g.hasta ? ' · activo hasta ' + esc(new Date(g.hasta).toLocaleDateString('es-CL')) : '') : '') +
+        // G87 K: 🎁 regalo o 🔑 respaldo (no se pudo activar solo): la key de 1 uso, para reenviarla si la persona la pierde.
+        (g.key_regalo ? '<br>' + (g.regalo ? '🎁 Key de regalo: ' : '🔑 Key de respaldo: ') + '<b>' + esc(g.key_regalo) + '</b>' : '') + '</p>' +
         (g.estado === 'pendiente' && g.medio === 'mp' ? '<p class="sub">⏳ Abrió Mercado Pago: se aprueba solo apenas pague (se revisa cada 1 min).</p><div class="btns-s"><button type="button" class="small ghost" data-mp="' + i + '">🔄 Revisar ahora</button><button type="button" class="small ghost" data-no="' + i + '">Cerrar</button></div>' :
         g.estado === 'pendiente' ? '<div class="btns-s">' + (g.con_comprobante ? '<button type="button" class="small ghost" data-v="' + i + '">Ver comprobante</button>' : '') +
           '<button type="button" class="small" data-ok="' + i + '">Aprobar</button><button type="button" class="small ghost" data-no="' + i + '">Rechazar</button></div>' :

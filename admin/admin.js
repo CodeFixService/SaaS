@@ -6,6 +6,7 @@
   const yo = await App.requerir(['admin', 'socio']);
   try { sessionStorage.setItem('cm-abierto', '1'); } catch (e) { /* nada */ }
   const SUPER = yo.rol === 'admin';
+  window.CM_SOCIO = !SUPER;  // G90: el socio no ve lo que el servidor le rechaza (Liberar, Ajustes, Planes, Textos, imágenes)
   let pub = await App.cargarPublica();
   const MB = (b) => b < 1048576 ? Math.round(b / 1024) + ' KB' : (b / 1048576).toFixed(1).replace('.', ',') + ' MB';
   const el = (v) => $('v-' + v);
@@ -37,6 +38,8 @@
     } catch (e) { el('resumen').innerHTML = '<p class="err">' + esc(e.message) + '</p>'; }
     // Súper panel: lo que espera en las 7 apps (pagos, verificaciones y versiones por liberar), con un toque a cada sección.
     el('resumen').insertAdjacentHTML('beforeend', '<div class="card" id="r6"><h2>Las 7 apps</h2><p class="sub">Revisando…</p></div>');
+    // G38 · 💰 Dinero (solo admin): ingresos por app/módulo, por vencer y morosos → WhatsApp de cobro.
+    if (SUPER && window.DineroCM) { el('resumen').insertAdjacentHTML('beforeend', '<div class="card" id="rDin"><h2>💰 Dinero</h2><p class="sub">Revisando…</p></div>'); window.DineroCM.montar($('rDin')).catch((x) => { if ($('rDin')) $('rDin').innerHTML = '<h2>💰 Dinero</h2><p class="sub warn">' + esc(x.message) + '</p>'; }); }
     (async () => {
       const M = window.MisApps; await M.preparar();
       const con = M.APPS.filter((a) => (M.estado[a.id] || {}).conectado);
@@ -207,11 +210,28 @@
       else if (b.dataset.a === 'del') { if (!(await confirmar('Eliminar a ' + b.dataset.n + ' y todos sus datos. No se puede deshacer.', 'Eliminar'))) return; const m = await motivo('Eliminar cuenta'); if (m === null) return; await App.borrarCuenta(id, m); toast('Eliminada'); usuarios($('uQ').value); }
     } catch (x) { err(x); }
   };
-  // G87 C · 🔑 Cuenta creada por el admin: va por WhatsApp (+56 9 validado), clave temporal al azar y la persona crea la suya al entrar.
+  // G90 · + Cuenta: primero la app. Centro de Mando = este formulario; las otras abren el ➕ Crear de su 🧭 panel (mismo flujo: WhatsApp + clave temporal).
+  const CREAR = { aplicaciones: ['negocios', '#ngMas', '🏪 Negocio'], barberia: ['barberias', '#bbMas', '💈 Barbería (dueño)'], billetera: ['negocios', '#ngMas', '👛 Billetera (negocio)'],
+    bicitaller: ['talleres', '#taMas', '🚲 Taller (clientes: dentro de cada taller)'] };
   function nueva() {
+    const M = window.MisApps;
+    const L = M.APPS.filter((a) => a.id === 'cm' || CREAR[a.id]);
+    const d = modal('<h2>+ Cuenta</h2><p class="sub">¿En qué app?</p><div class="lista-apps" style="display:grid;gap:8px">' + L.map((a) =>
+      '<button type="button" class="ghost" data-nap="' + a.id + '" style="display:flex;gap:10px;align-items:center;text-align:left"><span class="app-ico">' + App.ico(a.ico, 20) + '</span><span class="grow"><b>' + esc(a.nombre.split(' ·')[0]) + '</b><br><span class="sub">' +
+      esc(a.id === 'cm' ? '🏪 Negocio' + (SUPER ? ' o 🤝 Socio' : '') : CREAR[a.id][2]) + '</span></span></button>').join('') + '</div>' +
+      '<p class="sub">🅿️ Estaciona: cada persona crea su cuenta sola (un solo tipo).</p><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button></div>');
+    d.onclick = (ev) => {
+      const b = ev.target.closest('[data-nap]'); if (!b) return; d.close();
+      if (b.dataset.nap === 'cm') return nuevaCM();
+      const a = M.APPS.find((x) => x.id === b.dataset.nap), k = CREAR[a.id];
+      show('apps'); setTimeout(() => M.abrirPanel(a, { seccion: k[0], boton: k[1] }), 50);
+    };
+  }
+  // G87 C · 🔑 Cuenta creada por el admin: va por WhatsApp (+56 9 validado), clave temporal al azar y la persona crea la suya al entrar.
+  function nuevaCM() {
     const d = modal('<h2>Nueva cuenta</h2><label>Tipo<select id="nr"><option value="usuario">🏪 Negocio</option>' + (SUPER ? '<option value="socio">🤝 Socio (demo y ventas)</option>' : '') + '</select></label>' +
       '<label>Nombre<input id="nn" autocomplete="off"></label><label>WhatsApp<input id="nw" type="tel" inputmode="tel" placeholder="+56 9 1234 5678" autocomplete="off"></label><label>Correo<input id="ne" type="email" autocomplete="off"></label>' +
-      '<label>Clave temporal<input id="np" autocomplete="off" value="' + App.clave() + '"></label><p class="sub">Al entrar debe crear su propia clave. Clientes y negocios de las otras apps: en su 🧭 panel (Apps).</p>' +
+      '<label>Clave temporal<input id="np" autocomplete="off" value="' + App.clave() + '"></label><p class="sub">Al entrar debe crear su propia clave.</p>' +
       '<p class="err" id="nE"></p><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="nk" type="button">Crear</button></div>');
     const E = (t) => { d.querySelector('#nE').textContent = t; };
     d.querySelector('#nk').onclick = async (ev) => {
@@ -256,8 +276,8 @@
   }
   function generales(z) {
     const c = pub.config || {};
-    z.innerHTML = '<div class="card">' + CFG.map((f) => '<label>' + f[1] + '<input data-c="' + f[0] + '" data-t="' + (f[2] ? 's' : 'n') + '" value="' + esc(c[f[0]] === undefined ? '' : c[f[0]]) + '"></label>').join('') + '<button type="button" id="cg">Guardar ajustes</button></div>';
-    $('cg').onclick = async () => {
+    z.innerHTML = '<div class="card">' + CFG.map((f) => '<label>' + f[1] + '<input data-c="' + f[0] + '" data-t="' + (f[2] ? 's' : 'n') + '" value="' + esc(c[f[0]] === undefined ? '' : c[f[0]]) + '"' + (SUPER ? '' : ' readonly') + '></label>').join('') + (SUPER ? '<button type="button" id="cg">Guardar ajustes</button>' : '<p class="sub">👀 Solo para mirar: los cambios los hace el administrador.</p>') + '</div>';
+    if ($('cg')) $('cg').onclick = async () => {
       const m = await motivo('Cambiar ajustes'); if (m === null) return;
       try { for (const i of z.querySelectorAll('[data-c]')) { const nv = i.dataset.t === 'n' ? Number(i.value) : i.value; if (JSON.stringify(nv) !== JSON.stringify(c[i.dataset.c]) && !(i.value === '' && c[i.dataset.c] === undefined)) await rpc('admin_config_guardar', { p_clave: i.dataset.c, p_valor: nv, p_motivo: m }); } pub = await App.cargarPublica(); toast('Guardado'); } catch (x) { err(x); }
     };

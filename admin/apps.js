@@ -165,7 +165,7 @@
         (e.prueba ? '<a class="btn small" data-a="probar" href="' + urlPrueba(a) + '?cfx-limpio=' + encodeURIComponent(e.prueba.version) + '&cfx-cero=1" target="_blank" rel="noopener">🧪 Probar v' + esc(e.prueba.version) + '</a>' +
           '<button type="button" class="small" data-a="pconf"' + (probo(a) && !e.pBusy ? '' : ' disabled') + ' title="Primero ábrela con 🧪 Probar">' + (e.pBusy === 'confirmar' ? 'Confirmando…' : '✅ Confirmar') + '</button>' +
           '<button type="button" class="small ghost" data-a="pdes"' + (e.pBusy ? ' disabled' : '') + '>' + (e.pBusy === 'deshacer' ? 'Deshaciendo…' : '↩️ Deshacer') + '</button>' : '') +
-        (a.liberar && e.conectado ? '<button type="button" class="small" data-a="lib"' + (s.lista && !e.liberando ? '' : ' disabled') + '>' + (e.liberando ? 'Liberando…' : s.alDia ? A.ico('check', 15) + ' Liberada' : A.ico('cohete', 15) + ' Liberar v' + esc(e.pub || '?')) + '</button>' : '') +
+        (a.liberar && e.conectado && !global.CM_SOCIO ? '<button type="button" class="small" data-a="lib"' + (s.lista && !e.liberando ? '' : ' disabled') + '>' + (e.liberando ? 'Liberando…' : s.alDia ? A.ico('check', 15) + ' Liberada' : A.ico('cohete', 15) + ' Liberar v' + esc(e.pub || '?')) + '</button>' : '') +
         // G34 · 🧭 Panel universal: el panel de administrador de la app, aquí mismo (sin entrar a la app). Cerebro no.
         (e.conectado && !a.propia && a.id !== 'contenido' && global.PanelApps ? '<button type="button" class="small" data-a="panel">🧭 Panel</button>' : '') +
         (e.conectado ? '<button type="button" class="small' + (s.faltaBd ? '' : ' ghost') + '" data-a="bd" title="Corre auto_actualizar() en la base de esta app"' + (e.bdProg ? ' disabled' : '') + '>' + (e.bdProg ? 'Actualizando la base…' : '⚡ Actualizar base ahora') + '</button>' : '') +
@@ -534,10 +534,10 @@
     APPS.forEach(cargar);
   }
   // G34 · 🧭 Abre el panel de la app dentro de Apps (← Apps vuelve a las tarjetas).
-  function abrirPanel(a) {
+  function abrirPanel(a, o) {
     const el = raiz; if (!el || !global.PanelApps) return;
-    if (!(E[a.id] || {}).conectado) return conectar(a, () => abrirPanel(a));
-    global.PanelApps.abrir(a, cliente(a), el, () => render(el));
+    if (!(E[a.id] || {}).conectado) return conectar(a, () => abrirPanel(a, o));
+    global.PanelApps.abrir(a, cliente(a), el, () => render(el), o);
     try { global.scrollTo(0, 0); } catch (x) { /* nada */ }
   }
   // Para el panel de Pagos: deja listas (y conectadas, si ya entraste) las 7 apps sin pintar las tarjetas.
@@ -583,7 +583,7 @@
               '<span class="ca-txt"><b>' + esc(corto(x)) + '</b>' + (o.sub && o.sub(x) ? '<small>' + esc(o.sub(x)) + '</small>' : '') + '</span>' + (x.id === a.id ? '<span class="ca-ok" aria-hidden="true">✓</span>' : '') + '</button>' +
             (editar ? '<span class="ca-ed"><button type="button" class="small ghost" data-ca-img="' + x.id + '">Imagen</button>' + (IMG[x.id] ? '<button type="button" class="small ghost" data-ca-quitar="' + x.id + '">Original</button>' : '') + '</span>' : '') +
           '</div>').join('') +
-          '<button type="button" class="small ghost ca-cambiar" data-ca="editar">' + (editar ? 'Listo' : 'Cambiar imágenes') + '</button></div>' : '') + '</div>';
+          (global.CM_SOCIO ? '' : '<button type="button" class="small ghost ca-cambiar" data-ca="editar">' + (editar ? 'Listo' : 'Cambiar imágenes') + '</button>') + '</div>' : '') + '</div>';
       // Si la imagen no carga, queda un cuadro neutro del mismo tamaño (nunca el ícono roto).
       const sin = (i) => { const d = document.createElement('span'); d.className = 'ca-img sin'; i.replaceWith(d); };
       cont.querySelectorAll('img.ca-img').forEach((i) => { if (i.complete && !i.naturalWidth) sin(i); else i.onerror = () => sin(i); });

@@ -65,7 +65,8 @@
   function registrar(id, f) { P[id] = f; }
   const tiene = (id) => !!P[id];
   // Abre el panel de la app dentro de la vista (el) con "← Apps" para volver.
-  function abrir(a, c, el, volver) {
+  // o (opcional) = { seccion, boton }: abre directo esa sección y toca ese botón (G90: CM → Usuarios → + Cuenta de otra app).
+  function abrir(a, c, el, volver, o) {
     const rpc = async (fn, args) => { const { data, error } = await c.rpc(fn, args || {}); if (error) throw new Error(error.message); return data; };
     // G34 parte 2 · ayudas comunes: función del servidor de la app, filtros, acceso por WhatsApp y chat de soporte (CM → Mensajes).
     const fn = async (nombre, body) => {
@@ -96,7 +97,11 @@
       : '<p class="sub">Esta app todavía tiene su panel propio (llega aquí en su turno). Ábrelo en Resumen → Empresas → Panel de la app.</p>';
     // G42f: ↗ Abrir app arriba (la app en otra pestaña), sin apretar el título.
     const abrirApp = /^https?:\/\//.test(a.web || '') ? '<div class="btns" style="margin:0 0 6px"><a class="btn small" id="pnAbrir" target="_blank" rel="noopener" href="' + esc(a.web) + '">↗ Abrir app</a></div>' : '';
-    global.CFX_AJUSTES.montar(el.querySelector('#pnZ'), L, { arriba: abrirApp + nota });
+    const aj = global.CFX_AJUSTES.montar(el.querySelector('#pnZ'), L, { arriba: abrirApp + nota });
+    if (o && o.seccion && aj && L.some((s) => s.k === o.seccion)) {
+      aj.abrir(o.seccion);
+      if (o.boton) { let n = 0; const t = setInterval(() => { const b = global.document.querySelector(o.boton); if (b || ++n > 40) { clearInterval(t); if (b) { b.click(); try { b.scrollIntoView({ block: 'center' }); } catch (x) { /* nada */ } } } }, 150); }
+    }
   }
   global.PanelApps = { registrar, tiene, abrir, qrCanvas };
 })(window);
