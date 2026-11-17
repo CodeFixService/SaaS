@@ -156,3 +156,15 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 4. Entra a una de esas apps con una cuenta normal: a los segundos sale la tarjeta **📣 Novedad** abajo → **✕** la cierra y no vuelve.
 5. CM → 📢 Anuncios → **📊 Resultados** (vistas, clics, cerrados) · **📤 Compartir** (en el anuncio) abre el menú del teléfono → Instagram historia/post/reel.
 6. 🎬 Estudio/Cerebro: en **Cerebro** → Empresa → 🗂️ Respaldo, guía y borrar → **⬇️ Respaldo Excel** → guárdalo → avísame "respaldo listo" para portar el motor al CM.
+
+## G94 🎬💰🅿️ CM 5.35 · Billetera 1.21.81 · Estaciona 2.14.86 · las 7 apps (probar, después de CM → Apps → ⬆️ Actualizar base en las 7: CM 4.52 · Despega 5.70 · Barbería 3.00 · Billetera 55 · BiciTaller 2.50 · Estaciona 51)
+1. 🎬 **Estudio** (solo tu cuenta admin): app del CM → **Cerebro** → arriba **🎬 Estudio** → elige el Espacio (ej. Ciclaselfie) → **🎯 Espacio**: objetivo 💰/📈/💬/🔁, público, hashtags y ritmo → 💾 Guardar.
+2. **📚 Base** → **⬇️ Plantilla** → ábrela en Excel, llena tema / categoria / texto → guárdala como CSV → **⬆️ Subir CSV**.
+3. **💡 Idea** → elige la red → **✨ Generar idea** → 8 cajas, cada una con **📋 Copiar** y **🔄 Otra** · "2 ganchos más" con su puntaje · **📋 Copiar prompt para Claude** · **💾 Guardar idea**.
+4. **📅 Semana** → **📅 Armar la semana** → 💾 Guardar todas → toca una → ✅ Publicada + métricas (a los 7 días) → **📊 Qué funciona** muestra temas, ganchos, formatos, redes, horas y días. También **⬆️ Subir historial** (plantilla o export de Meta Business Suite / TikTok Studio).
+5. 💰 **Billetera** (cuenta de negocio): Más → **🧩 Módulos** (con "Vender módulos" apagado dice "incluidos") · un cliente que debe → **📝 Acuerdo** → Crear → 📲 Enviar link → el cliente abre su link, pone su nombre y **✍️ Acepto** → te llega el aviso.
+6. Billetera → Más → **🧮 Link para el contador** → 🔗 Crear link → ábrelo en otro teléfono (ve ingresos/gastos del mes y ⬇️ planilla, sin nombres) → ⛔ Desactivar.
+7. Billetera → Más → **🔁 Gastos fijos** → ＋ (ej. Arriendo día 1) → queda anotado en la Caja de este mes (1 sola vez). Cobrar a un cliente atrasado → el tono sale solo (📈 Cobranza escalonada).
+8. 🅿️ **Estaciona** (2 cuentas): dueño → Más → **🏷️ Descuento por estadía larga** (ej. 10 % desde 3) → otra cuenta reserva 4 → el total sale con −10 %.
+9. Estaciona: dueño acepta la reserva → quien arrienda abre la reserva → **🔑 Mi pase para entrar** (QR + código) → dueño → Más → **🔑 Control de acceso** → escribe el código (o 📷 Escanear) → ✅ VIGENTE → 🟢 Entrada / 🔴 Salida.
+10. Estaciona → Más → **💰 Ganancias y ocupación** (mes, % por lugar, mejor día, ⬇️ planilla) · **🧩 Módulos** (tienda) · el ⭐ destacado del mapa ahora también se compra suelto.
