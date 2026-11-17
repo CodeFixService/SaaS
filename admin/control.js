@@ -6,7 +6,7 @@
   const A = global.App, { esc, toast, modal, confirmar } = A;
   const M = () => global.MisApps;
   let raiz = null, actual = 'cm', seccion = 'negocios';
-  const SECC = [['negocios', '🏪 Negocios'], ['avisar', '📣 Avisar'], ['anuncios', '📢 Anuncios'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['dominio', '🌐 Dominio'], ['push', '🔔 Notificaciones'], ['correo', '✉️ Correo'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['salud', '🩺 Salud'], ['registro', '📜 Registro']];
+  const SECC = [['negocios', '🏪 Negocios'], ['avisar', '📣 Avisar'], ['anuncios', '📢 Anuncios'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['pruebas', '🎁 Pruebas'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['dominio', '🌐 Dominio'], ['push', '🔔 Notificaciones'], ['correo', '✉️ Correo'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['salud', '🩺 Salud'], ['registro', '📜 Registro']];
   // Nombres legibles de las claves de los planes (las demás se muestran tal cual).
   const NOMBRE = { productos: 'Productos', clientes: 'Clientes', fichas: 'Diseños publicados', equipo: 'Equipo', pedidos_mes: 'Pedidos al mes', respuestas: 'Respuestas rápidas',
     contactos: 'Contactos', favoritos: 'Favoritos', mensajes_seguidos: 'Mensajes seguidos', barberos: 'Barberos', servicios: 'Servicios', ofertas: 'Ofertas',
@@ -537,9 +537,23 @@
 
   // G93 📢 Anuncios: campañas del CM que se publican en las apps (admin/anuncios.js).
   const anuncios = () => global.AnunciosCM.render(caja());
-  const F = { negocios, avisar, anuncios, planes, textos, keys, cupones, verif, humano, dominio, push, correo, referidos, socios, datos, seguridad, salud, registro };
+  const F = { negocios, avisar, anuncios, planes, textos, keys, pruebas, cupones, verif, humano, dominio, push, correo, referidos, socios, datos, seguridad, salud, registro };
   // Referidos: quién invitó a quién (con qué cuenta), ranking, premio automático y premio a mano (días + sticker).
   const STICKERS = ['🏆 ¡Eres un crack invitando!', '🚀 ¡Vas volando! Gracias por recomendarnos', '💪 ¡Sigue así, vas muy bien!', '🌟 ¡Gracias por correr la voz!'];
+  // G95 🎁 Pruebas gratis: quién probó qué y cuándo (una vez por correo; la lista no se borra al eliminar la cuenta).
+  async function pruebas() {
+    let r;
+    try { r = await rpc('cfx_pruebas_admin'); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
+    const nomItem = (k) => k === 'pro' ? '⭐ Premium' : k === 'pack' ? '📦 Pack' : '🧩 ' + nom(k);
+    const items = Object.entries(r.items || {}).sort((a, b) => b[1] - a[1]), U = r.ultimas || [];
+    caja().innerHTML = '<div class="card"><h3 style="margin-top:0">🎁 Pruebas gratis usadas</h3>' +
+      '<p class="sub">Cada correo prueba Premium y cada módulo una sola vez. Si borra su cuenta y vuelve con el mismo correo, ya no ve el botón. Los días se cambian en Apps → 🧩 Módulos → Días de prueba (0 = sin prueba).</p>' +
+      (items.length ? '<div class="chips">' + items.map(([k, n]) => '<span class="pill info">' + esc(nomItem(k)) + ' · ' + n + '</span>').join('') + '</div>' : '') +
+      '<p class="sub">Total: ' + (+r.total || 0) + '</p></div>' +
+      (U.length ? '<div class="card">' + U.map((f) => '<div class="fila"><span class="grow"><b>' + esc(f.email || '(cuenta borrada)') + '</b><br><span class="sub">' + esc(nomItem(f.item)) + ' · ' +
+        new Date(f.creado).toLocaleDateString('es-CL') + '</span></span></div>').join('') + '</div>' : '<p class="empty">Nadie ha usado una prueba gratis todavía.</p>');
+  }
+
   async function referidos() {
     let r;
     try { r = await rpc('cfx_ref_lista'); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }

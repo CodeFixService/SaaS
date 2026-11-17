@@ -131,6 +131,15 @@ begin
   else n := p_cuenta; end if;
   return n;
 end $$;
+-- G95: la cuenta del dueño de un negocio. Gancho opcional de la app: cfx_negocio_dueno_app(uuid) → uuid (Billetera: el negocio no es la cuenta).
+create or replace function public.cfx_negocio_dueno(p_negocio uuid) returns uuid
+language plpgsql stable security definer set search_path = '' as $$
+declare d uuid;
+begin
+  if p_negocio is null then return null; end if;
+  if to_regprocedure('public.cfx_negocio_dueno_app(uuid)') is not null then execute 'select public.cfx_negocio_dueno_app($1)' into d using p_negocio; return d; end if;
+  return p_negocio;
+end $$;
 create or replace function public.cfx_negocio_premium(p_negocio uuid) returns boolean
 language plpgsql stable security definer set search_path = '' as $$
 declare r boolean;
@@ -194,7 +203,7 @@ $$;
 -- Pantalla 🧩 Módulos del negocio: catálogo, precios (con su descuento Premium), lo que tiene y hasta cuándo.
 create or replace function public.cfx_modulos_tienda() returns jsonb
 language plpgsql stable security definer set search_path = '' as $$
-declare v jsonb := public.cfx_venta(); n uuid := public.cfx_negocio_cuenta(auth.uid()); pre boolean; d int; am int;
+declare v jsonb := public.cfx_venta(); n uuid := public.cfx_negocio_cuenta(auth.uid()); dn uuid := public.cfx_negocio_dueno(public.cfx_negocio_cuenta(auth.uid())); pre boolean; d int; am int;
 begin
   if n is null then raise exception 'Solo para negocios'; end if;
   pre := public.cfx_negocio_premium(n);
@@ -202,13 +211,13 @@ begin
   am := greatest(1, least(12, coalesce((v ->> 'anual_meses')::int, 10)));
   return jsonb_build_object('activo', coalesce((v ->> 'activo')::boolean, false), 'premium', pre, 'descuento', d, 'anual_meses', am,
     'descuento_pro', case when pre then 0 else greatest(0, least(90, coalesce((v ->> 'descuento_premium')::int, 0))) end,
-    'prueba_dias', coalesce((v ->> 'prueba_dias')::int, 7), 'dueno', n = auth.uid(),
+    'prueba_dias', coalesce((v ->> 'prueba_dias')::int, 7), 'dueno', dn = auth.uid(),
     'campana', (select jsonb_build_object('meses', (c ->> 'meses')::int, 'hasta', c ->> 'hasta') from (select public.cfx_campana() c) x where c is not null),
-    'prueba_pack', exists (select 1 from public.cfx_modulos_pruebas p where p.negocio = n and p.item like 'pack:%'),
+    'prueba_pack', exists (select 1 from public.cfx_modulos_pruebas p where p.negocio = n and p.item like 'pack:%') or public.cfx_prueba_usada(dn, 'pack'),  -- G95: por correo
     'modulos', coalesce((select jsonb_agg(jsonb_build_object('clave', k, 'nombre', coalesce(c.nombre, k), 'detalle', coalesce(c.detalle, ''),
         'precio', round(public.cfx_venta_precio(k) * (100 - d) / 100.0)::int, 'lista', public.cfx_venta_precio(k),
         'vende', public.cfx_venta_activa(k), 'activo', public.cfx_modulo_de(k, n) or public.cfx_modulo_plan(k, n), 'plan', public.cfx_modulo_plan(k, n),
-        'hasta', m.hasta, 'origen', m.origen, 'regalo', public.cfx_campana_puede(k, n), 'prueba_usada', exists (select 1 from public.cfx_modulos_pruebas p where p.negocio = n and p.item = k),
+        'hasta', m.hasta, 'origen', m.origen, 'regalo', public.cfx_campana_puede(k, n), 'prueba_usada', exists (select 1 from public.cfx_modulos_pruebas p where p.negocio = n and p.item = k) or public.cfx_prueba_usada(dn, k),
         'links', v #> array['links', k]) order by o)
       from unnest(public.cfx_modulos_de_app()) with ordinality u(k, o)
       left join public.cfx_modulos_catalogo() c on c.clave = k
@@ -222,18 +231,23 @@ begin
       from jsonb_each(coalesce(v -> 'packs', '{}')) p where cardinality(public.cfx_venta_modulos(p.key)) > 0), '[]'));
 end $$;
 
--- Probar gratis: cada módulo una vez, y un solo pack por negocio. Solo el dueño.
+-- Probar gratis: cada módulo una vez, y un solo pack por negocio. Solo el dueño. G95: también una vez por CORREO (cfx_pruebas_usadas, no se borra).
+-- prueba_dias = 0 → sin prueba gratis.
 create or replace function public.cfx_modulo_probar(p_item text) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare v jsonb := public.cfx_venta(); n uuid := public.cfx_negocio_cuenta(auth.uid()); pack boolean := (public.cfx_venta() #> array['packs', p_item]) is not null;
-        dias int := greatest(1, least(30, coalesce((v ->> 'prueba_dias')::int, 7))); h timestamptz;
+        dias int := least(30, coalesce((v ->> 'prueba_dias')::int, 7)); h timestamptz;
 begin
-  if n is null or n <> auth.uid() then raise exception 'Solo el dueño del negocio'; end if;
+  if n is null or public.cfx_negocio_dueno(n) is distinct from auth.uid() then raise exception 'Solo el dueño del negocio'; end if;
+  if dias <= 0 then raise exception 'La prueba gratis no está disponible ahora'; end if;
   if not coalesce((v ->> 'activo')::boolean, false) or cardinality(public.cfx_venta_modulos(p_item)) = 0 then raise exception 'Módulo no válido'; end if;
   if pack and exists (select 1 from public.cfx_modulos_pruebas where negocio = n and item like 'pack:%') then raise exception 'Ya usaste la prueba gratis de un pack'; end if;
   if not pack and exists (select 1 from public.cfx_modulos_pruebas where negocio = n and item = p_item) then raise exception 'Ya usaste la prueba gratis de este módulo'; end if;
+  if public.cfx_prueba_usada(auth.uid(), case when pack then 'pack' else p_item end) then
+    raise exception '%', case when pack then 'Ya usaste la prueba gratis de un pack con este correo' else 'Ya usaste la prueba gratis de este módulo con este correo' end; end if;
   if not pack and public.cfx_modulo_de(p_item, n) then raise exception 'Ya tienes este módulo activo'; end if;
   insert into public.cfx_modulos_pruebas (negocio, item) values (n, case when pack then 'pack:' || p_item else p_item end);
+  perform public.cfx_prueba_marcar(auth.uid(), case when pack then 'pack' else p_item end);
   -- La prueba no alarga lo que ya está pagado: solo prende lo que no tiene.
   insert into public.cfx_modulos_negocio as m (negocio, modulo, hasta, origen)
   select n, k, now() + make_interval(days => dias), 'prueba' from unnest(public.cfx_venta_modulos(p_item)) k
@@ -248,7 +262,7 @@ create or replace function public.cfx_modulo_campana(p_modulo text) returns json
 language plpgsql security definer set search_path = '' as $$
 declare n uuid := public.cfx_negocio_cuenta(auth.uid()); c jsonb := public.cfx_campana(); h timestamptz;
 begin
-  if n is null or n <> auth.uid() then raise exception 'Solo el dueño del negocio'; end if;
+  if n is null or public.cfx_negocio_dueno(n) is distinct from auth.uid() then raise exception 'Solo el dueño del negocio'; end if;
   if c is null then raise exception 'La campaña ya terminó'; end if;
   if not public.cfx_campana_puede(p_modulo, n) then
     raise exception '%', case when exists (select 1 from public.cfx_modulos_pruebas p where p.negocio = n and p.item = 'campana:' || p_modulo)
@@ -368,7 +382,7 @@ begin
 end $$;
 
 revoke all on function public.cfx_modulos_catalogo(), public.cfx_venta(), public.cfx_venta_on(), public.cfx_venta_precio(text), public.cfx_venta_activa(text), public.cfx_venta_modulos(text),
-  public.cfx_negocio_cuenta(uuid), public.cfx_negocio_premium(uuid), public.cfx_modulo_plan(text, uuid), public.cfx_modulo_de(text, uuid), public.cfx_modulo_mio(text),
+  public.cfx_negocio_cuenta(uuid), public.cfx_negocio_dueno(uuid), public.cfx_negocio_premium(uuid), public.cfx_modulo_plan(text, uuid), public.cfx_modulo_de(text, uuid), public.cfx_modulo_mio(text),
   public.cfx_modulos_dar(uuid, text, int, text), public.cfx_modulos_avisar(), public.cfx_modulos_borrar(uuid),
   public.cfx_campana(), public.cfx_campana_puede(text, uuid) from public, anon, authenticated;
 revoke all on function public.cfx_modulos_de(uuid), public.cfx_modulos_tienda(), public.cfx_modulo_probar(text), public.cfx_modulo_campana(text), public.cfx_venta_admin(),

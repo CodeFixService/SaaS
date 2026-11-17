@@ -51,7 +51,7 @@ OPCIONAL = {'Aplicaciones': ('tienda.js', 'despacho.js', 'modulos.js', 'qr.js', 
 # CSS de terceros (G20): Bootstrap 5.3.8, SOLO utilidades (sin reboot, grid ni componentes: su .row/.card/.btn chocarían con core.css).
 # Va en <css>/vendor/ y se enlaza ANTES de la hoja propia de la app, así core.css y tema.css siguen mandando.
 VENDOR_CSS = ('vendor/bootstrap-utilities.min.css',)
-SALTAR = re.compile(r'(^docs/|guia|legal|actualizar\.html)')
+SALTAR = re.compile(r'(^docs/|guia|legal|actualizar\.html|^contador/)')  # contador/: link público de solo lectura (Billetera G94), sin el núcleo
 
 
 def paginas(repo):

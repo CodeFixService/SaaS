@@ -157,6 +157,13 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 5. CM → 📢 Anuncios → **📊 Resultados** (vistas, clics, cerrados) · **📤 Compartir** (en el anuncio) abre el menú del teléfono → Instagram historia/post/reel.
 6. 🎬 Estudio/Cerebro: en **Cerebro** → Empresa → 🗂️ Respaldo, guía y borrar → **⬇️ Respaldo Excel** → guárdalo → avísame "respaldo listo" para portar el motor al CM.
 
+## G95 🎁 Prueba 7 días por botón · las 7 apps (probar, después de CM → Apps → ⬆️ Actualizar base en las 7: CM 4.53 · Despega 5.71 · Barbería 3.01 · Billetera 56 · BiciTaller 2.51 · Estaciona 52)
+1. Crea una cuenta NUEVA de negocio en cualquier app (ej. BiciTaller /n/) → entra: parte **Free** (ya no regala Premium al registrarse).
+2. Toca **⭐ Premium / Pasar a Pro / Mi plan** → arriba sale **🎁 Prueba Premium 7 días gratis** → **🎁 Probar 7 días gratis** → **Continuar** → la app queda en Premium 7 días. Ábrela otra vez: ya no ofrece la prueba.
+3. Más → **🧩 Módulos** (con "Vender módulos" prendido en CM → Apps → 🧩) → cada módulo trae **🎁 Probar 7 días** (verde) → tócalo → "🎁 Prueba gratis hasta…" y ese botón desaparece. Otro módulo sigue con su botón.
+4. Anti-trampa: CM → Control → Negocios → borra esa cuenta → regístrate otra vez con el MISMO correo → Premium y el módulo ya probado NO muestran 🎁 (los otros módulos sí).
+5. CM → **Control** → elige la app → **🎁 Pruebas**: quién probó qué y cuándo ("(cuenta borrada)" si ya no existe). Los días se cambian en Apps → 🧩 Módulos → Días de prueba (0 = sin prueba).
+
 ## G94 🎬💰🅿️ CM 5.35 · Billetera 1.21.81 · Estaciona 2.14.86 · las 7 apps (probar, después de CM → Apps → ⬆️ Actualizar base en las 7: CM 4.52 · Despega 5.70 · Barbería 3.00 · Billetera 55 · BiciTaller 2.50 · Estaciona 51)
 1. 🎬 **Estudio** (solo tu cuenta admin): app del CM → **Cerebro** → arriba **🎬 Estudio** → elige el Espacio (ej. Ciclaselfie) → **🎯 Espacio**: objetivo 💰/📈/💬/🔁, público, hashtags y ritmo → 💾 Guardar.
 2. **📚 Base** → **⬇️ Plantilla** → ábrela en Excel, llena tema / categoria / texto → guárdala como CSV → **⬆️ Subir CSV**.

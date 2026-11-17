@@ -83,6 +83,7 @@ begin
   bloq := debe and y ->> 'rol' = 'negocio';
   return jsonb_build_object('config', c - 'inicio_desde', 'yo', y, 'pagado', pagado, 'bloqueado', bloq, 'debe_inicio', debe,
     'liberado_hasta', case when lh > now() then lh end, 'mp', public.cfx_mp_on(),
+    'prueba_pro', public.cfx_pro_prueba(y),  -- G95
     'ultimo', (select to_jsonb(x) from (select id, periodo, monto, medio, estado, dias, motivo, creado, resuelto, hasta, producto, regalo from public.cfx_pagos
                where cuenta = (y ->> 'id')::uuid order by creado desc limit 1) x),
     -- G87 K: 🔑 keys que compré (🎁 regalo o respaldo), con si ya se usaron.
@@ -539,3 +540,79 @@ end $$;
 revoke all on function public.cfx_ingresos_cero(boolean) from public, anon;
 grant execute on function public.cfx_ingresos_desde() to anon, authenticated;
 grant execute on function public.cfx_ingresos_cero(boolean) to authenticated;
+
+-- ---------------------------------------------------------------------
+-- G95 🎁 PRUEBA 7 DÍAS POR BOTÓN: todos parten FREE. "🎁 Probar Pro 7 días" (hoja ⭐ Premium) y "🎁 Probar 7 días" en cada módulo,
+--   UNA vez por correo. cfx_pruebas_usadas guarda el hash del correo (no el correo) y NO se borra al eliminar la cuenta ni en la limpieza:
+--   si la persona se borra y vuelve con el mismo correo, ya no ve el botón y el servidor lo rechaza. item: 'pro', la clave del módulo o 'pack'.
+--   Días: cfx_config 'pagos' → 'prueba_pro_dias' (si no está, los de 🧩 Módulos 'prueba_dias'; 7). 0 = sin prueba.
+--   Gancho opcional de la app: cfx_pro_prueba_app(uuid, text, int) → timestamptz (si no está, usa cfx_dar_premium).
+-- ---------------------------------------------------------------------
+create table if not exists public.cfx_pruebas_usadas (
+  hash   text not null,
+  item   text not null check (item ~ '^[a-z_:]{2,40}$'),
+  creado timestamptz not null default now(),
+  primary key (hash, item)
+);
+alter table public.cfx_pruebas_usadas enable row level security;
+revoke all on public.cfx_pruebas_usadas from anon, authenticated;
+create or replace function public.cfx_hash_correo(p_email text) returns text
+language sql immutable as $$ select encode(sha256(convert_to(lower(btrim(p_email)), 'UTF8')), 'hex') $$;
+create or replace function public.cfx_prueba_hash(p_cuenta uuid) returns text
+language sql stable security definer set search_path = '' as $$
+  select case when nullif(btrim(u.email), '') is not null then public.cfx_hash_correo(u.email) else public.cfx_hash_correo('id:' || u.id::text) end
+  from auth.users u where u.id = p_cuenta
+$$;
+create or replace function public.cfx_prueba_usada(p_cuenta uuid, p_item text) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.cfx_pruebas_usadas where hash = public.cfx_prueba_hash(p_cuenta) and item = p_item)
+$$;
+create or replace function public.cfx_prueba_marcar(p_cuenta uuid, p_item text) returns void
+language sql security definer set search_path = '' as $$
+  insert into public.cfx_pruebas_usadas (hash, item) select h, p_item from (select public.cfx_prueba_hash(p_cuenta) h) x where h is not null
+  on conflict do nothing
+$$;
+create or replace function public.cfx_pro_prueba_dias() returns int
+language sql stable security definer set search_path = '' as $$
+  select greatest(0, least(30, coalesce((select (valor ->> 'prueba_pro_dias')::int from public.cfx_config where clave = 'pagos'),
+    (select (valor ->> 'prueba_dias')::int from public.cfx_config where clave = 'modulos_venta'), 7)))
+$$;
+-- ¿Esta cuenta puede tocar 🎁 Probar Pro? (para la hoja ⭐ Premium)
+create or replace function public.cfx_pro_prueba(y jsonb) returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object('dias', d, 'usada', u, 'puede', d > 0 and not u and coalesce(y ->> 'rol', '') in ('negocio', 'cliente')
+    and not coalesce((y ->> 'premium_hasta')::timestamptz > now(), false))
+  from (select public.cfx_pro_prueba_dias() d, public.cfx_prueba_usada((y ->> 'id')::uuid, 'pro') u) x
+$$;
+create or replace function public.cfx_pro_probar() returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare y jsonb := public.cfx_yo(); u uuid := (y ->> 'id')::uuid; d int := public.cfx_pro_prueba_dias(); h timestamptz;
+begin
+  if u is null or u <> auth.uid() then raise exception 'Inicia sesión'; end if;
+  if coalesce(y ->> 'rol', '') not in ('negocio', 'cliente') then raise exception 'Esta cuenta no puede probar Premium'; end if;
+  if d <= 0 then raise exception 'La prueba gratis no está disponible ahora'; end if;
+  if coalesce((y ->> 'premium_hasta')::timestamptz > now(), false) then raise exception 'Ya tienes Premium activo'; end if;
+  if public.cfx_prueba_usada(u, 'pro') then raise exception 'Ya usaste tu prueba gratis de Premium con este correo'; end if;
+  perform public.cfx_prueba_marcar(u, 'pro');
+  if to_regprocedure('public.cfx_pro_prueba_app(uuid,text,integer)') is not null then
+    execute 'select public.cfx_pro_prueba_app($1, $2, $3)' into h using u, y ->> 'rol', d;
+  else h := public.cfx_dar_premium(u, y ->> 'rol', d); end if;
+  if h is null then raise exception 'No se pudo activar la prueba'; end if;
+  perform public.cfx_anotar('premium', 'prueba gratis ' || d || ' días · ' || u);
+  return jsonb_build_object('ok', true, 'hasta', h, 'dias', d);
+end $$;
+-- Centro de Mando → Control → 🎁 Pruebas: quién probó qué y cuándo (correo solo si la cuenta sigue existiendo).
+create or replace function public.cfx_pruebas_admin() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  perform <CHK>;
+  return jsonb_build_object('total', (select count(*) from public.cfx_pruebas_usadas),
+    'items', (select coalesce(jsonb_object_agg(item, n), '{}') from (select item, count(*) n from public.cfx_pruebas_usadas group by item) x),
+    'ultimas', (select coalesce(jsonb_agg(jsonb_build_object('item', p.item, 'creado', p.creado, 'email', coalesce(u.email, '')) order by p.creado desc), '[]')
+      from (select * from public.cfx_pruebas_usadas order by creado desc limit 200) p
+      left join (select distinct on (h) h, email from (select public.cfx_hash_correo(x.email) h, x.email from auth.users x where nullif(btrim(x.email), '') is not null) y) u on u.h = p.hash));
+end $$;
+revoke all on function public.cfx_hash_correo(text), public.cfx_prueba_hash(uuid), public.cfx_prueba_usada(uuid, text), public.cfx_prueba_marcar(uuid, text),
+  public.cfx_pro_prueba_dias(), public.cfx_pro_prueba(jsonb) from public, anon, authenticated;
+revoke all on function public.cfx_pro_probar(), public.cfx_pruebas_admin() from public, anon;
+grant execute on function public.cfx_pro_probar(), public.cfx_pruebas_admin() to authenticated;

@@ -47,6 +47,8 @@ Ahora: app 5.34 · bd 4.51 · función 3.4 · núcleo 3.02. Avisos: CFX_DIALOGO.
 - G90: Resumen → 💰 Dinero (admin/dinero.js, núcleo cfx_dinero en cada app; morosos → WhatsApp) · 🔔 cfx_alertas_revisar cada 15 min (negocio nuevo, errores) · Usuarios → + Cuenta elige la app (otras → PanelApps.abrir con { seccion, boton }) · window.CM_SOCIO oculta Liberar/Ajustes/Planes/Textos/imágenes/Dinero · Pagos muestra 🎁/🔑 key_regalo. Pruebas: g90.js, g90b.js, g90c.js.
 - G93 (G87 D): Tablero → ✅ Checklists (app/m-checklist.js; items tipo 'checklist' { p, ok, rubro, base } y 'plantilla'; rubro en prefs.rubro; plantillas de fábrica por rubro en FAB, editar = tu copia, ↺ vuelve a fábrica). Control → 📢 Anuncios (admin/anuncios.js; tabla cm_campanas + cm_campana_guardar/publicada/borrar; publica con núcleo cfx_anuncios_publicar en cada app; la tarjeta con ✕ la pone ayuda.js). Ojo: un botón con "volver" en su aria-label hace history.back() (núcleo) → usar otro texto o data-sin-atras. Pruebas: g93a.js, g93b.js.
 
+- G95 (4.53): 🎁 prueba 7 días por botón en el núcleo (pagos.sql cfx_pruebas_usadas por hash de correo, cfx_pro_probar; modulos_venta cfx_negocio_dueno) · Control → 🎁 Pruebas (cfx_pruebas_admin). Prueba: pruebas/g95.js.
+
 ## 🎬 Estudio (G94, bd 4.52)
 - App → Cerebro → 🎬 Estudio (solo rol admin): app/m-estudio.js (+ app/est-motor.js y app/est-importador.js, copias de Contenido/app; cargan a pedido). items est_conf / est_base / est_idea (constraint items_tipo_check). Prueba: pruebas/g94a.js.
 - Núcleo: catálogo de módulos +8 (Billetera: acuerdo, contador, escalonado, gastos_fijos · Estaciona: destacar, acceso, descuentos, ganancias) en nucleo/sql/modulos_venta.sql + demos en nucleo/modulos.js.
