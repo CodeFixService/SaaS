@@ -101,3 +101,7 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 - G59h orden lista → 🛡️ Garantía → Dar garantía → 📲 Enviar al cliente → (cliente) 🛡️ Usar mi garantía → (taller) Hoy → ✅ Lo arreglé
 - G74c Más → 🏪 Perfil → ⭐ Reseñas en Google → pega el link (Google Maps → tu taller → Pedir reseñas → Copiar link) → 💾 Guardar link → orden entregada → ⭐ Pedir reseña · (cliente) su link → ⭐ 5 estrellas → ⭐ Dejar reseña en Google
 - G59i Más → 🔁 Planes de mantención → ＋ Nuevo plan (ej. Rodador $15.000 · 1 visita · 10%) → ＋ Sumar cliente → 💰 Cobrar y sumar → abre una orden de ese teléfono → ✅ Usar el plan (total −10%) → (cliente) su link muestra "Tu plan" · tu página muestra los planes con 📲 Lo quiero
+
+## G84 c 🔎 Filtros de Estaciona (probar)
+1. Estaciona → ➕ Publicar (o Más → Mis estacionamientos → Editar) → marca 📹 Cámara y 🚪 Portón automático → Guardar.
+2. Mapa → arriba toca el chip 📹 Cámara o 🚪 Portón (o el botón de filtros) → solo quedan los que lo tienen.
