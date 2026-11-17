@@ -157,6 +157,11 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 5. CM → 📢 Anuncios → **📊 Resultados** (vistas, clics, cerrados) · **📤 Compartir** (en el anuncio) abre el menú del teléfono → Instagram historia/post/reel.
 6. 🎬 Estudio/Cerebro: en **Cerebro** → Empresa → 🗂️ Respaldo, guía y borrar → **⬇️ Respaldo Excel** → guárdalo → avísame "respaldo listo" para portar el motor al CM.
 
+## G100 ⚡ Cobrar sin link con Mercado Pago · BiciTaller 3.16 · Estaciona 2.14.92 (después de redeploy de **servidor** de BiciTaller con su corto.ts y CM → Apps → ⬆️ Actualizar base: BiciTaller 2.56 · Estaciona 57)
+1. **BiciTaller** (dueño) → **Más** → **💳 Abono** → conecta **⚡ Tu Mercado Pago** → en Espacio 1 pon solo el **monto** (link vacío) → marca **Activo** → **💾 Guardar** → en **Hoy** ya no sale "Configura el cobro del abono".
+2. Con otro teléfono reserva desde la vitrina → en la reserva sale solo **⚡ Pagar $… con Mercado Pago** (sin botón de link).
+3. **Estaciona** (dueño sin link) → conecta ⚡ en **Más** → **💳 Links de pago** → en el inicio ya no sale "Configura cómo te pagan".
+
 ## G99 ⚡ Aviso instantáneo de Mercado Pago · las 7 apps (después de CM → Apps → ⬆️ Actualizar base en las 7: CM 4.57 · Despega 5.75 · Barbería 3.05 · Billetera 60 · BiciTaller 2.55 · Estaciona 56)
 1. Redeploy de las 6 funciones (1 vez): Supabase (cada proyecto) → **Edge Functions** → función → **Code** → borra todo → pega la línea de `supabase/functions/<f>/corto.ts` de ese repo → **Deploy** (Verify JWT APAGADO). CM y BiciTaller: "servidor" · Despega, Barbería, Billetera y Estaciona: "enviar".
 2. Probar: paga algo chico con ⚡ Mercado Pago y NO vuelvas a la app (cierra la pestaña de MP) → en segundos llega "✅ Pago aprobado" (antes: hasta 1 minuto).
