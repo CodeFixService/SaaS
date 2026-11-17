@@ -88,4 +88,5 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 - G59f orden → 🪪 Pasaporte → Crear → 🖨️ Sticker QR → 📲 Enviar al dueño → (como cliente) 🚨 Me la robaron
 - G59g Más → 🚐 A domicilio → ⚙️ prender + recargo → Guardar → (como cliente) tu página → 🏠 Que vengan a mi casa → Reservar → (taller) Ruta del día → 🗺️ Abrir la ruta → 🚐 Voy en camino
 - G59h orden lista → 🛡️ Garantía → Dar garantía → 📲 Enviar al cliente → (cliente) 🛡️ Usar mi garantía → (taller) Hoy → ✅ Lo arreglé
+- G74c Más → 🏪 Perfil → ⭐ Reseñas en Google → pega el link (Google Maps → tu taller → Pedir reseñas → Copiar link) → 💾 Guardar link → orden entregada → ⭐ Pedir reseña · (cliente) su link → ⭐ 5 estrellas → ⭐ Dejar reseña en Google
 - G59i Más → 🔁 Planes de mantención → ＋ Nuevo plan (ej. Rodador $15.000 · 1 visita · 10%) → ＋ Sumar cliente → 💰 Cobrar y sumar → abre una orden de ese teléfono → ✅ Usar el plan (total −10%) → (cliente) su link muestra "Tu plan" · tu página muestra los planes con 📲 Lo quiero
