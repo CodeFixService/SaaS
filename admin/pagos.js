@@ -8,7 +8,7 @@
   const M = () => global.MisApps;
   const pesos = (n) => '$' + Number(n || 0).toLocaleString('es-CL');
   const PERIODO = { inicio: 'Primer pago', mensual: 'Mensual', meses: 'Varios meses', anual: 'Anual', otro: 'Otro monto', conexiones: 'Conexiones extra' };
-  const MEDIO = { link: 'link', transferencia: 'transferencia', tarjeta: 'tarjeta' };
+  const MEDIO = { link: 'link', transferencia: 'transferencia', tarjeta: 'tarjeta', mp: '⚡ Mercado Pago' };
   let raiz = null, cfg = null, filtro = 'pendiente';
 
   const conectadas = () => M().APPS.filter((a) => (M().estado[a.id] || {}).conectado);
@@ -17,29 +17,50 @@
   function campo(k, t, v, tipo, ayuda) {
     return '<label>' + t + '<input data-k="' + k + '" type="' + (tipo || 'text') + '" value="' + esc(v == null ? '' : v) + '"' + (tipo === 'number' ? ' inputmode="decimal"' : '') + '></label>' + (ayuda ? '<p class="sub" style="margin-top:-4px">' + ayuda + '</p>' : '');
   }
+  // G85: un solo PAGO GENERAL para las 7 apps (⚡ Mercado Pago automático · 🔗 link abierto · 🏦 transferencia) + cupones.
+  // Lo antiguo (links de monto fijo y link de tarjeta) ya no se muestra ni se usa, pero queda guardado (no se borra).
   function formulario() {
-    const c = cfg || {}, n = c.negocio || {}, cl = c.cliente || {}, t = c.transferencia || {}, tj = c.tarjeta || {};
-    return '<div class="card" id="pgCfg"><h2>Precios y formas de pago</h2><p class="sub">Iguales para las 7 apps. Al guardar se copian a todas las apps conectadas.</p>' +
+    const c = cfg || {}, n = c.negocio || {}, cl = c.cliente || {}, t = c.transferencia || {};
+    return '<div class="card" id="pgCfg"><h2>Precios</h2><p class="sub">Iguales para las 7 apps. Al guardar se copian a todas las apps conectadas.</p>' +
       '<h3>Negocio (cuenta principal)</h3><div class="grid2">' + campo('negocio.inicio', 'Primer pago', n.inicio, 'number') + campo('negocio.inicio_dias', 'Días que da', n.inicio_dias, 'number') +
       campo('negocio.mensual', 'Premium mensual', n.mensual, 'number') + campo('negocio.anual', 'Premium anual', n.anual, 'number') + '</div>' +
       '<label class="fila" style="gap:8px"><input type="checkbox" data-k="negocio.exigir_inicio" style="width:auto"' + (n.exigir_inicio ? ' checked' : '') + '> Los negocios nuevos no pueden usar la app hasta su primer pago</label>' +
       '<p class="sub">Solo para los que se registren desde que lo activas. Cuando vence, quedan en la versión gratis.</p>' +
       '<h3>Cliente</h3><div class="grid2">' + campo('cliente.mensual', 'Premium mensual', cl.mensual, 'number') + campo('cliente.anual', 'Premium anual', cl.anual, 'number') + '</div>' +
-      '<h3>🔗 Link general de pago</h3><p class="sub">Uno solo, sin monto, para todo: el pago de cada app, Premium, módulos y packs. Cada app muestra el total con 📋 Copiar monto.</p>' + campo('link', 'Link general (sin monto)', c.link, 'url') +
-      campo('comision_pct', 'Cargo por pago online del link (%)', c.comision_pct, 'number', 'Se muestra como una línea aparte ("Cargo por pago online"), igual que un impuesto: transparente. Súbelo, bájalo o déjalo en 0. Por transferencia pagan el precio exacto.') +
-      '<details' + ([n.link_mensual, n.link_3meses, n.link_anual, cl.link_mensual, cl.link_3meses, cl.link_anual].some(Boolean) ? ' open' : ' hidden') + '><summary>Links antiguos con monto fijo (bórralos: basta el link general)</summary><p class="sub">No hacen falta: el link abierto sirve para todo. Si ya tienes alguno, pégalo y ese plan lo usa (créalo con el monto que se indica: precio + cargo online). Vacío = usa el link abierto.</p>' +
-      campo('negocio.link_mensual', 'Negocio · mensual (y primer pago) · ' + pesos(Math.ceil((n.mensual || 0) * (1 + (Number(c.comision_pct) || 0) / 100))), n.link_mensual, 'url') +
-      campo('negocio.link_3meses', 'Negocio · 3 meses · ' + pesos(Math.ceil((n.mensual || 0) * 3 * (1 + (Number(c.comision_pct) || 0) / 100))), n.link_3meses, 'url') +
-      campo('negocio.link_anual', 'Negocio · anual · ' + pesos(Math.ceil((n.anual || 0) * (1 + (Number(c.comision_pct) || 0) / 100))), n.link_anual, 'url') +
-      campo('cliente.link_mensual', 'Cliente · mensual · ' + pesos(Math.ceil((cl.mensual || 0) * (1 + (Number(c.comision_pct) || 0) / 100))), cl.link_mensual, 'url') +
-      campo('cliente.link_3meses', 'Cliente · 3 meses · ' + pesos(Math.ceil((cl.mensual || 0) * 3 * (1 + (Number(c.comision_pct) || 0) / 100))), cl.link_3meses, 'url') +
-      campo('cliente.link_anual', 'Cliente · anual · ' + pesos(Math.ceil((cl.anual || 0) * (1 + (Number(c.comision_pct) || 0) / 100))), cl.link_anual, 'url') + '</details>' +
-      '<h3>Tarjeta (opcional)</h3>' + campo('tarjeta.link', 'Link de pago con tarjeta (sin monto)', tj.link, 'url', 'Por ejemplo tu link de Mercado Pago, Flow o SumUp. Si lo dejas vacío, no aparece.') +
-      campo('tarjeta.comision_pct', 'Cargo por pago con tarjeta (%)', tj.comision_pct, 'number', 'Pon lo que te cobra la plataforma (más IVA) para no perder plata. Ej.: 3,5') +
-      '<h3>Transferencia</h3><div class="grid2">' + campo('transferencia.banco', 'Banco', t.banco) + campo('transferencia.tipo', 'Tipo de cuenta', t.tipo) + campo('transferencia.numero', 'Número', t.numero) +
-      campo('transferencia.rut', 'RUT', t.rut) + campo('transferencia.titular', 'Titular', t.titular) + campo('transferencia.correo', 'Correo', t.correo, 'email') + '</div>' +
+      '<h2 style="margin-top:18px">💳 Pago general</h2><p class="sub">Uno solo para todo (cada app, Premium, módulos y packs). La persona ve el total con su cupón ya descontado.</p>' +
+      '<div class="pg-medio"><h3>🔗 Link de pago abierto</h3><p class="sub">Tu link sin monto (el que dejas abierto). La persona copia el total, paga y sube el pantallazo: lo apruebas en "Por revisar".</p>' +
+        campo('link', 'Link general (sin monto)', c.link, 'url') +
+        campo('comision_pct', 'Cargo por pago online (%)', c.comision_pct, 'number', 'Se suma como una línea aparte en Mercado Pago y en el link. Por transferencia pagan el precio exacto. 0 = sin cargo.') + '</div>' +
+      '<div class="pg-medio"><h3>🏦 Transferencia</h3><div class="grid2">' + campo('transferencia.banco', 'Banco', t.banco) + campo('transferencia.tipo', 'Tipo de cuenta', t.tipo) + campo('transferencia.numero', 'Número', t.numero) +
+        campo('transferencia.rut', 'RUT', t.rut) + campo('transferencia.titular', 'Titular', t.titular) + campo('transferencia.correo', 'Correo', t.correo, 'email') + '</div></div>' +
       campo('whatsapp', 'WhatsApp para dudas de pago (con 56)', c.whatsapp, 'tel') +
-      '<button type="button" class="block" id="pgGuardar">Guardar en las 7 apps</button><div id="pgRes"></div></div>';
+      '<button type="button" class="block" id="pgGuardar">Guardar en las 7 apps</button><div id="pgRes"></div></div>' +
+      '<div class="card" id="pgMp"><h2>⚡ Mercado Pago automático</h2><p class="sub">Pagan con tarjeta, débito o saldo y el plan <b>se activa solo</b>: sin comprobante y sin que tú apruebes. Te llega push "⚡ Pago automático" y a la persona "✅ Pago aprobado".</p><div id="mpEst"><p class="sub">Revisando…</p></div>' +
+        '<label>Access Token de producción<input id="mpTk" autocomplete="off" spellcheck="false" placeholder="APP_USR-…"></label>' +
+        '<p class="sub" style="margin-top:-4px">Dónde: Mercado Pago → Tu negocio → Configuración → Credenciales → Credenciales de producción → Access Token. Queda guardado solo en la base de cada app: nadie lo puede volver a ver.</p>' +
+        '<div class="btns-s"><button type="button" id="mpCon">Conectar en las 7 apps</button><button type="button" class="ghost" id="mpPausa">Pausar</button></div><div id="mpRes"></div></div>' +
+      '<div class="card"><h2>🏷️ Cupones</h2><p class="sub">Se aplican al pagar Premium (Mercado Pago, link o transferencia): la persona escribe el código y ve el descuento al tiro.</p><button type="button" class="ghost" id="pgCup">Crear o ver cupones</button></div>';
+  }
+  // Estado del pago automático en cada app.
+  async function mpEstado() {
+    const z = raiz.querySelector('#mpEst'); if (!z) return;
+    const out = await Promise.all(conectadas().map(async (a) => { try { return [a, await M().rpcDe(M().cliente(a), 'cfx_mp_estado')]; } catch (x) { return [a, { error: nf(x) }]; } }));
+    const on = out.filter((r) => r[1].activo), cuenta = (on[0] || [])[1];
+    z.innerHTML = (cuenta ? '<p class="pill ok" style="display:inline-block">✓ Activo en ' + on.length + ' de ' + out.length + (cuenta.nick ? ' · ' + esc(cuenta.nick) : '') + ' · …' + esc(cuenta.fin || '') + '</p>' : '<p class="pill warn" style="display:inline-block">Sin conectar</p>') +
+      out.filter((r) => !r[1].activo).map((r) => '<p class="sub">' + esc(r[0].nombre.split(' ·')[0]) + ': ' + esc(r[1].error || (r[1].conectado ? 'en pausa' : 'sin conectar')) + '</p>').join('');
+    const bp = raiz.querySelector('#mpPausa'); if (bp) { bp.textContent = on.length ? 'Pausar' : 'Prender'; bp.dataset.on = on.length ? '1' : ''; bp.hidden = !out.some((r) => r[1].conectado); }
+  }
+  async function mpGuardar(tk, activo) {
+    const res = raiz.querySelector('#mpRes'), out = [];
+    if (tk && !/^(APP_USR|TEST)-/.test(tk)) return toast('El Access Token empieza con APP_USR-');
+    res.innerHTML = '<p class="sub">Guardando…</p>';
+    for (const a of M().APPS) {
+      if (!(M().estado[a.id] || {}).conectado) { out.push([a, 'warn', 'No conectada']); continue; }
+      try { await M().rpcDe(M().cliente(a), 'cfx_mp_guardar', { p_token: tk || null, p_activo: activo }); out.push([a, 'ok', tk ? 'Conectado' : activo ? 'Prendido' : 'En pausa']); }
+      catch (x) { out.push([a, 'bad', nf(x)]); }
+    }
+    res.innerHTML = out.map((r) => '<div class="fila"><span class="grow">' + esc(r[0].nombre.split(' ·')[0]) + '</span><span class="pill ' + r[1] + '">' + esc(r[2]) + '</span></div>').join('');
+    raiz.querySelector('#mpTk').value = ''; mpEstado();
   }
   function leer() {
     const o = JSON.parse(JSON.stringify(cfg || {}));
@@ -54,8 +75,6 @@
   async function guardarTodas() {
     const p = leer(), res = raiz.querySelector('#pgRes'), out = [];
     if (p.link && !/^https:\/\//.test(p.link)) return toast('El link debe empezar con https://');
-    if (p.tarjeta && p.tarjeta.link && !/^https:\/\//.test(p.tarjeta.link)) return toast('El link de tarjeta debe empezar con https://');
-    for (const g of ['negocio', 'cliente']) for (const k of ['link_mensual', 'link_3meses', 'link_anual']) if (p[g] && p[g][k] && !/^https:\/\//.test(p[g][k])) return toast('Los links deben empezar con https://');
     res.innerHTML = '<p class="sub">Guardando…</p>';
     for (const a of M().APPS) {
       const e = M().estado[a.id] || {};
@@ -90,13 +109,15 @@
         '<p class="sub">' + esc(g.email) + ' · ' + (g.rol === 'negocio' ? 'Negocio' : g.rol === 'cliente' ? 'Cliente' : 'Otro') + ' · ' + (PERIODO[g.periodo] || g.periodo) + (g.meses ? ' (' + g.meses + ')' : '') + (g.producto ? ' · 🧩 ' + esc(g.producto) : '') + ' · <b>' + pesos(g.monto) + '</b> por ' + (MEDIO[g.medio] || g.medio) +
         ' · ' + A.hace(g.creado) + (g.aprobados ? ' · ya pagó ' + g.aprobados + ' vez/veces' : ' · primer pago') + (g.nota ? '<br>' + esc(g.nota) : '') + (g.motivo ? '<br>Motivo: ' + esc(g.motivo) : '') +
         (g.estado === 'aprobado' && g.dias ? '<br>' + g.dias + ' días de Premium' : '') + '</p>' +
-        (g.estado === 'pendiente' ? '<div class="btns-s">' + (g.con_comprobante ? '<button type="button" class="small ghost" data-v="' + i + '">Ver comprobante</button>' : '') +
+        (g.estado === 'pendiente' && g.medio === 'mp' ? '<p class="sub">⏳ Abrió Mercado Pago: se aprueba solo apenas pague (se revisa cada 2 min).</p><div class="btns-s"><button type="button" class="small ghost" data-mp="' + i + '">🔄 Revisar ahora</button><button type="button" class="small ghost" data-no="' + i + '">Cerrar</button></div>' :
+        g.estado === 'pendiente' ? '<div class="btns-s">' + (g.con_comprobante ? '<button type="button" class="small ghost" data-v="' + i + '">Ver comprobante</button>' : '') +
           '<button type="button" class="small" data-ok="' + i + '">Aprobar</button><button type="button" class="small ghost" data-no="' + i + '">Rechazar</button></div>' :
           g.estado === 'aprobado' && global.CFX_COMPROBANTE ? '<div class="btns-s"><button type="button" class="small ghost" data-cb="' + i + '">🧾 Comprobante</button></div>' : '') + '</div>').join('') ||
         '<p class="empty">' + (filtro === 'pendiente' ? 'No hay pagos por revisar 🎉' : 'Sin pagos') + '</p>');
     cont.onclick = async (ev) => {
-      const b = ev.target.closest('[data-v],[data-ok],[data-no],[data-cb]'); if (!b) return;
+      const b = ev.target.closest('[data-v],[data-ok],[data-no],[data-cb],[data-mp]'); if (!b) return;
       if (b.dataset.cb) return comprobante(filas[+b.dataset.cb]);
+      if (b.dataset.mp) { const g = filas[+b.dataset.mp]; try { const r = await M().rpcDe(M().cliente(g.app), 'cfx_mp_revisar_admin', { p_id: g.id }); toast(r === 'aprobado' ? '✅ Pagado: plan activado' : 'Aún no paga en Mercado Pago'); lista(); } catch (x) { toast(nf(x)); } return; }
       const g = filas[+(b.dataset.v || b.dataset.ok || b.dataset.no)], c = M().cliente(g.app);
       try {
         if (b.dataset.v && g.conexiones) { const { data: u } = await c.storage.from('pagos').createSignedUrl(g.path, 600); if (u) A.verImagen(u.signedUrl, 'Comprobante', 'comprobante.jpg'); }
@@ -128,7 +149,7 @@
     const nom = g.conexiones ? 'Conexiones extra' : g.producto ? 'Módulo ' + g.producto : 'Plan Premium · ' + (PERIODO[g.periodo] || g.periodo || '');
     global.CFX_COMPROBANTE.abrir({ titulo: 'Comprobante de pago', negocio: 'CodeFix · ' + app, fecha: g.resuelto || g.creado, numero: String(g.id || '').slice(0, 8).toUpperCase(), cliente: g.nombre || g.email,
       items: [{ cant: 1, nombre: nom + (g.meses ? ' (' + g.meses + ' meses)' : ''), precio: Number(g.monto) || 0 }], total: Number(g.monto) || 0,
-      medio: g.medio === 'link' ? 'Link de pago' : g.medio });
+      medio: g.medio === 'link' ? 'Link de pago' : g.medio === 'mp' ? 'Mercado Pago' : g.medio });
   }
 
   async function exento(si) {
@@ -173,6 +194,10 @@
       '<label>Días<input id="lbDias" type="number" inputmode="numeric" min="1" max="90" value="7"></label>' +
       '<div class="btns-s"><button type="button" class="small" id="lbSi">Liberar</button><button type="button" class="small ghost" id="lbNo">Terminar ahora</button></div><div id="lbRes"></div></div>';
     el.querySelector('#pgGuardar').onclick = guardarTodas;
+    el.querySelector('#mpCon').onclick = () => { const tk = el.querySelector('#mpTk').value.trim(); if (!tk) return toast('Pega tu Access Token'); mpGuardar(tk, true); };
+    el.querySelector('#mpPausa').onclick = (ev) => mpGuardar(null, !ev.target.dataset.on);
+    el.querySelector('#pgCup').onclick = () => { try { sessionStorage.setItem('cm-control-secc', 'cupones'); } catch (x) { /* nada */ } const b = document.querySelector('[data-v="control"]'); if (b) b.click(); else location.hash = '#control'; };
+    mpEstado();
     el.querySelector('#pgExSi').onclick = () => exento(true);
     el.querySelector('#pgExNo').onclick = () => exento(false);
     el.querySelector('#lbSi').onclick = () => { const n = Math.round(+el.querySelector('#lbDias').value || 0); if (n < 1 || n > 90) return toast('De 1 a 90 días'); liberar(n); };

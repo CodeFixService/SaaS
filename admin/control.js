@@ -583,13 +583,14 @@
 
   async function render(el) {
     raiz = el;
+    try { const s0 = sessionStorage.getItem('cm-control-secc'); if (s0) { sessionStorage.removeItem('cm-control-secc'); if (F[s0]) seccion = s0; } } catch (x) { /* nada */ }  // G85: desde Pagos → 🏷️ Cupones
     el.innerHTML = '<div class="titulo-v"><h2>Control</h2><span class="sub">Las 7 apps</span></div><p class="sub">Cargando…</p>';
     await M().preparar();
     const a = app();
     el.innerHTML = '<div class="titulo-v"><h2>Control</h2><span class="sub">Las 7 apps</span></div>' +
-      '<div class="seg" style="display:flex;flex-wrap:wrap;gap:8px">' + M().APPS.map((x) => '<button type="button" data-app="' + x.id + '" class="' + (x.id === actual ? 'on' : '') + '">' + esc(x.nombre.split(' ·')[0]) + (conectada(x) ? '' : ' 🔌') + '</button>').join('') + '</div>' +
+      '<div id="ctlApps"></div>' +  // G85: caja de apps (antes, 7 botones que bajaban de línea)
       '<div class="chips">' + SECC.map((s) => '<button type="button" class="chip' + (s[0] === seccion ? ' on' : '') + '" data-s="' + s[0] + '">' + s[1] + '</button>').join('') + '</div><div id="ctlCuerpo"></div>';
-    el.querySelectorAll('[data-app]').forEach((b) => { b.onclick = () => { actual = b.dataset.app; render(el); }; });
+    await M().cajaApps(el.querySelector('#ctlApps'), actual, (id) => { actual = id; render(el); }, { sub: (x) => conectada(x) ? '' : '🔌 Sin conectar' });
     el.querySelectorAll('[data-s]').forEach((b) => { b.onclick = () => { seccion = b.dataset.s; render(el); }; });
     if (!conectada(a)) {
       caja().innerHTML = '<div class="card"><p>Conéctate a ' + esc(a.nombre) + ' con tu cuenta de administrador de esa app (queda guardada en este teléfono).</p><button type="button" id="ctlCon">Conectar</button></div>';

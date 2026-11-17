@@ -27,6 +27,9 @@ Los correos de cada tienda a SUS clientes salen con el Gmail de la tienda: **Des
 - Negocio: **$3.000/mes** · Cliente Premium: **$2.000/mes**. Prueba gratis 7 días (déjala: retiene).
 - 🔗 **Link de pago abierto** (G28): Mercado Pago → Cobrar → Link de pago → **sin monto** → pégalo en CM → Pagos → 🔗 **Link general de pago** → Guardar en las 7 apps. Sirve para TODO (pago de cada app, Premium, módulos y packs; G30: los links con monto fijo ya no se muestran, salvo los antiguos para borrarlos): la app muestra el total con 📋 Copiar monto y el comprobante.
 
+- ⚡ **Mercado Pago automático** (G85, recomendado): Mercado Pago → Tu negocio → Configuración → Credenciales → **Credenciales de producción** → copia el **Access Token** (APP_USR-…) → CM → Pagos → ⚡ Mercado Pago automático → pégalo → **Conectar en las 7 apps**. Desde ahí: la persona toca ⚡ Pagar con Mercado Pago, paga y su plan se activa solo (te llega push "⚡ Pago automático"). El link abierto sigue igual (esos los apruebas tú en Por revisar).
+- 🏷️ Cupones: CM → Pagos → 🏷️ Crear o ver cupones (ej. VERANO 20%): la persona lo escribe en la caja del cupón y ve el precio tachado.
+
 ## 4 · 🧩 Venta de módulos (tú, CM → Apps → Órbita → 🧩)
 1. 💰 Vender módulos: **prendido**.
 2. Precios recomendados (por mes): sueltos $990 · **📊 Medir anuncios $990** · **🌐 Dominio propio $1.990** (te pide trabajo a ti).

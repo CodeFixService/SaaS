@@ -525,5 +525,69 @@
   }
   // Para el panel de Pagos: deja listas (y conectadas, si ya entraste) las 7 apps sin pintar las tarjetas.
   const preparar = () => Promise.all(APPS.filter((a) => !E[a.id] || !E[a.id].url).map(cargar));
-  global.MisApps = { render, APPS, urlLimpia, cliente, estado: E, preparar, conectar, rpcDe, abrirAdmin, abrirPanel, vincular, kpis, nombre, valor, peso, respaldar, limpieza };
+  // ---------- G85 · 🗂️ Caja de apps ----------
+  // Un botón con la app elegida (su imagen + nombre). Al tocarlo se abre la caja con las 7 apps para elegir otra.
+  // Imagen: la de cada app (icons/icon-192.png) o la que pongas tú (🖼️ Cambiar imágenes; se guarda en el CM para todos tus teléfonos).
+  let IMG = null;
+  const imgDefecto = (a) => (a.propia ? A.ROOT : a.web) + 'icons/icon-192.png';
+  const imgDe = (a) => (IMG && IMG[a.id]) || imgDefecto(a);
+  async function imagenes() {
+    if (IMG) return IMG;
+    try { const r = await A.rpc('config_publica'); IMG = Object.assign({}, ((r && r.config) || {}).apps_imagenes || {}); } catch (x) { IMG = {}; }
+    return IMG;
+  }
+  function achicarImg(file) {
+    return new Promise((ok, no) => {
+      const img = new Image(), u = URL.createObjectURL(file);
+      img.onload = () => {
+        const L = 128, c = document.createElement('canvas'); c.width = c.height = L;
+        const k = Math.max(L / img.width, L / img.height), w = img.width * k, h = img.height * k;
+        c.getContext('2d').drawImage(img, (L - w) / 2, (L - h) / 2, w, h); URL.revokeObjectURL(u);
+        let d = c.toDataURL('image/webp', 0.85); if (!/^data:image\/webp/.test(d)) d = c.toDataURL('image/png');
+        ok(d);
+      };
+      img.onerror = () => { URL.revokeObjectURL(u); no(new Error('No se pudo leer la imagen (usa JPG o PNG)')); };
+      img.src = u;
+    });
+  }
+  async function cajaApps(cont, actualId, alElegir, o) {
+    o = o || {};
+    await imagenes();
+    let abierta = false, editar = false;
+    const img = (a) => '<img class="ca-img" alt="" src="' + esc(imgDe(a)) + '">';
+    const corto = (a) => a.nombre.split(' ·')[0];
+    const pintar = () => {
+      const a = APPS.find((x) => x.id === actualId) || APPS[0];
+      cont.innerHTML = '<div class="ca' + (abierta ? ' abierta' : '') + '">' +
+        '<button type="button" class="ca-btn" data-ca="abrir" aria-expanded="' + abierta + '">' + img(a) +
+          '<span class="ca-txt"><b>' + esc(corto(a)) + '</b><small>' + (abierta ? 'Elige la app' : 'Toca para cambiar de app') + '</small></span><span class="ca-flecha" aria-hidden="true"></span></button>' +
+        (abierta ? '<div class="ca-lista" role="listbox">' + APPS.map((x) => '<div class="ca-fila' + (x.id === a.id ? ' on' : '') + '">' +
+            '<button type="button" class="ca-op" role="option" aria-selected="' + (x.id === a.id) + '" data-ca-app="' + x.id + '">' + img(x) +
+              '<span class="ca-txt"><b>' + esc(corto(x)) + '</b>' + (o.sub && o.sub(x) ? '<small>' + esc(o.sub(x)) + '</small>' : '') + '</span>' + (x.id === a.id ? '<span class="ca-ok" aria-hidden="true">✓</span>' : '') + '</button>' +
+            (editar ? '<span class="ca-ed"><button type="button" class="small ghost" data-ca-img="' + x.id + '">Imagen</button>' + (IMG[x.id] ? '<button type="button" class="small ghost" data-ca-quitar="' + x.id + '">Original</button>' : '') + '</span>' : '') +
+          '</div>').join('') +
+          '<button type="button" class="small ghost ca-cambiar" data-ca="editar">' + (editar ? 'Listo' : 'Cambiar imágenes') + '</button></div>' : '') + '</div>';
+      // Si la imagen no carga, queda un cuadro neutro del mismo tamaño (nunca el ícono roto).
+      const sin = (i) => { const d = document.createElement('span'); d.className = 'ca-img sin'; i.replaceWith(d); };
+      cont.querySelectorAll('img.ca-img').forEach((i) => { if (i.complete && !i.naturalWidth) sin(i); else i.onerror = () => sin(i); });
+    };
+    const guardar = async () => {
+      try { await A.rpc('admin_config_guardar', { p_clave: 'apps_imagenes', p_valor: IMG, p_motivo: 'Imagen de app' }); toast('Imagen guardada'); }
+      catch (x) { toast(/Ajuste no válido/.test(x.message) ? 'Actualiza la base del Centro de Mando para guardar imágenes' : x.message); }
+    };
+    cont.onclick = (ev) => {
+      const b = ev.target.closest('[data-ca],[data-ca-app],[data-ca-img],[data-ca-quitar]'); if (!b) return;
+      if (b.dataset.ca === 'abrir') { abierta = !abierta; editar = false; return pintar(); }
+      if (b.dataset.ca === 'editar') { editar = !editar; return pintar(); }
+      if (b.dataset.caApp) { abierta = false; if (b.dataset.caApp === actualId) return pintar(); actualId = b.dataset.caApp; pintar(); return alElegir(actualId); }
+      if (b.dataset.caQuitar) { delete IMG[b.dataset.caQuitar]; pintar(); return guardar(); }
+      if (b.dataset.caImg) {
+        const f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*';
+        f.onchange = async () => { if (!f.files[0]) return; try { IMG[b.dataset.caImg] = await achicarImg(f.files[0]); pintar(); guardar(); } catch (x) { toast(x.message); } };
+        f.click();
+      }
+    };
+    pintar();
+  }
+  global.MisApps = { cajaApps, render, APPS, urlLimpia, cliente, estado: E, preparar, conectar, rpcDe, abrirAdmin, abrirPanel, vincular, kpis, nombre, valor, peso, respaldar, limpieza };
 })(window);

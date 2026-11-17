@@ -40,3 +40,4 @@ Ahora: app 5.10 · bd 4.33 · función 3.2 · núcleo 2.79. Avisos: CFX_DIALOGO.
 - Bootstrap: solo utilidades (`vendor/`), nunca el completo (choca .btn/.card/.modal/.row/.toast). tema.css mapea --bs-* → --cfx-*.
 - El título de cabecera (`.cfx-cab-h h1`) no se adorna.
 - Colores nuevos con var(--cfx-*)/var(--brand) (respetan 🎨 Colores a tu gusto).
+- G85: CM → Control elige la app con la 🗂️ caja de apps (MisApps.cajaApps, imágenes en config 'apps_imagenes'). CM → Pagos = un solo pago general (link abierto + transferencia) + ⚡ Mercado Pago automático (token en cada app, cfx_mp_*) + 🏷️ Cupones.
