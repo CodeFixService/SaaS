@@ -39,6 +39,13 @@ Los correos de cada tienda a SUS clientes salen con el Gmail de la tienda: **Des
 8. 🎁 **Campaña de lanzamiento** (G74 b, las 6): CM → Apps → <app> → 🧩 → tarjeta **🎁 Campaña de lanzamiento** → marca los módulos → Meses de regalo (3 sugerido) → Termina el (fecha) → **🎁 Lanzar campaña**.
    Negocio: Más → 🧩 Módulos ve arriba "Lanzamiento: N módulos GRATIS por 3 meses" y en cada uno **GRATIS 3 meses** → **🎁 Activar gratis** (o desde ▶️ Probar) → lo tiene al tiro ("🎁 Regalo hasta el…"). Una vez por módulo.
    El día después de "Termina el" se apaga sola (o **⏹️ Terminar hoy**): los nuevos ven el precio; los que activaron siguen hasta su fecha y 7 días antes les llega el aviso para pagar (Premium −20 %).
+   G81: **✅ Todos los módulos** de un toque · meses con botones (1 · 3 · 6 · 12) · **Dura** 15/30/60/90 días (pone "Termina el" solo).
+9. 🔑 **Keys** (G81 d, las 6) — CM → Control → elige la app → **🔑 Keys**:
+   - **Qué activa**: ⭐ Premium (negocio o cliente) · 📦 Pack (Básico/Crecer/Completo) · un módulo suelto (solo negocios).
+   - **Cuántas** 1 · 5 · 10 · 20 y **Días** 30 · 90 · 180 · 1 año → **🔑 Crear keys** → **📋 Copiar todas** (trae el texto listo: qué activa, días, códigos y dónde canjear).
+   - Cada key sirve **1 sola vez** (no hay keys de "5 usos": se filtran). Para 5 negocios → crea 5.
+   - Negocio canjea: Premium → Mi plan → **🔑 Tengo una key** · módulo/pack → Más → 🧩 Módulos → **🔑 Tengo una key**. Si ya tiene ese módulo activo, la key NO se gasta (le avisa).
+   - Tú también puedes aplicarla: CM → Control → Negocios → 🔑 Key en ese negocio. **Revocar** = deja de servir (si no se usó).
 
 ## 5 · 🌐 Dominio de CodeFix + dominios de los negocios (G33, todo desde el CM)
 **1 vez (tú):**

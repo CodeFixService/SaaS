@@ -20,8 +20,8 @@ const assert = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('
     await p.locator('[data-t=app_lema]').fill('Nuevo lema'); await p.click('[data-g=app_lema]'); await p.waitForTimeout(700);
     assert((await t.sim.su("select valor from textos where clave='app_lema'"))[0].valor === 'Nuevo lema', 'texto guardado');
     await p.click('[data-s=keys]'); await p.waitForTimeout(1200);
-    await p.fill('#kN', '2'); await p.click('#kG'); await p.waitForTimeout(1000);
-    const codigos = (await p.locator('#kOut pre').innerText()).split('\n');
+    await p.evaluate(() => { document.querySelector('#kN').value = '2'; }); await p.click('#kG'); await p.waitForTimeout(1000);
+    const codigos = (await p.locator('#kOut pre').innerText()).match(/CFX-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}/g) || [];
     assert(codigos.length === 2 && /^CFX-/.test(codigos[0]), 'keys creadas ' + codigos[0]);
     await p.click('[data-s=cupones]'); await p.waitForTimeout(1200);
     await p.fill('#cC', 'FERIA20'); await p.click('#cG'); await p.waitForTimeout(1500);

@@ -101,7 +101,7 @@
             try { r = await rpc('cfx_key_aplicar', { p_cuenta: n.id, p_rol: negRol, p_email: n.email, p_codigo: d.querySelector('#ngK').value }); }
             catch (x) { d.querySelector('#ngKE').textContent = nf(x); return; }
             if (r && r.error) { d.querySelector('#ngKE').textContent = r.error; return; }
-            d.close ? d.close() : d.remove(); toast('🔑 Premium hasta ' + fecha(r.hasta)); lista();
+            d.close ? d.close() : d.remove(); toast('🔑 ' + (r.nombre || 'Premium') + ' hasta ' + fecha(r.hasta)); lista();
           };
           return;
         }
@@ -117,21 +117,39 @@
   }
 
   async function keys() {
-    let L = [];
+    let L = [], V = null;
     try { L = await rpc('cfx_keys_lista'); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
-    caja().innerHTML = '<div class="card"><h2>Crear keys</h2><p class="sub">Cada key activa Premium una vez (sirve para regalar o vender por fuera). Solo se ven completas al crearlas.</p>' +
-      '<div class="grid2"><label>Cantidad<input id="kN" type="number" value="1" min="1" max="50"></label><label>Días<input id="kD" type="number" value="30"></label></div>' +
-      '<label>Para<select id="kR"><option value="negocio">Negocio</option><option value="cliente">Cliente</option></select></label><label>Nota<input id="kT" maxlength="120" placeholder="Ej: regalo feria"></label>' +
-      '<button type="button" class="block" id="kG">Crear</button><div id="kOut"></div></div>' +
-      '<div class="card"><h2>Keys</h2>' + (L.map((k) => '<div class="fila" style="padding:4px 0;border-top:1px solid var(--line)"><span class="grow">…' + esc(k.ultimos) + ' · ' + esc(k.rol) + ' · ' + k.dias + ' días' + (k.nota ? ' · ' + esc(k.nota) : '') +
+    try { V = await rpc('cfx_venta_admin'); } catch (x) { V = null; }  // G81 d: catálogo de módulos y packs (si la base ya lo tiene)
+    // G81 d · Qué activa la key: Premium (negocio o cliente) o un módulo/pack (solo negocios). 1 uso cada una, en lote.
+    const items = [['', '⭐ Premium']].concat(V ? Object.entries((V.config && V.config.packs) || {}).map(([k, p]) => [k, '📦 Pack ' + p.nombre])
+      .concat((V.catalogo || []).map((x) => [x.clave, x.nombre])) : []);
+    const nomItem = (k) => ((items.find((x) => x[0] === (k || '')) || [])[1]) || k;
+    const chips = (id, vals, on, f) => '<div class="cfx-chips" data-grupo="' + id + '">' + vals.map((v) => '<button type="button" class="cfx-chip' + (v === on ? ' on' : '') + '" data-v="' + v + '">' + f(v) + '</button>').join('') + '</div>';
+    caja().innerHTML = '<div class="card"><h2>Crear keys</h2><p class="sub">Cada key sirve 1 vez: activa Premium o un módulo/pack en el negocio que la canjea. Crea varias de una vez y cópialas todas. Solo se ven completas al crearlas.</p>' +
+      '<label>Qué activa<select id="kI">' + items.map(([k, n]) => '<option value="' + esc(k) + '">' + esc(n) + '</option>').join('') + '</select></label>' +
+      '<p class="sub" style="margin:10px 0 4px"><b>Cuántas</b></p><input type="hidden" id="kN" value="5">' + chips('kN', [1, 5, 10, 20], 5, (v) => v) +
+      '<p class="sub" style="margin:10px 0 4px"><b>Días que da cada una</b></p><input type="hidden" id="kD" value="30">' + chips('kD', [30, 90, 180, 365], 30, (v) => v === 365 ? '1 año' : v + ' días') +
+      '<label id="kRl">Para<select id="kR"><option value="negocio">Negocio</option><option value="cliente">Cliente</option></select></label><label>Nota<input id="kT" maxlength="120" placeholder="Ej: regalo feria"></label>' +
+      '<button type="button" class="block" id="kG">🔑 Crear keys</button><div id="kOut"></div></div>' +
+      '<div class="card"><h2>Keys</h2>' + (L.map((k) => '<div class="fila" style="padding:4px 0;border-top:1px solid var(--line)"><span class="grow">…' + esc(k.ultimos) + ' · ' + esc(nomItem(k.item)) + (k.item ? '' : ' ' + esc(k.rol)) + ' · ' + k.dias + ' días' + (k.nota ? ' · ' + esc(k.nota) : '') +
         '<br><span class="sub">' + (k.revocada ? 'revocada' : k.usada_por ? 'usada por ' + esc(k.usada_email || '') + ' ' + A.hace(k.usada_at) : 'sin usar') + '</span></span>' +
         (!k.usada_por && !k.revocada ? '<button type="button" class="small ghost" data-rev="' + k.id + '">Revocar</button>' : '') + '</div>').join('') || '<p class="empty">Sin keys</p>') + '</div>';
-    raiz.querySelector('#kG').onclick = async () => {
+    const kI = raiz.querySelector('#kI'), kRl = raiz.querySelector('#kRl');
+    kI.onchange = () => { kRl.hidden = !!kI.value; kRl.style.display = kI.value ? 'none' : ''; if (kI.value) raiz.querySelector('#kR').value = 'negocio'; };
+    raiz.querySelectorAll('.cfx-chips[data-grupo]').forEach((g) => { g.onclick = (ev) => {
+      const ch = ev.target.closest('.cfx-chip'); if (!ch) return;
+      raiz.querySelector('#' + g.dataset.grupo).value = ch.dataset.v; g.querySelectorAll('.cfx-chip').forEach((x) => x.classList.toggle('on', x === ch));
+    }; });
+    raiz.querySelector('#kG').onclick = async (ev) => {
+      ev.target.disabled = true;
       try {
-        const l = await rpc('cfx_keys_crear', { p_n: +raiz.querySelector('#kN').value, p_rol: raiz.querySelector('#kR').value, p_dias: +raiz.querySelector('#kD').value, p_nota: raiz.querySelector('#kT').value });
-        raiz.querySelector('#kOut').innerHTML = '<pre style="white-space:pre-wrap;user-select:all">' + esc(l.join('\n')) + '</pre><button type="button" class="small" id="kCop">📋 Copiar</button>';
-        raiz.querySelector('#kCop').onclick = () => navigator.clipboard.writeText(l.join('\n')).then(() => toast('Copiadas'));
+        const it = kI.value, n = +raiz.querySelector('#kN').value, dias = +raiz.querySelector('#kD').value;
+        const l = await rpc('cfx_keys_crear', Object.assign({ p_n: n, p_rol: it ? 'negocio' : raiz.querySelector('#kR').value, p_dias: dias, p_nota: raiz.querySelector('#kT').value }, it ? { p_item: it } : {}));
+        const txt = (it ? nomItem(it) : 'Premium ' + raiz.querySelector('#kR').value) + ' · ' + dias + ' días (1 uso cada una):\n' + l.join('\n') + '\n\nCanjéala en la app: ' + (it ? 'Más → 🧩 Módulos → 🔑 Tengo una key' : 'Premium → 🔑 Tengo una key') + '.';
+        raiz.querySelector('#kOut').innerHTML = '<pre style="white-space:pre-wrap;user-select:all">' + esc(txt) + '</pre><button type="button" class="block" id="kCop">📋 Copiar todas (' + l.length + ')</button>';
+        raiz.querySelector('#kCop').onclick = () => navigator.clipboard.writeText(txt).then(() => toast('Copiadas'));
       } catch (x) { toast(nf(x)); }
+      ev.target.disabled = false;
     };
     caja().onclick = async (ev) => {
       const b = ev.target.closest('[data-rev]'); if (!b) return;

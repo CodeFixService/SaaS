@@ -374,9 +374,14 @@
         '<p class="sub">' + (V.campana_on ? '🟢 Activa hasta el ' + esc(dma(C.hasta)) + ' · ' + (V.campana_usos || 0) + ' negocio(s) ya la activaron.'
           : C ? '⚪ Terminó el ' + esc(dma(C.hasta)) + ' · ' + (V.campana_usos || 0) + ' negocio(s) la activaron. Ellos siguen con su regalo hasta su fecha.'
           : 'Elige módulos y meses de regalo. El negocio toca 🎁 Activar gratis y lo tiene al tiro. El día de término se apaga sola.') + '</p>' +
+        (mods.length > 1 ? '<label class="fila" style="gap:8px;align-items:center;margin:4px 0"><input type="checkbox" id="cTodos"' + (mods.every((x) => sel.includes(x.clave)) ? ' checked' : '') + '><b class="grow">✅ Todos los módulos</b></label>' : '') +
         (mods.length ? '<div style="display:grid;gap:2px;margin:6px 0">' + mods.map((x) => '<label class="fila" style="gap:8px;align-items:center;min-width:0;margin:4px 0"><input type="checkbox" data-camp="' + esc(x.clave) + '"' +
           (sel.includes(x.clave) ? ' checked' : '') + '><span class="grow" style="min-width:0;overflow-wrap:anywhere">' + esc(x.nombre) + '</span></label>').join('') + '</div>' : '<p class="sub">Prende algún módulo arriba.</p>') +
-        '<label>Meses de regalo<select id="cMeses">' + [1, 3, 6, 12].map((n) => '<option value="' + n + '"' + (n === meses ? ' selected' : '') + '>' + n + (n === 1 ? ' mes' : ' meses') + (n === 3 ? ' (sugerido)' : '') + '</option>').join('') + '</select></label>' +
+        // G81 a: meses y término con botones de un toque (sin listas de Android); la fecha exacta queda como opción.
+        '<p class="sub" style="margin:10px 0 4px"><b>Meses de regalo</b> (3 = sugerido)</p><input type="hidden" id="cMeses" value="' + meses + '">' +
+        '<div class="cfx-chips" data-grupo="cMeses">' + [1, 3, 6, 12].map((n) => '<button type="button" class="cfx-chip' + (n === meses ? ' on' : '') + '" data-v="' + n + '">' + n + (n === 1 ? ' mes' : ' meses') + '</button>').join('') + '</div>' +
+        '<p class="sub" style="margin:10px 0 4px"><b>Dura</b> (se apaga sola)</p>' +
+        '<div class="cfx-chips" data-grupo="cHasta">' + [15, 30, 60, 90].map((n) => '<button type="button" class="cfx-chip" data-v="' + enDias(n) + '">' + n + ' días</button>').join('') + '</div>' +
         '<label>Termina el<input id="cHasta" type="date" min="' + hoy() + '" value="' + esc(V.campana_on ? C.hasta : enDias(30)) + '"></label>' +
         '<p class="err" id="cErr"></p><div class="btns" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr))">' +
         (V.campana_on ? '<button type="button" class="ghost" id="cFin">⏹️ Terminar hoy</button>' : '') +
@@ -431,7 +436,16 @@
       catch (x) { toast(x.message); }
       pintar();
     };
+    d.addEventListener('change', (ev) => {
+      if (ev.target.id === 'cTodos') d.querySelectorAll('[data-camp]').forEach((x) => { x.checked = ev.target.checked; });
+      else if (ev.target.dataset.camp) { const t = d.querySelector('#cTodos'); if (t) t.checked = [...d.querySelectorAll('[data-camp]')].every((x) => x.checked); }
+    });
     d.addEventListener('click', async (ev) => {
+      const ch = ev.target.closest('.cfx-chips[data-grupo] .cfx-chip');
+      if (ch) {
+        const g = ch.parentElement; d.querySelector('#' + g.dataset.grupo).value = ch.dataset.v;
+        g.querySelectorAll('.cfx-chip').forEach((x) => x.classList.toggle('on', x === ch)); return;
+      }
       if (ev.target.id === 'vGuardar') {
         const cfg = V.config || {}, precios = {}, links = {}, packs = JSON.parse(JSON.stringify(cfg.packs || {}));
         d.querySelectorAll('[data-pr]').forEach((x) => { if (x.value.trim() !== '') precios[x.dataset.pr] = Math.round(Number(x.value)); });
