@@ -96,6 +96,7 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 - G59d Más → 📦 Repuestos → ✨ → entregar → 🛒 pedido → 📥 Llegó
 - G59e Más → 🏷️ Bicis usadas → ＋ → ✅ Todo bien → 📷 → 📣 Publicar → 👀 Ver en mi página · Más → 🔄 Parte de pago
 - G59f orden → 🪪 Pasaporte → Crear → 🖨️ Sticker QR → 📲 Enviar al dueño → (como cliente) 🚨 Me la robaron
+- G86 📍 (2 teléfonos) pasaporte → 📲 Enviar al dueño → (dueño) 🚨 Me la robaron (casilla 🕵️ marcada) → (otro teléfono) escanea el sticker → Permitir ubicación → (dueño y taller) llega el aviso → 📍 Dónde está → 🗺️ Abrir en el mapa → camina: el punto se mueve solo
 - G59g Más → 🚐 A domicilio → ⚙️ prender + recargo → Guardar → (como cliente) tu página → 🏠 Que vengan a mi casa → Reservar → (taller) Ruta del día → 🗺️ Abrir la ruta → 🚐 Voy en camino
 - G59h orden lista → 🛡️ Garantía → Dar garantía → 📲 Enviar al cliente → (cliente) 🛡️ Usar mi garantía → (taller) Hoy → ✅ Lo arreglé
 - G74c Más → 🏪 Perfil → ⭐ Reseñas en Google → pega el link (Google Maps → tu taller → Pedir reseñas → Copiar link) → 💾 Guardar link → orden entregada → ⭐ Pedir reseña · (cliente) su link → ⭐ 5 estrellas → ⭐ Dejar reseña en Google

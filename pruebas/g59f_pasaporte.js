@@ -85,6 +85,7 @@ const { abrir } = require('./h');
     ok(/p\/\?t=/.test(href) && /&c=/.test(href) && await q.locator('#cPas').isVisible(), '🪪 /r/: "Ver mi pasaporte" con la clave del dueño');
     await q.goto(new URL(href, q.url()).href); await q.waitForTimeout(3500);
     ok(await q.locator('#cDueno').isVisible() && /WTU123456789/.test(await q.locator('#datos').innerText()), '🔐 dueño: ve su serie completa y el botón');
+    await q.uncheck('#cSil');  // G86: sin rastreo silencioso, quien escanea ve el aviso
     q.once('dialog', (dl) => dl.accept('Mall Plaza, 15/11'));  // h.js: CFX_DIALOGO.pedir → prompt
     await q.click('#bRobo'); await q.waitForTimeout(2500);
     ok((await su('select robada, robada_nota from public.pasaportes'))[0].robada === true, '🚨 Me la robaron → robada');
