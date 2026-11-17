@@ -34,7 +34,7 @@ perfiles, espacios, items, pedidos/pagos, planes, config, textos, notificaciones
 
 ## Versiones
 `shared/config.js` VERSION/DB_VERSION + `version.json` (notas = SOLO categorías G44b) + `instalar.sql` l.147.
-Ahora: app 5.34 · bd 4.51 · función 3.4 · núcleo 3.02. Avisos: CFX_DIALOGO.confirmar/pedir/avisar (nunca confirm/prompt de Chrome).
+Ahora: app 5.39 · bd 4.56 · función 3.4 · núcleo 3.06 (G98: ⚡ Mercado Pago de cada negocio en nucleo/sql/mp_negocio.sql + CFX_PAGOS.mpNegocio). Avisos: CFX_DIALOGO.confirmar/pedir/avisar (nunca confirm/prompt de Chrome).
 
 ## Reglas propias
 - Bootstrap: solo utilidades (`vendor/`), nunca el completo (choca .btn/.card/.modal/.row/.toast). tema.css mapea --bs-* → --cfx-*.

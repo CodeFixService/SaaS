@@ -157,6 +157,14 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 5. CM → 📢 Anuncios → **📊 Resultados** (vistas, clics, cerrados) · **📤 Compartir** (en el anuncio) abre el menú del teléfono → Instagram historia/post/reel.
 6. 🎬 Estudio/Cerebro: en **Cerebro** → Empresa → 🗂️ Respaldo, guía y borrar → **⬇️ Respaldo Excel** → guárdalo → avísame "respaldo listo" para portar el motor al CM.
 
+## G98 ⚡ Mercado Pago de cada negocio · Barbería 3.25 · BiciTaller 3.14 · Estaciona 2.14.90 (probar, después de CM → Apps → ⬆️ Actualizar base en las 7: CM 4.56 · Despega 5.74 · Barbería 3.04 · Billetera 59 · BiciTaller 2.54 · Estaciona 55)
+Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa un abono chico, ej. $500).
+1. **Barbería** (cuenta de barbería) → **Más** → **💳 Links de pago** → tarjeta **⚡ Tu Mercado Pago** → pega el Access Token (Mercado Pago → Tu negocio → Configuración → Credenciales → **Credenciales de producción**) → **⚡ Conectar** → dice "✅ Activo · tu nombre".
+2. Con otro teléfono reserva por el link de la barbería → en la reserva toca **⚡ Pagar con Mercado Pago** → paga → vuelve → en segundos dice **¡Tu hora está agendada!** (sin comprobante). Al barbero le llega "📅 … · ⚡ abono pagado con Mercado Pago".
+3. **BiciTaller** → **Más** → **💳 Abono** → misma tarjeta → **⚡ Conectar** → reserva desde la vitrina con otro teléfono → **⚡ Pagar $… con Mercado Pago** → queda **✅ Confirmada** sola.
+4. **Estaciona** (dueño) → **Más** → **💳 Links de pago** → tarjeta arriba → **⚡ Conectar**. Con otra cuenta reserva → **⚡ Pagar $… con Mercado Pago** → queda confirmada sin que el dueño toque nada. En un arriendo por mes con 🔁 Renovar prendido, 5 días antes aparece **⚡ Pagar … con Mercado Pago** para el mes siguiente.
+5. Para volver a link + comprobante: misma tarjeta → **Desconectar**.
+
 ## G96 b 🏬📣 Sucursales · Promo destacada · Despega 6.53 · Barbería 3.24 · BiciTaller 3.13 (probar, después de CM → Apps → ⬆️ Actualizar base en las 7: CM 4.55 · Despega 5.73 · Barbería 3.03 · Billetera 58 · BiciTaller 2.53 · Estaciona 54)
 1. Despega (cuenta de tienda) → **Más** → "Tu tienda" → **🏬 Sucursales y bodegas** (sin el módulo: **▶️ Probar módulo**) → Nombre "Local Mall" → **Agregar sucursal**. Se crea sola la principal **⭐ Casa matriz** con todo tu stock de hoy.
 2. En "Stock por sucursal" escribe cuánto hay en Local Mall (ej. 5) → el total sube 5. **⇄ Mover mercadería**: producto, Desde Casa matriz, Hacia Local Mall, 3 → **⇄ Mover** (el total no cambia).
