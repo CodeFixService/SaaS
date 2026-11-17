@@ -122,3 +122,5 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 - CM → Usuarios → **🔑 Clave** (en cada persona): le pone clave temporal y te arma el WhatsApp.
 - Socio: ya NO puede dar Pro, suspender, cambiar ajustes ni eliminar (solo agregar avisos con motivo). Pruébalo con tu cuenta de socio.
 - 🪪 Verificación: el RUT se escribe sin el dígito final (sale solo) y las fotos de la cédula abren la cámara.
+- 🛰️ Función del CM (1 vez, ANTES de probar 🔑 Clave): Supabase (CM vqevujjraisrcoirswuq) → Edge Functions → servidor → Code → borra todo y pega:
+  `import 'https://raw.githubusercontent.com/CodeFixService/SaaS/b9c0a0ab3d044d167984cb1282de25120a5a0a8d/supabase/functions/servidor/index.ts';` → Deploy (Verify JWT APAGADO).
