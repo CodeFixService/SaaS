@@ -144,7 +144,7 @@ end $$;
 create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '4.50'::text $$;
+language sql immutable as $$ select '4.51'::text $$;
 create or replace function public.cfg_int(c text) returns int
 language sql stable security definer set search_path = '' as $$
   select (valor #>> '{}')::int from public.config where clave = c
@@ -241,7 +241,7 @@ create table if not exists public.items (
   espacio_id  uuid references public.espacios (id) on delete set null,
   padre       uuid references public.items (id) on delete cascade,
   tipo        text not null check (tipo in ('tarea', 'proyecto', 'meta', 'resultado', 'habito', 'check', 'idea', 'problema',
-                                           'solucion', 'nota', 'diario', 'logro', 'leccion', 'recordatorio', 'falta', 'pedido')),
+                                           'solucion', 'nota', 'diario', 'logro', 'leccion', 'recordatorio', 'falta', 'pedido', 'checklist', 'plantilla')),
   titulo      text not null default '' check (length(titulo) <= 200),
   cuerpo      text not null default '' check (length(cuerpo) <= 4000),
   estado      text not null default 'abierto' check (length(estado) <= 20),
@@ -264,7 +264,8 @@ begin
   for c in select conname from pg_constraint where conrelid = 'public.items'::regclass and contype = 'c' and pg_get_constraintdef(oid) like '%tipo%recordatorio%'
   loop execute 'alter table public.items drop constraint ' || quote_ident(c); end loop;
   alter table public.items add constraint items_tipo_check check (tipo in ('tarea', 'proyecto', 'meta', 'resultado', 'habito', 'check', 'idea', 'problema',
-    'solucion', 'nota', 'diario', 'logro', 'leccion', 'recordatorio', 'falta', 'pedido'));
+    'solucion', 'nota', 'diario', 'logro', 'leccion', 'recordatorio', 'falta', 'pedido', 'checklist', 'plantilla'));
+  -- G93: "checklist" = procedimiento paso a paso (datos = { p: [pasos], ok: [índices hechos], rubro, base }); "plantilla" = tu plantilla editable { p, rubro, base }.
 end $$;
 create index if not exists items_owner_tipo_idx on public.items (owner, tipo, estado);
 create index if not exists items_owner_fecha_idx on public.items (owner, fecha) where fecha is not null;
@@ -573,7 +574,7 @@ begin
   if p_prefs is not null then
     if jsonb_typeof(p_prefs) <> 'object' or length(p_prefs::text) > 1500 then raise exception 'Datos no válidos'; end if;
     select coalesce(jsonb_object_agg(k, v), '{}') into f from jsonb_each(p_prefs) as t(k, v)
-    where k in ('tz', 'limite_descanso_min', 'limite_app_min', 'pausa_cada', 'resumen_manana', 'cierre_noche', 'avisos_horario', 'color', 'tema', 'avatar', 'guia', 'wip', 'cabeza', 'cabeza_h1', 'cabeza_h2', 'insistir', 'plan_semana');
+    where k in ('tz', 'limite_descanso_min', 'limite_app_min', 'pausa_cada', 'resumen_manana', 'cierre_noche', 'avisos_horario', 'color', 'tema', 'avatar', 'guia', 'wip', 'cabeza', 'cabeza_h1', 'cabeza_h2', 'insistir', 'plan_semana', 'rubro');
   end if;
   update public.perfiles set nombre = left(trim(coalesce(p_nombre, nombre)), 80), telefono = left(trim(coalesce(p_telefono, telefono)), 30),
     prefs = case when f is null then prefs else prefs || f end
@@ -779,6 +780,58 @@ begin
   insert into public.config (clave, valor) values (p_clave, p_valor) on conflict (clave) do update set valor = excluded.valor;
   perform public.auditar('ajuste', p_clave || ' = ' || p_valor::text, p_motivo);
 end $$;
+
+-- G93 📣 Anuncios (G87 D): campañas maestras del CM (Campaña → Conjuntos → Anuncios). Al publicar, el CM las copia a cada app elegida
+-- con cfx_anuncios_publicar (núcleo). Solo promos propias. Socio: puede AGREGAR una campaña con motivo; cambiar/borrar = admin.
+create table if not exists public.cm_campanas (
+  id uuid primary key default gen_random_uuid(), nombre text not null check (length(nombre) between 1 and 60),
+  objetivo text not null default 'vender' check (objetivo in ('vender', 'seguidores', 'comentarios', 'compartidos', 'avisar')),
+  apps text[] not null default '{}', desde date, hasta date, activa boolean not null default true,
+  conjuntos jsonb not null default '[]' check (jsonb_typeof(conjuntos) = 'array' and length(conjuntos::text) <= 1500000),
+  publicada timestamptz, creado timestamptz not null default now(), actualizado timestamptz not null default now());
+alter table public.cm_campanas enable row level security;
+revoke all on public.cm_campanas from anon, authenticated;
+create or replace function public.cm_campanas() returns jsonb
+language plpgsql security definer set search_path = '' as $$
+begin
+  perform public.admin_check();
+  return coalesce((select jsonb_agg(to_jsonb(c) order by c.creado desc) from public.cm_campanas c), '[]');
+end $$;
+create or replace function public.cm_campana_guardar(p jsonb, p_motivo text default '') returns uuid
+language plpgsql security definer set search_path = '' as $$
+declare i uuid := nullif(p ->> 'id', '')::uuid; c jsonb := coalesce(p -> 'conjuntos', '[]'); ap text[];
+begin
+  if i is not null and exists (select 1 from public.cm_campanas where id = i) then perform public.edit_check(p_motivo); else perform public.agrega_check(p_motivo); i := null; end if;
+  if jsonb_typeof(c) <> 'array' or jsonb_array_length(c) > 10 or (select coalesce(sum(jsonb_array_length(coalesce(x -> 'anuncios', '[]'))), 0) from jsonb_array_elements(c) x) > 30 then
+    raise exception 'Máximo 10 conjuntos y 30 anuncios por campaña';
+  end if;
+  select coalesce(array_agg(a), '{}') into ap from jsonb_array_elements_text(coalesce(p -> 'apps', '[]')) a where a in ('cm', 'aplicaciones', 'barberia', 'billetera', 'bicitaller', 'estaciona');
+  if i is null then
+    insert into public.cm_campanas (nombre, objetivo, apps, desde, hasta, activa, conjuntos)
+    values (left(trim(coalesce(p ->> 'nombre', '')), 60), coalesce(nullif(p ->> 'objetivo', ''), 'vender'), ap, nullif(p ->> 'desde', '')::date, nullif(p ->> 'hasta', '')::date,
+            coalesce((p ->> 'activa')::boolean, true), c) returning id into i;
+  else
+    update public.cm_campanas set nombre = left(trim(coalesce(p ->> 'nombre', '')), 60), objetivo = coalesce(nullif(p ->> 'objetivo', ''), 'vender'), apps = ap,
+      desde = nullif(p ->> 'desde', '')::date, hasta = nullif(p ->> 'hasta', '')::date, activa = coalesce((p ->> 'activa')::boolean, true), conjuntos = c, actualizado = now() where id = i;
+  end if;
+  perform public.auditar('anuncios', 'Campaña ' || left(coalesce(p ->> 'nombre', ''), 60), p_motivo);
+  return i;
+end $$;
+create or replace function public.cm_campana_publicada(p_id uuid) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  perform public.agrega_check('publicar campaña');
+  update public.cm_campanas set publicada = now() where id = p_id;
+end $$;
+create or replace function public.cm_campana_borrar(p_id uuid, p_motivo text default '') returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  perform public.edit_check(p_motivo);
+  delete from public.cm_campanas where id = p_id;
+  perform public.auditar('anuncios', 'Campaña borrada', p_motivo);
+end $$;
+revoke all on function public.cm_campanas(), public.cm_campana_guardar(jsonb, text), public.cm_campana_publicada(uuid), public.cm_campana_borrar(uuid, text) from public, anon;
+grant execute on function public.cm_campanas(), public.cm_campana_guardar(jsonb, text), public.cm_campana_publicada(uuid), public.cm_campana_borrar(uuid, text) to authenticated;
 
 create or replace function public.admin_texto_guardar(p_clave text, p_valor text, p_motivo text default '') returns void
 language plpgsql security definer set search_path = '' as $$
@@ -3337,7 +3390,7 @@ grant execute on function public.cfx_es_socio(), public.cfx_socios_lista(), publ
 --   Nada se borra solo: las vacías se borran con un toque; las que tienen datos piden descargar el respaldo y escribir "sí".
 --   cfx_tablas() = las tablas que crea este archivo (la revisa pruebas/inventario.py --verificar).
 -- ---------------------------------------------------------------------
-create or replace function public.cfx_tablas() returns text[] language sql immutable as $$ select array['public.auditoria', 'public.cfx_analisis', 'public.cfx_bloqueos', 'public.cfx_boleta_cuentas', 'public.cfx_boletas', 'public.cfx_brechas', 'public.cfx_calificaciones', 'public.cfx_cargas', 'public.cfx_carritos', 'public.cfx_chat', 'public.cfx_clave_temporal', 'public.cfx_config', 'public.cfx_consent', 'public.cfx_consent_hist', 'public.cfx_cupones', 'public.cfx_derechos', 'public.cfx_descuentos', 'public.cfx_errores', 'public.cfx_exentos', 'public.cfx_fallas', 'public.cfx_keys', 'public.cfx_legal', 'public.cfx_login_fallos', 'public.cfx_login_qr', 'public.cfx_mensajes', 'public.cfx_modulos_negocio', 'public.cfx_modulos_pruebas', 'public.cfx_pagos', 'public.cfx_pin', 'public.cfx_push_entrega', 'public.cfx_ref_codigos', 'public.cfx_referidos', 'public.cfx_registro', 'public.cfx_reportes', 'public.cfx_salud', 'public.cfx_secretos', 'public.cfx_sellos', 'public.cfx_sellos_cfg', 'public.cfx_socios', 'public.cfx_verificaciones', 'public.cfx_versiones', 'public.cm_puentes', 'public.compartido_log', 'public.compartidos', 'public.config', 'public.espacios', 'public.invitaciones', 'public.items', 'public.notificaciones', 'public.pagos', 'public.perfiles', 'public.planes', 'public.push_subs', 'public.secretos', 'public.textos', 'public.uso_dia', 'public.vinculos'] $$;
+create or replace function public.cfx_tablas() returns text[] language sql immutable as $$ select array['public.auditoria', 'public.cfx_analisis', 'public.cfx_anuncio_vistos', 'public.cfx_anuncios', 'public.cfx_bloqueos', 'public.cfx_boleta_cuentas', 'public.cfx_boletas', 'public.cfx_brechas', 'public.cfx_calificaciones', 'public.cfx_cargas', 'public.cfx_carritos', 'public.cfx_chat', 'public.cfx_clave_temporal', 'public.cfx_config', 'public.cfx_consent', 'public.cfx_consent_hist', 'public.cfx_cupones', 'public.cfx_derechos', 'public.cfx_descuentos', 'public.cfx_errores', 'public.cfx_exentos', 'public.cfx_fallas', 'public.cfx_keys', 'public.cfx_legal', 'public.cfx_login_fallos', 'public.cfx_login_qr', 'public.cfx_mensajes', 'public.cfx_modulos_negocio', 'public.cfx_modulos_pruebas', 'public.cfx_pagos', 'public.cfx_pin', 'public.cfx_push_entrega', 'public.cfx_ref_codigos', 'public.cfx_referidos', 'public.cfx_registro', 'public.cfx_reportes', 'public.cfx_salud', 'public.cfx_secretos', 'public.cfx_sellos', 'public.cfx_sellos_cfg', 'public.cfx_socios', 'public.cfx_verificaciones', 'public.cfx_versiones', 'public.cm_campanas', 'public.cm_puentes', 'public.compartido_log', 'public.compartidos', 'public.config', 'public.espacios', 'public.invitaciones', 'public.items', 'public.notificaciones', 'public.pagos', 'public.perfiles', 'public.planes', 'public.push_subs', 'public.secretos', 'public.textos', 'public.uso_dia', 'public.vinculos'] $$;
 create or replace function public.cfx_inventario() returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare r record; n bigint; out jsonb := '[]'::jsonb;
@@ -5221,6 +5274,101 @@ end $$;
 revoke all on function public.cfx_boleta_crear(uuid, text, jsonb, numeric, text), public.cfx_of_api(text, jsonb, text) from public, anon, authenticated;
 revoke all on function public.cfx_boleta_estado(), public.cfx_boleta_guardar(jsonb) from public, anon;
 grant execute on function public.cfx_boleta_estado(), public.cfx_boleta_guardar(jsonb) to authenticated;
+
+-- ---------------------------------------------------------------------
+-- CodeFix · 📣 Anuncios (G93 · G87 D). Solo promos PROPIAS (de CodeFix a quienes usan las apps), nunca publicidad de terceros.
+--   CM → Control → 📣 Anuncios: Campaña → Conjuntos (a quién) → Anuncios (título, texto, imagen, botón). Se publican en cada app elegida.
+--   En la app: tarjeta con ✕ (no vuelve a salir a esa persona) · cuenta vistas, clics y cierres (1 vez por persona).
+-- ---------------------------------------------------------------------
+create table if not exists public.cfx_anuncios (
+  id uuid primary key, campana uuid not null, campana_nombre text not null default '' check (length(campana_nombre) <= 60),
+  conjunto text not null default '' check (length(conjunto) <= 60),
+  publico text not null default 'todos' check (publico in ('todos', 'negocios', 'clientes', 'premium', 'gratis')),
+  titulo text not null check (length(titulo) between 1 and 80), texto text not null default '' check (length(texto) <= 240),
+  imagen text not null default '' check (length(imagen) <= 90000 and (imagen = '' or imagen ~ '^https://' or imagen ~ '^data:image/(png|jpeg|webp);base64,')),
+  boton text not null default '' check (length(boton) <= 30),
+  link text not null default '' check (length(link) <= 500 and (link = '' or link ~ '^(https://|/|#)')),
+  desde date, hasta date, activo boolean not null default true, orden int not null default 0, creado timestamptz not null default now());
+create index if not exists cfx_anuncios_campana_idx on public.cfx_anuncios (campana);
+create table if not exists public.cfx_anuncio_vistos (
+  anuncio uuid not null references public.cfx_anuncios (id) on delete cascade, cuenta uuid not null,
+  visto timestamptz not null default now(), clic timestamptz, cerrado timestamptz, primary key (anuncio, cuenta));
+alter table public.cfx_anuncios enable row level security;
+alter table public.cfx_anuncio_vistos enable row level security;
+revoke all on public.cfx_anuncios, public.cfx_anuncio_vistos from anon, authenticated;
+
+-- Publicar una campaña completa en ESTA app: reemplaza sus anuncios (los que ya no vienen se borran). Solo admin.
+create or replace function public.cfx_anuncios_publicar(p_campana uuid, p_nombre text, p_lista jsonb) returns int
+language plpgsql security definer set search_path = '' as $$
+declare a jsonb; n int := 0; ids uuid[] := '{}';
+begin
+  perform public.super_check();
+  if p_campana is null or jsonb_typeof(coalesce(p_lista, 'null')) <> 'array' or jsonb_array_length(p_lista) > 30 then raise exception 'Datos no válidos'; end if;
+  for a in select * from jsonb_array_elements(p_lista) loop
+    ids := ids || (a ->> 'id')::uuid;
+    insert into public.cfx_anuncios as x (id, campana, campana_nombre, conjunto, publico, titulo, texto, imagen, boton, link, desde, hasta, activo, orden)
+    values ((a ->> 'id')::uuid, p_campana, left(trim(coalesce(p_nombre, '')), 60), left(trim(coalesce(a ->> 'conjunto', '')), 60), coalesce(nullif(a ->> 'publico', ''), 'todos'),
+            left(trim(coalesce(a ->> 'titulo', '')), 80), left(trim(coalesce(a ->> 'texto', '')), 240), trim(coalesce(a ->> 'imagen', '')), left(trim(coalesce(a ->> 'boton', '')), 30),
+            trim(coalesce(a ->> 'link', '')), nullif(a ->> 'desde', '')::date, nullif(a ->> 'hasta', '')::date, coalesce((a ->> 'activo')::boolean, true), n)
+    on conflict (id) do update set campana = excluded.campana, campana_nombre = excluded.campana_nombre, conjunto = excluded.conjunto, publico = excluded.publico,
+      titulo = excluded.titulo, texto = excluded.texto, imagen = excluded.imagen, boton = excluded.boton, link = excluded.link, desde = excluded.desde,
+      hasta = excluded.hasta, activo = excluded.activo, orden = excluded.orden
+    where x.campana = p_campana;
+    n := n + 1;
+  end loop;
+  delete from public.cfx_anuncios where campana = p_campana and not (id = any (ids));
+  perform public.cfx_anotar('anuncios', 'Campaña "' || left(coalesce(p_nombre, ''), 60) || '": ' || n || ' anuncio(s)');
+  return n;
+end $$;
+
+-- Quitar una campaña de ESTA app (se borran sus anuncios y contadores). Solo admin.
+create or replace function public.cfx_anuncios_quitar(p_campana uuid) returns int
+language plpgsql security definer set search_path = '' as $$
+declare n int;
+begin
+  perform public.super_check();
+  delete from public.cfx_anuncios where campana = p_campana; get diagnostics n = row_count;
+  perform public.cfx_anotar('anuncios', 'Campaña quitada (' || n || ')');
+  return n;
+end $$;
+
+-- Resultados por anuncio en ESTA app (vistas, clics, cierres = personas distintas). Solo admin.
+create or replace function public.cfx_anuncios_admin() returns jsonb
+language plpgsql security definer set search_path = '' as $$
+begin
+  perform public.super_check();
+  return coalesce((select jsonb_agg(jsonb_build_object('id', a.id, 'campana', a.campana, 'titulo', a.titulo, 'activo', a.activo,
+    'vistas', (select count(*) from public.cfx_anuncio_vistos v where v.anuncio = a.id),
+    'clics', (select count(*) from public.cfx_anuncio_vistos v where v.anuncio = a.id and v.clic is not null),
+    'cierres', (select count(*) from public.cfx_anuncio_vistos v where v.anuncio = a.id and v.cerrado is not null)) order by a.creado) from public.cfx_anuncios a), '[]');
+end $$;
+
+-- Lo que ve la persona: anuncios activos, vigentes, de su público y que no cerró (máx. 3). La app no los pide para admin/socio.
+create or replace function public.cfx_anuncios_ver() returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare u uuid := auth.uid(); hoy date := (now() at time zone 'America/Santiago')::date;
+begin
+  if u is null then return '[]'; end if;
+  return coalesce((select jsonb_agg(jsonb_build_object('id', a.id, 'titulo', a.titulo, 'texto', a.texto, 'imagen', a.imagen, 'boton', a.boton, 'link', a.link) order by a.orden, a.creado)
+    from (select * from public.cfx_anuncios a
+          where a.activo and (a.desde is null or a.desde <= hoy) and (a.hasta is null or a.hasta >= hoy)
+            and not exists (select 1 from public.cfx_anuncio_vistos v where v.anuncio = a.id and v.cuenta = u and v.cerrado is not null)
+            and (a.publico = 'todos' or u in (select d from public.cfx_destinatarios(a.publico) d))
+          order by a.orden, a.creado limit 3) a), '[]');
+end $$;
+
+-- Marca vista / clic / cierre (una fila por persona y anuncio: no se infla contando de nuevo).
+create or replace function public.cfx_anuncio_marcar(p_id uuid, p_que text) returns void
+language plpgsql security definer set search_path = '' as $$
+declare u uuid := auth.uid();
+begin
+  if u is null or p_que not in ('vista', 'clic', 'cierre') or not exists (select 1 from public.cfx_anuncios where id = p_id) then return; end if;
+  insert into public.cfx_anuncio_vistos (anuncio, cuenta) values (p_id, u) on conflict do nothing;
+  if p_que = 'clic' then update public.cfx_anuncio_vistos set clic = coalesce(clic, now()) where anuncio = p_id and cuenta = u;
+  elsif p_que = 'cierre' then update public.cfx_anuncio_vistos set cerrado = coalesce(cerrado, now()) where anuncio = p_id and cuenta = u; end if;
+end $$;
+revoke all on function public.cfx_anuncios_publicar(uuid, text, jsonb), public.cfx_anuncios_quitar(uuid), public.cfx_anuncios_admin(), public.cfx_anuncios_ver(), public.cfx_anuncio_marcar(uuid, text) from public, anon;
+grant execute on function public.cfx_anuncios_publicar(uuid, text, jsonb), public.cfx_anuncios_quitar(uuid), public.cfx_anuncios_admin(), public.cfx_anuncios_ver(), public.cfx_anuncio_marcar(uuid, text) to authenticated;
 -- <<< CFX núcleo
 
 -- ---------- 4.31 · G33 🌐 Token de Cloudflare del dominio (se puede volver a correr) ----------

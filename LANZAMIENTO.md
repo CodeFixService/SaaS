@@ -148,3 +148,11 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 2. 🚲 BiciTaller → Más → **🧾 Boleta SII** → completa RUT, razón social, giro, dirección, comuna → 💾 Guardar. (⚡ Automática solo si tienes API key de OpenFactura.)
 3. Caja → 🧾 en un cobro → ✍️ anota el N° (o ⚡ Emitir si es automática).
 4. 💈 Barbería (dueño) → Más → **🧾 Boleta SII** → datos → Guardar → Caja → toca un corte → **🧾 Boleta SII** → escribe el N° → 🧾 Comprobante lo muestra.
+
+## G93 ✅📢 CM 5.34 · las 7 apps (probar, después de CM → Apps → ⬆️ Actualizar base en las 7; CM debe quedar bd 4.51)
+1. App del CM (tu cuenta de prueba, no admin) → **Tablero** → arriba **✅ Checklists** → 🏷️ Mi rubro: elige uno → toca **Usar** en una plantilla → tacha pasos → 🎉 al terminar → **↺ Reiniciar** para reusarla.
+2. En la plantilla toca **✏️** → cambia los pasos (uno por línea) → Guardar: queda "tuya"; **↺** vuelve a la de fábrica. **+ Crear desde cero** para una propia.
+3. CM → Más → Control → **📢 Anuncios** → **+ Campaña** → nombre, objetivo, apps → en el conjunto elige **A quién** → **+ Anuncio** (📷 Imagen, título, texto, botón y link como `https://…` o `#premium`) → Guardar → **🚀 Publicar**.
+4. Entra a una de esas apps con una cuenta normal: a los segundos sale la tarjeta **📣 Novedad** abajo → **✕** la cierra y no vuelve.
+5. CM → 📢 Anuncios → **📊 Resultados** (vistas, clics, cerrados) · **📤 Compartir** (en el anuncio) abre el menú del teléfono → Instagram historia/post/reel.
+6. 🎬 Estudio/Cerebro: en **Cerebro** → Empresa → 🗂️ Respaldo, guía y borrar → **⬇️ Respaldo Excel** → guárdalo → avísame "respaldo listo" para portar el motor al CM.

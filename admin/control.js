@@ -6,7 +6,7 @@
   const A = global.App, { esc, toast, modal, confirmar } = A;
   const M = () => global.MisApps;
   let raiz = null, actual = 'cm', seccion = 'negocios';
-  const SECC = [['negocios', '🏪 Negocios'], ['avisar', '📣 Avisar'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['dominio', '🌐 Dominio'], ['push', '🔔 Notificaciones'], ['correo', '✉️ Correo'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['salud', '🩺 Salud'], ['registro', '📜 Registro']];
+  const SECC = [['negocios', '🏪 Negocios'], ['avisar', '📣 Avisar'], ['anuncios', '📢 Anuncios'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['dominio', '🌐 Dominio'], ['push', '🔔 Notificaciones'], ['correo', '✉️ Correo'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['salud', '🩺 Salud'], ['registro', '📜 Registro']];
   // Nombres legibles de las claves de los planes (las demás se muestran tal cual).
   const NOMBRE = { productos: 'Productos', clientes: 'Clientes', fichas: 'Diseños publicados', equipo: 'Equipo', pedidos_mes: 'Pedidos al mes', respuestas: 'Respuestas rápidas',
     contactos: 'Contactos', favoritos: 'Favoritos', mensajes_seguidos: 'Mensajes seguidos', barberos: 'Barberos', servicios: 'Servicios', ofertas: 'Ofertas',
@@ -535,7 +535,9 @@
     };
   }
 
-  const F = { negocios, avisar, planes, textos, keys, cupones, verif, humano, dominio, push, correo, referidos, socios, datos, seguridad, salud, registro };
+  // G93 📢 Anuncios: campañas del CM que se publican en las apps (admin/anuncios.js).
+  const anuncios = () => global.AnunciosCM.render(caja());
+  const F = { negocios, avisar, anuncios, planes, textos, keys, cupones, verif, humano, dominio, push, correo, referidos, socios, datos, seguridad, salud, registro };
   // Referidos: quién invitó a quién (con qué cuenta), ranking, premio automático y premio a mano (días + sticker).
   const STICKERS = ['🏆 ¡Eres un crack invitando!', '🚀 ¡Vas volando! Gracias por recomendarnos', '💪 ¡Sigue así, vas muy bien!', '🌟 ¡Gracias por correr la voz!'];
   async function referidos() {

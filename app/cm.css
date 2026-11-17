@@ -129,3 +129,11 @@ nav.tabs button.nuevo .ic{width:28px;height:28px}nav.tabs button.nuevo.on{backgr
 
 /* Cabecera en celular: el chip Trabajo/Descanso más compacto (sin lupa; Buscar está en Más) */
 @media (max-width:480px){.chip-modo{padding:4px 9px;font-size:11px;gap:4px}.chip-modo svg{width:13px;height:13px}}
+
+/* G93 ✅ Checklists */
+.cl-rubro{display:flex;flex-direction:column;gap:6px}.cl-item{display:flex;flex-direction:column;align-items:stretch;gap:6px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:var(--r-sm);padding:10px 12px;margin:0 0 8px;box-shadow:none;min-height:0}
+.cl-item .fila .barra{flex:1;margin:0}.cl-plant{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}.cl-plant:first-of-type{border-top:0}.cl-plant .grow{flex:1;min-width:0}
+.cl-acc{display:flex;gap:6px;flex:none}.cl-pasos{display:flex;flex-direction:column;gap:4px;margin:10px 0}.cl-paso{align-items:flex-start;padding:8px 10px;border-radius:var(--r-sm);background:var(--field)}
+.cl-paso.ok span{text-decoration:line-through;color:var(--muted)}.cl-btns{flex-wrap:wrap}.ok-txt{color:var(--ok);font-weight:600;margin:4px 0}
+#v-tablero .fila .barra{flex:1;margin:0}
+dialog .fila .barra{flex:1;margin:0}

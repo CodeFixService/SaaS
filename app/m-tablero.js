@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const A = App, CM = window.CM, { esc, hoy, toast, modal } = A;
-  const ui = { f: 'todo', tipo: 'tarea' };
+  const ui = { f: 'todo', tipo: 'tarea', vista: 'tablero' };
   const COLS = [['abierto', 'Pendiente'], ['en_curso', 'Haciendo'], ['revision', 'En revisión'], ['hecho', 'Listo']];
   const WIP = () => Number((CM.cuenta.prefs || {}).wip) || 3;
 
@@ -36,12 +36,25 @@
       '<div class="mv">' + (idx > 0 ? '<button type="button" class="x" data-mv="' + COLS[idx - 1][0] + '" data-id="' + i.id + '" aria-label="Mover atrás">' + CM.ico('izq', 16) + '</button>' : '<span></span>') +
       (idx < COLS.length - 1 ? '<button type="button" class="x" data-mv="' + COLS[idx + 1][0] + '" data-id="' + i.id + '" aria-label="Mover adelante">' + CM.ico('der', 16) + '</button>' : '') + '</div></div>';
   }
+  // G93: pestañas de la pantalla (menú principal → deslizar cambia de pestaña).
+  const PEST = () => '<div class="chips" data-cfx-pestanas>' + [['tablero', '📋 Tablero'], ['check', '✅ Checklists']].map((t) => '<button type="button" class="chip' + (ui.vista === t[0] ? ' on' : '') + '" data-tv="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>';
   function render(el) {
+    if (ui.vista === 'check') {
+      if (CM.mod.checklist) { CM.mod.checklist.render(el, '<div class="titulo-v"><h2>Checklists</h2></div>' + PEST()); pest(el); }
+      else CM.cargarMod('checklist').then(() => CM.pintar()).catch((e) => toast(e.message));
+      return;
+    }
+    renderTablero(el); pest(el);
+  }
+  function pest(el) {
+    el.querySelectorAll('[data-tv]').forEach((b) => { b.onclick = (e) => { e.stopPropagation(); ui.vista = b.dataset.tv; CM.pintar(); }; });
+  }
+  function renderTablero(el) {
     const h = hoy(), lim = WIP();
     let L = CM.items.filter((i) => (i.tipo === 'tarea' || i.tipo === 'proyecto') && CM.enEsp(i) && !i.padre);
     if (ui.f !== 'todo') L = L.filter((i) => i.tipo === ui.f);
     const enCurso = L.filter((i) => i.estado === 'en_curso').length;
-    let x = '<div class="titulo-v"><h2>Tablero</h2><span class="sub">' + L.filter((i) => i.estado !== 'hecho').length + ' abiertas</span></div>' + CM.selectorEspacio();
+    let x = '<div class="titulo-v"><h2>Tablero</h2><span class="sub">' + L.filter((i) => i.estado !== 'hecho').length + ' abiertas</span></div>' + CM.selectorEspacio() + PEST();
     x += '<div class="chips" id="fTipo">' + [['todo', 'Todo'], ['tarea', 'Tareas'], ['proyecto', 'Proyectos']].map((t) => '<button type="button" class="chip' + (ui.f === t[0] ? ' on' : '') + '" data-f="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>';
     x += '<div class="card cap-card"><div class="cap"><input id="tkIn" maxlength="200" placeholder="Nueva tarea o proyecto…" autocomplete="off"><select id="tkTipo" aria-label="Tipo"><option value="tarea"' + (ui.tipo === 'tarea' ? ' selected' : '') + '>Tarea</option><option value="proyecto"' + (ui.tipo === 'proyecto' ? ' selected' : '') + '>Proyecto</option></select><button type="button" id="tkOk" aria-label="Agregar">' + CM.ico('plus', 20) + '</button></div></div>';
     x += '<div class="cols">' + COLS.map((c) => {

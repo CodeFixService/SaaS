@@ -34,7 +34,7 @@ perfiles, espacios, items, pedidos/pagos, planes, config, textos, notificaciones
 
 ## Versiones
 `shared/config.js` VERSION/DB_VERSION + `version.json` (notas = SOLO categorías G44b) + `instalar.sql` l.147.
-Ahora: app 5.32 · bd 4.49 · función 3.4 · núcleo 3.00. Avisos: CFX_DIALOGO.confirmar/pedir/avisar (nunca confirm/prompt de Chrome).
+Ahora: app 5.34 · bd 4.51 · función 3.4 · núcleo 3.02. Avisos: CFX_DIALOGO.confirmar/pedir/avisar (nunca confirm/prompt de Chrome).
 
 ## Reglas propias
 - Bootstrap: solo utilidades (`vendor/`), nunca el completo (choca .btn/.card/.modal/.row/.toast). tema.css mapea --bs-* → --cfx-*.
@@ -45,3 +45,4 @@ Ahora: app 5.32 · bd 4.49 · función 3.4 · núcleo 3.00. Avisos: CFX_DIALOGO.
 - G87 A: Control → Negocios usa cfx_negocios (núcleo) → cfx_cuentas_app(rol, q) + cfx_quitar_premium(uuid) que define CADA app (las 6 + CM ya la tienen). El menú de secciones de Control lleva data-cfx-pestanas (deslizar la página cambia de sección). Tiras con mouse: ayuda.js tiraMouse(). Prueba: pruebas/g87a.js.
 - G89 (G87 E/C/J): Apps → 🧹 Respaldo y limpieza → ↺ Ingresos de prueba (cfx_ingresos_cero; no borra pagos). SOCIO = solo agrega: edit_check lo rechaza, agrega_check (avisos con motivo), preparar_borrado no lo deja borrar. Usuarios → Nueva cuenta (WhatsApp +56 9 con CFX_CL.tel, clave temporal, 💬 Enviar por WhatsApp) y 🔑 Clave (función servidor accion 'restablecer', solo admin). Clave temporal = núcleo cfx_clave_temporal + ventana obligatoria en qr.js. Pruebas: g87e.js, g87c.js, g87j.js.
 - G90: Resumen → 💰 Dinero (admin/dinero.js, núcleo cfx_dinero en cada app; morosos → WhatsApp) · 🔔 cfx_alertas_revisar cada 15 min (negocio nuevo, errores) · Usuarios → + Cuenta elige la app (otras → PanelApps.abrir con { seccion, boton }) · window.CM_SOCIO oculta Liberar/Ajustes/Planes/Textos/imágenes/Dinero · Pagos muestra 🎁/🔑 key_regalo. Pruebas: g90.js, g90b.js, g90c.js.
+- G93 (G87 D): Tablero → ✅ Checklists (app/m-checklist.js; items tipo 'checklist' { p, ok, rubro, base } y 'plantilla'; rubro en prefs.rubro; plantillas de fábrica por rubro en FAB, editar = tu copia, ↺ vuelve a fábrica). Control → 📢 Anuncios (admin/anuncios.js; tabla cm_campanas + cm_campana_guardar/publicada/borrar; publica con núcleo cfx_anuncios_publicar en cada app; la tarjeta con ✕ la pone ayuda.js). Ojo: un botón con "volver" en su aria-label hace history.back() (núcleo) → usar otro texto o data-sin-atras. Pruebas: g93a.js, g93b.js.
