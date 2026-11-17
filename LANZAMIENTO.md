@@ -157,6 +157,13 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 5. CM → 📢 Anuncios → **📊 Resultados** (vistas, clics, cerrados) · **📤 Compartir** (en el anuncio) abre el menú del teléfono → Instagram historia/post/reel.
 6. 🎬 Estudio/Cerebro: en **Cerebro** → Empresa → 🗂️ Respaldo, guía y borrar → **⬇️ Respaldo Excel** → guárdalo → avísame "respaldo listo" para portar el motor al CM.
 
+## G96 b 🏬📣 Sucursales · Promo destacada · Despega 6.53 · Barbería 3.24 · BiciTaller 3.13 (probar, después de CM → Apps → ⬆️ Actualizar base en las 7: CM 4.55 · Despega 5.73 · Barbería 3.03 · Billetera 58 · BiciTaller 2.53 · Estaciona 54)
+1. Despega (cuenta de tienda) → **Más** → "Tu tienda" → **🏬 Sucursales y bodegas** (sin el módulo: **▶️ Probar módulo**) → Nombre "Local Mall" → **Agregar sucursal**. Se crea sola la principal **⭐ Casa matriz** con todo tu stock de hoy.
+2. En "Stock por sucursal" escribe cuánto hay en Local Mall (ej. 5) → el total sube 5. **⇄ Mover mercadería**: producto, Desde Casa matriz, Hacia Local Mall, 3 → **⇄ Mover** (el total no cambia).
+3. **Caja** → arriba de los medios de pago: **🏬 Vendes desde** → elige Local Mall → vende 1 → en Sucursales baja en Local Mall y en el total. Los pedidos online siempre salen de la Casa matriz.
+4. **Más** → "Vender más" → **📣 Promo destacada** → Título + foto + Botón "Ver" + Link https://… → **📣 Publicar promo**. Con un cliente de tu tienda: abre la app → a los segundos sale la tarjeta "📣 Tu tienda · …" con ✕. En la hoja ves 👁️ la vieron · 👆 la tocaron. Máx. 3 al aire (⏸️ Pausar).
+5. Lo mismo en **Barbería** (Más → 📣 Promo destacada; la ven quienes reservaron contigo) y **BiciTaller** (Más → 📣 Promo destacada; la ven tus clientes con cuenta). Tus 🏷️ Ofertas/Promociones de siempre no cambian.
+
 ## G96 🧩 Módulos de tienda · Despega 6.52 (probar, después de CM → Apps → ⬆️ Actualizar base en las 7: CM 4.54 · Despega 5.72 · Barbería 3.02 · Billetera 57 · BiciTaller 2.52 · Estaciona 53)
 1. Despega (cuenta de tienda) → **Más** → grupo "Vender más": **🎁 Gift cards** · **🛒 Carritos olvidados** · **🔁 Compras recurrentes** y en "Tu tienda" **📦 Stock mínimo y proveedores**. Sin el módulo: qué hace + **▶️ Probar módulo** (🎁 7 días).
 2. **🎁 Gift cards** → Monto 15000 → **🎁 Crear gift card** → **💬 Enviar por WhatsApp**. En la **Caja**: medio **🎁 Gift card** → Cobrar → escribe el código → descuenta del saldo. En el carrito del cliente: escribe el código en "Cupón o gift card" → ve su saldo → el pedido sale con ese descuento (si se cancela, el saldo vuelve).
