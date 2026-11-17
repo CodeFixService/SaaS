@@ -132,3 +132,13 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 4. Entra como socio al CM: no ve 💰 Dinero, 🚀 Liberar ni Planes/Textos.
 5. A los 15 min de un negocio nuevo te llega 🔔 "🆕 Negocio nuevo".
 
+
+## G91 🚲 BiciTaller 3.07 (probar, después de CM → Apps → 🚲 BiciTaller → ⬆️ Actualizar base: debe quedar 2.47)
+1. 📸 Abre una orden → en un ítem toca **📷 Foto del daño** → saca la foto. Pide aprobación: el cliente la ve en su link.
+2. 🧑‍🔧 Hoy → Tablero: arriba salen los botones **Todos · cada mecánico · Sin asignar** con cuántas bicis tiene cada uno; toca uno para filtrar.
+3. 📍 Entra como CLIENTE → Inicio → **🚲 Mis bicis → ➕ Registrar mi bici** → 🖨️ QR. Escanea el QR con otro teléfono: NO pide ubicación ni muestra mantenciones. Ahora en tu app toca **🚨 Me la robaron** → vuelve a escanear: pide ubicación → en tu ficha sale el **mapa** con el punto.
+4. 📄 En esa ficha (o en el taller: Más → 🪪 Pasaporte → la bici) toca **📄 Constancia para Carabineros** → Imprimir o guardar PDF. En el taller también: **📲 Avisar al dueño**.
+5. 🗓️ Más → ⏰ Horario: tarjetas **Sábado** y **Domingo** (horario, cada cuánto, bicis a la vez, máximo del día; vacío = igual que lunes a viernes) → 💾 Guardar. Abajo **⛔ Días cerrados**: Desde/Hasta → ⛔ Cerrar esos días (✅ Abrir lo deshace).
+6. 🧾 Más → 💵 Caja → en un cobro toca **🧾** → escribe el N° de la boleta del SII → 💾 Guardar · **🧾 Comprobante** para imprimir o mandar por WhatsApp.
+7. 🛒 (con el módulo 📦) Más → 📦 Repuestos → ✏️ uno → marca **🛒 Mostrar en mi tienda** (tipo, descripción, 📷 foto) → 💾. Abre tu página de reservas: sale **🛒 Tienda** → Agregar → **📲 Pedir por WhatsApp**.
+8. 📊 (Premium) Más → 📊 Estadísticas: abajo **🧑‍🔧 Por mecánico · 💵 Caja de este mes · 🔩 Lo más vendido · 📥 Descargar (Excel)**.

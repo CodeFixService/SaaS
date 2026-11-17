@@ -72,7 +72,7 @@ const { abrir } = require('./h');
     const q = await t.ctx.newPage();
     await q.goto(t.base + '/p/?t=' + pa.token); await q.waitForTimeout(3500);
     let u = await q.locator('#todo').innerText().catch(() => '');
-    ok(/Trek Marlin 7/.test(u) && /6789/.test(u) && !/WTU123456789/.test(u) && /Sin reporte de robo/.test(u) && /Cadena 11v/.test(u), '📱 /p/: bici, serie tapada, ✅ sin robo e historial');
+    ok(/Trek Marlin 7/.test(u) && /6789/.test(u) && !/WTU123456789/.test(u) && /Sin reporte de robo/.test(u) && !/Cadena 11v/.test(u), '📱 /p/: bici, serie tapada, ✅ sin robo y SIN historial (G91: solo el dueño)');
     ok(await q.locator('#cDueno').isHidden(), '🔐 sin clave no puede reportar');
     ok(await sinScroll(q), 'sin scroll horizontal a 320 px (/p/)');
     err = ''; const r0 = (await su("select public.pasaporte_reportar($1, 'clavefalsa1234567890123', true, '') r", [pa.token]))[0].r;
@@ -107,7 +107,8 @@ const { abrir } = require('./h');
 
     // Sin módulo la ficha pública no se ve
     await su("delete from public.cfx_modulos_negocio where modulo = 'pasaporte'");
-    ok((await su('select public.pasaporte_ver($1) r', [pa.token]))[0].r === null, '🔒 sin módulo: /p/ ya no muestra la bici');
+    const sm = (await su('select public.pasaporte_ver($1, $2) r', [pa.token, pa.clave]))[0].r;
+    ok(sm && sm.bici && !sm.historial.length, '🛟 sin módulo: la seguridad sigue (G91) pero sin historial');
   } catch (e) { f++; console.log('✗ ' + e.message.split('\n')[0]); await t.foto('g59f_error').catch(() => {}); }
   console.log('ERRORES:', t.errores.filter((x) => !/Failed to load resource|ERR_|favicon|404/.test(x)).join('\n') || 'ninguno');
   console.log(f ? 'FALLAS: ' + f : 'TODO OK'); await t.cerrar(); process.exit(f ? 1 : 0);
