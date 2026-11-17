@@ -142,3 +142,9 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 6. 🧾 Más → 💵 Caja → en un cobro toca **🧾** → escribe el N° de la boleta del SII → 💾 Guardar · **🧾 Comprobante** para imprimir o mandar por WhatsApp.
 7. 🛒 (con el módulo 📦) Más → 📦 Repuestos → ✏️ uno → marca **🛒 Mostrar en mi tienda** (tipo, descripción, 📷 foto) → 💾. Abre tu página de reservas: sale **🛒 Tienda** → Agregar → **📲 Pedir por WhatsApp**.
 8. 📊 (Premium) Más → 📊 Estadísticas: abajo **🧑‍🔧 Por mecánico · 💵 Caja de este mes · 🔩 Lo más vendido · 📥 Descargar (Excel)**.
+
+## G92 🔤🧾 las 7 apps (probar, después de CM → Apps → ⬆️ Actualizar base en las 7)
+1. Cualquier app → 👤 Mi perfil → 🎨 Color y modo → mueve **🔤 Tamaño de letra** y toca **Delgada / Normal / Gruesa**: cambia al tiro y queda guardado.
+2. 🚲 BiciTaller → Más → **🧾 Boleta SII** → completa RUT, razón social, giro, dirección, comuna → 💾 Guardar. (⚡ Automática solo si tienes API key de OpenFactura.)
+3. Caja → 🧾 en un cobro → ✍️ anota el N° (o ⚡ Emitir si es automática).
+4. 💈 Barbería (dueño) → Más → **🧾 Boleta SII** → datos → Guardar → Caja → toca un corte → **🧾 Boleta SII** → escribe el N° → 🧾 Comprobante lo muestra.
