@@ -34,7 +34,7 @@ perfiles, espacios, items, pedidos/pagos, planes, config, textos, notificaciones
 
 ## Versiones
 `shared/config.js` VERSION/DB_VERSION + `version.json` (notas = SOLO categorías G44b) + `instalar.sql` l.147.
-Ahora: app 5.39 · bd 4.56 · función 3.4 · núcleo 3.06 (G98: ⚡ Mercado Pago de cada negocio en nucleo/sql/mp_negocio.sql + CFX_PAGOS.mpNegocio). Avisos: CFX_DIALOGO.confirmar/pedir/avisar (nunca confirm/prompt de Chrome).
+Ahora: app 5.40 · bd 4.57 · función 3.5 · núcleo 3.07 (G99 a: ⚡ aviso instantáneo de Mercado Pago, núcleo cfx_mp_notif/cfx_mp_aviso; G98: Mercado Pago de cada negocio en nucleo/sql/mp_negocio.sql). Avisos: CFX_DIALOGO.confirmar/pedir/avisar (nunca confirm/prompt de Chrome).
 
 ## Reglas propias
 - Bootstrap: solo utilidades (`vendor/`), nunca el completo (choca .btn/.card/.modal/.row/.toast). tema.css mapea --bs-* → --cfx-*.
@@ -48,6 +48,7 @@ Ahora: app 5.39 · bd 4.56 · función 3.4 · núcleo 3.06 (G98: ⚡ Mercado Pag
 - G93 (G87 D): Tablero → ✅ Checklists (app/m-checklist.js; items tipo 'checklist' { p, ok, rubro, base } y 'plantilla'; rubro en prefs.rubro; plantillas de fábrica por rubro en FAB, editar = tu copia, ↺ vuelve a fábrica). Control → 📢 Anuncios (admin/anuncios.js; tabla cm_campanas + cm_campana_guardar/publicada/borrar; publica con núcleo cfx_anuncios_publicar en cada app; la tarjeta con ✕ la pone ayuda.js). Ojo: un botón con "volver" en su aria-label hace history.back() (núcleo) → usar otro texto o data-sin-atras. Pruebas: g93a.js, g93b.js.
 
 - G95 (4.53): 🎁 prueba 7 días por botón en el núcleo (pagos.sql cfx_pruebas_usadas por hash de correo, cfx_pro_probar; modulos_venta cfx_negocio_dueno) · Control → 🎁 Pruebas (cfx_pruebas_admin). Prueba: pruebas/g95.js.
+- G99 a (5.40 · bd 4.57 · función 3.5 · núcleo 3.07): ⚡ aviso instantáneo de Mercado Pago (núcleo cfx_mp_notif/cfx_mp_aviso; gancho cfx_mp_aviso_url_app en instalar.sql; servidor atiende ?cfx_mp=). Prueba: pruebas/g99.js.
 
 ## 🎬 Estudio (G94, bd 4.52)
 - App → Cerebro → 🎬 Estudio (solo rol admin): app/m-estudio.js (+ app/est-motor.js y app/est-importador.js, copias de Contenido/app; cargan a pedido). items est_conf / est_base / est_idea (constraint items_tipo_check). Prueba: pruebas/g94a.js.

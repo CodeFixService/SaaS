@@ -157,6 +157,11 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 5. CM → 📢 Anuncios → **📊 Resultados** (vistas, clics, cerrados) · **📤 Compartir** (en el anuncio) abre el menú del teléfono → Instagram historia/post/reel.
 6. 🎬 Estudio/Cerebro: en **Cerebro** → Empresa → 🗂️ Respaldo, guía y borrar → **⬇️ Respaldo Excel** → guárdalo → avísame "respaldo listo" para portar el motor al CM.
 
+## G99 ⚡ Aviso instantáneo de Mercado Pago · las 7 apps (después de CM → Apps → ⬆️ Actualizar base en las 7: CM 4.57 · Despega 5.75 · Barbería 3.05 · Billetera 60 · BiciTaller 2.55 · Estaciona 56)
+1. Redeploy de las 6 funciones (1 vez): Supabase (cada proyecto) → **Edge Functions** → función → **Code** → borra todo → pega la línea de `supabase/functions/<f>/corto.ts` de ese repo → **Deploy** (Verify JWT APAGADO). CM y BiciTaller: "servidor" · Despega, Barbería, Billetera y Estaciona: "enviar".
+2. Probar: paga algo chico con ⚡ Mercado Pago y NO vuelvas a la app (cierra la pestaña de MP) → en segundos llega "✅ Pago aprobado" (antes: hasta 1 minuto).
+3. Si no la redeployas no se rompe nada: sigue confirmando al volver y cada 1 min.
+
 ## G98 ⚡ Mercado Pago de cada negocio · Barbería 3.25 · BiciTaller 3.14 · Estaciona 2.14.90 (probar, después de CM → Apps → ⬆️ Actualizar base en las 7: CM 4.56 · Despega 5.74 · Barbería 3.04 · Billetera 59 · BiciTaller 2.54 · Estaciona 55)
 Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa un abono chico, ej. $500).
 1. **Barbería** (cuenta de barbería) → **Más** → **💳 Links de pago** → tarjeta **⚡ Tu Mercado Pago** → pega el Access Token (Mercado Pago → Tu negocio → Configuración → Credenciales → **Credenciales de producción**) → **⚡ Conectar** → dice "✅ Activo · tu nombre".
