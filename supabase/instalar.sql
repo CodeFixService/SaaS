@@ -144,7 +144,7 @@ end $$;
 create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '4.51'::text $$;
+language sql immutable as $$ select '4.52'::text $$;
 create or replace function public.cfg_int(c text) returns int
 language sql stable security definer set search_path = '' as $$
   select (valor #>> '{}')::int from public.config where clave = c
@@ -241,7 +241,7 @@ create table if not exists public.items (
   espacio_id  uuid references public.espacios (id) on delete set null,
   padre       uuid references public.items (id) on delete cascade,
   tipo        text not null check (tipo in ('tarea', 'proyecto', 'meta', 'resultado', 'habito', 'check', 'idea', 'problema',
-                                           'solucion', 'nota', 'diario', 'logro', 'leccion', 'recordatorio', 'falta', 'pedido', 'checklist', 'plantilla')),
+                                           'solucion', 'nota', 'diario', 'logro', 'leccion', 'recordatorio', 'falta', 'pedido', 'checklist', 'plantilla', 'est_conf', 'est_base', 'est_idea')),
   titulo      text not null default '' check (length(titulo) <= 200),
   cuerpo      text not null default '' check (length(cuerpo) <= 4000),
   estado      text not null default 'abierto' check (length(estado) <= 20),
@@ -264,7 +264,8 @@ begin
   for c in select conname from pg_constraint where conrelid = 'public.items'::regclass and contype = 'c' and pg_get_constraintdef(oid) like '%tipo%recordatorio%'
   loop execute 'alter table public.items drop constraint ' || quote_ident(c); end loop;
   alter table public.items add constraint items_tipo_check check (tipo in ('tarea', 'proyecto', 'meta', 'resultado', 'habito', 'check', 'idea', 'problema',
-    'solucion', 'nota', 'diario', 'logro', 'leccion', 'recordatorio', 'falta', 'pedido', 'checklist', 'plantilla'));
+    'solucion', 'nota', 'diario', 'logro', 'leccion', 'recordatorio', 'falta', 'pedido', 'checklist', 'plantilla', 'est_conf', 'est_base', 'est_idea'));
+  -- G94: 🎬 Estudio (solo admin en la app): est_conf { obj, publico, tono, tags, ritmo } · est_base titulo = texto { tema, cat } · est_idea titulo = gancho { idea del motor, m: métricas }.
   -- G93: "checklist" = procedimiento paso a paso (datos = { p: [pasos], ok: [índices hechos], rubro, base }); "plantilla" = tu plantilla editable { p, rubro, base }.
 end $$;
 create index if not exists items_owner_tipo_idx on public.items (owner, tipo, estado);

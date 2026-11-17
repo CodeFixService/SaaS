@@ -49,11 +49,21 @@
     return '<button type="button" class="big" data-act="nueva" data-t="logro">' + CM.ico('plus', 18) + ' Anotar un logro</button>' + (L.length ? L.slice(0, 40).map((i) => fila(i, CM.ico('estrella', 15))).join('') : '<p class="empty">Anota lo que lograste: te recuerda cuánto avanzas.</p>') +
       (hechas.length ? '<h3 class="sec">Trabajo finalizado</h3>' + hechas.slice(0, 20).map((i) => fila(i)).join('') : '');
   }
+  // G94: 🎬 Estudio de contenido, solo la cuenta admin (Josué).
+  const esAdmin = () => !!(CM.cuenta && CM.cuenta.rol === 'admin');
+  const subs = () => SUBS.concat(esAdmin() ? [['estudio', '🎬 Estudio']] : []);
   function render(el) {
     if (CM.ui.sub) { ui.sub = CM.ui.sub; CM.ui.sub = null; }
+    if (ui.sub === 'estudio' && !esAdmin()) ui.sub = 'ideas';
+    if (ui.sub === 'estudio') {
+      const head = '<div class="titulo-v"><h2>Cerebro</h2></div><div class="chips">' + subs().map((s) => '<button type="button" class="chip' + (ui.sub === s[0] ? ' on' : '') + '" data-sub="' + s[0] + '">' + s[1] + '</button>').join('') + '</div>';
+      if (CM.mod.estudio) CM.mod.estudio.render(el, head, (n) => { ui.sub = n; CM.pintar(); });
+      else { el.innerHTML = head + '<p class="sub">Cargando…</p>'; CM.cargarMod('estudio').then(() => CM.pintar()).catch((e) => toast(e.message)); }
+      return;
+    }
     const cuerpo = { ideas, problemas, notas, diario, logros }[ui.sub]();
     el.innerHTML = '<div class="titulo-v"><h2>Cerebro</h2></div>' + (['diario'].includes(ui.sub) ? '' : CM.selectorEspacio()) +
-      '<div class="chips">' + SUBS.map((s) => '<button type="button" class="chip' + (ui.sub === s[0] ? ' on' : '') + '" data-sub="' + s[0] + '">' + s[1] + '</button>').join('') + '</div>' +
+      '<div class="chips">' + subs().map((s) => '<button type="button" class="chip' + (ui.sub === s[0] ? ' on' : '') + '" data-sub="' + s[0] + '">' + s[1] + '</button>').join('') + '</div>' +
       '<input id="bq" type="search" placeholder="Buscar…" value="' + esc(ui.q) + '" maxlength="60">' + cuerpo;
     CM.alSelectorEspacio(el);
     const bq = el.querySelector('#bq'); bq.oninput = () => { ui.q = bq.value.trim().toLowerCase(); clearTimeout(ui.t); ui.t = setTimeout(() => { CM.pintar(); const n = document.getElementById('bq'); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, 250); };

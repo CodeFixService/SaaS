@@ -137,3 +137,6 @@ nav.tabs button.nuevo .ic{width:28px;height:28px}nav.tabs button.nuevo.on{backgr
 .cl-paso.ok span{text-decoration:line-through;color:var(--muted)}.cl-btns{flex-wrap:wrap}.ok-txt{color:var(--ok);font-weight:600;margin:4px 0}
 #v-tablero .fila .barra{flex:1;margin:0}
 dialog .fila .barra{flex:1;margin:0}
+/* G94 🎬 Estudio */
+.est-caja .est-txt{white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0}.est-alt{border-top:1px solid var(--line,rgba(127,127,127,.25));padding-top:8px;margin-top:8px}.est-alt p{margin:0 0 4px}
+.est-ritmo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.est-ritmo label{margin:0;font-size:13px}.est-ritmo input{width:100%}
