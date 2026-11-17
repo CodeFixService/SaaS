@@ -14,6 +14,12 @@ const assert = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('
     await p.click('[data-app=cm] [data-a=limp]'); await p.waitForTimeout(1500);
     assert(await p.locator('dialog [data-c]').count() === 8, '8 limpiezas (4 núcleo + 4 CM)');
     assert(await p.locator('dialog [data-tb]').count() === 2, '2 tablas sobrantes');
+    // G87 E · ↺ Ingresos de prueba
+    assert(/todo el historial/.test(await p.locator('dialog [data-cero-txt]').innerText()), '↺ muestra: cuenta todo el historial');
+    await p.click('dialog [data-cero-si]'); await p.waitForTimeout(500); await p.locator('dialog button', { hasText: 'Volver a cero' }).last().click(); await p.waitForTimeout(1200);
+    assert(/Cuenta desde/.test(await p.locator('dialog [data-cero-txt]').innerText()) && await p.locator('dialog [data-cero-no]').isVisible(), '↺ Volver a cero: cuenta desde hoy + Contar todo otra vez');
+    await p.click('dialog [data-cero-no]'); await p.waitForTimeout(1200);
+    assert(/todo el historial/.test(await p.locator('dialog [data-cero-txt]').innerText()), '↺ deshacer vuelve a todo el historial');
     await t.foto('limpieza');
     await p.click('dialog [data-tb="public.vacia"]'); await p.waitForTimeout(300); await p.locator('dialog button', { hasText: 'Borrar' }).last().click(); await p.waitForTimeout(1200);
     assert(await p.locator('dialog [data-tb]').count() === 1, 'vacía borrada');

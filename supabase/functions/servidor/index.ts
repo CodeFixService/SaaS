@@ -5,6 +5,7 @@
 //  3) { accion: 'qr_entrar' }     G32 d: el computador entra con la sesión que aprobó el celular (QR).
 //  4) { accion: 'dominio' }       G33: solo el admin. Arma el dominio de CodeFix en Cloudflare (dominio.ts).
 //  5) { accion: 'ping' }          Diagnóstico.
+//  6) { accion: 'restablecer' }   G87 C: solo el admin. Clave temporal + debe crear la suya al entrar.
 //  3) sin acción (cada minuto, pg_cron): envía por push los avisos nuevos de la campanita.
 import webpush from 'npm:web-push@3.6.7';
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
@@ -37,7 +38,7 @@ async function reintentarPush(s: Rpc, preparar: () => Promise<boolean>) {
 }
 import { dominio } from './dominio.ts';
 
-const VERSION = '3.3';
+const VERSION = '3.4';
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -155,6 +156,25 @@ async function dominioAdmin(jwt: string, b: { dominio?: string; tiendas?: string
   return await dominio({ token, dominio: String(b.dominio || ''), tiendas: Array.isArray(b.tiendas) ? b.tiendas.map(String) : [] });
 }
 
+// G87 C · 🔑 Recuperar la clave desde el CM (solo el admin): clave temporal al azar (la arma el CM) + debe crear la suya al entrar.
+async function restablecer(jwt: string, b: { id?: string; password?: string }) {
+  const s = db();
+  const { data: who, error: e0 } = await s.auth.getUser(jwt);
+  if (e0 || !who?.user) return { ok: false, error: 'Inicia sesión de nuevo' };
+  const { data: adm } = await s.rpc('admin_email');
+  if (!adm || String(who.user.email || '').toLowerCase() !== String(adm).toLowerCase()) return { ok: false, error: 'Solo el administrador' };
+  const id = String(b.id || ''), password = String(b.password || '');
+  if (!/^[0-9a-f-]{36}$/i.test(id) || password.length < 8) return { ok: false, error: 'Dato no válido' };
+  const { data: u, error: e1 } = await s.auth.admin.getUserById(id);
+  if (e1 || !u?.user?.email) return { ok: false, error: 'Cuenta no encontrada' };
+  if (u.user.email.toLowerCase() === String(adm).toLowerCase()) return { ok: false, error: 'La clave del administrador no se cambia desde aquí' };
+  const { error: e2 } = await s.auth.admin.updateUserById(id, { password });
+  if (e2) return { ok: false, error: e2.message };
+  await s.from('cfx_clave_temporal').upsert({ email: u.user.email.toLowerCase(), creado: new Date().toISOString() });
+  await s.from('auditoria').insert({ quien: who.user.id, accion: 'clave_temporal', detalle: u.user.email, motivo: '', rol: 'admin', quien_email: who.user.email });
+  return { ok: true, email: u.user.email };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   try {
@@ -178,6 +198,11 @@ Deno.serve(async (req) => {
       const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
       try { return json(await dominioAdmin(jwt, body)); }
       catch (e) { return json({ ok: false, error: 'Cloudflare: ' + String((e as Error).message || e) }); }
+    }
+    if (body?.accion === 'restablecer') {
+      const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+      try { return json(await restablecer(jwt, body)); }
+      catch (e) { return json({ ok: false, error: 'Error del servidor: ' + String((e as Error).message || e) }); }
     }
     if (body?.accion === 'borrar_mia') {
       const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');

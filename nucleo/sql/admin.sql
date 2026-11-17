@@ -387,8 +387,8 @@ begin
   perform <CHK>;
   return (select jsonb_agg(jsonb_build_object('mes', to_char(m, 'YYYY-MM'),
       'cuentas', (select count(*) from auth.users u where u.created_at >= m and u.created_at < m + interval '1 month'),
-      'pagos', (select count(*) from public.cfx_pagos p where p.estado = 'aprobado' and p.creado >= m and p.creado < m + interval '1 month'),
-      'ingresos', (select coalesce(sum(p.monto), 0) from public.cfx_pagos p where p.estado = 'aprobado' and p.creado >= m and p.creado < m + interval '1 month')) order by m)
+      'pagos', (select count(*) from public.cfx_pagos p where p.estado = 'aprobado' and p.creado >= m and p.creado < m + interval '1 month' and p.creado >= public.cfx_ingresos_desde()),
+      'ingresos', (select coalesce(sum(p.monto), 0) from public.cfx_pagos p where p.estado = 'aprobado' and p.creado >= m and p.creado < m + interval '1 month' and p.creado >= public.cfx_ingresos_desde())) order by m)
     from generate_series(date_trunc('month', now()) - make_interval(months => n - 1), date_trunc('month', now()), interval '1 month') m);
 end $$;
 revoke all on function public.cfx_series(int) from public, anon;

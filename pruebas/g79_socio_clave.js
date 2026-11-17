@@ -1,7 +1,7 @@
 // G79: CM → Usuarios → Nueva cuenta (socio) debe pedir contraseña y mostrar el mensaje de acceso. Correr: node pruebas/g79_socio_clave.js
 const fs=require('fs');const {chromium}=require('playwright');
 const src=fs.readFileSync('/home/user/SaaS/admin/admin.js','utf8');
-const f1=src.slice(src.indexOf('  function nueva()'),src.indexOf('  // Precios, links'));
+const f1=fs.readFileSync('/home/user/SaaS/nucleo/seguro.js','utf8')+';const SUPER=true,rpc=async()=>{},confirmar=async()=>true;'+src.slice(src.indexOf('  // G87 C · 🔑 Cuenta creada'),src.indexOf('  // Precios, links'));
 (async()=>{const b=await chromium.launch();const p=await b.newPage();
 await p.setContent('<body></body>');
 const r=await p.evaluate(async(code)=>{let enviado=null,toasts=[];
@@ -10,7 +10,7 @@ const r=await p.evaluate(async(code)=>{let enviado=null,toasts=[];
  const modal=(h)=>{const d=document.createElement('dialog');d.innerHTML=h;document.body.appendChild(d);d.showModal();return d};
  const toast=(m)=>toasts.push(m),err=(e)=>toast(e.message),usuarios=()=>{},esc=App.esc;
  eval(code+';nueva();');
- const d=document.querySelector('dialog');d.querySelector('#nn').value='Pedro';d.querySelector('#ne').value='p@x.cl';d.querySelector('#nr').value='socio';
+ const d=document.querySelector('dialog');d.querySelector('#nn').value='Pedro';d.querySelector('#ne').value='p@x.cl';d.querySelector('#nr').value='socio';d.querySelector('#nw').value='9 1234 5678';
  const pre=d.querySelector('#np').value;d.querySelector('#nk').click();await new Promise(r=>setTimeout(r,50));
  const t=[...document.querySelectorAll('dialog[open] textarea')].map(x=>x.value);
  return {pre,enviado,toasts,t};},f1);

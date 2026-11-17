@@ -465,7 +465,31 @@ grant execute on function public.cfx_mp_pagar(text, int, text, text, text), publ
 do $$
 begin
   perform cron.unschedule(jobid) from cron.job where jobname = 'cfx-mp';
-  perform cron.schedule('cfx-mp', '*/2 * * * *', 'select public.cfx_mp_revisar_pendientes()');
+  perform cron.schedule('cfx-mp', '* * * * *', 'select public.cfx_mp_revisar_pendientes()');
 exception when others then
   raise notice 'Revisión de Mercado Pago no programada (%).', sqlerrm;
 end $$;
+
+-- G87 E · ↺ Volver a cero los ingresos (solo admin, con registro). NO borra pagos: los ingresos de los resúmenes se cuentan
+-- desde esta fecha (los de prueba quedan en el historial). "Contar todo" lo deshace.
+create or replace function public.cfx_ingresos_desde() returns timestamptz
+language sql stable security definer set search_path = '' as $$
+  select coalesce((select (valor ->> 'desde')::timestamptz from public.cfx_config where clave = 'ingresos_cero'), '-infinity'::timestamptz)
+$$;
+create or replace function public.cfx_ingresos_cero(p_cero boolean default null) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+begin
+  perform <CHK>;
+  if p_cero is true then
+    insert into public.cfx_config (clave, valor) values ('ingresos_cero', jsonb_build_object('desde', now()))
+      on conflict (clave) do update set valor = excluded.valor;
+    perform public.cfx_anotar('ingresos a cero', 'Los resúmenes cuentan desde ' || to_char(now() at time zone 'America/Santiago', 'DD-MM-YYYY HH24:MI'));
+  elsif p_cero is false then
+    delete from public.cfx_config where clave = 'ingresos_cero';
+    perform public.cfx_anotar('ingresos a cero', 'Deshecho: vuelve a contar todo el historial');
+  end if;
+  return jsonb_build_object('desde', nullif(public.cfx_ingresos_desde(), '-infinity'::timestamptz));
+end $$;
+revoke all on function public.cfx_ingresos_cero(boolean) from public, anon;
+grant execute on function public.cfx_ingresos_desde() to anon, authenticated;
+grant execute on function public.cfx_ingresos_cero(boolean) to authenticated;

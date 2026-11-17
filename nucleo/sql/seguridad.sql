@@ -43,3 +43,27 @@ begin
 end $$;
 revoke all on function public.cfx_seguridad() from public, anon;
 grant execute on function public.cfx_seguridad() to authenticated;
+
+-- G87 C · 🔑 Clave temporal: la cuenta que crea el admin (o a la que le restablece la clave) debe crear su clave al entrar.
+-- Solo guarda el correo (nunca la clave). El admin la marca; la persona la borra al guardar su clave nueva.
+create table if not exists public.cfx_clave_temporal (email text primary key, creado timestamptz not null default now());
+alter table public.cfx_clave_temporal enable row level security;
+revoke all on public.cfx_clave_temporal from anon, authenticated;
+create or replace function public.cfx_clave_temporal_marcar(p_email text) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  perform <CHK>;
+  if coalesce(p_email, '') !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then raise exception 'Correo no válido'; end if;
+  insert into public.cfx_clave_temporal (email) values (lower(trim(p_email))) on conflict (email) do update set creado = now();
+  perform public.cfx_anotar('clave temporal', lower(trim(p_email)));
+end $$;
+create or replace function public.cfx_clave_debo() returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.cfx_clave_temporal t join auth.users u on lower(u.email) = t.email where u.id = auth.uid())
+$$;
+create or replace function public.cfx_clave_cambiada() returns void
+language sql security definer set search_path = '' as $$
+  delete from public.cfx_clave_temporal where email = (select lower(email) from auth.users where id = auth.uid())
+$$;
+revoke all on function public.cfx_clave_temporal_marcar(text), public.cfx_clave_debo(), public.cfx_clave_cambiada() from public, anon;
+grant execute on function public.cfx_clave_temporal_marcar(text), public.cfx_clave_debo(), public.cfx_clave_cambiada() to authenticated;

@@ -299,9 +299,26 @@
     const c = cliente(a), e = E[a.id], bajadas = new Set();
     const d = modal('<div class="fila"><h2 class="grow" style="margin:0">' + A.ico('escoba', 20) + ' ' + esc(a.nombre) + '</h2><button class="small ghost" data-cerrar type="button">Cerrar</button></div>' +
       '<div class="card"><h3>1. Respaldo</h3><p class="sub">Excel con cuentas, pagos, ajustes y registro de esta app. Descárgalo antes de borrar.</p><button type="button" data-r>' + A.ico('bajar', 15) + ' Descargar respaldo (Excel)</button></div>' +
+      '<div class="card" data-cero><h3>↺ Ingresos de prueba</h3><p class="sub">Deja en $0 los ingresos de los resúmenes de esta app (los pagos NO se borran: quedan en el historial). Se puede deshacer.</p><p class="sub" data-cero-txt>Revisando…</p><div class="btns"><button type="button" class="small" data-cero-si disabled>↺ Volver a cero</button><button type="button" class="small ghost hidden" data-cero-no>Contar todo otra vez</button></div></div>' +
       '<div class="card"><h3>2. Limpieza</h3><label class="fila" style="gap:8px;align-items:center;padding:4px 0 8px"><input type="checkbox" data-auto style="width:auto" disabled> <span class="grow"><b>🌙 Limpieza automática cada noche</b><span class="sub" data-auto-txt style="display:block">Revisando…</span></span></label><div data-l><p class="sub">Revisando…</p></div></div>' +
       '<div class="card"><h3>3. Tablas sobrantes</h3><p class="sub">Restos de versiones antiguas que la app ya no usa. Las vacías se borran con un toque; las que tienen datos piden respaldo y escribir "sí".</p><div data-i><p class="sub">Revisando…</p></div></div>');
     d.querySelector('[data-r]').onclick = () => respaldar(a);
+    // G87 E · ↺ ingresos a cero (núcleo cfx_ingresos_cero: solo admin, queda en el Registro; no borra pagos).
+    const cero = d.querySelector('[data-cero]');
+    function pintarCero(r) {
+      const t = cero.querySelector('[data-cero-txt]'), si = cero.querySelector('[data-cero-si]'), no = cero.querySelector('[data-cero-no]');
+      if (!r || r.error) { t.textContent = (r && r.error) || 'Sin respuesta.'; si.disabled = true; no.classList.add('hidden'); return; }
+      t.textContent = r.desde ? '✅ Cuenta desde el ' + new Date(r.desde).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' }) + '.' : 'Hoy cuenta todo el historial.';
+      si.disabled = false; no.classList.toggle('hidden', !r.desde);
+    }
+    rpcDe(c, 'cfx_ingresos_cero', { p_cero: null }).then(pintarCero, (x) => pintarCero({ error: nf(x) }));
+    cero.querySelector('[data-cero-si]').onclick = async () => {
+      if (!(await confirmar('↺ ' + a.nombre + ': los ingresos de los resúmenes quedan en $0 desde ahora. Los pagos no se borran.', 'Volver a cero'))) return;
+      try { pintarCero(await rpcDe(c, 'cfx_ingresos_cero', { p_cero: true })); toast('↺ Ingresos de ' + a.nombre + ' en $0'); } catch (x) { toast(nf(x)); }
+    };
+    cero.querySelector('[data-cero-no]').onclick = async () => {
+      try { pintarCero(await rpcDe(c, 'cfx_ingresos_cero', { p_cero: false })); toast('Vuelve a contar todo el historial'); } catch (x) { toast(nf(x)); }
+    };
     async function pintar() {
       const L = d.querySelector('[data-l]'), I = d.querySelector('[data-i]');
       try {

@@ -34,7 +34,7 @@ perfiles, espacios, items, pedidos/pagos, planes, config, textos, notificaciones
 
 ## Versiones
 `shared/config.js` VERSION/DB_VERSION + `version.json` (notas = SOLO categorías G44b) + `instalar.sql` l.147.
-Ahora: app 5.10 · bd 4.33 · función 3.2 · núcleo 2.79. Avisos: CFX_DIALOGO.confirmar/pedir/avisar (nunca confirm/prompt de Chrome).
+Ahora: app 5.31 · bd 4.48 · función 3.4 · núcleo 2.99. Avisos: CFX_DIALOGO.confirmar/pedir/avisar (nunca confirm/prompt de Chrome).
 
 ## Reglas propias
 - Bootstrap: solo utilidades (`vendor/`), nunca el completo (choca .btn/.card/.modal/.row/.toast). tema.css mapea --bs-* → --cfx-*.
@@ -43,3 +43,4 @@ Ahora: app 5.10 · bd 4.33 · función 3.2 · núcleo 2.79. Avisos: CFX_DIALOGO.
 - G85: CM → Control elige la app con la 🗂️ caja de apps (MisApps.cajaApps, imágenes en config 'apps_imagenes'). CM → Pagos = un solo pago general (link abierto + transferencia) + ⚡ Mercado Pago automático (token en cada app, cfx_mp_*) + 🏷️ Cupones.
 
 - G87 A: Control → Negocios usa cfx_negocios (núcleo) → cfx_cuentas_app(rol, q) + cfx_quitar_premium(uuid) que define CADA app (las 6 + CM ya la tienen). El menú de secciones de Control lleva data-cfx-pestanas (deslizar la página cambia de sección). Tiras con mouse: ayuda.js tiraMouse(). Prueba: pruebas/g87a.js.
+- G89 (G87 E/C/J): Apps → 🧹 Respaldo y limpieza → ↺ Ingresos de prueba (cfx_ingresos_cero; no borra pagos). SOCIO = solo agrega: edit_check lo rechaza, agrega_check (avisos con motivo), preparar_borrado no lo deja borrar. Usuarios → Nueva cuenta (WhatsApp +56 9 con CFX_CL.tel, clave temporal, 💬 Enviar por WhatsApp) y 🔑 Clave (función servidor accion 'restablecer', solo admin). Clave temporal = núcleo cfx_clave_temporal + ventana obligatoria en qr.js. Pruebas: g87e.js, g87c.js, g87j.js.

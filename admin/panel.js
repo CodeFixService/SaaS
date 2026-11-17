@@ -77,8 +77,11 @@
     const seg = (z, sel, f) => { z.querySelector(sel).onclick = (ev) => { const b = ev.target.closest('[data-f]'); if (!b) return; z.querySelectorAll(sel + ' [data-f]').forEach((x) => x.classList.toggle('on', x === b)); f(b.dataset.f); }; };
     const wa = (tel, t) => { const n = String(tel || '').replace(/\D/g, ''); return 'https://wa.me/' + (n.length === 9 ? '56' + n : n) + '?text=' + encodeURIComponent(t || ''); };
     function acceso(titulo, msg, tel) {
+      // G87 C · 🔑 si el mensaje lleva correo + contraseña, la app la marca temporal: al entrar debe crear la suya.
+      const em = (String(msg).match(/Correo:\s*(\S+@\S+)/i) || [])[1];
+      if (em && /(contraseña|clave)[^:\n]{0,12}:/i.test(msg)) rpc('cfx_clave_temporal_marcar', { p_email: em.replace(/[.,;]+$/, '') }).catch(() => { /* base sin G87 C */ });
       const d = modal('<h2>' + esc(titulo) + '</h2><p class="sub">Envíale estos datos:</p><textarea readonly rows="8">' + esc(msg) + '</textarea>' +
-        '<div class="btns"><button type="button" class="ghost" data-cerrar>Cerrar</button><button type="button" class="ghost" id="acCp">📋 Copiar</button><a class="btn" target="_blank" rel="noopener" href="' + esc(tel ? wa(tel, msg) : 'https://wa.me/?text=' + encodeURIComponent(msg)) + '">💬 WhatsApp</a></div>');
+        '<div class="btns"><button type="button" class="ghost" data-cerrar>Cerrar</button><button type="button" class="ghost" id="acCp">📋 Copiar</button><a class="btn" target="_blank" rel="noopener" href="' + esc(tel ? wa(tel, msg) : 'https://wa.me/?text=' + encodeURIComponent(msg)) + '">💬 Enviar por WhatsApp</a></div>');
       d.querySelector('#acCp').onclick = async () => { try { await navigator.clipboard.writeText(msg); toast('📋 Copiado'); } catch (e) { toast(msg); } };
     }
     async function soporte(cuenta, nombre, texto) {

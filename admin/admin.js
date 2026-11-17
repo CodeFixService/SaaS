@@ -193,7 +193,7 @@
       const L = await rpc('admin_usuarios', { p_buscar: q || '' });
       $('uL').innerHTML = L.map((u) => '<div class="card"><div class="fila"><span class="tit">' + esc(u.nombre || u.email) + '</span><span class="pill ' + (u.rol === 'admin' ? 'dark' : u.rol === 'socio' ? 'info' : '') + '">' + u.rol + '</span>' + (u.suspendido ? '<span class="pill bad">suspendido</span>' : '') + '</div>' +
         '<p class="sub">' + esc(u.email) + ' · ' + u.registros + ' registros · ' + (u.premium_hasta && new Date(u.premium_hasta) > new Date() ? 'Pro hasta ' + App.fCorta(u.premium_hasta.slice(0, 10)) : 'gratis') + ' · visto ' + (u.visto_at ? App.hace(u.visto_at) : 'nunca') + '</p>' +
-        (u.rol === 'admin' ? '' : '<div class="btns-s"><button class="small ghost" data-a="pro" data-id="' + u.id + '">Días Pro</button><button class="small ghost" data-a="susp" data-id="' + u.id + '" data-s="' + (u.suspendido ? 0 : 1) + '">' + (u.suspendido ? 'Reactivar' : 'Suspender') + '</button><button class="small ghost" data-a="del" data-id="' + u.id + '" data-n="' + esc(u.email) + '">Eliminar</button></div>') + '</div>').join('') || '<p class="empty">Sin resultados</p>';
+        (u.rol === 'admin' || !SUPER ? '' : '<div class="btns-s"><button class="small ghost" data-a="clave" data-id="' + u.id + '" data-n="' + esc(u.email) + '" data-t="' + esc(u.telefono || '') + '">🔑 Clave</button><button class="small ghost" data-a="pro" data-id="' + u.id + '">Días Pro</button><button class="small ghost" data-a="susp" data-id="' + u.id + '" data-s="' + (u.suspendido ? 0 : 1) + '">' + (u.suspendido ? 'Reactivar' : 'Suspender') + '</button><button class="small ghost" data-a="del" data-id="' + u.id + '" data-n="' + esc(u.email) + '">Eliminar</button></div>') + '</div>').join('') || '<p class="empty">Sin resultados</p>';
     } catch (e) { $('uL').innerHTML = '<p class="err">' + esc(e.message) + '</p>'; }
   }
   el('usuarios').onclick = async (e) => {
@@ -203,18 +203,44 @@
         const d = modal('<h2>Días de Pro</h2><p class="sub">Positivo suma, negativo quita, 0 cancela.</p><input id="dp" type="number" value="30"><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="dk" type="button">Siguiente</button></div>');
         d.querySelector('#dk').onclick = async () => { const n = +d.querySelector('#dp').value; d.close(); const m = await motivo('Días de Pro'); if (m === null) return; try { await rpc('admin_premium', { p_id: id, p_dias: n, p_motivo: m }); toast('Listo'); usuarios($('uQ').value); } catch (x) { err(x); } };
       } else if (b.dataset.a === 'susp') { const m = await motivo(b.dataset.s === '1' ? 'Suspender cuenta' : 'Reactivar cuenta'); if (m === null) return; await rpc('admin_suspender', { p_id: id, p_suspender: b.dataset.s === '1', p_motivo: m }); usuarios($('uQ').value); }
+      else if (b.dataset.a === 'clave') await restablecer(id, b.dataset.n, b.dataset.t);
       else if (b.dataset.a === 'del') { if (!(await confirmar('Eliminar a ' + b.dataset.n + ' y todos sus datos. No se puede deshacer.', 'Eliminar'))) return; const m = await motivo('Eliminar cuenta'); if (m === null) return; await App.borrarCuenta(id, m); toast('Eliminada'); usuarios($('uQ').value); }
     } catch (x) { err(x); }
   };
+  // G87 C · 🔑 Cuenta creada por el admin: va por WhatsApp (+56 9 validado), clave temporal al azar y la persona crea la suya al entrar.
   function nueva() {
-    const d = modal('<h2>Nueva cuenta</h2><label>Nombre<input id="nn"></label><label>Correo<input id="ne" type="email"></label><label>Rol<select id="nr"><option value="usuario">Usuario</option><option value="socio">Socio</option></select></label><label>Contraseña inicial<input id="np" autocomplete="off" value="' + App.clave() + '"></label><p class="sub">Al crear te mostramos el mensaje con su correo y contraseña para enviárselo.</p><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="nk" type="button">Crear</button></div>');
-    d.querySelector('#nk').onclick = async () => { try { const k = { email: d.querySelector('#ne').value.trim(), nombre: d.querySelector('#nn').value.trim(), rol: d.querySelector('#nr').value, password: d.querySelector('#np').value.trim() };
-      if (k.password.length < 6) return err(new Error('La contraseña debe tener al menos 6 caracteres'));
-      await App.crearCuenta(k); d.close(); toast('Cuenta creada'); usuarios(); acceso(App.mensajeAcceso({ nombre: k.nombre || k.email, email: k.email, password: k.password })); } catch (x) { err(x); } };
+    const d = modal('<h2>Nueva cuenta</h2><label>Tipo<select id="nr"><option value="usuario">🏪 Negocio</option>' + (SUPER ? '<option value="socio">🤝 Socio (demo y ventas)</option>' : '') + '</select></label>' +
+      '<label>Nombre<input id="nn" autocomplete="off"></label><label>WhatsApp<input id="nw" type="tel" inputmode="tel" placeholder="+56 9 1234 5678" autocomplete="off"></label><label>Correo<input id="ne" type="email" autocomplete="off"></label>' +
+      '<label>Clave temporal<input id="np" autocomplete="off" value="' + App.clave() + '"></label><p class="sub">Al entrar debe crear su propia clave. Clientes y negocios de las otras apps: en su 🧭 panel (Apps).</p>' +
+      '<p class="err" id="nE"></p><div class="btns"><button class="ghost" data-cerrar type="button">Cancelar</button><button id="nk" type="button">Crear</button></div>');
+    const E = (t) => { d.querySelector('#nE').textContent = t; };
+    d.querySelector('#nk').onclick = async (ev) => {
+      const k = { email: d.querySelector('#ne').value.trim().toLowerCase(), nombre: d.querySelector('#nn').value.trim(), rol: d.querySelector('#nr').value, password: d.querySelector('#np').value.trim(), telefono: '' };
+      const w = window.CFX_CL.tel(d.querySelector('#nw').value);
+      if (!k.nombre) return E('Escribe el nombre');
+      if (!w) return E('WhatsApp no válido: +56 9 y 8 números');
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(k.email)) return E('Correo no válido');
+      if (k.password.length < 8) return E('La clave temporal debe tener al menos 8 caracteres');
+      k.telefono = w; ev.target.disabled = true; E('');
+      try {
+        await App.crearCuenta(k); d.close(); toast('Cuenta creada'); usuarios();
+        await rpc('cfx_clave_temporal_marcar', { p_email: k.email }).catch(() => {});
+        acceso(App.mensajeAcceso({ nombre: k.nombre, email: k.email, password: k.password }), w);
+      } catch (x) { ev.target.disabled = false; E(x.message); }
+    };
+  }
+  // 🔑 Recuperar la clave (solo admin): temporal al azar → por WhatsApp; al entrar crea la suya.
+  async function restablecer(id, email, tel) {
+    if (!(await confirmar('🔑 ' + email + ': se le pone una clave temporal nueva (la de ahora deja de servir).', 'Crear clave temporal'))) return;
+    const k = App.clave();
+    const { data, error } = await App.sb.functions.invoke('servidor', { body: { accion: 'restablecer', id, password: k } });
+    if (error || !data || !data.ok) return err(new Error((data && data.error) || 'Actualiza la función "servidor" (v3.4) en Supabase'));
+    acceso('Hola\nTe dejamos una clave temporal para entrar a ' + 'Centro de Mando' + '.\n\nEntra aquí: ' + location.origin + '/\nCorreo: ' + email + '\nClave temporal: ' + k + '\n\nAl entrar te pedirá crear tu propia clave.', tel, '🔑 Clave temporal lista');
   }
 
-  function acceso(m) {
-    const d = modal('<h2>✅ Cuenta creada</h2><p class="sub">Envíale este mensaje:</p><textarea rows="8" readonly>' + esc(m) + '</textarea><div class="btns"><button class="ghost" data-cerrar type="button">Cerrar</button><button id="nkC" type="button">📋 Copiar</button></div>');
+  function acceso(m, tel, titulo) {
+    const n = window.CFX_CL.tel(tel), wa = 'https://wa.me/' + (n || '') + '?text=' + encodeURIComponent(m);
+    const d = modal('<h2>' + esc(titulo || '✅ Cuenta creada') + '</h2><p class="sub">Envíale este mensaje' + (n ? ' a ' + esc(window.CFX_CL.telVer(n)) : '') + ':</p><textarea rows="8" readonly>' + esc(m) + '</textarea><div class="btns"><button class="ghost" data-cerrar type="button">Cerrar</button><button class="ghost" id="nkC" type="button">📋 Copiar</button><a class="btn" id="nkW" target="_blank" rel="noopener" href="' + esc(wa) + '">💬 Enviar por WhatsApp</a></div>');
     d.querySelector('#nkC').onclick = async () => { try { await navigator.clipboard.writeText(m); } catch (x) { const t = d.querySelector('textarea'); t.select(); document.execCommand('copy'); } toast('Copiado'); };
   }
   // Precios, links y transferencia ya no van aquí: se editan una vez para las 7 apps en Pagos.

@@ -114,3 +114,11 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 ## G87 A 🐞 CM 5.30 (probar)
 - CM → Más → Control → elegir 🚲 BiciTaller en la caja → 🏪 Negocios: debe salir tu taller de prueba (también Billetera, Estaciona y Centro de Mando; antes decía "aún no tiene la lista"). Requiere ⬆️ Actualizar base en BiciTaller, Billetera, Estaciona y CM.
 - Menú de Control: se corre con el dedo; deslizando el dedo por la página (fuera del menú) pasa a la sección vecina; en computador, con la rueda del mouse o arrastrando.
+
+## G89 🧹🔐⚡ CM 5.31 · las 7 apps (probar, después de ⬆️ Actualizar base en las 7 y la función "servidor" del CM v3.4)
+- CM → Apps → (cada app) 🧹 Respaldo y limpieza → **↺ Volver a cero**: los ingresos de los resúmenes quedan en $0 (los pagos no se borran). "Contar todo otra vez" lo deshace.
+- Despega: si un producto sale en la vitrina pero no en tu Caja → abre la Caja: ahora aparece solo (para editarlo o borrarlo). Los que tienen error: CM → Apps → 🚀 Despega → 🧹 → "🗑️ Productos con error" → Borrar.
+- CM → Usuarios → **+ Cuenta**: tipo, nombre, WhatsApp (+56 9), correo → Crear → **💬 Enviar por WhatsApp**. Al entrar, la persona DEBE crear su clave.
+- CM → Usuarios → **🔑 Clave** (en cada persona): le pone clave temporal y te arma el WhatsApp.
+- Socio: ya NO puede dar Pro, suspender, cambiar ajustes ni eliminar (solo agregar avisos con motivo). Pruébalo con tu cuenta de socio.
+- 🪪 Verificación: el RUT se escribe sin el dígito final (sale solo) y las fotos de la cédula abren la cámara.
