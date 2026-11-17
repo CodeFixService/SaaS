@@ -135,7 +135,9 @@
         '<br><span class="sub">' + (k.revocada ? 'revocada' : k.usada_por ? 'usada por ' + esc(k.usada_email || '') + ' ' + A.hace(k.usada_at) : 'sin usar') + '</span></span>' +
         (!k.usada_por && !k.revocada ? '<button type="button" class="small ghost" data-rev="' + k.id + '">Revocar</button>' : '') + '</div>').join('') || '<p class="empty">Sin keys</p>') + '</div>';
     const kI = raiz.querySelector('#kI'), kRl = raiz.querySelector('#kRl');
-    kI.onchange = () => { kRl.hidden = !!kI.value; kRl.style.display = kI.value ? 'none' : ''; if (kI.value) raiz.querySelector('#kR').value = 'negocio'; };
+    const kR = raiz.querySelector('#kR'), kRn = document.createElement('span'); kRn.className = 'sub'; kRl.appendChild(kRn);
+    // Nada se oculta: con un módulo/pack "Para" queda visible fijo en Negocio y dice por qué.
+    kI.onchange = () => { kR.disabled = !!kI.value; if (kI.value) kR.value = 'negocio'; kRn.textContent = kI.value ? 'Los módulos son solo para negocios.' : ''; };
     raiz.querySelectorAll('.cfx-chips[data-grupo]').forEach((g) => { g.onclick = (ev) => {
       const ch = ev.target.closest('.cfx-chip'); if (!ch) return;
       raiz.querySelector('#' + g.dataset.grupo).value = ch.dataset.v; g.querySelectorAll('.cfx-chip').forEach((x) => x.classList.toggle('on', x === ch));
