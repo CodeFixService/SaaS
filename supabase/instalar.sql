@@ -144,7 +144,7 @@ end $$;
 create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '4.46'::text $$;
+language sql immutable as $$ select '4.47'::text $$;
 create or replace function public.cfg_int(c text) returns int
 language sql stable security definer set search_path = '' as $$
   select (valor #>> '{}')::int from public.config where clave = c
@@ -1172,6 +1172,23 @@ create or replace function public.cfx_avisar(p_cuenta uuid, p_titulo text, p_cue
 language sql security definer set search_path = '' as $$ select public.avisar(p_cuenta, p_titulo, p_cuerpo, '/app/#mas') $$;
 create or replace function public.cfx_avisar_admin(p_titulo text, p_cuerpo text) returns void
 language sql security definer set search_path = '' as $$ select public.avisar_staff(p_titulo, p_cuerpo, '/admin/#apps') $$;
+
+-- G87 A · Lista de cuentas para Control → Negocios (antes decía "aún no tiene la lista de negocios").
+-- Negocio = cuentas que usan el Centro de Mando como app (rol usuario). No tiene clientes. Solo la llama cfx_negocios (admin).
+create or replace function public.cfx_cuentas_app(p_rol text, p_q text) returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select case when p_rol = 'cliente' then '[]'::jsonb else
+    (select coalesce(jsonb_agg(jsonb_build_object('id', p.id, 'email', p.email, 'nombre', p.nombre, 'rol', 'negocio',
+        'premium_hasta', case when p.premium_hasta > now() then p.premium_hasta end, 'creado', p.created_at, 'suspendido', p.suspendido) order by p.created_at desc), '[]'::jsonb)
+     from (select x.* from public.perfiles x where x.rol = 'usuario'
+             and (coalesce(p_q, '') = '' or x.email ilike '%' || p_q || '%' or x.nombre ilike '%' || p_q || '%')
+           order by x.created_at desc limit 300) p) end
+$$;
+create or replace function public.cfx_quitar_premium(p_cuenta uuid) returns void
+language sql security definer set search_path = '' as $$
+  update public.perfiles set premium_hasta = null where id = p_cuenta and rol = 'usuario'
+$$;
+revoke all on function public.cfx_cuentas_app(text, text), public.cfx_quitar_premium(uuid) from public, anon, authenticated;
 
 -- Ganchos de administración para el núcleo (planes, textos, a quién avisar y verificación).
 create or replace function public.cfx_planes_app() returns jsonb

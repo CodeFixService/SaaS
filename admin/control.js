@@ -589,7 +589,7 @@
     const a = app();
     el.innerHTML = '<div class="titulo-v"><h2>Control</h2><span class="sub">Las 7 apps</span></div>' +
       '<div id="ctlApps"></div>' +  // G85: caja de apps (antes, 7 botones que bajaban de línea)
-      '<div class="chips">' + SECC.map((s) => '<button type="button" class="chip' + (s[0] === seccion ? ' on' : '') + '" data-s="' + s[0] + '">' + s[1] + '</button>').join('') + '</div><div id="ctlCuerpo"></div>';
+      '<div class="chips" data-cfx-pestanas>' + SECC.map((s) => '<button type="button" class="chip' + (s[0] === seccion ? ' on' : '') + '" data-s="' + s[0] + '">' + s[1] + '</button>').join('') + '</div><div id="ctlCuerpo"></div>';
     await M().cajaApps(el.querySelector('#ctlApps'), actual, (id) => { actual = id; render(el); }, { sub: (x) => conectada(x) ? '' : '🔌 Sin conectar' });
     el.querySelectorAll('[data-s]').forEach((b) => { b.onclick = () => { seccion = b.dataset.s; render(el); }; });
     if (!conectada(a)) {

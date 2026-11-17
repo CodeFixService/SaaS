@@ -41,3 +41,5 @@ Ahora: app 5.10 · bd 4.33 · función 3.2 · núcleo 2.79. Avisos: CFX_DIALOGO.
 - El título de cabecera (`.cfx-cab-h h1`) no se adorna.
 - Colores nuevos con var(--cfx-*)/var(--brand) (respetan 🎨 Colores a tu gusto).
 - G85: CM → Control elige la app con la 🗂️ caja de apps (MisApps.cajaApps, imágenes en config 'apps_imagenes'). CM → Pagos = un solo pago general (link abierto + transferencia) + ⚡ Mercado Pago automático (token en cada app, cfx_mp_*) + 🏷️ Cupones.
+
+- G87 A: Control → Negocios usa cfx_negocios (núcleo) → cfx_cuentas_app(rol, q) + cfx_quitar_premium(uuid) que define CADA app (las 6 + CM ya la tienen). El menú de secciones de Control lleva data-cfx-pestanas (deslizar la página cambia de sección). Tiras con mouse: ayuda.js tiraMouse(). Prueba: pruebas/g87a.js.

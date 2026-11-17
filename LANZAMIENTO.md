@@ -105,3 +105,12 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 ## G84 c 🔎 Filtros de Estaciona (probar)
 1. Estaciona → ➕ Publicar (o Más → Mis estacionamientos → Editar) → marca 📹 Cámara y 🚪 Portón automático → Guardar.
 2. Mapa → arriba toca el chip 📹 Cámara o 🚪 Portón (o el botón de filtros) → solo quedan los que lo tienen.
+
+## G84 d+e ⏰🔔🔁 Estaciona 2.14.81 (probar con 2 cuentas, después de ⬆️ Actualizar base de datos)
+- ⏰ Reserva por hora confirmada → 15 min antes de terminar llega "⏰ Tu estacionamiento termina a las…" (día: 2 h antes · mes: 3 días antes). El dueño también se entera.
+- 🔔 (cuenta Premium) Más → Cuenta → Alerta de zona → activar → cuando otra persona termina o cancela un arriendo en uso cerca, llega "🔔 Se liberó un estacionamiento cerca" (máx. 1 cada 30 min).
+- 🔁 Reserva por MES confirmada → Reservas → abrirla → "Renovar cada mes" → Prender. 5 días antes de terminar llega "🔁 Toca renovar tu mes" → 💳 Pagar → 📤 Subir comprobante → (dueño) ✅ Aceptar = un mes más. Si el dueño rechaza, o quien arrienda toca "No renovar", deja de renovarse.
+
+## G87 A 🐞 CM 5.30 (probar)
+- CM → Más → Control → elegir 🚲 BiciTaller en la caja → 🏪 Negocios: debe salir tu taller de prueba (también Billetera, Estaciona y Centro de Mando; antes decía "aún no tiene la lista"). Requiere ⬆️ Actualizar base en BiciTaller, Billetera, Estaciona y CM.
+- Menú de Control: se corre con el dedo; deslizando el dedo por la página (fuera del menú) pasa a la sección vecina; en computador, con la rueda del mouse o arrastrando.
