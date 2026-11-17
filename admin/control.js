@@ -6,7 +6,7 @@
   const A = global.App, { esc, toast, modal, confirmar } = A;
   const M = () => global.MisApps;
   let raiz = null, actual = 'cm', seccion = 'negocios';
-  const SECC = [['negocios', '🏪 Negocios'], ['avisar', '📣 Avisar'], ['anuncios', '📢 Anuncios'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['pruebas', '🎁 Pruebas'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['dominio', '🌐 Dominio'], ['push', '🔔 Notificaciones'], ['correo', '✉️ Correo'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['salud', '🩺 Salud'], ['registro', '📜 Registro']];
+  const SECC = [['negocios', '🏪 Negocios'], ['avisar', '📣 Avisar'], ['anuncios', '📢 Anuncios'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['pruebas', '🎁 Pruebas'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['dominio', '🌐 Dominio'], ['push', '🔔 Notificaciones'], ['correo', '✉️ Correo'], ['ml', '🛒 Mercado Libre'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['salud', '🩺 Salud'], ['registro', '📜 Registro']];
   // Nombres legibles de las claves de los planes (las demás se muestran tal cual).
   const NOMBRE = { productos: 'Productos', clientes: 'Clientes', fichas: 'Diseños publicados', equipo: 'Equipo', pedidos_mes: 'Pedidos al mes', respuestas: 'Respuestas rápidas',
     contactos: 'Contactos', favoritos: 'Favoritos', mensajes_seguidos: 'Mensajes seguidos', barberos: 'Barberos', servicios: 'Servicios', ofertas: 'Ofertas',
@@ -428,6 +428,26 @@
     };
   }
 
+  // G101 🛒 Mercado Libre: la app de desarrollador de Josué (una sola, para todas las tiendas de Despega). Cada tienda conecta SU cuenta (OAuth).
+  async function ml() {
+    const a = M().APPS.find((x) => x.id === 'aplicaciones');
+    if (!a || !conectada(a)) { caja().innerHTML = '<div class="card"><p class="sub">Conéctate primero a Despega (arriba).</p></div>'; return; }
+    const url = M().urlLimpia(a).split('?')[0];
+    caja().innerHTML = '<div class="card"><h2>🛒 Mercado Libre</h2><p class="sub">Para que las tiendas de Despega unan su stock con Mercado Libre (módulo 🧩). Una vez:</p>' +
+      '<p class="sub">1) Entra a <b>developers.mercadolibre.cl</b> → Mis aplicaciones → Crear aplicación.<br>2) En "URI de redirect" pega: <b class="una">' + esc(url) + '</b><br>3) Permisos: lectura y escritura (offline_access, read, write).<br>4) Copia aquí el App ID y la Clave secreta.</p>' +
+      '<label>App ID<input id="mlI" inputmode="numeric" autocomplete="off" maxlength="25"></label>' +
+      '<label>Clave secreta<input id="mlS" autocomplete="off" maxlength="80" data-sin-voz placeholder="(déjala vacía para no cambiarla)"></label>' +
+      '<label>URI de redirect<input id="mlU" autocomplete="off" maxlength="200" value="' + esc(url) + '"></label>' +
+      '<button type="button" class="block" id="mlOk">Guardar en Despega</button><p class="sub" id="mlE">Revisando…</p></div>';
+    const c = M().cliente(a), q = (s) => caja().querySelector(s);
+    const pintar = (r) => { q('#mlE').textContent = r.id && r.secreto ? '✅ Listo · ' + r.cuentas + ' tiendas conectadas · ' + r.vinculos + ' publicaciones unidas' : '⚠️ Falta ' + (r.id ? 'la Clave secreta' : 'el App ID'); if (r.id) q('#mlI').value = r.id; if (r.volver) q('#mlU').value = r.volver; };
+    try { pintar(await M().rpcDe(c, 'ml_app_estado')); } catch (x) { q('#mlE').textContent = nf(x); }
+    q('#mlOk').onclick = async () => {
+      try { pintar(await M().rpcDe(c, 'ml_app_guardar', { p_id: q('#mlI').value.trim(), p_secreto: q('#mlS').value.trim(), p_volver: q('#mlU').value.trim() })); q('#mlS').value = ''; toast('🛒 Guardado en Despega'); }
+      catch (x) { toast(nf(x)); }
+    };
+  }
+
   // G42f ✉️ Correo: UN solo Gmail de Josué para los correos de CodeFix (cuentas y avisos) de todas las apps.
   // Los correos de cada negocio a SUS clientes salen con el Gmail del propio negocio (en su app), nunca con este.
   const CORREO = {
@@ -537,7 +557,7 @@
 
   // G93 📢 Anuncios: campañas del CM que se publican en las apps (admin/anuncios.js).
   const anuncios = () => global.AnunciosCM.render(caja());
-  const F = { negocios, avisar, anuncios, planes, textos, keys, pruebas, cupones, verif, humano, dominio, push, correo, referidos, socios, datos, seguridad, salud, registro };
+  const F = { negocios, avisar, anuncios, planes, textos, keys, pruebas, cupones, verif, humano, dominio, push, correo, ml, referidos, socios, datos, seguridad, salud, registro };
   // Referidos: quién invitó a quién (con qué cuenta), ranking, premio automático y premio a mano (días + sticker).
   const STICKERS = ['🏆 ¡Eres un crack invitando!', '🚀 ¡Vas volando! Gracias por recomendarnos', '💪 ¡Sigue así, vas muy bien!', '🌟 ¡Gracias por correr la voz!'];
   // G95 🎁 Pruebas gratis: quién probó qué y cuándo (una vez por correo; la lista no se borra al eliminar la cuenta).

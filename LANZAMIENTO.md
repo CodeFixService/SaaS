@@ -157,6 +157,16 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 5. CM → 📢 Anuncios → **📊 Resultados** (vistas, clics, cerrados) · **📤 Compartir** (en el anuncio) abre el menú del teléfono → Instagram historia/post/reel.
 6. 🎬 Estudio/Cerebro: en **Cerebro** → Empresa → 🗂️ Respaldo, guía y borrar → **⬇️ Respaldo Excel** → guárdalo → avísame "respaldo listo" para portar el motor al CM.
 
+## G101 🛒 Mercado Libre · Despega 6.56 · CM 5.41 (después de CM → Apps → ⬆️ Actualizar base en las 7: CM 4.58 · Despega 5.76 · Barbería 3.06 · Billetera 61 · BiciTaller 2.57 · Estaciona 58; funciones SIN cambio)
+Una sola vez (Josué, en el computador):
+1. Abre **developers.mercadolibre.cl** → entra con tu cuenta de ML → **Mis aplicaciones** → **Crear aplicación**.
+2. Nombre "CodeFix Despega" · **URI de redirect**: la que muestra **CM → Control → 🛒 Mercado Libre** (la URL de Despega, termina en /) · Permisos: **read, write, offline_access** · Tópicos: ninguno → **Crear**.
+3. Copia **App ID** y **Clave secreta** → **CM → Control → 🛒 Mercado Libre** → pégalos → **Guardar en Despega** → dice "✅ Listo".
+Probar (cuenta de tienda en Despega, con una publicación activa en ML):
+4. **Más** → "Vender más" → **🛒 Mercado Libre** (sin el módulo: **▶️ Probar módulo** → 🎁 Probar 7 días) → **🔗 Conectar Mercado Libre** → acepta en ML → vuelves solo y dice "✅ Conectado como TU_APODO".
+5. **📥 Unir publicaciones** → en cada publicación elige su producto de la tienda. En "Unidas" sale "⏳ Se manda N a Mercado Libre" → a los 5 min (o **🔄 Sincronizar**) pasa a "✅ N en los dos lados" y en ML se ve ese stock.
+6. Vende 1 en ML (compra de prueba) → a los 5 min llega 🔔 "🛒 Vendiste en Mercado Libre" y el stock de la tienda bajó 1. **⏸️ Pausar** detiene todo; **Desconectar** borra el permiso pero guarda las uniones.
+
 ## G100 ⚡ Cobrar sin link con Mercado Pago · BiciTaller 3.16 · Estaciona 2.14.92 (después de redeploy de **servidor** de BiciTaller con su corto.ts y CM → Apps → ⬆️ Actualizar base: BiciTaller 2.56 · Estaciona 57)
 1. **BiciTaller** (dueño) → **Más** → **💳 Abono** → conecta **⚡ Tu Mercado Pago** → en Espacio 1 pon solo el **monto** (link vacío) → marca **Activo** → **💾 Guardar** → en **Hoy** ya no sale "Configura el cobro del abono".
 2. Con otro teléfono reserva desde la vitrina → en la reserva sale solo **⚡ Pagar $… con Mercado Pago** (sin botón de link).
