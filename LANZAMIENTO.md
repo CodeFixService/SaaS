@@ -157,6 +157,13 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 5. CM → 📢 Anuncios → **📊 Resultados** (vistas, clics, cerrados) · **📤 Compartir** (en el anuncio) abre el menú del teléfono → Instagram historia/post/reel.
 6. 🎬 Estudio/Cerebro: en **Cerebro** → Empresa → 🗂️ Respaldo, guía y borrar → **⬇️ Respaldo Excel** → guárdalo → avísame "respaldo listo" para portar el motor al CM.
 
+## G96 🧩 Módulos de tienda · Despega 6.52 (probar, después de CM → Apps → ⬆️ Actualizar base en las 7: CM 4.54 · Despega 5.72 · Barbería 3.02 · Billetera 57 · BiciTaller 2.52 · Estaciona 53)
+1. Despega (cuenta de tienda) → **Más** → grupo "Vender más": **🎁 Gift cards** · **🛒 Carritos olvidados** · **🔁 Compras recurrentes** y en "Tu tienda" **📦 Stock mínimo y proveedores**. Sin el módulo: qué hace + **▶️ Probar módulo** (🎁 7 días).
+2. **🎁 Gift cards** → Monto 15000 → **🎁 Crear gift card** → **💬 Enviar por WhatsApp**. En la **Caja**: medio **🎁 Gift card** → Cobrar → escribe el código → descuenta del saldo. En el carrito del cliente: escribe el código en "Cupón o gift card" → ve su saldo → el pedido sale con ese descuento (si se cancela, el saldo vuelve).
+3. **🛒 Carritos olvidados** (con un cliente que dejó productos sin pedir) → **💬 WhatsApp** → abre el chat con el texto listo y queda "✓ le escribiste".
+4. **🔁 Compras recurrentes** → Cliente + producto + cada 7/14/30 días → 🔁 Guardar. Ese día (9 AM) el pedido se crea solo y al cliente le llega el aviso. El cliente lo ve en Pedidos → **⏸️ Pausar**.
+5. **📦 Stock mínimo y proveedores** → + Agregar proveedor (nombre + WhatsApp) → en cada producto: mínimo y proveedor → cuando baja te llega 📦 aviso → **💬 Pedir** abre WhatsApp del proveedor con la lista.
+
 ## G95 🎁 Prueba 7 días por botón · las 7 apps (probar, después de CM → Apps → ⬆️ Actualizar base en las 7: CM 4.53 · Despega 5.71 · Barbería 3.01 · Billetera 56 · BiciTaller 2.51 · Estaciona 52)
 1. Crea una cuenta NUEVA de negocio en cualquier app (ej. BiciTaller /n/) → entra: parte **Free** (ya no regala Premium al registrarse).
 2. Toca **⭐ Premium / Pasar a Pro / Mi plan** → arriba sale **🎁 Prueba Premium 7 días gratis** → **🎁 Probar 7 días gratis** → **Continuar** → la app queda en Premium 7 días. Ábrela otra vez: ya no ofrece la prueba.
