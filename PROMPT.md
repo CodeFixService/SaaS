@@ -13,13 +13,13 @@ REGLA G33: boleta, pagos, NFC, impresora, dominio, integraciones → Claude elig
 
 LISTA MAESTRA: SaaS/PLAN.md (grep -n "G5[2-9]\|G6[0-9]\|G7[0-9]\|ORDEN NUEVO\|AHORA"). Guía Josué: SaaS/LANZAMIENTO.md. Entorno/reglas: SaaS/INDUCCION.md. Cada repo: APP.md antes que el código.
 
-ESTADO (17/11): núcleo 2.95 · CM 5.27 (bd 4.45, función 3.3) · Despega 6.42 (bd 5.64, enviar 3.6) · Barbería 3.13 (bd 2.94, enviar 1.2) · Billetera 1.21.73 (bd 48, enviar 1.4.0) · BiciTaller 3.00 (bd 2.41, servidor 2.1) · Estaciona 2.14.75 (bd 41, enviar 1.2). ⚠️ G81 está en la rama de sesión (commits "G81…"); si central.js no quedó OK, el chat nuevo: correr central y g81.js → git push origin HEAD:main en las 6.
+ESTADO (17/11): núcleo 2.95 · CM 5.27 (bd 4.45, función 3.3) · Despega 6.42 (bd 5.64, enviar 3.6) · Barbería 3.13 (bd 2.94, enviar 1.2) · Billetera 1.21.73 (bd 48, enviar 1.4.0) · BiciTaller 3.00 (bd 2.41, servidor 2.1) · Estaciona 2.14.75 (bd 41, enviar 1.2). G81 en main (central 132 OK + g81.js + cm_control.js).
 HECHO G81 (detalle PLAN.md "G81"): a) cards del CM con espacio + campaña de un toque (✅ Todos, meses 1/3/6/12, Dura 15/30/60/90) · b) íconos por la palabra (📣 Compartir → compartir; Imprimir, Editar, Descargar…) · c) 📅📋 ui.js CFX_ELEGIR: calendario, hora y listas propias en hoja (no Android) en las 6 · d) 🔑 keys de Premium/módulo/pack, 1 uso, en lote (1/5/10/20) con 📋 Copiar todas; canje en Mi plan y Más → 🧩 → 🔑 Tengo una key (LANZAMIENTO.md §4 punto 9). Prueba: pruebas/g81.js.
 
 PENDIENTE DE JOSUÉ: 1) Cloudflare Listo (6 apps) → CM → 🧹 Limpiar → CM → Apps → 🚀 Liberar (CM 5.27, Despega 6.42, Barbería 3.13, Billetera 1.21.73, BiciTaller 3.00, Estaciona 2.14.75) → cada app pide ⬆️ Actualizar base de datos → en el PC: recargar 3 veces, el menú queda al lado. 2) Probar en el celular lo de LANZAMIENTO.md §4 (8 Campaña, 9 🔑 Keys) y "🚲 Probar módulos BiciTaller" (G59, G74a-c). 3) CM → Control → ✉️ Correo + SMTP en Supabase. 4) Redirect URLs y Dominio (LANZAMIENTO.md). 5) G54: CM → Pagos → desmarcar "Los negocios nuevos no pueden usar la app hasta su primer pago" → Guardar.
 
 ORDEN (Josué: "terminemos la aplicación", chat nuevo tras reinicio):
-0) Si G81 no está en main: central.js + g81.js OK → push main de las 6. Josué revisa en el celular: CM → Apps → 🧩 (campaña), CM → Control → 🔑 Keys, cualquier fecha/lista (calendario propio), Más → Compartir.
+0) Josué revisa en el celular: CM → Apps → 🧩 (campaña), CM → Control → 🔑 Keys, cualquier fecha/lista (calendario propio), Más → Compartir.
 1) G82 (PLAN.md "G82"): menús que se deslizan al lado (pestañas) DISTINTOS de botones/chips, que destaquen, en el núcleo para las 6.
 2) 🅿️ Estaciona: revisar sus problemas (Josué: "va a tener un usuario normal nomás" → confirmar). 3) G74 d) 🎬 Estudio de contenido / Cerebro ("hay que hacer mucho").
  G74 d: PRIMERO leer Contenido/MEMORIA.md y exportar datos; portar motor/importador/métricas al CM; partir por 🎬 Espacios + 8 cajas (detalle PLAN.md).

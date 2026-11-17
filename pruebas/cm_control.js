@@ -9,6 +9,7 @@ const assert = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('
     await p.goto(t.base + '/'); await p.fill('input[type=email]', 'juanjosuecastilloloyola@gmail.com'); await p.fill('input[type=password]', 'admin123'); await p.press('input[type=password]', 'Enter');
     await p.waitForURL(/admin/); await p.waitForTimeout(800); await t.sinModales();
     await p.goto(t.base + '/admin/#control'); await p.waitForTimeout(4000); await t.sinModales();
+    await p.click('[data-s=avisar]'); await p.waitForTimeout(1000);
     await p.fill('#avT', 'Hola a todos'); await p.fill('#avC', 'Prueba'); await p.click('#avG'); await p.waitForTimeout(300); await p.locator('dialog button', { hasText: 'Enviar' }).last().click(); await p.waitForTimeout(1200);
     assert((await t.sim.su("select count(*)::int n from notificaciones where titulo='Hola a todos'"))[0].n === 1, 'aviso masivo');
     await t.foto('control-avisar'); assert(await t.anchoOk(), 'ancho avisar');
