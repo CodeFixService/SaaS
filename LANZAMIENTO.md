@@ -245,6 +245,12 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ **Estaciona** → Más: **🌙 Tarifa fin de semana y noche** (+20 % sábado/domingo) · **🔁 Clientes frecuentes** (premio % desde la reserva N) · **📅 Cerrar fechas** · **🔔 Lista de espera** (en la ficha ocupada sale "Avísame cuando se libere"; al ponerlo Disponible les llega el aviso).
 3. 🎁 Lanzamiento: CM → Apps → **Billetera** → 🧩 → **🎁 Campaña** → marca los 7 módulos → **3 meses** → hasta la fecha que quieras → Guardar. Igual en **Estaciona** (8 módulos). Después se cobran solos.
 
+## G32 e 📲 Tarjeta en el celular · núcleo 3.17 · Despega 6.65 · BiciTaller 3.26 (sin base ni funciones)
+1. Android con NFC y la app de cobro instalada (Mercado Pago, SumUp o Klap Tap on Phone; cada una pide su registro).
+2. Despega → **Caja** → agrega un producto → **📲 Tarjeta (celular)** → **💵 Cobrar** → sale el monto → elige tu app → **📲 Abrir** → cobra ahí (📋 Copiar el monto) → vuelve → **✅ Se aprobó** → Reporte: 💳 Tarjeta.
+3. BiciTaller → Más → **💵 Caja** → ＋ Nueva venta → Cobrar → **📲 Tarjeta (celular)** → igual que arriba.
+4. Cancelar no registra nada. En iPhone o PC avisa que funciona en Android con NFC.
+
 ## G109 💈 Membresías que se pagan solas · Barbería 3.36 (base: Barbería 3.14; núcleo y funciones SIN cambio)
 0. CM → Apps → **⬆️ Actualizar base** en Barbería → 🚀 Liberar.
 1. Teléfono 1 (dueño de barbería de prueba): Más → 💳 Links de pago → **⚡ Tu Mercado Pago** conectado · Más → 🔁 Membresías → **+ Nueva membresía** para el cliente de prueba (precio chico, ej. $1.000, 1 mes) → Guardar.
