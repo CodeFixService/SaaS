@@ -238,3 +238,11 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 1. 💰 **Billetera** → Más: **📤 Cuentas por pagar** (＋ Nueva → proveedor, monto, vence → ✅ Pagar → queda gasto en Caja; el Inicio avisa 3 días antes) · **💵 Cierre de caja** (efectivo con que partiste + lo que contaste → dice si cuadra, sobra o falta) · **🔔 Aviso de vencimiento** (solo: el día antes y el día que vence le llega aviso al cliente que activó "🔔 Avisarme…" en su link).
 2. 🅿️ **Estaciona** → Más: **🌙 Tarifa fin de semana y noche** (+20 % sábado/domingo) · **🔁 Clientes frecuentes** (premio % desde la reserva N) · **📅 Cerrar fechas** · **🔔 Lista de espera** (en la ficha ocupada sale "Avísame cuando se libere"; al ponerlo Disponible les llega el aviso).
 3. 🎁 Lanzamiento: CM → Apps → **Billetera** → 🧩 → **🎁 Campaña** → marca los 7 módulos → **3 meses** → hasta la fecha que quieras → Guardar. Igual en **Estaciona** (8 módulos). Después se cobran solos.
+
+## G106 ⚡ Pago automático con tarjeta (Estaciona) · núcleo 3.13 · CM 5.46 · Despega 6.61 · Barbería 3.32 · Billetera 1.21.92 · BiciTaller 3.22 · Estaciona 2.14.98 (bases: CM 4.62 · Despega 5.80 · Barbería 3.10 · Billetera 65 · BiciTaller 2.61 · Estaciona 62; funciones SIN cambio)
+0. CM → Apps → **⬆️ Actualizar base** en las 7 → 🚀 Liberar.
+1. 🅿️ Teléfono 1 (dueño): Más → 💳 Links de pago → ⚡ Tu Mercado Pago **conectado** (Access Token de producción).
+2. Teléfono 2 (quien arrienda): reserva **por mes** confirmada → abre la reserva → tarjeta **⚡ Pagar solo cada mes** → **⚡ Activar pago automático** → confirma el correo de SU Mercado Pago → Seguir → autoriza la tarjeta en MP → vuelve y dice **✅ Activo**.
+3. Teléfono 1: llega 🔔 "⚡ Pago automático activado" y en la reserva sale "⚡ Se paga solo cada mes con tarjeta". El cobro se hace solo 2 días antes de terminar el mes → 🔔 "⚡ Mes pagado solo" y la reserva sigue 1 mes más.
+4. Teléfono 2: **Quitar** → se apaga en Mercado Pago (el arriendo sigue; el mes siguiente se paga como antes).
+
