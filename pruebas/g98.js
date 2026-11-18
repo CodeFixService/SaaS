@@ -30,7 +30,7 @@ const falla = async (fn) => { try { await fn(); return null; } catch (e) { retur
     e = await como('dueno@x.cl', "public.cfx_mp_neg_guardar('APP_USR-1234567890123456789012345-abcd', true)");
     ok(e.conectado && e.activo && e.nick === 'JUANBARBER' && e.fin === 'abcd', '⚡ Conectado como JUANBARBER (…abcd)');
     const P = (await su("select has_table_privilege('authenticated', 'public.cfx_mp_negocio', 'select') a, has_table_privilege('anon', 'public.cfx_mp_neg_cobros', 'select') b, " +
-      "has_function_privilege('anon', 'public.cfx_mp_neg_cobro(uuid, text, text, integer, text, timestamptz)', 'execute') c, " +
+      "has_function_privilege('anon', 'public.cfx_mp_neg_cobro(uuid, text, text, integer, text, timestamptz, text)', 'execute') c, " +
       "has_function_privilege('authenticated', 'public.cfx_mp_neg_pagado_app(text, text, integer)', 'execute') d"))[0];
     ok(!P.a && !P.b && !P.c && !P.d, '🔒 Nadie lee el token ni crea cobros o marca pagos desde fuera');
 

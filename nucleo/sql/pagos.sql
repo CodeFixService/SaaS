@@ -680,7 +680,10 @@ create or replace function public.cfx_pago_volver(p_ref text) returns text
 language plpgsql stable security definer set search_path = '' as $$
 declare r text := lower(left(coalesce(p_ref, ''), 80));
 begin
-  if r !~ '^f:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then return null; end if;
+  if r !~ '^[fn]:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then return null; end if;
+  if left(r, 1) = 'n' then  -- G107 💳 Flow propio del negocio
+    return (select volver from public.cfx_mp_neg_cobros where id = substr(r, 3)::uuid and medio = 'flow' and created_at > now() - interval '2 days' and volver ~ '^https://[^\s"<>]+$');
+  end if;
   return (select volver from public.cfx_pagos where id = substr(r, 3)::uuid and medio = 'flow' and creado > now() - interval '2 days' and volver ~ '^https://[^\s"<>]+$');
 end $$;
 

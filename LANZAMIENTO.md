@@ -245,6 +245,12 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ **Estaciona** → Más: **🌙 Tarifa fin de semana y noche** (+20 % sábado/domingo) · **🔁 Clientes frecuentes** (premio % desde la reserva N) · **📅 Cerrar fechas** · **🔔 Lista de espera** (en la ficha ocupada sale "Avísame cuando se libere"; al ponerlo Disponible les llega el aviso).
 3. 🎁 Lanzamiento: CM → Apps → **Billetera** → 🧩 → **🎁 Campaña** → marca los 7 módulos → **3 meses** → hasta la fecha que quieras → Guardar. Igual en **Estaciona** (8 módulos). Después se cobran solos.
 
+## G107 💳 Webpay con el Flow de cada negocio · núcleo 3.15 · CM 5.48 · Despega 6.63 · Barbería 3.34 · Billetera 1.21.94 · BiciTaller 3.24 · Estaciona 2.15 (bases: CM 4.64 · Despega 5.82 · Barbería 3.12 · Billetera 67 · BiciTaller 2.63 · Estaciona 64; funciones SIN cambio)
+0. CM → Apps → **⬆️ Actualizar base** en las 7 → 🚀 Liberar.
+1. Dueño (Barbería, BiciTaller, Estaciona o Despega): donde está **⚡ Tu Mercado Pago** ahora sale debajo **💳 Tu Webpay con Flow** → pega API Key + Secret Key (flow.cl → Mis datos → Integración; marca 🧪 si son de sandbox) → **💳 Conectar** → dice ✅ Activo.
+2. Teléfono 2 (cliente): reserva/pedido por pagar → sale **💳 Pagar con Webpay** (y ⚡ Mercado Pago si también está) → paga → vuelve solo → queda confirmado sin comprobante. Dueño recibe 🔔 "💳 … pagado con Webpay".
+3. Dueño: desmarca "Cobrar con Webpay" → Guardar → el cliente ya no ve el botón.
+
 ## G106 ⚡ Pago automático con tarjeta (Estaciona) · núcleo 3.13 · CM 5.46 · Despega 6.61 · Barbería 3.32 · Billetera 1.21.92 · BiciTaller 3.22 · Estaciona 2.14.98 (bases: CM 4.62 · Despega 5.80 · Barbería 3.10 · Billetera 65 · BiciTaller 2.61 · Estaciona 62; funciones SIN cambio)
 0. CM → Apps → **⬆️ Actualizar base** en las 7 → 🚀 Liberar.
 1. 🅿️ Teléfono 1 (dueño): Más → 💳 Links de pago → ⚡ Tu Mercado Pago **conectado** (Access Token de producción).
