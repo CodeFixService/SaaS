@@ -225,3 +225,10 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 8. 🅿️ **Estaciona** (2 cuentas): dueño → Más → **🏷️ Descuento por estadía larga** (ej. 10 % desde 3) → otra cuenta reserva 4 → el total sale con −10 %.
 9. Estaciona: dueño acepta la reserva → quien arrienda abre la reserva → **🔑 Mi pase para entrar** (QR + código) → dueño → Más → **🔑 Control de acceso** → escribe el código (o 📷 Escanear) → ✅ VIGENTE → 🟢 Entrada / 🔴 Salida.
 10. Estaciona → Más → **💰 Ganancias y ocupación** (mes, % por lugar, mejor día, ⬇️ planilla) · **🧩 Módulos** (tienda) · el ⭐ destacado del mapa ahora también se compra suelto.
+
+## G103 💳🧾 Webpay con Flow + factura 33 · núcleo 3.10 · CM 5.43 · Despega 6.58 · Barbería 3.29 · Billetera 1.21.89 · BiciTaller 3.19 · Estaciona 2.14.95 (bases: CM 4.60 · Despega 5.78 · Barbería 3.08 · Billetera 63 · BiciTaller 2.59 · Estaciona 60)
+0. EDGE: redeploy de las 6 funciones con su **corto.ts nuevo** (traen el regreso desde Flow; reemplaza el redeploy pendiente de G99/G100).
+1. 💳 **Flow** (para que paguen con Webpay débito/crédito, transferencia o MACH): crea tu cuenta en **flow.cl** (persona o empresa) → Mi cuenta → **Integración → API Keys** → copia **API Key** y **Secret Key**.
+2. CM → **Pagos** → tarjeta **💳 Webpay con Flow** → pega las 2 llaves → **Conectar en las 7 apps** (todas ✅). Si son de sandbox.flow.cl marca "Son llaves de pruebas".
+3. Prueba: en cualquier app → ⭐ Premium → **💳 Webpay** → Pagar con Webpay → paga $ chico con cupón → vuelves a la app y dice 🎉 Pago aprobado (CM recibe "⚡ Pago automático").
+4. 🧾 **Factura** (Despega): Ajustes → Boleta SII → llena **Código de actividad** (6 números, sii.cl → Mi SII) → Guardar. En la vitrina, el comprador abre **🧾 Necesito factura** y pone los datos de su empresa → en Pedidos sale "Pide factura" → **Emitir factura SII** (OpenFactura) o **Anotar N° factura SII** (manual). Si el cliente la pide por WhatsApp: Pedidos → **🧾 Dar factura**.

@@ -547,7 +547,7 @@ begin
     'por', (select coalesce(jsonb_agg(jsonb_build_object('producto', k, 'monto', s, 'n', n) order by s desc), '[]') from (
       select coalesce(producto, 'premium') k, sum(monto) s, count(*) n from public.cfx_pagos where estado = 'aprobado' and creado >= greatest(m0, d) group by 1) q),
     'medios', (select coalesce(jsonb_object_agg(medio, s), '{}') from (select medio, sum(monto) s from public.cfx_pagos where estado = 'aprobado' and creado >= greatest(m0, d) group by 1) q),
-    'pendientes', (select count(*) from public.cfx_pagos where estado = 'pendiente' and medio <> 'mp'),
+    'pendientes', (select count(*) from public.cfx_pagos where estado = 'pendiente' and medio not in ('mp', 'flow')),
     'premium', coalesce(cardinality(activos), 0), 'vencen', ve, 'morosos', mo);
 end $$;
 revoke all on function public.cfx_tel_de(uuid) from public, anon, authenticated;

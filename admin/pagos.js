@@ -8,7 +8,7 @@
   const M = () => global.MisApps;
   const pesos = (n) => '$' + Number(n || 0).toLocaleString('es-CL');
   const PERIODO = { inicio: 'Primer pago', mensual: 'Mensual', meses: 'Varios meses', anual: 'Anual', otro: 'Otro monto', conexiones: 'Conexiones extra' };
-  const MEDIO = { link: 'link', transferencia: 'transferencia', tarjeta: 'tarjeta', mp: '⚡ Mercado Pago' };
+  const MEDIO = { link: 'link', transferencia: 'transferencia', tarjeta: 'tarjeta', mp: '⚡ Mercado Pago', flow: '💳 Flow' };
   let raiz = null, cfg = null, filtro = 'pendiente';
 
   const conectadas = () => M().APPS.filter((a) => (M().estado[a.id] || {}).conectado);
@@ -39,6 +39,13 @@
         '<label>Access Token de producción<input id="mpTk" autocomplete="off" spellcheck="false" placeholder="APP_USR-…"></label>' +
         '<p class="sub" style="margin-top:-4px">Dónde: Mercado Pago → Tu negocio → Configuración → Credenciales → Credenciales de producción → Access Token. Queda guardado solo en la base de cada app: nadie lo puede volver a ver.</p>' +
         '<div class="btns-s"><button type="button" id="mpCon">Conectar en las 7 apps</button><button type="button" class="ghost" id="mpPausa">Pausar</button></div><div id="mpRes"></div></div>' +
+      // G38 💳 Flow: Webpay + transferencia + MACH con una sola cuenta (se activa solo, igual que Mercado Pago).
+      '<div class="card" id="pgFlow"><h2>💳 Webpay con Flow</h2><p class="sub">Un 2.º pago automático: Webpay (débito, crédito, prepago), transferencia o MACH. Se activa solo, igual que Mercado Pago.</p><div id="flEst"><p class="sub">Revisando…</p></div>' +
+        '<label>API Key<input id="flKey" autocomplete="off" spellcheck="false" placeholder="XXXXXXXX-XXXX-…"></label>' +
+        '<label>Secret Key<input id="flSec" type="password" autocomplete="off" spellcheck="false"></label>' +
+        '<label class="fila" style="gap:8px"><input type="checkbox" id="flSand" style="width:auto"> Son llaves de pruebas (sandbox.flow.cl)</label>' +
+        '<p class="sub">Dónde: flow.cl → Mi cuenta → Integración → API Keys (copia las 2). Quedan solo en la base de cada app: nadie las vuelve a ver.</p>' +
+        '<div class="btns-s"><button type="button" id="flCon">Conectar en las 7 apps</button><button type="button" class="ghost" id="flPausa">Pausar</button></div><div id="flRes"></div></div>' +
       '<div class="card"><h2>🏷️ Cupones</h2><p class="sub">Se aplican al pagar Premium (Mercado Pago, link o transferencia): la persona escribe el código y ve el descuento al tiro.</p><button type="button" class="ghost" id="pgCup">Crear o ver cupones</button></div>';
   }
   // Estado del pago automático en cada app.
@@ -61,6 +68,26 @@
     }
     res.innerHTML = out.map((r) => '<div class="fila"><span class="grow">' + esc(r[0].nombre.split(' ·')[0]) + '</span><span class="pill ' + r[1] + '">' + esc(r[2]) + '</span></div>').join('');
     raiz.querySelector('#mpTk').value = ''; mpEstado();
+  }
+  // G38 💳 Flow: mismo modelo que Mercado Pago (estado por app · conectar/pausar en las 7).
+  async function flEstado() {
+    const z = raiz.querySelector('#flEst'); if (!z) return;
+    const out = await Promise.all(conectadas().map(async (a) => { try { return [a, await M().rpcDe(M().cliente(a), 'cfx_flow_estado')]; } catch (x) { return [a, { error: nf(x) }]; } }));
+    const on = out.filter((r) => r[1].activo), cuenta = (on[0] || [])[1];
+    z.innerHTML = (cuenta ? '<p class="pill ok" style="display:inline-block">✓ Activo en ' + on.length + ' de ' + out.length + (cuenta.sandbox ? ' · 🧪 pruebas' : '') + ' · …' + esc(cuenta.fin || '') + '</p>' : '<p class="pill warn" style="display:inline-block">Sin conectar</p>') +
+      out.filter((r) => !r[1].activo).map((r) => '<p class="sub">' + esc(r[0].nombre.split(' ·')[0]) + ': ' + esc(r[1].error || (r[1].conectado ? 'en pausa' : 'sin conectar')) + '</p>').join('');
+    const bp = raiz.querySelector('#flPausa'); if (bp) { bp.textContent = on.length ? 'Pausar' : 'Prender'; bp.dataset.on = on.length ? '1' : ''; bp.hidden = !out.some((r) => r[1].conectado); }
+  }
+  async function flGuardar(k, sc, activo) {
+    const res = raiz.querySelector('#flRes'), out = [], sand = !!(raiz.querySelector('#flSand') || {}).checked;
+    res.innerHTML = '<p class="sub">Guardando…</p>';
+    for (const a of M().APPS) {
+      if (!(M().estado[a.id] || {}).conectado) { out.push([a, 'warn', 'No conectada']); continue; }
+      try { await M().rpcDe(M().cliente(a), 'cfx_flow_guardar', { p_apikey: k || null, p_secret: sc || null, p_activo: activo, p_sandbox: sand }); out.push([a, 'ok', k ? 'Conectado' : activo ? 'Prendido' : 'En pausa']); }
+      catch (x) { out.push([a, 'bad', nf(x)]); }
+    }
+    res.innerHTML = out.map((r) => '<div class="fila"><span class="grow">' + esc(r[0].nombre.split(' ·')[0]) + '</span><span class="pill ' + r[1] + '">' + esc(r[2]) + '</span></div>').join('');
+    raiz.querySelector('#flKey').value = ''; raiz.querySelector('#flSec').value = ''; flEstado();
   }
   function leer() {
     const o = JSON.parse(JSON.stringify(cfg || {}));
@@ -111,7 +138,7 @@
         (g.estado === 'aprobado' && g.dias ? '<br>' + g.dias + ' días de ' + (g.producto ? 'módulo' : 'Premium') + (g.hasta ? ' · activo hasta ' + esc(new Date(g.hasta).toLocaleDateString('es-CL')) : '') : '') +
         // G87 K: 🎁 regalo o 🔑 respaldo (no se pudo activar solo): la key de 1 uso, para reenviarla si la persona la pierde.
         (g.key_regalo ? '<br>' + (g.regalo ? '🎁 Key de regalo: ' : '🔑 Key de respaldo: ') + '<b>' + esc(g.key_regalo) + '</b>' : '') + '</p>' +
-        (g.estado === 'pendiente' && g.medio === 'mp' ? '<p class="sub">⏳ Abrió Mercado Pago: se aprueba solo apenas pague (se revisa cada 1 min).</p><div class="btns-s"><button type="button" class="small ghost" data-mp="' + i + '">🔄 Revisar ahora</button><button type="button" class="small ghost" data-no="' + i + '">Cerrar</button></div>' :
+        (g.estado === 'pendiente' && (g.medio === 'mp' || g.medio === 'flow') ? '<p class="sub">⏳ Abrió ' + (g.medio === 'flow' ? 'Flow' : 'Mercado Pago') + ': se aprueba solo apenas pague (se revisa cada 1 min).</p><div class="btns-s"><button type="button" class="small ghost" data-mp="' + i + '">🔄 Revisar ahora</button><button type="button" class="small ghost" data-no="' + i + '">Cerrar</button></div>' :
         g.estado === 'pendiente' ? '<div class="btns-s">' + (g.con_comprobante ? '<button type="button" class="small ghost" data-v="' + i + '">Ver comprobante</button>' : '') +
           '<button type="button" class="small" data-ok="' + i + '">Aprobar</button><button type="button" class="small ghost" data-no="' + i + '">Rechazar</button></div>' :
           g.estado === 'aprobado' && global.CFX_COMPROBANTE ? '<div class="btns-s"><button type="button" class="small ghost" data-cb="' + i + '">🧾 Comprobante</button></div>' : '') + '</div>').join('') ||
@@ -119,7 +146,7 @@
     cont.onclick = async (ev) => {
       const b = ev.target.closest('[data-v],[data-ok],[data-no],[data-cb],[data-mp]'); if (!b) return;
       if (b.dataset.cb) return comprobante(filas[+b.dataset.cb]);
-      if (b.dataset.mp) { const g = filas[+b.dataset.mp]; try { const r = await M().rpcDe(M().cliente(g.app), 'cfx_mp_revisar_admin', { p_id: g.id }); toast(r === 'aprobado' ? '✅ Pagado: plan activado' : 'Aún no paga en Mercado Pago'); lista(); } catch (x) { toast(nf(x)); } return; }
+      if (b.dataset.mp) { const g = filas[+b.dataset.mp]; try { const r = await M().rpcDe(M().cliente(g.app), 'cfx_mp_revisar_admin', { p_id: g.id }); toast(r === 'aprobado' ? '✅ Pagado: plan activado' : 'Aún no paga en ' + (g.medio === 'flow' ? 'Flow' : 'Mercado Pago')); lista(); } catch (x) { toast(nf(x)); } return; }
       const g = filas[+(b.dataset.v || b.dataset.ok || b.dataset.no)], c = M().cliente(g.app);
       try {
         if (b.dataset.v && g.conexiones) { const { data: u } = await c.storage.from('pagos').createSignedUrl(g.path, 600); if (u) A.verImagen(u.signedUrl, 'Comprobante', 'comprobante.jpg'); }
@@ -151,7 +178,7 @@
     const nom = g.conexiones ? 'Conexiones extra' : g.producto ? 'Módulo ' + g.producto : 'Plan Premium · ' + (PERIODO[g.periodo] || g.periodo || '');
     global.CFX_COMPROBANTE.abrir({ titulo: 'Comprobante de pago', negocio: 'CodeFix · ' + app, fecha: g.resuelto || g.creado, numero: String(g.id || '').slice(0, 8).toUpperCase(), cliente: g.nombre || g.email,
       items: [{ cant: 1, nombre: nom + (g.meses ? ' (' + g.meses + ' meses)' : ''), precio: Number(g.monto) || 0 }], total: Number(g.monto) || 0,
-      medio: g.medio === 'link' ? 'Link de pago' : g.medio === 'mp' ? 'Mercado Pago' : g.medio });
+      medio: g.medio === 'link' ? 'Link de pago' : g.medio === 'mp' ? 'Mercado Pago' : g.medio === 'flow' ? 'Flow' : g.medio });
   }
 
   async function exento(si) {
@@ -198,8 +225,10 @@
     el.querySelector('#pgGuardar').onclick = guardarTodas;
     el.querySelector('#mpCon').onclick = () => { const tk = el.querySelector('#mpTk').value.trim(); if (!tk) return toast('Pega tu Access Token'); mpGuardar(tk, true); };
     el.querySelector('#mpPausa').onclick = (ev) => mpGuardar(null, !ev.target.dataset.on);
+    el.querySelector('#flCon').onclick = () => { const k = el.querySelector('#flKey').value.trim(), sc = el.querySelector('#flSec').value.trim(); if (!k || !sc) return toast('Pega las 2 llaves de Flow'); flGuardar(k, sc, true); };
+    el.querySelector('#flPausa').onclick = (ev) => flGuardar(null, null, !ev.target.dataset.on);
     el.querySelector('#pgCup').onclick = () => { try { sessionStorage.setItem('cm-control-secc', 'cupones'); } catch (x) { /* nada */ } const b = document.querySelector('[data-v="control"]'); if (b) b.click(); else location.hash = '#control'; };
-    mpEstado();
+    mpEstado(); flEstado();
     el.querySelector('#pgExSi').onclick = () => exento(true);
     el.querySelector('#pgExNo').onclick = () => exento(false);
     el.querySelector('#lbSi').onclick = () => { const n = Math.round(+el.querySelector('#lbDias').value || 0); if (n < 1 || n > 90) return toast('De 1 a 90 días'); liberar(n); };
