@@ -38,7 +38,7 @@
       '<div class="card" id="pgMp"><h2>⚡ Mercado Pago automático</h2><p class="sub">Pagan con tarjeta, débito o saldo y el plan <b>se activa solo</b>: sin comprobante y sin que tú apruebes. Te llega push "⚡ Pago automático" y a la persona "✅ Pago aprobado".</p><div id="mpEst"><p class="sub">Revisando…</p></div>' +
         '<label>Access Token de producción<input id="mpTk" autocomplete="off" spellcheck="false" placeholder="APP_USR-…"></label>' +
         '<p class="sub" style="margin-top:-4px">Dónde: Mercado Pago → Tu negocio → Configuración → Credenciales → Credenciales de producción → Access Token. Queda guardado solo en la base de cada app: nadie lo puede volver a ver.</p>' +
-        '<div class="btns-s"><button type="button" id="mpCon">Conectar en las 7 apps</button><button type="button" class="ghost" id="mpPausa">Pausar</button></div><div id="mpRes"></div></div>' +
+        '<div class="btns-s"><button type="button" id="mpCon">Conectar en las 7 apps</button><button type="button" class="ghost" id="mpPausa">Pausar</button></div><div id="mpRes"></div><div id="mpSubs"></div></div>' +
       // G38 💳 Flow: Webpay + transferencia + MACH con una sola cuenta (se activa solo, igual que Mercado Pago).
       '<div class="card" id="pgFlow"><h2>💳 Webpay con Flow</h2><p class="sub">Un 2.º pago automático: Webpay (débito, crédito, prepago), transferencia o MACH. Se activa solo, igual que Mercado Pago.</p><div id="flEst"><p class="sub">Revisando…</p></div>' +
         '<label>API Key<input id="flKey" autocomplete="off" spellcheck="false" placeholder="XXXXXXXX-XXXX-…"></label>' +
@@ -56,6 +56,20 @@
     z.innerHTML = (cuenta ? '<p class="pill ok" style="display:inline-block">✓ Activo en ' + on.length + ' de ' + out.length + (cuenta.nick ? ' · ' + esc(cuenta.nick) : '') + ' · …' + esc(cuenta.fin || '') + '</p>' : '<p class="pill warn" style="display:inline-block">Sin conectar</p>') +
       out.filter((r) => !r[1].activo).map((r) => '<p class="sub">' + esc(r[0].nombre.split(' ·')[0]) + ': ' + esc(r[1].error || (r[1].conectado ? 'en pausa' : 'sin conectar')) + '</p>').join('');
     const bp = raiz.querySelector('#mpPausa'); if (bp) { bp.textContent = on.length ? 'Pausar' : 'Prender'; bp.dataset.on = on.length ? '1' : ''; bp.hidden = !out.some((r) => r[1].conectado); }
+    mpSubs();
+  }
+  // G108 🔁 Renovaciones automáticas (Premium/módulos que se pagan solos con MP), de las 7 apps.
+  async function mpSubs() {
+    const z = raiz.querySelector('#mpSubs'); if (!z) return;
+    const out = await Promise.all(conectadas().map(async (a) => { try { return [a, await M().rpcDe(M().cliente(a), 'cfx_mp_subs_admin')]; } catch (x) { return [a, null]; } }));
+    const it = [];
+    out.forEach((r) => { if (r[1]) (r[1].items || []).forEach((x) => it.push(Object.assign({ app: r[0].nombre.split(' ·')[0] }, x))); });
+    const act = it.filter((x) => x.estado === 'activa').length;
+    const fe = (f) => f ? new Date(f).toLocaleDateString('es-CL') : '';
+    z.innerHTML = '<details style="margin-top:8px"><summary>🔁 Renovaciones automáticas: ' + act + ' activa' + (act === 1 ? '' : 's') + '</summary>' +
+      (it.length ? it.map((x) => '<div class="fila"><span class="grow">' + esc(x.app) + ' · ' + esc(x.nombre || x.email) + '<br><small class="sub">' + esc(x.producto ? '🧩 ' + x.producto : '⭐ Premium') + ' · $' + (+x.monto || 0).toLocaleString('es-CL') +
+        (x.periodo === 'anual' ? '/año' : '/mes') + ' · ' + (x.cobros ? x.cobros + ' cobro(s), último ' + fe(x.ultimo) : '1.er cobro ' + fe(x.inicio)) + '</small></span><span class="pill ' + (x.estado === 'activa' ? 'ok' : 'warn') + '">' + esc(x.estado) + '</span></div>').join('')
+        : '<p class="sub">Aún nadie. Aparece cuando alguien marca "🔁 Renovar solo" al pagar con Mercado Pago.</p>') + '</details>';
   }
   async function mpGuardar(tk, activo) {
     const res = raiz.querySelector('#mpRes'), out = [];

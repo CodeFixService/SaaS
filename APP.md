@@ -49,6 +49,7 @@ Ahora: app 5.40 · bd 4.57 · función 3.5 · núcleo 3.07 (G99 a: ⚡ aviso ins
 
 - G95 (4.53): 🎁 prueba 7 días por botón en el núcleo (pagos.sql cfx_pruebas_usadas por hash de correo, cfx_pro_probar; modulos_venta cfx_negocio_dueno) · Control → 🎁 Pruebas (cfx_pruebas_admin). Prueba: pruebas/g95.js.
 - G99 a (5.40 · bd 4.57 · función 3.5 · núcleo 3.07): ⚡ aviso instantáneo de Mercado Pago (núcleo cfx_mp_notif/cfx_mp_aviso; gancho cfx_mp_aviso_url_app en instalar.sql; servidor atiende ?cfx_mp=). Prueba: pruebas/g99.js.
+- G108 (5.49 · bd 4.65 · núcleo 3.16): 🔁 Premium/módulos con renovación automática (núcleo pagos.sql cfx_mp_suscribir/cfx_mp_sub_*, preapproval de MP con el token de CodeFix; pagos.js casilla 🔁 Renovar solo). CM → Pagos → ⚡ Mercado Pago → 🔁 Renovaciones automáticas (cfx_mp_subs_admin en las 7). Prueba: pruebas/g108.js.
 
 ## 🎬 Estudio (G94, bd 4.52)
 - App → Cerebro → 🎬 Estudio (solo rol admin): app/m-estudio.js (+ app/est-motor.js y app/est-importador.js, copias de Contenido/app; cargan a pedido). items est_conf / est_base / est_idea (constraint items_tipo_check). Prueba: pruebas/g94a.js.

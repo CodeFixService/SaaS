@@ -245,6 +245,13 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ **Estaciona** → Más: **🌙 Tarifa fin de semana y noche** (+20 % sábado/domingo) · **🔁 Clientes frecuentes** (premio % desde la reserva N) · **📅 Cerrar fechas** · **🔔 Lista de espera** (en la ficha ocupada sale "Avísame cuando se libere"; al ponerlo Disponible les llega el aviso).
 3. 🎁 Lanzamiento: CM → Apps → **Billetera** → 🧩 → **🎁 Campaña** → marca los 7 módulos → **3 meses** → hasta la fecha que quieras → Guardar. Igual en **Estaciona** (8 módulos). Después se cobran solos.
 
+## G108 🔁 Premium y módulos con renovación automática · núcleo 3.16 · CM 5.49 · Despega 6.64 · Barbería 3.35 · Billetera 1.21.95 · BiciTaller 3.25 · Estaciona 2.16 (bases: CM 4.65 · Despega 5.83 · Barbería 3.13 · Billetera 68 · BiciTaller 2.64 · Estaciona 65; funciones SIN cambio)
+0. CM → Apps → **⬆️ Actualizar base** en las 7 → 🚀 Liberar. Necesita ⚡ Mercado Pago de CodeFix conectado (CM → Pagos).
+1. Teléfono 2 (cuenta de negocio de prueba, cualquier app) → ⭐ Premium → **1 mes** → ⚡ Mercado Pago → marca **🔁 Renovar solo cada mes** → revisa el correo (el de su Mercado Pago) → **🔁 Autorizar en Mercado Pago** → autoriza la tarjeta → vuelve → sale **🔁 ¡Listo!** con la fecha del 1.er cobro.
+2. Al cobrar MP (minutos después): 🔔 "✅ Pago aprobado" y Premium +30 días. Tú: 🔔 "🔁 Renovación automática cobrada" y en CM → Pagos → ⚡ Mercado Pago → **🔁 Renovaciones automáticas** sale la persona.
+3. Teléfono 2 → ⭐ Premium → arriba **🔁 Se renueva solo cada mes** → **Quitar renovación automática** → Sí → desaparece (lo pagado sigue).
+4. Igual con un 🧩 módulo (Más → 🧩 Módulos → uno → 1 mes → 🔁 Renovar solo). 3 meses y 🎁 regalo NO ofrecen renovación (son pagos sueltos).
+
 ## G107 💳 Webpay con el Flow de cada negocio · núcleo 3.15 · CM 5.48 · Despega 6.63 · Barbería 3.34 · Billetera 1.21.94 · BiciTaller 3.24 · Estaciona 2.15 (bases: CM 4.64 · Despega 5.82 · Barbería 3.12 · Billetera 67 · BiciTaller 2.63 · Estaciona 64; funciones SIN cambio)
 0. CM → Apps → **⬆️ Actualizar base** en las 7 → 🚀 Liberar.
 1. Dueño (Barbería, BiciTaller, Estaciona o Despega): donde está **⚡ Tu Mercado Pago** ahora sale debajo **💳 Tu Webpay con Flow** → pega API Key + Secret Key (flow.cl → Mis datos → Integración; marca 🧪 si son de sandbox) → **💳 Conectar** → dice ✅ Activo.
