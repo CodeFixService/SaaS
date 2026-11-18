@@ -165,6 +165,12 @@ Cada tienda usa SU cuenta de Chilexpress (CodeFix no pone nada). Para probar, co
 4. Etiquetas (solo con contrato): pega la llave de **Envíos** y tu **N° de cliente TCC** (te lo da tu ejecutivo Chilexpress) → **💾 Guardar** → dice "🏷️ etiquetas activas".
 5. **Pedidos** → un pedido con 🚚 Despacho ya pagado → **🏷️ Etiqueta Chilexpress** → revisa calle/número → elige servicio → **🏷️ Crear etiqueta** → sale la etiqueta (**🖨️ Imprimir** o **⬇️ Descargar**) y al cliente le llega el código de seguimiento.
 
+## G102 b 💲 Tarifa Chilexpress en el carrito · núcleo 3.14 · Despega 6.62 (después de CM → Apps → ⬆️ Actualizar base en las 7: CM 4.63 · Despega 5.81 · Barbería 3.11 · Billetera 66 · BiciTaller 2.62 · Estaciona 63; funciones SIN cambio)
+Necesita el paso G102 hecho (Chilexpress conectado). Con tu cuenta de tienda en Despega:
+1. **Más** → "Tu tienda" → **🚚 Despacho** → "Resto de Chile" → **💲 Tarifa Chilexpress** → en "Si Chilexpress no responde, cobrar" pon un precio (o 0 = por pagar) → **Guardar**.
+2. Abre tu tienda pública (o el catálogo con una cuenta de cliente) → agrega un producto → **🛒 Pedido** → **🚚 Despacho** → Comuna: **📦 Otra comuna o región…** → elige región → escribe "Temuco" → a los segundos dice "🚚 Despacho Chilexpress a Temuco: $X".
+3. Haz el pedido → en **Pedidos** sale la línea "🚚 Chilexpress a Temuco" sumada al total.
+
 ## G101 🛒 Mercado Libre · Despega 6.56 · CM 5.41 (después de CM → Apps → ⬆️ Actualizar base en las 7: CM 4.58 · Despega 5.76 · Barbería 3.06 · Billetera 61 · BiciTaller 2.57 · Estaciona 58; funciones SIN cambio)
 Una sola vez (Josué, en el computador):
 1. Abre **developers.mercadolibre.cl** → entra con tu cuenta de ML → **Mis aplicaciones** → **Crear aplicación**.
