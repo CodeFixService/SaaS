@@ -157,6 +157,14 @@ CM → **Resumen** → Empresas → tarjeta de la app → **🧹 Limpiar** (desd
 5. CM → 📢 Anuncios → **📊 Resultados** (vistas, clics, cerrados) · **📤 Compartir** (en el anuncio) abre el menú del teléfono → Instagram historia/post/reel.
 6. 🎬 Estudio/Cerebro: en **Cerebro** → Empresa → 🗂️ Respaldo, guía y borrar → **⬇️ Respaldo Excel** → guárdalo → avísame "respaldo listo" para portar el motor al CM.
 
+## G102 🚚 Courier Chilexpress · Despega 6.57 (después de CM → Apps → ⬆️ Actualizar base en las 7: CM 4.59 · Despega 5.77 · Barbería 3.07 · Billetera 62 · BiciTaller 2.58 · Estaciona 59; funciones SIN cambio)
+Cada tienda usa SU cuenta de Chilexpress (CodeFix no pone nada). Para probar, con tu cuenta de tienda en Despega:
+1. En el computador: **developers.wschilexpress.com** → crea cuenta → **Productos** → suscríbete a **Cotizador**, **Coberturas** y **Envíos** → **Perfil** → copia la **Primary key** de cada uno.
+2. Despega → **Más** → "Tu tienda" → **🚚 Courier Chilexpress** (sin el módulo: **▶️ Probar módulo** → 🎁 Probar 7 días) → **⚙️ Conexión y datos de retiro** → pega las llaves · marca **🧪 Llaves de prueba** si son de prueba · comuna, calle, número y teléfono desde donde envías → **💾 Guardar** → dice "✅ Chilexpress conectado".
+3. **💲 Cotizar un envío** → escribe "Temuco" → **💲 Cotizar** → salen los servicios con precio.
+4. Etiquetas (solo con contrato): pega la llave de **Envíos** y tu **N° de cliente TCC** (te lo da tu ejecutivo Chilexpress) → **💾 Guardar** → dice "🏷️ etiquetas activas".
+5. **Pedidos** → un pedido con 🚚 Despacho ya pagado → **🏷️ Etiqueta Chilexpress** → revisa calle/número → elige servicio → **🏷️ Crear etiqueta** → sale la etiqueta (**🖨️ Imprimir** o **⬇️ Descargar**) y al cliente le llega el código de seguimiento.
+
 ## G101 🛒 Mercado Libre · Despega 6.56 · CM 5.41 (después de CM → Apps → ⬆️ Actualizar base en las 7: CM 4.58 · Despega 5.76 · Barbería 3.06 · Billetera 61 · BiciTaller 2.57 · Estaciona 58; funciones SIN cambio)
 Una sola vez (Josué, en el computador):
 1. Abre **developers.mercadolibre.cl** → entra con tu cuenta de ML → **Mis aplicaciones** → **Crear aplicación**.
