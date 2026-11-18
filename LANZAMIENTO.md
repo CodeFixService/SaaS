@@ -278,3 +278,9 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 3. Teléfono 1: llega 🔔 "⚡ Pago automático activado" y en la reserva sale "⚡ Se paga solo cada mes con tarjeta". El cobro se hace solo 2 días antes de terminar el mes → 🔔 "⚡ Mes pagado solo" y la reserva sigue 1 mes más.
 4. Teléfono 2: **Quitar** → se apaga en Mercado Pago (el arriendo sigue; el mes siguiente se paga como antes).
 
+
+## G111 parte 2 · 🧹 Ver cuentas de prueba (no borra nada)
+1. Supabase → abre la app (Despega, Barbería, Billetera, BiciTaller, Estaciona, CM; **no** Cerebro) → **SQL Editor** → **New query**.
+2. Pega el archivo `nucleo/sql/cuentas_lista.sql` del repo SaaS → **Run**.
+3. Pantallazo (o **Export → CSV**) → mándaselo a Claude escribiendo los **n** que se BORRAN (ej. "Despega: 3, 5, 7").
+4. Claude arma el SQL de borrado solo con esas cuentas (con respaldo).
