@@ -245,6 +245,13 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ **Estaciona** → Más: **🌙 Tarifa fin de semana y noche** (+20 % sábado/domingo) · **🔁 Clientes frecuentes** (premio % desde la reserva N) · **📅 Cerrar fechas** · **🔔 Lista de espera** (en la ficha ocupada sale "Avísame cuando se libere"; al ponerlo Disponible les llega el aviso).
 3. 🎁 Lanzamiento: CM → Apps → **Billetera** → 🧩 → **🎁 Campaña** → marca los 7 módulos → **3 meses** → hasta la fecha que quieras → Guardar. Igual en **Estaciona** (8 módulos). Después se cobran solos.
 
+## G109 💈 Membresías que se pagan solas · Barbería 3.36 (base: Barbería 3.14; núcleo y funciones SIN cambio)
+0. CM → Apps → **⬆️ Actualizar base** en Barbería → 🚀 Liberar.
+1. Teléfono 1 (dueño de barbería de prueba): Más → 💳 Links de pago → **⚡ Tu Mercado Pago** conectado · Más → 🔁 Membresías → **+ Nueva membresía** para el cliente de prueba (precio chico, ej. $1.000, 1 mes) → Guardar.
+2. Teléfono 2 (ese cliente): Inicio → **🔁 Tu membresía** → **⚡ Pagar sola cada mes** → revisa el correo (el de su Mercado Pago) → Seguir → autoriza la tarjeta → vuelve → sale **⚡ Se paga sola cada mes** + Quitar.
+3. Teléfono 1: 🔔 "⚡ Membresía que se paga sola" · en 🔁 Membresías sale **⚡ Se paga sola con tarjeta**. Cuando MP cobre (1 día antes de que venza): +1 mes y entra a la Caja.
+4. Teléfono 1 → Editar → **Quitar pago automático** → Sí (o el cliente desde su Inicio). Cambiar el precio o pausarla también lo apaga.
+
 ## G108 🔁 Premium y módulos con renovación automática · núcleo 3.16 · CM 5.49 · Despega 6.64 · Barbería 3.35 · Billetera 1.21.95 · BiciTaller 3.25 · Estaciona 2.16 (bases: CM 4.65 · Despega 5.83 · Barbería 3.13 · Billetera 68 · BiciTaller 2.64 · Estaciona 65; funciones SIN cambio)
 0. CM → Apps → **⬆️ Actualizar base** en las 7 → 🚀 Liberar. Necesita ⚡ Mercado Pago de CodeFix conectado (CM → Pagos).
 1. Teléfono 2 (cuenta de negocio de prueba, cualquier app) → ⭐ Premium → **1 mes** → ⚡ Mercado Pago → marca **🔁 Renovar solo cada mes** → revisa el correo (el de su Mercado Pago) → **🔁 Autorizar en Mercado Pago** → autoriza la tarjeta → vuelve → sale **🔁 ¡Listo!** con la fecha del 1.er cobro.
