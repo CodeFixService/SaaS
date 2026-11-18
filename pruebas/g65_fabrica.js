@@ -35,7 +35,8 @@ const { abrir } = require('./h');
     await toca('#hTablero [data-tj="' + id + '"] b'); await p.waitForTimeout(2000);
     await toca('#dAddR'); await p.waitForTimeout(300);
     const ins = p.locator('#dItems [data-k=nombre]').last();
-    ok(await ins.getAttribute('list') === 'fabRep' && await p.locator('#fabRep option[value="Cadena 11 velocidades"]').count() === 1, '📦 el ítem tiene la lista de repuestos');
+    const lst = await ins.getAttribute('list');  // G59d: con 📦 stock la lista es stRep (mis repuestos + los de fábrica)
+    ok(/^(fabRep|stRep)$/.test(lst) && await p.locator('#' + lst + ' option[value="Cadena 11 velocidades"]').count() === 1, '📦 el ítem tiene la lista de repuestos (' + lst + ')');
     await ins.fill('Cadena 11 velocidades'); await p.waitForTimeout(300);
     ok(await p.locator('#dItems [data-k=precio]').last().inputValue() === '25000', 'elegir "Cadena 11 velocidades" pone $25.000 (editable)');
     await t.foto('g65_orden');
@@ -57,7 +58,7 @@ const { abrir } = require('./h');
     // Más → Servicios
     await p.goto(t.base + '/taller/#mas/servicios'); await p.waitForTimeout(3000); await t.sinModales();
     const txt = await p.evaluate(() => [...document.querySelectorAll('#sLista, .pill')].map((x) => x.innerText).join(' | ') + ' #' + location.hash);
-    ok(await p.locator('#sTipicos').count() === 1 && /23 de 60/.test(txt), '🛠️ Servicios: "✨ Servicios de fábrica" y "23 de 60" (Premium de regalo) (' + (txt.match(/\d+ de \d+/) || [""])[0] + ')');
+    ok(await p.locator('#sTipicos').count() === 1 && /23 de 40/.test(txt), '🛠️ Servicios: "✨ Servicios de fábrica" y "23 de 40" (G95: parte en Free) (' + (txt.match(/\d+ de \d+/) || [""])[0] + ')');
     await t.foto('g65_servicios');
 
     // 👤 Cliente en /t/
