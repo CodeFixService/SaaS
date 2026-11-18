@@ -33,7 +33,15 @@ Los correos de cada tienda a SUS clientes salen con el Gmail de la tienda: **Des
 ## 4 · 🧩 Venta de módulos (tú, CM → Apps → Órbita → 🧩)
 1. 💰 Vender módulos: **prendido**.
 2. Precios recomendados (por mes): sueltos $990 · **📊 Medir anuncios $990** · **🌐 Dominio propio $1.990** (te pide trabajo a ti).
-3. Packs: 🌱 Básico $1.990 · 🚀 Crecer $2.990 ⭐ Más elegido · 💎 Completo $3.990 (trae los nuevos solo). Anual = 10 meses. Premium −20 %.
+3. Packs (G112 b, iguales en las 6; ⭐ Normal = el destacado; cada pack sale más barato que sus sueltos; Completo trae los nuevos solo):
+   | App | 🌱 Básico | ⭐ Normal | 💎 Completo |
+   |---|---|---|---|
+   | Despega | $1.990 · cupones, sellos, calificaciones | $2.990 · + chat, carrito, redes, estadísticas | $3.990 · los 20 |
+   | Barbería | $1.490 · recordatorios, sellos | $2.490 · + campañas, antifalta, espera, reseñas | $2.990 · los 12 |
+   | Billetera | $1.490 · acuerdo, escalonado | $1.990 · + aviso vence, gastos fijos, cierre de caja | $2.490 · los 7 |
+   | BiciTaller | $1.490 · presupuesto, aviso listo, mantención | $2.490 · + stock, garantías, reseñas, promos | $3.490 · los 12 |
+   | Estaciona | $1.490 · destacar, descuentos | $1.990 · + avísame, frecuentes, tarifas | $2.490 · los 8 |
+   Se cambian en CM → Apps → (app) → 🧩. Las bases que ya tenías cambiadas a mano NO se tocan. Anual = 10 meses. Premium −20 %.
 4. 🔗 Links de monto fijo: **opcionales** (G28). Con el link abierto de Pagos basta. Si ya tienes alguno, va en 🔗 Links con monto fijo (opcional) y ese plan lo usa.
 5. Cómo lo ve el **negocio** (G25): Más → ⭐ **Mi plan y módulos** (Free/Pro arriba, 🧩 Módulos abajo) → **▶️ Probar** abre un ejemplo animado (no toca su tienda) → Comprar · Cerrar (o ✕). Sin prueba gratis.
 6. ⏰ **Todo vence solo** (G25): mensual a los 30 días, anual a los 365, regalo en los días que des. Nada queda permanente: el negocio renueva en Mi plan.
@@ -44,7 +52,7 @@ Los correos de cada tienda a SUS clientes salen con el Gmail de la tienda: **Des
    El día después de "Termina el" se apaga sola (o **⏹️ Terminar hoy**): los nuevos ven el precio; los que activaron siguen hasta su fecha y 7 días antes les llega el aviso para pagar (Premium −20 %).
    G81: **✅ Todos los módulos** de un toque · meses con botones (1 · 3 · 6 · 12) · **Dura** 15/30/60/90 días (pone "Termina el" solo).
 9. 🔑 **Keys** (G81 d, las 6) — CM → Control → elige la app → **🔑 Keys**:
-   - **Qué activa**: ⭐ Premium (negocio o cliente) · 📦 Pack (Básico/Crecer/Completo) · un módulo suelto (solo negocios).
+   - **Qué activa**: ⭐ Premium (negocio o cliente) · 📦 Pack (Básico/Normal/Completo) · un módulo suelto (solo negocios).
    - **Cuántas** 1 · 5 · 10 · 20 y **Días** 30 · 90 · 180 · 1 año → **🔑 Crear keys** → **📋 Copiar todas** (trae el texto listo: qué activa, días, códigos y dónde canjear).
    - Cada key sirve **1 sola vez** (no hay keys de "5 usos": se filtran). Para 5 negocios → crea 5.
    - Negocio canjea: Premium → Mi plan → **🔑 Tengo una key** · módulo/pack → Más → 🧩 Módulos → **🔑 Tengo una key**. Si ya tiene ese módulo activo, la key NO se gasta (le avisa).
@@ -284,3 +292,8 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. Pega el archivo `nucleo/sql/cuentas_lista.sql` del repo SaaS → **Run**.
 3. Pantallazo (o **Export → CSV**) → mándaselo a Claude escribiendo los **n** que se BORRAN (ej. "Despega: 3, 5, 7").
 4. Claude arma el SQL de borrado solo con esas cuentas (con respaldo).
+
+## G112 a · 🧹 Sacar Cerebro (tú, 2 min)
+1. Cloudflare → **Workers & Pages** → **contenido** → **Settings** → abajo **Delete** → escribe el nombre → **Delete**.
+2. (Opcional) Supabase → proyecto de Cerebro → **Project Settings** → **Pause project**. Si ya no entras, no importa.
+3. El repo **Contenido** queda guardado en GitHub (no lo borres: nada se pierde). Su motor ya está en CM → 🎬 Estudio.

@@ -22,14 +22,13 @@ from insignia import insignia
 AQUI = os.path.dirname(os.path.abspath(__file__))
 VERSION = json.load(open(os.path.join(AQUI, 'nucleo.json')))['nucleo']
 # repo → (carpeta de los .js, carpeta del .css, archivo del service worker)
-APPS = {
+APPS = {  # G112: Cerebro (contenido) retirado; su motor vive en el CM (🎬 Estudio)
     'saas': ('shared', 'shared', 'sw.js'),
     'emprendedor': ('js', 'css', 'sw.js'),
     'Aplicaciones': ('shared', 'shared', 'sw.js'),
     'barberia': ('shared', 'shared', 'sw.js'),
     'taller': ('shared', 'shared', 'sw.js'),
     'estacionamiento': ('js', 'css', 'sw.js'),
-    'contenido': ('shared', 'shared', 'sw.js'),
 }
 # repo → (archivo SQL donde va el bloque común, chequeo de administrador de esa app)
 SQL = {
@@ -39,7 +38,6 @@ SQL = {
     'barberia': ('supabase/instalar.sql', 'public.cfx_es_admin()'),
     'taller': ('supabase/schema.sql', 'public.admin_check()'),
     'estacionamiento': ('supabase/instalar.sql', 'public.cfx_es_admin()'),
-    'contenido': ('supabase/instalar.sql', 'public.super_check()'),
 }
 INI, FIN = '-- >>> CFX núcleo (no editar aquí: se copia de saas/nucleo/sql con sincronizar.py)', '-- <<< CFX núcleo'
 TABLA = re.compile(r'create table (?:if not exists )?((?:public|privado)\.[a-z_]+)', re.I)

@@ -5,12 +5,12 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
   let fallas = 0;
   // La versión del código debe ser la de version.json (si no, el botón Actualizar dice "aún se está publicando").
   const fs = require('fs'), CODIGO = { saas: ['shared/config.js', /VERSION: '([\d.]+)'/], emprendedor: ['js/core.js', /VERSION = '([\d.]+)'/], Aplicaciones: ['shared/core.js', /APP_VERSION = '([\d.]+)'/],
-    barberia: ['shared/core.js', /VERSION = '([\d.]+)'/], contenido: ['shared/config.js', /VERSION: '([\d.]+)'/] };
+    barberia: ['shared/core.js', /VERSION = '([\d.]+)'/] };  // G112: Cerebro retirado
   for (const [app, [f, re]] of Object.entries(CODIGO)) {
     const v = JSON.parse(fs.readFileSync('/home/user/' + app + '/version.json')).version, m = fs.readFileSync('/home/user/' + app + '/' + f, 'utf8').match(re);
     if (!m || m[1] !== v) { fallas++; console.log('FALLA: ' + app + ': ' + f + ' dice ' + (m && m[1]) + ' y version.json ' + v); } else console.log('ok', app + ': versión del código = version.json');
   }
-  for (const app of ['saas', 'emprendedor', 'Aplicaciones', 'barberia', 'taller', 'estacionamiento', 'contenido']) {
+  for (const app of ['saas', 'emprendedor', 'Aplicaciones', 'barberia', 'taller', 'estacionamiento']) {
     const db = app === 'barberia' ? 'barberia_prueba' : 'p_' + app.toLowerCase();
     if (app !== 'barberia') require('child_process').execSync(__dirname + '/base.sh /home/user/' + app, { stdio: 'ignore' });
     const t = await abrir('/home/user/' + app, db); const p = t.page;
