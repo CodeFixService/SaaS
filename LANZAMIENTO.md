@@ -293,6 +293,11 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 3. Pantallazo (o **Export → CSV**) → mándaselo a Claude escribiendo los **n** que se BORRAN (ej. "Despega: 3, 5, 7").
 4. Claude arma el SQL de borrado solo con esas cuentas (con respaldo).
 
+## G121 · 📏 ¿Cuánto pesa cada app? (tú, 2 min por app)
+1. Supabase → elige la app → **SQL Editor** → **+ New query**.
+2. Pega todo `nucleo/sql/peso.sql` (repo SaaS) → **Run**. Solo lee, no cambia nada.
+3. Mándame 1 pantallazo por app (las 6). Fila clave: **🗄️ Base total** (% de 500 MB).
+
 ## G112 a · 🧹 Sacar Cerebro (tú, 2 min)
 1. Cloudflare → **Workers & Pages** → **contenido** → **Settings** → abajo **Delete** → escribe el nombre → **Delete**.
 2. (Opcional) Supabase → proyecto de Cerebro → **Project Settings** → **Pause project**. Si ya no entras, no importa.
