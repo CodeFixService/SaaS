@@ -11,7 +11,7 @@ Revisión de las 6 apps + CM (todas usan el mismo núcleo, así que cada punto v
 | Firma HMAC-SHA256 en cada llamada a Flow | ✅ |
 | Link abierto y transferencia: el admin aprueba con pantallazo | ✅ |
 | Llaves de pago (MP Access Token, Flow API Key/Secret, también las de cada negocio): tablas bloqueadas (nadie las lee después de guardarlas, ni la app) + disco cifrado de Supabase (AES-256) | ✅ |
-| Llaves de pago cifradas TAMBIÉN dentro de la base (Supabase Vault), así ni un respaldo las muestra | ⏳ c1 |
+| Llaves de pago y secretos (MP, Flow, los de cada negocio, Turnstile, GitHub, Cloudflare) cifrados TAMBIÉN dentro de la base (Supabase Vault): la tabla guarda solo `vault:<nombre>`, ni un respaldo los muestra; al desconectar se borran de Vault (G112 c1, prueba g112c1.js) | ✅ |
 
 ## 2. Cuentas y datos
 | Punto | Estado |
@@ -34,5 +34,5 @@ Revisión de las 6 apps + CM (todas usan el mismo núcleo, así que cada punto v
 | SII | Boleta en todas · factura (33) en Despega | ✅ |
 
 ## 4. Cola (en orden)
-- ⏳ **c1** Llaves de pago y token de Cloudflare a **Supabase Vault** (cifrado dentro de la base). Base vieja no se rompe: si no hay Vault, sigue como hoy.
-- ⏳ **c2** Rotación: CM → Pagos muestra cuándo se pegó cada llave y avisa a los 12 meses "🔄 Cámbiala".
+- ✅ **c1** Llaves de pago y secretos a **Supabase Vault** (núcleo 3.19): triggers al guardar + `cfx_secreto()` al usar; las que ya estaban pasan solas al ⬆️ Actualizar base. Sin Vault sigue como antes.
+- ✅ **c2** Rotación: CM → Pagos y la tarjeta del dueño (⚡ Tu Mercado Pago / 💳 Tu Webpay) muestran cuándo se pegó cada llave y a los 12 meses avisan "🔄 Cámbiala" (pausar o actualizar la base no cambia la fecha; pegar una nueva sí). Prueba g112c2.js + g85/g98.

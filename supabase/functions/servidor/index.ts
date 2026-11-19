@@ -38,7 +38,7 @@ async function reintentarPush(s: Rpc, preparar: () => Promise<boolean>) {
 }
 import { dominio } from './dominio.ts';
 
-const VERSION = '3.6';
+const VERSION = '3.7';
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -152,7 +152,9 @@ async function dominioAdmin(jwt: string, b: { dominio?: string; tiendas?: string
   const { data: adm } = await s.rpc('admin_email');
   if (!adm || String(who.user.email || '').toLowerCase() !== String(adm).toLowerCase()) return { ok: false, error: 'Solo el administrador' };
   let token = Deno.env.get('CF_API_TOKEN') || '';
-  if (!token) { const { data } = await s.from('cfx_secretos').select('valor').eq('clave', 'cloudflare').maybeSingle(); token = data?.valor || ''; }
+  if (!token) { const { data } = await s.from('cfx_secretos').select('valor').eq('clave', 'cloudflare').maybeSingle(); token = data?.valor || '';
+    // G112 c1 · 🔒 si el token está en Supabase Vault, la tabla solo tiene la marca 'vault:…' → se abre con la llave de servicio.
+    if (token.startsWith('vault:')) { const { data: v } = await s.rpc('cfx_secreto_srv', { p_clave: 'cloudflare' }); token = typeof v === 'string' ? v : ''; } }
   return await dominio({ token, dominio: String(b.dominio || ''), tiendas: Array.isArray(b.tiendas) ? b.tiendas.map(String) : [] });
 }
 

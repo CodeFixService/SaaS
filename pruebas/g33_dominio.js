@@ -50,7 +50,7 @@ function cloudflare() {
         const [{ adm }] = await h.su('select public.admin_email() adm');
         const [{ em }] = await h.su('select email em from auth.users where id = $1', [user && user.sub]);
         if (String(em).toLowerCase() !== adm) return { ok: false, error: 'Solo el administrador' };
-        const k = await h.su("select valor from public.cfx_secretos where clave = 'cloudflare'");
+        const k = await h.su("select public.cfx_secreto(valor) valor from public.cfx_secretos where clave = 'cloudflare'");
         return dominio({ token: (k[0] || {}).valor || '', dominio: b.dominio, tiendas: b.tiendas || [], f: cf.f });
       },
     },

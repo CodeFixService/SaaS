@@ -349,7 +349,7 @@ end $$;
 -- ¿El token de Turnstile es de una persona? Sin secret key no se exige. Si Cloudflare no responde, no frena la venta.
 create or replace function public.cfx_humano_ok(p_token text) returns boolean
 language plpgsql security definer set search_path = '' as $$
-declare k text := (select valor from public.cfx_secretos where clave = 'turnstile'); st int; c text;
+declare k text := public.cfx_secreto((select valor from public.cfx_secretos where clave = 'turnstile')); st int; c text;
 begin
   if k is null then return true; end if;
   if coalesce(p_token, '') = '' or length(p_token) > 4000 then return false; end if;

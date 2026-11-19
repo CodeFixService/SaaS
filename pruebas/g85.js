@@ -73,7 +73,7 @@ const MP = 'https://api.mercadopago.com';
       ok(r.pest === 0, modo + ': las tiras vuelven a verse como antes (sin pestañas G82)');
       await p.click('#ctlApps .ca-btn'); await p.waitForTimeout(300);
       r = await p.evaluate(() => ({ n: document.querySelectorAll('#ctlApps .ca-op').length, ancho: document.documentElement.scrollWidth <= innerWidth + 1 }));
-      ok(r.n === 7 && r.ancho, modo + ': al abrir la caja salen las 7 apps y no hay desborde');
+      ok(r.n === 6 && r.ancho, modo + ': al abrir la caja salen las 6 apps (Cerebro retirado G112 a) y no hay desborde');
       await t.foto('g85-caja-' + modo);
       await p.click('#ctlApps [data-ca-app=billetera]'); await p.waitForTimeout(1500);
       r = await p.evaluate(() => ({ nombre: (document.querySelector('#ctlApps .ca-btn b') || {}).textContent, cerrada: !document.querySelector('#ctlApps .ca-lista') }));
@@ -87,7 +87,13 @@ const MP = 'https://api.mercadopago.com';
     const [im] = await t.sim.su("select valor ? 'barberia' as si from public.config where clave = 'apps_imagenes'");
     ok(im && im.si, 'la imagen elegida para Barbería queda guardada en el CM');
     // Pagos: solo el pago general (sin links de monto fijo ni tarjeta) + Mercado Pago automático + cupones.
+    // G112 c2: MP conectado hace más de 1 año → CM → Pagos muestra la fecha y "🔄 Cámbiala".
+    await t.sim.su("insert into public.cfx_config (clave, valor) values ('mp', '{\"token\": \"APP_USR-1234567890123456789012345-ab12\", \"activo\": true}') on conflict (clave) do update set valor = excluded.valor");
+    await t.sim.su("update public.cfx_config set valor = valor || '{\"desde\": \"2025-01-15T12:00:00Z\"}' where clave = 'mp'");
     await p.goto(t.base + '/admin/#pagos'); await p.waitForTimeout(3500); await t.sinModales();
+    await p.waitForTimeout(2000);
+    const est = await p.evaluate(() => (document.querySelector('#mpEst') || {}).innerText || '');
+    ok(/ab12/.test(est) && /15-01-2025/.test(est) && /más de 1 año/.test(est), 'Pagos: ⚡ Mercado Pago dice desde cuándo y pide cambiar la llave vieja ' + JSON.stringify(est.slice(0, 200)));
     const q = await p.evaluate(() => ({ viejos: document.querySelectorAll('[data-k^="negocio.link_"], [data-k^="cliente.link_"], [data-k^="tarjeta."]').length,
       link: !!document.querySelector('[data-k=link]'), mp: !!document.querySelector('#pgMp #mpTk'), cup: !!document.querySelector('#pgCup'), ancho: document.documentElement.scrollWidth <= innerWidth + 1 }));
     ok(q.viejos === 0 && q.link && q.mp && q.cup && q.ancho, 'Pagos: pago general + ⚡ Mercado Pago + 🏷️ Cupones, sin links fijos ni tarjeta ' + JSON.stringify(q));

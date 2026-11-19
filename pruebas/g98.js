@@ -108,6 +108,13 @@ const falla = async (fn) => { try { await fn(); return null; } catch (e) { retur
     await p.fill('#cfxMpnTok', 'APP_USR-1234567890123456789012345-wxyz'); await p.click('[data-mpn="guardar"]'); await p.waitForTimeout(2000);
     card = await p.evaluate(() => document.querySelector('#cMpNeg').innerText);
     ok(/Activo/.test(card) && /JUANBARBER/.test(card) && /wxyz/.test(card), 'Dueño: conecta desde la pantalla → ✅ Activo · JUANBARBER (…wxyz)');
+    // G112 c1/c2: la llave queda en Vault (tabla con la marca) y la pantalla dice desde cuándo; con más de 1 año pide cambiarla.
+    ok((await su("select token from public.cfx_mp_negocio"))[0].token.startsWith('vault:') && /Pegada el/.test(card) && !/más de 1 año/.test(card), 'Dueño: token en Vault · "Pegada el…" sin aviso');
+    await su("update public.cfx_mp_negocio set llave_desde = now() - interval '400 days'");
+    await p.reload(); await p.waitForTimeout(3000); await t.sinModales();
+    await p.waitForSelector('#cMpNeg:not([hidden])', { timeout: 10000 }).catch(() => {});
+    card = await p.evaluate(() => document.querySelector('#cMpNeg').innerText);
+    ok(/más de 1 año/.test(card) && /Credenciales/.test(card), 'Dueño: llave de más de 1 año → 🔄 Cámbiala');
     await p.evaluate(() => document.querySelector('#cMpNeg').scrollIntoView());
     await p.screenshot({ path: __dirname + '/capturas/barberia/g98_dueno.png' }).catch(() => {});
     ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'Dueño: sin scroll horizontal');

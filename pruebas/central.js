@@ -587,7 +587,7 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await t.foto('control-seguridad');
         await p.click('[data-s=humano]'); await p.waitForTimeout(1000);
         await p.uncheck('#huTodas'); await p.fill('#huK', '0x4AAAAAAAprueba'); await p.fill('#huS', '0x4AAAAAAAsecreto'); await p.click('#huG'); await p.waitForTimeout(1500);
-        const [hs] = await t.sim.su("select (select valor from cfx_secretos where clave = 'turnstile') s, public.cfx_humano() h");
+        const [hs] = await t.sim.su("select public.cfx_secreto((select valor from cfx_secretos where clave = 'turnstile')) s, public.cfx_humano() h");
         // G8: Control → 🩺 Salud muestra ping, respaldo y errores, y se borran.
         await t.sim.su("select public.cfx_salud_marca('respaldo', '{\"mb\": 1.5, \"tablas\": 40}')");
         await p.click('[data-s=salud]'); await p.waitForTimeout(1500);
@@ -635,7 +635,7 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await p.click('[data-app=aplicaciones] [data-a=probar]'); await p.waitForTimeout(600);
         const despues = await p.evaluate(() => document.querySelector('[data-app=aplicaciones] [data-a=pconf]').disabled);
         await p.click('[data-app=aplicaciones] [data-a=pconf]'); await p.waitForTimeout(600); await p.click('dialog [data-si]'); await p.waitForTimeout(2500);
-        const [gh] = await t.sim.su("select (select valor from cfx_secretos where clave = 'github') tk, (select count(*) from extensions.http_log where method = 'PATCH' and uri like '%Aplicaciones/git/refs/heads/main' and content like '%bbb222%' and content like '%false%')::int pm, has_function_privilege('anon', 'public.cm_pruebas(text, text)', 'execute') an, has_function_privilege('authenticated', 'public.gh_api(text, text, jsonb)', 'execute') au");
+        const [gh] = await t.sim.su("select public.cfx_secreto((select valor from cfx_secretos where clave = 'github')) tk, (select count(*) from extensions.http_log where method = 'PATCH' and uri like '%Aplicaciones/git/refs/heads/main' and content like '%bbb222%' and content like '%false%')::int pm, has_function_privilege('anon', 'public.cm_pruebas(text, text)', 'execute') an, has_function_privilege('authenticated', 'public.gh_api(text, text, jsonb)', 'execute') au");
         await t.foto('apps-confirmar');
         ok(antes && !despues && gh.tk === 'github_pat_prueba' && gh.pm === 1 && !gh.an && !gh.au, 'CM: ✅ Confirmar tras 🧪 Probar (pruebas → main) ' + JSON.stringify([antes, despues, gh]));
         // G12 · C19: 🧩 Módulos en la tarjeta de una app que los tiene (aquí el CM con un gancho de prueba): apagar el chat.

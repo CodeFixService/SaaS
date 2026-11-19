@@ -1,4 +1,4 @@
-/* Centro de Mando · Pagos de las 7 apps en un solo lugar.
+/* Centro de Mando · Pagos de todas las apps en un solo lugar.
    1) Precios, link de pago, comisión y datos de transferencia: se escriben una vez y se guardan en todas las apps (cfx_pagos_config_guardar).
    2) Comprobantes por revisar de todas las apps: ver, aprobar (con los días de Premium) o rechazar (cfx_pago_resolver).
    3) Cuentas que no pagan el primer pago (por ejemplo, las de prueba que creas tú). Usa las conexiones de Apps (MisApps). */
@@ -17,11 +17,11 @@
   function campo(k, t, v, tipo, ayuda) {
     return '<label>' + t + '<input data-k="' + k + '" type="' + (tipo || 'text') + '" value="' + esc(v == null ? '' : v) + '"' + (tipo === 'number' ? ' inputmode="decimal"' : '') + '></label>' + (ayuda ? '<p class="sub" style="margin-top:-4px">' + ayuda + '</p>' : '');
   }
-  // G85: un solo PAGO GENERAL para las 7 apps (⚡ Mercado Pago automático · 🔗 link abierto · 🏦 transferencia) + cupones.
+  // G85: un solo PAGO GENERAL para todas las apps (⚡ Mercado Pago automático · 🔗 link abierto · 🏦 transferencia) + cupones.
   // Lo antiguo (links de monto fijo y link de tarjeta) ya no se muestra ni se usa, pero queda guardado (no se borra).
   function formulario() {
     const c = cfg || {}, n = c.negocio || {}, cl = c.cliente || {}, t = c.transferencia || {};
-    return '<div class="card" id="pgCfg"><h2>Precios</h2><p class="sub">Iguales para las 7 apps. Al guardar se copian a todas las apps conectadas.</p>' +
+    return '<div class="card" id="pgCfg"><h2>Precios</h2><p class="sub">Iguales para todas las apps. Al guardar se copian a todas las apps conectadas.</p>' +
       '<h3>Negocio (cuenta principal)</h3><div class="grid2">' + campo('negocio.inicio', 'Primer pago', n.inicio, 'number') + campo('negocio.inicio_dias', 'Días que da', n.inicio_dias, 'number') +
       campo('negocio.mensual', 'Premium mensual', n.mensual, 'number') + campo('negocio.anual', 'Premium anual', n.anual, 'number') + '</div>' +
       '<label class="fila" style="gap:8px"><input type="checkbox" data-k="negocio.exigir_inicio" style="width:auto"' + (n.exigir_inicio ? ' checked' : '') + '> Los negocios nuevos no pueden usar la app hasta su primer pago</label>' +
@@ -34,31 +34,34 @@
       '<div class="pg-medio"><h3>🏦 Transferencia</h3><div class="grid2">' + campo('transferencia.banco', 'Banco', t.banco) + campo('transferencia.tipo', 'Tipo de cuenta', t.tipo) + campo('transferencia.numero', 'Número', t.numero) +
         campo('transferencia.rut', 'RUT', t.rut) + campo('transferencia.titular', 'Titular', t.titular) + campo('transferencia.correo', 'Correo', t.correo, 'email') + '</div></div>' +
       campo('whatsapp', 'WhatsApp para dudas de pago (con 56)', c.whatsapp, 'tel') +
-      '<button type="button" class="block" id="pgGuardar">Guardar en las 7 apps</button><div id="pgRes"></div></div>' +
+      '<button type="button" class="block" id="pgGuardar">Guardar en todas las apps</button><div id="pgRes"></div></div>' +
       '<div class="card" id="pgMp"><h2>⚡ Mercado Pago automático</h2><p class="sub">Pagan con tarjeta, débito o saldo y el plan <b>se activa solo</b>: sin comprobante y sin que tú apruebes. Te llega push "⚡ Pago automático" y a la persona "✅ Pago aprobado".</p><div id="mpEst"><p class="sub">Revisando…</p></div>' +
         '<label>Access Token de producción<input id="mpTk" autocomplete="off" spellcheck="false" placeholder="APP_USR-…"></label>' +
         '<p class="sub" style="margin-top:-4px">Dónde: Mercado Pago → Tu negocio → Configuración → Credenciales → Credenciales de producción → Access Token. Queda guardado solo en la base de cada app: nadie lo puede volver a ver.</p>' +
-        '<div class="btns-s"><button type="button" id="mpCon">Conectar en las 7 apps</button><button type="button" class="ghost" id="mpPausa">Pausar</button></div><div id="mpRes"></div><div id="mpSubs"></div></div>' +
+        '<div class="btns-s"><button type="button" id="mpCon">Conectar en todas las apps</button><button type="button" class="ghost" id="mpPausa">Pausar</button></div><div id="mpRes"></div><div id="mpSubs"></div></div>' +
       // G38 💳 Flow: Webpay + transferencia + MACH con una sola cuenta (se activa solo, igual que Mercado Pago).
       '<div class="card" id="pgFlow"><h2>💳 Webpay con Flow</h2><p class="sub">Un 2.º pago automático: Webpay (débito, crédito, prepago), transferencia o MACH. Se activa solo, igual que Mercado Pago.</p><div id="flEst"><p class="sub">Revisando…</p></div>' +
         '<label>API Key<input id="flKey" autocomplete="off" spellcheck="false" placeholder="XXXXXXXX-XXXX-…"></label>' +
         '<label>Secret Key<input id="flSec" type="password" autocomplete="off" spellcheck="false"></label>' +
         '<label class="fila" style="gap:8px"><input type="checkbox" id="flSand" style="width:auto"> Son llaves de pruebas (sandbox.flow.cl)</label>' +
         '<p class="sub">Dónde: flow.cl → Mi cuenta → Integración → API Keys (copia las 2). Quedan solo en la base de cada app: nadie las vuelve a ver.</p>' +
-        '<div class="btns-s"><button type="button" id="flCon">Conectar en las 7 apps</button><button type="button" class="ghost" id="flPausa">Pausar</button></div><div id="flRes"></div></div>' +
+        '<div class="btns-s"><button type="button" id="flCon">Conectar en todas las apps</button><button type="button" class="ghost" id="flPausa">Pausar</button></div><div id="flRes"></div></div>' +
       '<div class="card"><h2>🏷️ Cupones</h2><p class="sub">Se aplican al pagar Premium (Mercado Pago, link o transferencia): la persona escribe el código y ve el descuento al tiro.</p><button type="button" class="ghost" id="pgCup">Crear o ver cupones</button></div>';
   }
+  // G112 c2 · 🔄 Desde cuándo está la llave; con más de 1 año avisa "Cámbiala" (y en qué apps).
+  const llaveDesde = (c) => { try { return c && c.desde ? ' · 🔑 ' + esc(new Date(c.desde).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })) : ''; } catch (x) { return ''; } };
+  const llaveRotar = (out, donde) => { const v = out.filter((r) => r[1].rotar); return v.length ? '<p class="sub warn" data-cfx-rotar>🔄 La llave tiene más de 1 año en ' + esc(v.map((r) => r[0].nombre.split(' ·')[0]).join(', ')) + ': crea una nueva en ' + esc(donde) + ', pégala aquí y toca Conectar en todas las apps.</p>' : ''; };
   // Estado del pago automático en cada app.
   async function mpEstado() {
     const z = raiz.querySelector('#mpEst'); if (!z) return;
     const out = await Promise.all(conectadas().map(async (a) => { try { return [a, await M().rpcDe(M().cliente(a), 'cfx_mp_estado')]; } catch (x) { return [a, { error: nf(x) }]; } }));
     const on = out.filter((r) => r[1].activo), cuenta = (on[0] || [])[1];
-    z.innerHTML = (cuenta ? '<p class="pill ok" style="display:inline-block">✓ Activo en ' + on.length + ' de ' + out.length + (cuenta.nick ? ' · ' + esc(cuenta.nick) : '') + ' · …' + esc(cuenta.fin || '') + '</p>' : '<p class="pill warn" style="display:inline-block">Sin conectar</p>') +
+    z.innerHTML = (cuenta ? '<p class="pill ok" style="display:inline-block">✓ Activo en ' + on.length + ' de ' + out.length + (cuenta.nick ? ' · ' + esc(cuenta.nick) : '') + ' · …' + esc(cuenta.fin || '') + llaveDesde(cuenta) + '</p>' + llaveRotar(out, 'Mercado Pago → Credenciales → Access Token') : '<p class="pill warn" style="display:inline-block">Sin conectar</p>') +
       out.filter((r) => !r[1].activo).map((r) => '<p class="sub">' + esc(r[0].nombre.split(' ·')[0]) + ': ' + esc(r[1].error || (r[1].conectado ? 'en pausa' : 'sin conectar')) + '</p>').join('');
     const bp = raiz.querySelector('#mpPausa'); if (bp) { bp.textContent = on.length ? 'Pausar' : 'Prender'; bp.dataset.on = on.length ? '1' : ''; bp.hidden = !out.some((r) => r[1].conectado); }
     mpSubs();
   }
-  // G108 🔁 Renovaciones automáticas (Premium/módulos que se pagan solos con MP), de las 7 apps.
+  // G108 🔁 Renovaciones automáticas (Premium/módulos que se pagan solos con MP), de todas las apps.
   async function mpSubs() {
     const z = raiz.querySelector('#mpSubs'); if (!z) return;
     const out = await Promise.all(conectadas().map(async (a) => { try { return [a, await M().rpcDe(M().cliente(a), 'cfx_mp_subs_admin')]; } catch (x) { return [a, null]; } }));
@@ -88,7 +91,7 @@
     const z = raiz.querySelector('#flEst'); if (!z) return;
     const out = await Promise.all(conectadas().map(async (a) => { try { return [a, await M().rpcDe(M().cliente(a), 'cfx_flow_estado')]; } catch (x) { return [a, { error: nf(x) }]; } }));
     const on = out.filter((r) => r[1].activo), cuenta = (on[0] || [])[1];
-    z.innerHTML = (cuenta ? '<p class="pill ok" style="display:inline-block">✓ Activo en ' + on.length + ' de ' + out.length + (cuenta.sandbox ? ' · 🧪 pruebas' : '') + ' · …' + esc(cuenta.fin || '') + '</p>' : '<p class="pill warn" style="display:inline-block">Sin conectar</p>') +
+    z.innerHTML = (cuenta ? '<p class="pill ok" style="display:inline-block">✓ Activo en ' + on.length + ' de ' + out.length + (cuenta.sandbox ? ' · 🧪 pruebas' : '') + ' · …' + esc(cuenta.fin || '') + llaveDesde(cuenta) + '</p>' + llaveRotar(out, 'Flow → Integración → API Keys') : '<p class="pill warn" style="display:inline-block">Sin conectar</p>') +
       out.filter((r) => !r[1].activo).map((r) => '<p class="sub">' + esc(r[0].nombre.split(' ·')[0]) + ': ' + esc(r[1].error || (r[1].conectado ? 'en pausa' : 'sin conectar')) + '</p>').join('');
     const bp = raiz.querySelector('#flPausa'); if (bp) { bp.textContent = on.length ? 'Pausar' : 'Prender'; bp.dataset.on = on.length ? '1' : ''; bp.hidden = !out.some((r) => r[1].conectado); }
   }
