@@ -54,3 +54,4 @@ Ahora: app 5.40 · bd 4.57 · función 3.5 · núcleo 3.07 (G99 a: ⚡ aviso ins
 ## 🎬 Estudio (G94, bd 4.52)
 - App → Cerebro → 🎬 Estudio (solo rol admin): app/m-estudio.js (+ app/est-motor.js y app/est-importador.js, copias de Contenido/app; cargan a pedido). items est_conf / est_base / est_idea (constraint items_tipo_check). Prueba: pruebas/g94a.js.
 - Núcleo: catálogo de módulos +8 (Billetera: acuerdo, contador, escalonado, gastos_fijos · Estaciona: destacar, acceso, descuentos, ganancias) en nucleo/sql/modulos_venta.sql + demos en nucleo/modulos.js.
+- 🎬 G112 d · est-motor.js y est-importador.js pasaron al núcleo (shared/): el 🎬 Estudio del CM (app/m-estudio.js) los carga de ../shared/. Los negocios de las 5 apps tienen el mismo motor como módulo 'estudio' (núcleo estudio.js + sql/estudio.sql).

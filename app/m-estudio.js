@@ -45,9 +45,9 @@
 
   /* ---------- carga perezosa del motor y el importador ---------- */
   let libs;
-  const cargarLibs = () => libs || (libs = Promise.all(['est-motor.js', 'est-importador.js'].map((f) => new Promise((ok, no) => {
+  const cargarLibs = () => libs || (libs = Promise.all(['est-motor.js', 'est-importador.js'].map((f) => new Promise((ok, no) => {  // G112 d: viven en el núcleo (shared/)
     if ((f === 'est-motor.js' && window.Motor) || (f === 'est-importador.js' && window.Importador)) return ok();
-    const s = document.createElement('script'); s.src = f + '?v=' + (window.BT_CONFIG.VERSION || ''); s.onload = ok; s.onerror = () => { libs = null; no(new Error('No se pudo cargar el Estudio. Revisa tu conexión.')); }; document.head.appendChild(s);
+    const s = document.createElement('script'); s.src = '../shared/' + f + '?v=' + (window.BT_CONFIG.VERSION || ''); s.onload = ok; s.onerror = () => { libs = null; no(new Error('No se pudo cargar el Estudio. Revisa tu conexión.')); }; document.head.appendChild(s);
   }))));
 
   /* ---------- datos del espacio ---------- */

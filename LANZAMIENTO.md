@@ -298,6 +298,14 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. (Opcional) Supabase → proyecto de Cerebro → **Project Settings** → **Pause project**. Si ya no entras, no importa.
 3. El repo **Contenido** queda guardado en GitHub (no lo borres: nada se pierde). Su motor ya está en CM → 🎬 Estudio.
 
+## G112 d · 🎬 Estudio de contenido (módulo) · núcleo 3.20 · CM 5.53 bd 4.67 · Despega 6.69 bd 5.86 · Barbería 3.40 bd 3.17 · Billetera 1.21.99 bd 71 · BiciTaller 3.30 bd 2.67 · Estaciona 2.20 bd 68
+1. Cloudflare → **Listo** en las 6 apps. CM → **Apps** → ⬆️ **Actualizar base** en LAS 5 con negocios (y el CM) → 🚀 **Liberar**.
+2. Entra como dueño de prueba (cualquier app) → **Más** → 🎬 **Estudio de contenido** → ▶️ **Probar módulo** (7 días gratis).
+3. **📚 Base** → ⬇️ **Plantilla** (ábrela en Excel, llénala) → ⬆️ **Subir CSV**, o **＋ Agregar** (tema + texto).
+4. **💡 Idea** → ✨ **Generar idea** → salen 8 cajas con 📋 **Copiar** → 💾 **Guardar idea**.
+5. **📅 Semana** → toca la idea → pon vistas/clientes → 💾 **Guardar métricas** → **📊 Qué funciona** muestra tus números.
+6. CM → Pagos/Módulos: el 🎬 aparece en ⭐ Normal y 💎 Completo.
+
 ## G112 c1+c2 · 🔒 Llaves en Vault + 🔄 aviso de cambio · núcleo 3.19 · CM 5.52 · Despega 6.68 · Barbería 3.39 · Billetera 1.21.98 · BiciTaller 3.29 · Estaciona 2.19 (bases: CM 4.66 · Despega 5.85 · Barbería 3.16 · Billetera 70 · BiciTaller 2.66 · Estaciona 67; función "servidor" del CM 3.7)
 1. Supabase → proyecto del **CM** → **Edge Functions** → **servidor** → **Code** → borra todo y pega:
    `import 'https://raw.githubusercontent.com/CodeFixService/SaaS/a7745025160300f85131cddd00cf12f36b527e13/supabase/functions/servidor/index.ts';`

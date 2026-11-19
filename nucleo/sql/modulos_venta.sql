@@ -100,7 +100,9 @@ language sql immutable as $$
          ('tarifas', '🌙 Tarifa fin de semana y noche', 'Cobra distinto el sábado, domingo y de noche: un % más (o menos) que se calcula solo al reservar.'),
          ('frecuentes', '🔁 Clientes frecuentes', 'Ve quién te arrienda más y prémialo solo: un % menos desde su reserva número N. Vuelven siempre.'),
          ('calendario', '📅 Cerrar fechas', 'Cierra días por vacaciones o uso propio: nadie puede reservar esas fechas y la ficha lo muestra.'),
-         ('avisame', '🔔 Lista de espera', 'Si tu lugar está ocupado, la gente se anota y le avisamos apenas lo marques disponible: no pierdes al próximo cliente.')
+         ('avisame', '🔔 Lista de espera', 'Si tu lugar está ocupado, la gente se anota y le avisamos apenas lo marques disponible: no pierdes al próximo cliente.'),
+         -- G112 d: 🎬 Estudio de contenido (las 5 apps con negocios; mismo motor del Centro de Mando, sin IA de pago).
+         ('estudio', '🎬 Estudio de contenido', 'Ideas para TikTok, Instagram y Facebook con gancho, guión, copy y hashtags listos para copiar. Arma tu semana y aprende de TUS métricas qué funciona.')
 $$;
 
 create or replace function public.cfx_venta() returns jsonb
