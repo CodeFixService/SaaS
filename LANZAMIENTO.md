@@ -354,3 +354,9 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 3. CM → **Apps** → ⬆️ **Actualizar base** en LAS 6 → 🚀 **Liberar**. Las llaves que ya tenías (Mercado Pago, Flow, Turnstile, GitHub, Cloudflare y las de cada negocio) pasan SOLAS a Vault. No hay que volver a pegarlas.
 4. Revisar: Supabase → cualquier app → **Integrations** → **Vault** → **Secrets**: salen con nombre `cfx_…` (ej. `cfx_cfg_mp_token`).
 5. Probar: CM → **Pagos** → ⚡ Mercado Pago dice "✓ Activo … · 🔑 fecha". Si una llave tiene más de 1 año sale "🔄 … crea una nueva" → la pegas y **Conectar en todas las apps**.
+
+## G127 ✉️ Billetera: "Error sending confirmation email"
+1. CM → Control → ✉️ Correo → botón **Supabase → SMTP** de **Billetera** (o supabase.com → proyecto emprendedor → Authentication → Emails → SMTP Settings).
+2. Enable custom SMTP: host `smtp.gmail.com` · puerto `465` · usuario = tu Gmail · clave = contraseña de aplicación de Google · Sender name: Billetera → **Save**.
+3. Vuelve a crear la libreta. (Atajo si no quieres correo: Authentication → Sign In / Providers → Email → apagar **Confirm email** → Save: la cuenta entra al tiro.)
+
