@@ -303,6 +303,17 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. (Opcional) Supabase → proyecto de Cerebro → **Project Settings** → **Pause project**. Si ya no entras, no importa.
 3. El repo **Contenido** queda guardado en GitHub (no lo borres: nada se pierde). Su motor ya está en CM → 🎬 Estudio.
 
+## G128 · 🛒 Cobro de pedidos · núcleo 3.29 · CM 5.62 bd 4.69 · Despega 6.78 bd 5.89 · Barbería 3.49 bd 3.19 · Billetera 1.21.109 bd 73 · BiciTaller 3.39 bd 2.69 · Estaciona 2.29 bd 70 (funciones SIN cambio)
+0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo**.
+1. **Tu tienda de prueba: ¿qué medio tiene?** Supabase de Despega → **SQL Editor** → pega y **Run**: `select empresa, slug, coalesce(trim(datos_pago),'') <> '' transferencia, public.link_activo(id,'pedido') medios from profiles where role='user';` → si `medios` sale vacío, tus clientes hoy "💰 Pagan al retirar".
+2. Despega → **Hoy**: sin medio sale **⚠️ Tus clientes no pueden pagar en línea → Configurar**. Pon tus datos de 🏦 transferencia (Ajustes → Mi tienda) → el aviso se va.
+3. **Caja** → un producto → **🛒 Venta online** → elige 💵 **Abono** 30 % → Guardar. Otro → 🛠️ **Servicio** + 💰 **Pagar al retirar**. Otro → 🔑 **Acceso digital** + escribe un link → Guardar.
+4. Abre tu tienda (/t/) en incógnito → agrega el del abono → **💳 ¿Cómo pagas?** muestra ⚡ Todo ahora / 💵 Abono → elige Abono → Enviar → en /r/ sale **💵 Paga tu abono** + **📋 Copiar enlace / 📲 Mandarme por WhatsApp**.
+5. Sube un pantallazo como comprobante → Despega → **Pedidos** → **✅ Aprobar pago** → dice "💵 Abono pagado · 💰 cobra $X al entregar". Pedido sin cuenta: **📲 Enviar enlace al cliente**.
+6. Compra el 🔑 acceso digital → apruébalo → en /r/ aparece **🔑 Tu acceso** (antes no se ve).
+7. Con cuenta de cliente: Mis pedidos → **💬 Chat del pedido** → escribe → en Pedidos de la tienda aparece **💬 Chat del pedido (1)**. (No sale en Mensajes; se borra 7 días después de cerrar.)
+8. 🧾 Boleta: sale sola si tienes OpenFactura automática (Ajustes → Boleta SII); si no, en el pedido pagado está **🧾 Emitir / Anotar N°**. Con abono, sale al entregar (por el total).
+
 ## G123 · 🎬 Estudio: 🔄 Cambiar todo + Espacio por app · núcleo 3.28 · CM 5.61 · Despega 6.77 · Barbería 3.48 · Billetera 1.21.108 · BiciTaller 3.38 · Estaciona 2.28 (bases y funciones SIN cambio; va junto con G122: un solo Liberar)
 1. CM → Cerebro → 🎬 Estudio → **🎯 Espacio** → **📱 App**: elige Despega → **✨ Base de fábrica** → dice "✨ N filas sumadas".
 2. **💡 Idea** → ✨ Generar idea → en ✍️ Copy y #️⃣ Hashtags toca **🔄 Otra** (cambian) → abajo **🔄 Cambiar todo** (cambia todo de una vez).
