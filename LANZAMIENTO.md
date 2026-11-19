@@ -297,3 +297,12 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 1. Cloudflare → **Workers & Pages** → **contenido** → **Settings** → abajo **Delete** → escribe el nombre → **Delete**.
 2. (Opcional) Supabase → proyecto de Cerebro → **Project Settings** → **Pause project**. Si ya no entras, no importa.
 3. El repo **Contenido** queda guardado en GitHub (no lo borres: nada se pierde). Su motor ya está en CM → 🎬 Estudio.
+
+## G112 c1+c2 · 🔒 Llaves en Vault + 🔄 aviso de cambio · núcleo 3.19 · CM 5.52 · Despega 6.68 · Barbería 3.39 · Billetera 1.21.98 · BiciTaller 3.29 · Estaciona 2.19 (bases: CM 4.66 · Despega 5.85 · Barbería 3.16 · Billetera 70 · BiciTaller 2.66 · Estaciona 67; función "servidor" del CM 3.7)
+1. Supabase → proyecto del **CM** → **Edge Functions** → **servidor** → **Code** → borra todo y pega:
+   `import 'https://raw.githubusercontent.com/CodeFixService/SaaS/a7745025160300f85131cddd00cf12f36b527e13/supabase/functions/servidor/index.ts';`
+   → **Deploy** (Verify JWT APAGADO).
+2. Cloudflare → **Listo** en las 6 apps.
+3. CM → **Apps** → ⬆️ **Actualizar base** en LAS 6 → 🚀 **Liberar**. Las llaves que ya tenías (Mercado Pago, Flow, Turnstile, GitHub, Cloudflare y las de cada negocio) pasan SOLAS a Vault. No hay que volver a pegarlas.
+4. Revisar: Supabase → cualquier app → **Integrations** → **Vault** → **Secrets**: salen con nombre `cfx_…` (ej. `cfx_cfg_mp_token`).
+5. Probar: CM → **Pagos** → ⚡ Mercado Pago dice "✓ Activo … · 🔑 fecha". Si una llave tiene más de 1 año sale "🔄 … crea una nueva" → la pegas y **Conectar en todas las apps**.
