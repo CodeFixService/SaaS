@@ -303,6 +303,12 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. (Opcional) Supabase → proyecto de Cerebro → **Project Settings** → **Pause project**. Si ya no entras, no importa.
 3. El repo **Contenido** queda guardado en GitHub (no lo borres: nada se pierde). Su motor ya está en CM → 🎬 Estudio.
 
+## G122 b + G128 c · 🧹 Fotos huérfanas · 🏦 Abono por transferencia en BiciTaller · núcleo 3.32 · CM 5.65 bd 4.70 · Despega 6.81 bd 5.90 · Barbería 3.52 bd 3.20 · Billetera 1.21.112 bd 74 · BiciTaller 3.42 bd 2.70 · Estaciona 2.32 bd 72 (funciones SIN cambio)
+0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo**.
+1. 🧹 No tienes que hacer nada: cuando un dueño entra (1 vez por semana), se borran de Storage SOLO sus fotos de más de 7 días que no estén en ninguna tabla (producto/servicio/oferta/bici borrados). Las que se usan, nunca.
+2. 🚲 BiciTaller (taller) → Más → **💳 Abono**: borra el link, llena **🏦 Datos de transferencia**, marca el espacio activo → **💾 Guardar** → se guarda sin error (antes pedía link o MP).
+3. Haz una reserva en tu página → en la reserva sale **"🏦 1️⃣ Transfiere $…"** con tus datos + **📋 Copiar datos** + **2️⃣ Subir foto del comprobante**.
+
 ## G128 b · ⚠️ Aviso "tus clientes no pueden pagar" · núcleo 3.31 · CM 5.64 · Despega 6.80 · Barbería 3.51 · Billetera 1.21.111 · BiciTaller 3.41 · Estaciona 2.31 bd 71 (funciones SIN cambio)
 0. Cloudflare Listo → CM → Apps → 🅿️ Estaciona → ⬆️ Actualizar base (debe quedar 71) → 🚀 Liberar todo.
 1. 💈 Barbería (dueño): Más → 💳 Links de pago → borra link y datos de banco (con abono > 0) → Inicio: arriba "⚠️ Tus clientes no pueden reservar online" → **Configurar** te lleva a Links de pago. Vuelve a poner tus datos: el aviso se va.
