@@ -110,7 +110,11 @@
   }
   function copy(idea) {
     const c = cf(), el = may(idea.elemento || idea.tema);
-    const cuerpo = c.obj === 'vender' ? el + '. Lo vemos todos los días y tiene solución.' : c.obj === 'comentarios' ? el + '. ¿A ti te ha pasado?' : c.obj === 'compartidos' ? el + '. Guárdalo: te va a servir.' : el + '. Cada semana te traigo uno así.';
+    const V = { vender: ['. Lo vemos todos los días y tiene solución.', '. Te lo resolvemos rápido y sin vueltas.', '. Escríbenos y lo vemos juntos hoy.'],
+      comentarios: ['. ¿A ti te ha pasado?', '. Cuéntame en comentarios si te suena.', '. ¿Qué harías tú? Te leo.'],
+      compartidos: ['. Guárdalo: te va a servir.', '. Compártelo con quien lo necesita.', '. Guárdalo para cuando te toque.'],
+      seguidores: ['. Cada semana te traigo uno así.', '. Sígueme: mañana viene la parte 2.', '. Más datos así en mi perfil.'] }[c.obj] || ['.'];
+    const cuerpo = el + V[(+idea.vc || 0) % V.length]; // G123: 🔄 Otra cambia la variante
     return idea.gancho + '\n\n' + cuerpo + (c.publico ? '\nPara ' + c.publico + '.' : '') + '\n\n👉 ' + idea.cta;
   }
   function hashtags(idea) {
@@ -118,7 +122,10 @@
     String(c.tags || '').split(/[\s,]+/).filter(Boolean).forEach((x) => s.add(x[0] === '#' ? x.toLowerCase() : tagDe(x)));
     s.add(tagDe(idea.tema)); if (esp()) s.add(tagDe(esp().nombre));
     if (idea.red === 'tiktok') s.add('#tiktokchile'); else if (idea.red !== 'historias') s.add('#chile');
-    return Array.from(s).filter((x) => x.length > 2).slice(0, 8).join(' ');
+    const X = ['#tips', '#datos', '#emprendimiento', '#pyme', '#hechoenchile', '#negociolocal', '#consejos', '#santiago'], v = +idea.vh || 0; // G123: 🔄 Otra suma otros
+    if (v) { s.add(tagDe(idea.elemento || '').slice(0, 20)); for (let k = 0; k < 3; k++) s.add(X[(v * 3 + k) % X.length]); }
+    const L = Array.from(s).filter((x) => x.length > 2); if (v) L.push(...L.splice(0, v % Math.max(1, L.length)));
+    return L.slice(0, 8).join(' ');
   }
   function cajas(idea) {
     const alt = alternativas(idea), pts = puntaje(idea.gancho, idea.estructura);
@@ -133,13 +140,13 @@
       ['toma', '🎥 Tomas a grabar', may(idea.toma)]
     ];
   }
-  const REFRESCA = { gancho: 'gancho', texto_pantalla: 'texto_pantalla', cta: 'cta', red: 'red', toma: 'toma', guion: 'formato' };
+  const REFRESCA = { gancho: 'gancho', texto_pantalla: 'texto_pantalla', cta: 'cta', red: 'red', toma: 'toma', guion: 'formato', copy: 'vc', tags: 'vh' };
   function htmlCajas(idea, conId) {
     return cajas(idea).map((c) => '<div class="card est-caja" data-caja="' + c[0] + '"><div class="fila"><b>' + c[1] + '</b>' + (c[3] ? '<span class="pill info">' + esc(c[3]) + '</span>' : '') + '</div>' +
       '<p class="est-txt">' + esc(c[2] || '—') + '</p>' +
       (c[4] ? '<details class="comp"><summary>2 ganchos más</summary>' + c[4].map((a, k) => '<div class="est-alt"><p>' + esc(a.txt) + '</p><span class="sub">⭐ ' + a.pts + ' · ' + esc(a.tec) + '</span><div class="btns-s"><button type="button" class="small ghost" data-act="copiaAlt" data-k="' + k + '">📋 Copiar</button><button type="button" class="small ghost" data-act="usarAlt" data-k="' + k + '">Usar este</button></div></div>').join('') + '</details>' : '') +
       '<div class="btns-s"><button type="button" class="small" data-act="copiar" data-c="' + c[0] + '">📋 Copiar</button>' + (REFRESCA[c[0]] ? '<button type="button" class="small ghost" data-act="refrescar" data-c="' + c[0] + '" aria-label="Otra opción">🔄 Otra</button>' : '') + '</div></div>').join('') +
-      '<div class="btns"><button type="button" class="ghost" data-act="prompt">📋 Copiar prompt para Claude</button>' + (conId ? '' : '<button type="button" data-act="guardar">💾 Guardar idea</button>') + '</div>';
+      '<div class="btns">' + (conId ? '' : '<button type="button" class="ghost" data-act="todo">🔄 Cambiar todo</button>') + '<button type="button" class="ghost" data-act="prompt">📋 Copiar prompt para Claude</button>' + (conId ? '' : '<button type="button" data-act="guardar">💾 Guardar idea</button>') + '</div>';
   }
   function promptClaude(idea) {
     const c = cf(), e = esp();
@@ -156,7 +163,7 @@
     if (re && !re.test(idea.formato) && ((idea.combo || '').length % 3) !== 0) { const f = window.Motor.formatosDe(idea.red).find((x) => re.test(x.t)); if (f) { idea.formato = f.t; idea.duracion_seg = f.dur || idea.duracion_seg; } }
     return idea;
   }
-  function datosIdea(i) { const o = {}; ['combo', 'tema', 'red', 'estructura', 'estructura_nombre', 'elemento_id', 'elemento', 'gancho', 'formato', 'duracion_seg', 'toma', 'texto_pantalla', 'cta', 'hora', 'fecha_plan', 'm'].forEach((k) => { if (i[k] != null) o[k] = typeof i[k] === 'string' ? i[k].slice(0, 300) : i[k]; }); return o; }
+  function datosIdea(i) { const o = {}; ['combo', 'tema', 'red', 'estructura', 'estructura_nombre', 'elemento_id', 'elemento', 'gancho', 'formato', 'duracion_seg', 'toma', 'texto_pantalla', 'cta', 'hora', 'fecha_plan', 'm', 'vc', 'vh'].forEach((k) => { if (i[k] != null) o[k] = typeof i[k] === 'string' ? i[k].slice(0, 300) : i[k]; }); return o; }
   const guardarIdea = (i) => CM.add('est_idea', { espacio_id: ui.esp, titulo: String(i.gancho || '').slice(0, 200), fecha: i.fecha_plan || null, estado: 'pendiente', datos: datosIdea(i) });
 
   /* ---------- CSV ---------- */
@@ -257,9 +264,57 @@
     if (delMes.length) { const b = delMes.sort((a, c) => puntos(c.datos.m) - puntos(a.datos.m))[0]; x += '<div class="card"><b>📈 Lo mejor del mes</b><p class="sub">' + esc(b.titulo) + ' · 👁️ ' + (+b.datos.m.vistas || 0) + '</p><button type="button" class="small" data-act="masAsi" data-id="' + b.id + '">✨ Más como esta</button></div>'; }
     return x;
   }
+  /* ---------- G123 b · ✨ Base de fábrica por app: el Espacio ligado a una app trae lo que esa app hace (temas + sus 🧩 módulos) ---------- */
+  const APPS_EST = [['', '— Ninguna (marca propia)'], ['despega', '🚀 Despega Pyme'], ['barberia', '💈 Barbería'], ['billetera', '💰 Billetera'], ['taller', '🚲 BiciTaller'], ['estaciona', '🅿️ Estaciona'], ['cm', '🛸 Centro de Mando']];
+  // [tema, [error, síntoma, dato, mito, parte, costo, idea_video, cta]] · módulos = 'parte' del tema "Módulos".
+  const FAB = {
+    despega: { pub: 'pymes y tiendas de Chile', tags: '#pyme #emprendimiento #ventasonline', t: [
+      ['Catálogo online', ['vender solo por fotos sueltas en WhatsApp', 'los clientes preguntan el precio de todo', 'un catálogo con precios responde solo las preguntas repetidas', 'tener tienda online es caro', 'el link de tu catálogo', 'cada pregunta sin responder es una venta perdida', 'de 20 mensajes a 1 link: antes y después', 'Crea tu catálogo gratis: link en la bio']],
+      ['Caja y stock', ['anotar las ventas en un cuaderno', 'a fin de mes no cuadra la plata', 'saber qué se vende más te dice qué comprar', 'el stock se controla a ojo', 'la caja del celular', 'quedarte sin stock del más vendido cuesta ventas todo el mes', 'un día de ventas cerrado en 1 minuto', 'Pruébalo gratis 7 días']],
+      ['Pedidos y boleta', ['tomar pedidos por chat y perder alguno', 'clientes reclaman que su pedido no llegó', 'un pedido con estado avisa solo al cliente', 'la boleta electrónica es un enredo', 'la boleta en 1 toque', 'un pedido olvidado es un cliente que no vuelve', 'del pedido a la entrega: así se ve', 'Escríbenos y te mostramos cómo']]],
+      mod: ['Chat', 'Cupones', 'Tarjeta de sellos', 'Recordar carrito', 'Campañas automáticas', 'Vender en redes', 'Dominio propio', 'Gift cards', 'Mercado Libre', 'Courier Chilexpress'] },
+    barberia: { pub: 'barberías y peluquerías', tags: '#barberia #barbershop #barberochile', t: [
+      ['Reservas online', ['agendar por WhatsApp a toda hora', 'clientes que no llegan a su hora', 'con reserva online el cliente elige solo y te llega el aviso', 'la gente prefiere llamar', 'el link de reservas', 'cada hora vacía es plata que no vuelve', 'un día lleno sin tocar el teléfono', 'Reserva tu hora: link en la bio']],
+      ['Clientes que vuelven', ['no saber cuándo le toca el corte a cada cliente', 'clientes que se van con otro barbero', 'un recordatorio a las 3 semanas trae de vuelta al cliente', 'el cliente vuelve solo si le gustó', 'la tarjeta de sellos', 'un cliente perdido vale 12 cortes al año', 'el corte número 10 gratis', 'Pide tu tarjeta de sellos']],
+      ['Tu equipo', ['repartir las horas en un papel', 'dos clientes a la misma hora', 'cada barbero con su agenda evita choques', 'la agenda compartida es un caos', 'la agenda de cada barbero', 'un choque de horas es un cliente molesto', 'un día de la barbería por dentro', 'Agenda con tu barbero favorito']]],
+      mod: ['Recordatorios', 'Anti-falta', 'Lista de espera', 'Reseñas en Google', 'Portafolio', 'Gift cards', 'Membresía', 'Productos y stock', 'Reservas por WhatsApp e Instagram'] },
+    billetera: { pub: 'emprendedores y almacenes', tags: '#emprendedor #finanzas #almacen', t: [
+      ['Fiado y deudas', ['anotar el fiado en un cuaderno', 'clientes que no se acuerdan cuánto deben', 'un recordatorio amable cobra más que una llamada', 'cobrar es incómodo', 'la libreta del celular', 'el fiado olvidado es plata regalada', 'cobrar una deuda en 1 mensaje', 'Ordena tu fiado gratis']],
+      ['Plata del negocio', ['mezclar la plata de la casa con la del negocio', 'a fin de mes no sabes si ganaste', 'separar gastos e ingresos muestra la ganancia real', 'llevar cuentas es para contadores', 'el resumen del mes', 'un gasto hormiga al día suma miles al mes', 'cuánto gané este mes: así se ve', 'Pruébala 7 días gratis']],
+      ['Pagos y comprobantes', ['perder los comprobantes de transferencia', 'pagos que no sabes de quién son', 'cada pago con su foto queda ordenado', 'el pantallazo basta', 'el comprobante guardado', 'un pago sin comprobante es una discusión', 'de pantallazo a pago ordenado', 'Escríbenos y te ayudamos']]],
+      mod: ['Acuerdo de pago firmado', 'Link para el contador', 'Cobranza escalonada', 'Gastos fijos automáticos', 'Cuentas por pagar', 'Cierre de caja', 'Aviso de vencimiento automático'] },
+    taller: { pub: 'talleres de bicicletas y ciclistas', tags: '#bicicletas #ciclismo #tallerdebicis', t: [
+      ['Reservas del taller', ['recibir bicis sin hora y colapsar', 'clientes que preguntan a cada rato si está lista', 'un aviso de "bici lista" ahorra 5 llamadas', 'los ciclistas no reservan', 'el link de reservas', 'una bici olvidada en el taller ocupa espacio y plata', 'de la llegada a la entrega en 15 s', 'Reserva tu mantención: link en la bio']],
+      ['Presupuesto y fotos', ['arreglar sin presupuesto aprobado', 'el cliente reclama el cobro', 'un presupuesto por link con fotos se aprueba en minutos', 'el cliente confía de palabra', 'la foto del daño', 'un cobro discutido es un cliente perdido', 'antes y después de la bici', 'Pide tu presupuesto por WhatsApp']],
+      ['Mantención', ['esperar a que la bici falle', 'la cadena suena y salta', 'una mantención a tiempo cuesta la mitad', 'si anda, está bien', 'la cadena y los frenos', 'arreglar tarde cuesta 4 veces más', 'señales de que tu bici necesita mantención', 'Agenda hoy tu mantención']]],
+      mod: ['Presupuesto por link', 'Aviso "bici lista"', 'Recordatorio de mantención', 'Repuestos y stock', 'Bicis usadas certificadas', 'Parte de pago', 'Pasaporte de la bici', 'Mecánico a domicilio', 'Garantías', 'Plan de mantención'] },
+    estaciona: { pub: 'dueños de estacionamientos y conductores', tags: '#estacionamiento #santiago #arriendo', t: [
+      ['Arrendar tu estacionamiento', ['tener el estacionamiento vacío todo el día', 'nadie sabe que arriendas', 'en el mapa te encuentran los que buscan cerca', 'arrendar es complicado', 'tu espacio en el mapa', 'un estacionamiento vacío pierde plata cada hora', 'cuánto gana un estacionamiento al mes', 'Publica tu espacio gratis']],
+      ['Encontrar dónde estacionar', ['dar vueltas buscando estacionamiento', 'llegar tarde por no encontrar dónde dejar el auto', 'reservar antes te ahorra 15 minutos de vueltas', 'siempre hay donde estacionar', 'el mapa con espacios libres', 'una multa cuesta más que un estacionamiento', 'de dar vueltas a llegar directo', 'Busca tu estacionamiento en la app']],
+      ['Pagos seguros', ['cobrar en efectivo y sin registro', 'clientes que se van sin pagar', 'con pago en la app no se te escapa nadie', 'el efectivo es más seguro', 'el pago automático', 'un cliente que no paga borra la ganancia del día', 'así se paga un estacionamiento en 1 toque', 'Prueba la app hoy']]],
+      mod: ['Destacado en el mapa', 'Control de acceso con QR', 'Descuento por estadía larga', 'Ganancias y ocupación', 'Tarifa fin de semana y noche', 'Clientes frecuentes', 'Cerrar fechas', 'Lista de espera'] },
+    cm: { pub: 'pymes de Chile que quieren vender más', tags: '#codefix #pyme #apps', t: [
+      ['Apps para tu negocio', ['usar 5 apps distintas que no conversan', 'pagar caro por sistemas que no usas', 'una app hecha para tu rubro se aprende en 1 día', 'las apps son para empresas grandes', 'tu app con tu nombre', 'cada sistema extra es una cuota al mes', '1 día con tu negocio en el celular', 'Pruébalo gratis: link en la bio']],
+      ['Gratis para partir', ['pagar antes de probar', 'no saber si te va a servir', 'parte FREE con todo lo básico funcionando', 'lo gratis no sirve', 'el plan FREE', 'pagar algo que no usas es plata botada', 'lo que puedes hacer gratis hoy', 'Crea tu cuenta gratis']],
+      ['Soporte cercano', ['quedarte solo cuando algo falla', 'nadie responde cuando necesitas ayuda', 'soporte por WhatsApp responde en minutos', 'el soporte es solo para los que pagan', 'el botón 🛟 de ayuda', 'una hora sin vender por una falla cuesta caro', 'así te ayudamos en vivo', 'Escríbenos por WhatsApp']]],
+      mod: [] }
+  };
+  const CATS8 = ['error', 'sintoma', 'dato', 'mito', 'parte', 'costo', 'idea_video', 'cta'];
+  function filasFabrica(app) {
+    const F = FAB[app]; if (!F) return [];
+    const r = [];
+    F.t.forEach(([tema, xs]) => xs.forEach((tx, k) => r.push({ tema, cat: CATS8[k], texto: tx })));
+    F.mod.forEach((m) => r.push({ tema: 'Módulos', cat: 'parte', texto: 'el módulo ' + m }));
+    if (F.mod.length) [['error', 'pagar por un sistema entero cuando solo necesitas una función'], ['dato', 'cada módulo se prueba gratis 7 días'], ['cta', 'Prueba un módulo gratis 7 días']].forEach(([c, tx]) => r.push({ tema: 'Módulos', cat: c, texto: tx }));
+    return r;
+  }
   function vEspacio() {
     const c = cf();
-    return '<div class="card"><b>🎯 Objetivo de ' + esc((esp() || {}).nombre || '') + '</b><p class="sub">Elige formatos, ganchos y CTA según lo que buscas.</p><div class="chips" id="eObj">' + OBJ.map((o) => '<button type="button" class="chip' + (c.obj === o[0] ? ' on' : '') + '" data-obj="' + o[0] + '">' + o[1] + '</button>').join('') + '</div>' +
+    const app = c.app || '', nb = base().length;
+    return '<div class="card"><b>📱 App de este espacio</b><p class="sub">Si el espacio es de una de tus apps, ✨ Base de fábrica trae lo que esa app hace (temas y sus 🧩 módulos) para sacar ideas al tiro.</p>' +
+      '<label>App<select id="eApp">' + APPS_EST.map((x) => '<option value="' + x[0] + '"' + (x[0] === app ? ' selected' : '') + '>' + esc(x[1]) + '</option>').join('') + '</select></label>' +
+      '<button type="button" class="ghost" data-act="fabrica">✨ Base de fábrica</button>' + (nb ? '<p class="sub">Ya tienes ' + nb + ' filas: solo se suman las que faltan.</p>' : '') + '</div>' +
+      '<div class="card"><b>🎯 Objetivo de ' + esc((esp() || {}).nombre || '') + '</b><p class="sub">Elige formatos, ganchos y CTA según lo que buscas.</p><div class="chips" id="eObj">' + OBJ.map((o) => '<button type="button" class="chip' + (c.obj === o[0] ? ' on' : '') + '" data-obj="' + o[0] + '">' + o[1] + '</button>').join('') + '</div>' +
       '<label>Público<input id="ePub" maxlength="80" value="' + esc(c.publico) + '" placeholder="ej. ciclistas de Santiago"></label>' +
       '<label>Tono<input id="eTono" maxlength="60" value="' + esc(c.tono) + '" placeholder="ej. cercano, con humor"></label>' +
       '<label>Hashtags fijos<input id="eTags" maxlength="160" value="' + esc(c.tags) + '" placeholder="#bicis #taller"></label>' +
@@ -306,7 +361,9 @@
     bind(el, alSub);
     const ce = el.querySelector('#estEsp');
     if (ce) window.CFX_CAJA.montar(ce, { opciones: espacios().map((e) => ({ id: e.id, t: e.nombre, color: e.color || '#94a3b8' })), actual: ui.esp, dato: 'ca-esp', titulo: 'Elige el espacio', aviso: 'Espacio · toca para cambiar',
-      alElegir: (id) => { ui.esp = id; ui.idea = null; ui.semana = null; CM.pintar(); } });
+      alElegir: (id) => { const habia = !!ui.idea; ui.esp = id; ui.idea = null; ui.semana = null; // G123 b: al cambiar de espacio la idea se rehace con su base
+        if (habia && base().length) { const n = window.Motor.nueva(ctx(), ui.red, hoy()); if (n) ui.idea = ajustarObjetivo(n); }
+        CM.pintar(); } });
   }
   function bind(el, alSub) {
     el.onclick = async (e) => {
@@ -324,8 +381,13 @@
           let n = C.temas.includes(opc.tema) ? window.Motor.nueva(C, ui.red, hoy(), opc) : window.Motor.nueva(C, ui.red, hoy());
           if (!n) return toast('Se usaron todas las combinaciones: suma filas a la base (📚 Base).');
           ui.idea = ajustarObjetivo(n); ui.v = 'idea'; CM.pintar();
+        } else if (a === 'todo') { // G123 a: 🔄 Cambiar todo = gancho, guión, texto, copy, hashtags, CTA y tomas de una vez (mismo tema si se puede)
+          const C = ctx(), t = (ui.idea || {}).tema, n = (C.temas.includes(t) && window.Motor.nueva(C, ui.red, hoy(), { tema: t })) || window.Motor.nueva(C, ui.red, hoy());
+          if (!n) return toast('Se usaron todas las combinaciones: suma filas a la base (📚 Base).');
+          const k = ((ui.idea || {}).vc || 0) + 1; ui.idea = Object.assign(ajustarObjetivo(n), { vc: k, vh: k }); CM.pintar();
         } else if (a === 'refrescar') {
           const campo = REFRESCA[b.dataset.c], prev = ui.idea.cta, op = CTA_OBJ[cf().obj] || [];
+          if (campo === 'vc' || campo === 'vh') { ui.idea = Object.assign({}, ui.idea, { [campo]: (+ui.idea[campo] || 0) + 1 }); CM.pintar(); return; }
           ui.idea = window.Motor.refrescar(ctx(), ui.idea, campo);
           if (campo === 'cta' && op.length) ui.idea.cta = op[(op.indexOf(prev) + 1) % op.length];
           CM.pintar();
@@ -334,6 +396,16 @@
         else if (a === 'guardar') { await guardarIdea(ui.idea); ui.idea = null; toast('💾 Guardada en 📅 Semana'); }
         else if (a === 'semana' || a === 'otraSemana') { const d = new Date(hoy() + 'T12:00:00'), w = d.getDay() || 7; d.setDate(d.getDate() + (w === 1 ? 0 : 8 - w)); const C = ctx(); ui.semana = window.Motor.semana(C, cf().ritmo, d.toISOString().slice(0, 10)).map(ajustarObjetivo); if (!ui.semana.length) toast('Falta base: súbela en 📚 Base.'); CM.pintar(); }
         else if (a === 'guardarSemana') { const L = ui.semana || []; await insertar(L.map((i) => ({ tipo: 'est_idea', estado: 'pendiente', espacio_id: ui.esp, titulo: String(i.gancho || '').slice(0, 200), fecha: i.fecha_plan || null, datos: datosIdea(i) }))); ui.semana = null; toast('💾 ' + L.length + ' ideas guardadas'); }
+        else if (a === 'fabrica') {
+          const app = el.querySelector('#eApp').value; if (!app) return toast('Elige primero la app de este espacio');
+          const ya = new Set(base().map((x) => (((x.datos || {}).tema || '') + '|' + ((x.datos || {}).cat || '') + '|' + x.titulo).toLowerCase()));
+          const rows = filasFabrica(app).filter((f) => !ya.has((f.tema + '|' + f.cat + '|' + f.texto).toLowerCase()))
+            .map((f) => ({ tipo: 'est_base', estado: 'abierto', espacio_id: ui.esp, titulo: f.texto, datos: { tema: f.tema, cat: f.cat } }));
+          const c = conf(), F = FAB[app], datos = Object.assign({}, cf(), { app, publico: cf().publico || F.pub, tags: cf().tags || F.tags });
+          if (c) await CM.upd(c.id, { datos }); else await CM.add('est_conf', { espacio_id: ui.esp, titulo: 'Estudio', datos });
+          if (rows.length) await insertar(rows);
+          toast(rows.length ? '✨ ' + rows.length + ' filas de fábrica sumadas' : 'Nada nuevo: la base de fábrica ya estaba'); ui.v = 'idea'; ui.idea = null; CM.pintar();
+        }
         else if (a === 'abrir') abrir(id);
         else if (a === 'subirBase') subirBase();
         else if (a === 'subirHist') subirHistorial();
@@ -341,7 +413,7 @@
         else if (a === 'agregar' || a === 'tema') agregar(b.dataset.t);
         else if (a === 'guardarConf') {
           const ritmo = {}; el.querySelectorAll('[data-ritmo]').forEach((i) => { ritmo[i.dataset.ritmo] = Math.max(0, Math.min(21, Math.round(+i.value) || 0)); });
-          const on = el.querySelector('[data-obj].on'), datos = { obj: on ? on.dataset.obj : 'vender', publico: el.querySelector('#ePub').value.trim().slice(0, 80), tono: el.querySelector('#eTono').value.trim().slice(0, 60), tags: el.querySelector('#eTags').value.trim().slice(0, 160), ritmo };
+          const on = el.querySelector('[data-obj].on'), datos = { app: el.querySelector('#eApp') ? el.querySelector('#eApp').value : (cf().app || ''), obj: on ? on.dataset.obj : 'vender', publico: el.querySelector('#ePub').value.trim().slice(0, 80), tono: el.querySelector('#eTono').value.trim().slice(0, 60), tags: el.querySelector('#eTags').value.trim().slice(0, 160), ritmo };
           const c = conf(); if (c) await CM.upd(c.id, { datos }); else await CM.add('est_conf', { espacio_id: ui.esp, titulo: 'Estudio', datos });
           toast('💾 Guardado'); ui.v = 'idea'; CM.pintar();
         }

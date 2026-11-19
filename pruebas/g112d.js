@@ -29,7 +29,7 @@ const APPS = {
     await t.sim.crearUsuario('cli@x.cl', 'clave123', { rol: 'cliente', barberia: (await t.sim.su('select codigo from public.barberias order by created_at limit 1'))[0].codigo, nombre: 'Pepe', telefono: '+56912345672' });
     await t.sim.su('update public.profiles set clave_temporal = false, tour_visto = true where true').catch(() => {});
     return { nadie: 'cli@x.cl' };
-  }, ['/'], async (p) => { await p.evaluate(() => { const b = [...document.querySelectorAll('nav.cfx-barra > a, nav.cfx-barra > button')].pop(); if (b) b.click(); }); await p.waitForTimeout(1200);
+  }, ['/'], async (p) => { await p.evaluate(() => { const b = [...document.querySelectorAll('nav.cfx-barra > a, nav.cfx-barra > button')].find((x) => /Más/.test(x.textContent)); if (b) b.click(); }); await p.waitForTimeout(1200);
     await p.click('text=Estudio de contenido >> visible=true'); await p.waitForTimeout(3000); }],
   billetera: ['/home/user/emprendedor', 'p_g112d_emp', async (t) => {
     for (const [e, n] of [['dueno@x.cl', 'Almacén Ana'], ['otro@x.cl', 'Otro']]) {
@@ -93,6 +93,13 @@ const APPS = {
       await p.click('.cfx-est [data-e=generar]'); await p.waitForTimeout(800);
       const cajas = await p.locator('.cfx-est [data-caja]').count();
       ok(cajas === 8, n + ': ✨ Generar idea → 8 cajas (' + cajas + ')');
+      { // G123 a: 🔄 en copy y hashtags + 🔄 Cambiar todo
+        const tx = (k) => p.locator('.cfx-est [data-caja=' + k + '] .e-txt').innerText();
+        const c0 = await tx('copy'); await p.click('.cfx-est [data-caja=copy] [data-e=refrescar]'); await p.waitForTimeout(300);
+        ok((await tx('copy')) !== c0 && await p.locator('.cfx-est [data-caja=tags] [data-e=refrescar]').count() === 1, n + ': 🔄 copy cambia y hashtags tienen 🔄 (G123)');
+        const c1 = await tx('copy'); await p.click('.cfx-est [data-e=todo]'); await p.waitForTimeout(400);
+        ok(await p.locator('.cfx-est [data-caja]').count() === 8 && (await tx('copy')) !== c1, n + ': 🔄 Cambiar todo rehace la idea (G123)');
+      }
       const ancho = await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
       ok(ancho, n + ': cabe a ' + (process.env.ANCHO || 360) + ' px');
       await p.screenshot({ path: __dirname + '/capturas/g112d-' + n + '-idea.png' }).catch(() => {});

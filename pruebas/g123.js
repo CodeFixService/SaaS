@@ -9,11 +9,12 @@ const caja = (p, k) => p.locator('[data-caja=' + k + '] .est-txt').innerText();
   execSync(__dirname + '/base.sh /home/user/saas p_g123', { stdio: 'ignore' });
   const t = await abrir('/home/user/saas', 'p_g123'); const p = t.page, su = t.sim.su;
   try {
-    const u = await t.sim.crearUsuario('jefe@x.cl', 'admin123');
+    const ADM = require('fs').readFileSync(__dirname + '/g112d.js', 'utf8').match(/const ADM = '([^']+)'/)[1]; // el admin real (súper admin)
+    const u = await t.sim.crearUsuario(ADM, 'admin123');
     await su("update public.perfiles set rol = 'admin' where id = $1", [u.id]);
     await su("insert into public.espacios (owner, nombre, color, modo) values ($1, 'Despega', '#ff6600', 'trabajo'), ($1, 'Barbería', '#0066ff', 'trabajo')", [u.id]);
     await p.goto(t.base + '/'); await p.waitForTimeout(800);
-    if (await p.locator('input[type=email]').count()) { await p.fill('input[type=email]', 'jefe@x.cl'); await p.fill('input[type=password]', 'admin123'); await p.press('input[type=password]', 'Enter'); }
+    if (await p.locator('input[type=email]').count()) { await p.fill('input[type=email]', ADM); await p.fill('input[type=password]', 'admin123'); await p.press('input[type=password]', 'Enter'); }
     await p.waitForTimeout(2000);
     await p.goto(t.base + '/app/#cerebro'); await p.waitForTimeout(1800); await t.sinModales(p);
     await p.click('[data-sub=estudio]'); await p.waitForTimeout(1800);

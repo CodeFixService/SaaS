@@ -303,6 +303,12 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. (Opcional) Supabase → proyecto de Cerebro → **Project Settings** → **Pause project**. Si ya no entras, no importa.
 3. El repo **Contenido** queda guardado en GitHub (no lo borres: nada se pierde). Su motor ya está en CM → 🎬 Estudio.
 
+## G123 · 🎬 Estudio: 🔄 Cambiar todo + Espacio por app · núcleo 3.28 · CM 5.61 · Despega 6.77 · Barbería 3.48 · Billetera 1.21.108 · BiciTaller 3.38 · Estaciona 2.28 (bases y funciones SIN cambio; va junto con G122: un solo Liberar)
+1. CM → Cerebro → 🎬 Estudio → **🎯 Espacio** → **📱 App**: elige Despega → **✨ Base de fábrica** → dice "✨ N filas sumadas".
+2. **💡 Idea** → ✨ Generar idea → en ✍️ Copy y #️⃣ Hashtags toca **🔄 Otra** (cambian) → abajo **🔄 Cambiar todo** (cambia todo de una vez).
+3. Con la idea abierta, cambia el Espacio en la caja ▾ → sale otra idea de ese espacio.
+4. En una app con el módulo 🎬 (ej. Barbería → Más → Estudio): mismos 🔄.
+
 ## G122 · 🖼️ Fotos a Storage · núcleo 3.27 · CM 5.60 bd 4.68 · Despega 6.76 bd 5.88 · Barbería 3.47 bd 3.18 · Billetera 1.21.107 bd 72 · BiciTaller 3.37 bd 2.68 · Estaciona 2.27 bd 69 (funciones SIN cambio)
 0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo**. (La base crea sola el almacén público **vitrina** en Storage de cada app.)
 1. Despega → **Caja** → un producto → **📷 foto** → Guardar → abre tu catálogo: la foto se ve. (Supabase de Despega → **Storage** → **vitrina**: aparece el archivo.)
