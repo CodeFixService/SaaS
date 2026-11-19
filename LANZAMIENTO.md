@@ -303,8 +303,16 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. (Opcional) Supabase → proyecto de Cerebro → **Project Settings** → **Pause project**. Si ya no entras, no importa.
 3. El repo **Contenido** queda guardado en GitHub (no lo borres: nada se pierde). Su motor ya está en CM → 🎬 Estudio.
 
-## G117 · 🗂️ Ajustes ordenados (horario y datos de banco) · núcleo 3.25 · CM 5.58 · Despega 6.74 bd 5.87 · Barbería 3.45 · Billetera 1.21.104 · BiciTaller 3.35 · Estaciona 2.25 (solo Despega cambia base)
-1. CM → Apps → Despega → **⬆️ Actualizar base** (5.87) → Cloudflare **Listo** en las 6 → CM → Apps → 🚀 **Liberar todo**.
+## G118 · 📊 Planilla de carga masiva · núcleo 3.26 · CM 5.59 · Despega 6.75 bd 5.87 · Barbería 3.46 · Billetera 1.21.105 · BiciTaller 3.36 · Estaciona 2.26 (va junto con G117: un solo Liberar)
+0. CM → Apps → Despega → **⬆️ Actualizar base** (5.87) → Cloudflare **Listo** en las 6 → CM → Apps → 🚀 **Liberar todo**.
+1. Despega → **Caja** → **Productos** → arriba **📊 Planilla única** → **⬇️ Descargar planilla** (Excel con ejemplos de tu rubro).
+2. Ábrela en Excel o Google Sheets, cambia/agrega 2 productos (uno con el mismo nombre de uno que ya tienes) → guarda → **⬆️ Subir planilla** → dice **🆕 Se crean 1 · 🔄 se actualizan 1** → **✅ Confirmar**.
+3. Escribe una letra en un precio y súbela: sale **⚠️ 1 con error · Fila N: precio…** y esa fila no se carga.
+4. **🤖 Pídele a Claude** → **📋 Copiar texto** → pégalo aquí en Claude con tu lista → pega la respuesta en el cuadro → **👀 Ver qué se carga**.
+5. Barbería y BiciTaller → ⋯ Más → **Servicios** → abajo **📊 Cargar o actualizar muchos** (igual). Billetera → **Clientes** → abajo **📊 Cargar muchos clientes** (marca la autorización; los que ya están no se tocan).
+
+## G117 · 🗂️ Ajustes ordenados (horario y datos de banco) · va junto con G118 (solo Despega cambia base: 5.87)
+1. Ya hecho en G118 paso 0.
 2. Despega → ⋯ Más → **Mi tienda**: el horario sale por días. **⚡ Rápido** = Lun a Vie, Sáb y Dom; **📅 Día por día** = cada día; **＋ colación** agrega un 2.º tramo. Abajo dice **👀 Así lo ven tus clientes**. Si tu horario estaba escrito raro, sale tal cual con **📅 Pasar a días** (no se pierde si no lo tocas).
 3. Mismo lugar, **Datos para transferencia**: banco (lista), tipo, N°, RUT (✅ si está bien), nombre y correo. Tus datos viejos salen arriba y los campos ya vienen llenos: revisa y toca **Guardar mi tienda**.
 4. Barbería → ⋯ Más → **💳 Links de pago** → datos de transferencia por campos → **Guardar**.
