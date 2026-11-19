@@ -1,0 +1,178 @@
+<title>Catálogo CodeFix</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: una columna de lectura (máx. 880px); fila de precios arriba, una ficha por app, texto de WhatsApp listo bajo cada una */
+:root{
+  --bg:#f3f6f7; --sup:#ffffff; --tinta:#13222c; --suave:#566872; --linea:#d9e2e6;
+  --acento:#0b7a83; --acento-fondo:#e1f1f2; --gratis:#2f7d32; --wa:#e9f7ee;
+  --f-tit:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-txt:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e171c; --sup:#16232a; --tinta:#e6eef1; --suave:#9db0b8; --linea:#2a3a42;
+  --acento:#4cc3cb; --acento-fondo:#173338; --gratis:#7fd083; --wa:#15302a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e171c; --sup:#16232a; --tinta:#e6eef1; --suave:#9db0b8; --linea:#2a3a42;
+  --acento:#4cc3cb; --acento-fondo:#173338; --gratis:#7fd083; --wa:#15302a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--tinta);font-family:var(--f-txt);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+main{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--f-tit);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(30px,6vw,46px);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(22px,4.4vw,28px);font-weight:800}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--suave);font-family:var(--f-txt);font-weight:600}
+p{margin:0}
+.marca{font-family:var(--f-tit);font-weight:800;color:var(--acento);letter-spacing:.02em}
+.intro{display:flex;flex-direction:column;gap:12px}
+.intro p{color:var(--suave);max-width:62ch;font-size:16px}
+.claves{display:flex;flex-wrap:wrap;gap:8px}
+.claves span{background:var(--acento-fondo);color:var(--tinta);padding:5px 12px;border-radius:999px;font-size:13.5px;font-weight:500}
+.precios{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--linea);border-radius:14px;background:var(--sup);overflow:hidden}
+.precios div{padding:14px 16px;display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--linea)}
+.precios div:last-child{border-right:0}
+.precios b{font-family:var(--f-tit);font-size:24px;font-variant-numeric:tabular-nums}
+.precios small{color:var(--suave);font-size:12.5px}
+.precios .et{font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:600;color:var(--acento)}
+.nota{color:var(--suave);font-size:13.5px}
+nav.apps{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding-block:8px;z-index:5}
+nav.apps a{white-space:nowrap;text-decoration:none;color:var(--tinta);border:1px solid var(--linea);background:var(--sup);padding:7px 13px;border-radius:999px;font-weight:500;font-size:14px}
+nav.apps a:hover,nav.apps a:focus-visible{border-color:var(--acento);outline:none}
+.app{background:var(--sup);border:1px solid var(--linea);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:18px;scroll-margin-top:64px}
+.cab{display:flex;flex-direction:column;gap:6px}
+.cab .ico{font-size:30px;line-height:1}
+.cab p{color:var(--suave);max-width:62ch}
+.planes{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.plan{display:flex;flex-direction:column;gap:8px;min-width:0}
+.plan ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.plan .tag{font-weight:600;font-size:14px}
+.plan.free .tag{color:var(--gratis)}
+.plan.pro .tag{color:var(--acento)}
+.packs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pack{border:1px solid var(--linea);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.pack.dest{border-color:var(--acento);background:var(--acento-fondo)}
+.pack b{font-family:var(--f-tit);font-size:20px;font-variant-numeric:tabular-nums}
+.pack span{font-size:13px;color:var(--suave)}
+.pack .n{font-weight:600;font-size:14px;color:var(--tinta)}
+details{border-top:1px solid var(--linea);padding-top:12px}
+summary{cursor:pointer;font-weight:600;color:var(--acento)}
+summary:focus-visible{outline:2px solid var(--acento);outline-offset:3px;border-radius:4px}
+.mods{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+.mods li{min-width:0}
+.mods b{display:block;font-weight:600;font-size:14.5px}
+.mods span{color:var(--suave);font-size:13.5px}
+.wa{background:var(--wa);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.wa pre{margin:0;white-space:pre-wrap;word-break:break-word;font-family:var(--f-txt);font-size:14px}
+.wa .fila{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+button{font:inherit;font-weight:600;font-size:14px;background:var(--acento);color:var(--sup);border:0;border-radius:999px;padding:8px 16px;cursor:pointer}
+button:focus-visible{outline:2px solid var(--tinta);outline-offset:2px}
+.pie{color:var(--suave);font-size:13.5px;display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--linea);padding-top:18px}
+@media (max-width:640px){
+  .precios{grid-template-columns:1fr 1fr}
+  .precios div:nth-child(2){border-right:0}
+  .precios div:nth-child(-n+2){border-bottom:1px solid var(--linea)}
+  .planes,.mods{grid-template-columns:1fr}
+  .packs{grid-template-columns:1fr}
+  .app{padding:16px}
+}
+</style>
+<main>
+  <header class="intro">
+    <div class="marca">CodeFix</div>
+    <h1>Apps listas para tu negocio</h1>
+    <p>Cinco apps hechas en Chile para vender, agendar, cobrar y ordenar tu negocio desde el celular. Partes gratis y pagas solo lo que de verdad usas.</p>
+    <div class="claves"><span>Gratis sin límite de días</span><span>Prueba 7 días con un botón</span><span>Tus clientes no pagan</span><span>Soporte siempre</span></div>
+  </header>
+
+  <section class="precios" aria-label="Precios">
+    <div><span class="et">Free</span><b>$0</b><small>Opera completo, para siempre</small></div>
+    <div><span class="et">Premium</span><b>$3.000</b><small>al mes · −20 % en módulos</small></div>
+    <div><span class="et">Módulo suelto</span><b>$990</b><small>al mes · lo activas y lo usas</small></div>
+    <div><span class="et">Packs</span><b><small style="font-size:13px">desde</small> $1.490</b><small>al mes · más barato que sueltos</small></div>
+  </section>
+  <p class="nota">Plan anual = pagas 10 meses. Pagas con Mercado Pago, Webpay o transferencia. Boleta en todas las apps; factura en Despega Pyme. Precios en pesos chilenos.</p>
+
+  <nav class="apps" id="nav" aria-label="Apps"></nav>
+  <div id="apps" style="display:flex;flex-direction:column;gap:28px"></div>
+
+  <section class="app" id="todas">
+    <div class="cab"><h2>Mensaje general</h2><p>Para presentar CodeFix sin elegir app todavía.</p></div>
+    <div class="wa"><pre id="wa-todas"></pre><div class="fila"><span class="nota">Listo para pegar en WhatsApp</span><button type="button" data-copiar="wa-todas">Copiar</button></div></div>
+  </section>
+
+  <footer class="pie">
+    <p>Detrás de las cinco apps está el Centro de Mando de CodeFix: actualizaciones, pagos y soporte en un solo lugar. El negocio no tiene que instalar nada aparte.</p>
+    <p>Cada módulo y Premium se prueban 7 días gratis una vez por correo. Si no lo renuevas, vuelves a Free y no pierdes tus datos.</p>
+  </footer>
+</main>
+<script>
+const MODS = {"despega": [["💬 Chat", "Conversa con tus clientes dentro de la app, con límites contra el spam."], ["⭐ Calificaciones", "Tus clientes te califican y tú a ellos: más confianza para comprar."], ["🏷️ Cupones", "Crea códigos de descuento para tus clientes."], ["🎟️ Tarjeta de sellos", "Cada compra suma un sello; al completar la meta, premio."], ["🛒 Recordar carrito", "Si un cliente deja productos en el carrito, al día siguiente le llega un aviso."], ["🔎 Para vender más", "Cada noche: clientes en riesgo, productos quietos, stock que se acaba y grupos de clientes."], ["📈 Estadísticas", "Ventas, productos que más dejan y gráficos en vivo."], ["🧑‍🍳 Mi equipo", "Suma vendedores y bodega con su propia cuenta y permisos."], ["📣 Campañas automáticas", "Mensajes automáticos a tus clientes: ofertas, cumpleaños y los que hace tiempo no vuelven."], ["📲 Vender en redes", "Pedir por WhatsApp, catálogo para Google e Instagram."], ["🔗 Avisos a tu sistema", "Cada pedido llega firmado a tu sistema o planilla (webhooks)."], ["📊 Medir anuncios", "Meta Pixel y Google Analytics en tu tienda: mide qué anuncio te trae ventas."], ["🌐 Dominio propio", "Tu tienda en tu dirección (mitienda.cl) en vez del link de Despega Pyme."], ["🎁 Gift cards", "Vende tarjetas de regalo con código para canjear en tu negocio."], ["🔁 Compras recurrentes", "Tu cliente recibe su pedido solo cada semana o cada mes (café, alimento, agua…): venta segura sin tener que pedirla."], ["📦 Stock mínimo y proveedores", "Te avisa cuando un producto baja de su mínimo y arma el pedido a tu proveedor por WhatsApp con un toque."], ["🏬 Sucursales y bodegas", "Stock separado por local o bodega: vendes en la Caja desde cada sucursal y mueves mercadería entre ellas."], ["📣 Promo destacada", "Al abrir la app, tus clientes ven tu oferta en una tarjeta con foto y botón (además de tus ofertas de siempre). Ves cuántos la vieron y la tocaron."], ["🛒 Mercado Libre", "Une tus productos con tus publicaciones de Mercado Libre: vendes allá y se descuenta aquí; cambias el stock aquí y se actualiza allá."], ["🚚 Courier Chilexpress", "Cotiza el envío y saca la etiqueta de Chilexpress desde el pedido: el código de seguimiento le llega solo a tu cliente."], ["🎬 Estudio de contenido", "Ideas para TikTok, Instagram y Facebook con gancho, guión, copy y hashtags listos para copiar. Arma tu semana y aprende de TUS métricas qué funciona."]], "barberia": [["⏰ Recordatorios", "Avisos automáticos antes de cada cita o vencimiento."], ["🎟️ Tarjeta de sellos", "Cada compra suma un sello; al completar la meta, premio."], ["📣 Campañas automáticas", "Mensajes automáticos a tus clientes: ofertas, cumpleaños y los que hace tiempo no vuelven."], ["⏳ Lista de espera", "Si no hay horas, el cliente se anota y le avisamos apenas se libere una."], ["⭐ Reseñas en Google", "Al cliente feliz le pedimos su reseña en Google: más gente te encuentra."], ["💳 Anti-falta", "Abono obligatorio y bloqueo automático para los clientes que reservan y no llegan."], ["🖼️ Portafolio", "Fotos de tus mejores trabajos en tu página de reservas."], ["🎁 Gift cards", "Vende tarjetas de regalo con código para canjear en tu negocio."], ["🔁 Membresía", "Plan mensual para tus clientes (ej. 4 cortes al mes): plata segura cada mes."], ["🛍️ Productos y stock", "Vende productos en la caja y lleva su stock."], ["🤖 Reservas por WhatsApp e Instagram", "Link y respuestas listas para que reserven desde tus redes."], ["📣 Promo destacada", "Al abrir la app, tus clientes ven tu oferta en una tarjeta con foto y botón (además de tus ofertas de siempre). Ves cuántos la vieron y la tocaron."], ["🎬 Estudio de contenido", "Ideas para TikTok, Instagram y Facebook con gancho, guión, copy y hashtags listos para copiar. Arma tu semana y aprende de TUS métricas qué funciona."]], "billetera": [["📝 Acuerdo de pago firmado", "Armas un plan de pago y el cliente lo acepta desde su link con su nombre: queda firmado, con fecha y calendario."], ["🧮 Link para el contador", "Un link de solo lectura con ventas, gastos y cobros del mes y su planilla: sin mandar pantallazos."], ["📈 Cobranza escalonada", "El mensaje de cobro sube de tono solo según los días de atraso: amable → neutral → firme, respetando la ley."], ["🔁 Gastos fijos automáticos", "Arriendo, luz o sueldos se anotan solos cada mes en tu caja, el día que elijas."], ["📤 Cuentas por pagar", "Lo que debes a tus proveedores con su vencimiento: te avisamos antes y al pagar queda como gasto en tu caja."], ["💵 Cierre de caja", "Al cerrar cuentas el efectivo y ves al tiro si cuadra, sobra o falta. Queda el historial de cada día."], ["🔔 Aviso de vencimiento automático", "El día antes y el día que vence, a tu cliente le llega el aviso en su celular con su saldo y link para pagar. Solo, respetando la ley."], ["🎬 Estudio de contenido", "Ideas para TikTok, Instagram y Facebook con gancho, guión, copy y hashtags listos para copiar. Arma tu semana y aprende de TUS métricas qué funciona."]], "taller": [["✅ Presupuesto por link", "El cliente aprueba o rechaza cada arreglo desde su celular: sin llamadas ni reclamos."], ["🔔 Aviso \"bici lista\"", "Al dejarla lista, el cliente recibe el aviso por WhatsApp con el total y el link; si no la retira, se lo recordamos."], ["⏰ Recordatorio de mantención", "Cada X meses le avisamos al cliente que le toca mantención: vuelve solo."], ["📦 Repuestos y stock", "Stock de repuestos que baja solo con cada orden y pedido a tu proveedor por WhatsApp con un toque."], ["🏷️ Bicis usadas certificadas", "Vende bicis usadas con informe de 50 puntos, fotos y garantía: se publican en tu página y te escriben por WhatsApp."], ["🔄 Parte de pago", "Calculadora: cuánto ofrecer por la bici usada del cliente para que se lleve una nueva o un arreglo."], ["🪪 Pasaporte de la bici", "Sticker QR para el cuadro: historial de mantenciones, dueño y aviso de robo. Quien la escanea sabe si es robada."], ["🚐 Mecánico a domicilio", "El cliente reserva con su dirección (+ recargo de visita); armas la ruta del día y le avisas “Voy en camino”."], ["🛡️ Garantías", "Garantía del trabajo, repuestos o bici usada, con vencimiento: el cliente la ve en su link y la usa en 1 toque."], ["🔁 Plan de mantención", "Tus clientes pagan al mes y tienen visitas incluidas y descuento: plata segura cada mes y vuelven siempre."], ["⭐ Reseñas en Google", "Al cliente feliz le pedimos su reseña en Google: más gente te encuentra."], ["📣 Promo destacada", "Al abrir la app, tus clientes ven tu oferta en una tarjeta con foto y botón (además de tus ofertas de siempre). Ves cuántos la vieron y la tocaron."], ["🎬 Estudio de contenido", "Ideas para TikTok, Instagram y Facebook con gancho, guión, copy y hashtags listos para copiar. Arma tu semana y aprende de TUS métricas qué funciona."]], "estaciona": [["⭐ Destacado en el mapa", "Tus estacionamientos salen primero y resaltados en el mapa y la lista: más reservas."], ["🔑 Control de acceso con QR", "Cada reserva trae su pase QR: lo escaneas al entrar y salir y ves si está vigente y su patente."], ["🏷️ Descuento por estadía larga", "Premia a quien reserva más tiempo: un % menos desde las horas, días o meses que elijas."], ["📊 Ganancias y ocupación", "Cuánto ganaste por mes, ocupación de cada lugar, mejores días y planilla para Excel."], ["🌙 Tarifa fin de semana y noche", "Cobra distinto el sábado, domingo y de noche: un % más (o menos) que se calcula solo al reservar."], ["🔁 Clientes frecuentes", "Ve quién te arrienda más y prémialo solo: un % menos desde su reserva número N. Vuelven siempre."], ["📅 Cerrar fechas", "Cierra días por vacaciones o uso propio: nadie puede reservar esas fechas y la ficha lo muestra."], ["🔔 Lista de espera", "Si tu lugar está ocupado, la gente se anota y le avisamos apenas lo marques disponible: no pierdes al próximo cliente."], ["🎬 Estudio de contenido", "Ideas para TikTok, Instagram y Facebook con gancho, guión, copy y hashtags listos para copiar. Arma tu semana y aprende de TUS métricas qué funciona."]]}
+;
+const APPS = [
+ {id:'despega', ico:'🛍️', nombre:'Despega Pyme', lema:'Tienda online, caja y pedidos para pymes.',
+  para:'Almacenes, emprendimientos, tiendas de ropa, comida y todo el que vende productos.',
+  free:['Tu tienda online con link propio para compartir','Caja para vender en el local, con stock','Pedidos con seguimiento para el cliente','Clientes, fichas y mensajes','Boleta y factura'],
+  pro:['Más cupo y más gente en tu equipo','Sin la marca CodeFix en tu tienda','Reportes para crecer','−20 % en todos los módulos'],
+  packs:[['🌱 Básico',1990,'Cupones, sellos y calificaciones'],['⭐ Normal',2990,'+ chat, recordar carrito, vender en redes y estadísticas'],['💎 Completo',3990,'Todos los módulos, también los nuevos']]},
+ {id:'barberia', ico:'💈', nombre:'Barbería', lema:'Reservas con abono, agenda y caja para barberías.',
+  para:'Barberías y peluquerías, con uno o varios barberos.',
+  free:['Agenda y servicios con sus tiempos','Link y QR para que reserven solos','Abono por Mercado Pago o transferencia','Caja de cortes y comprobante','Clientes con su historial'],
+  pro:['Barberos ilimitados','Estadísticas del negocio','Sin la marca CodeFix','Incluye ⏰ Recordatorios, 🎟️ Sellos y 📣 Campañas','−20 % en los demás módulos'],
+  packs:[['🌱 Básico',1490,'Recordatorios y sellos'],['⭐ Normal',2490,'+ campañas, anti-falta, lista de espera y reseñas'],['💎 Completo',2990,'Todos los módulos, también los nuevos']]},
+ {id:'billetera', ico:'💰', nombre:'Billetera', lema:'Libreta de cobros: fiado, cuotas y abonos en orden.',
+  para:'Negocios que venden al fiado o en cuotas, prestadores de servicios y quien cobra todos los meses.',
+  free:['Anota fiado, cuotas y abonos','Tu cliente ve su cuenta por un link','Caja de ingresos y gastos'],
+  pro:['Clientes ilimitados','Billeteras conectadas','Reportes','−20 % en todos los módulos'],
+  packs:[['🌱 Básico',1490,'Acuerdo de pago y cobranza escalonada'],['⭐ Normal',1990,'+ aviso de vencimiento, gastos fijos y cierre de caja'],['💎 Completo',2490,'Todos los módulos, también los nuevos']]},
+ {id:'taller', ico:'🚲', nombre:'BiciTaller', lema:'Órdenes de trabajo y clientes para talleres de bicicletas.',
+  para:'Talleres y mecánicos de bicicletas, en local o a domicilio.',
+  free:['Órdenes de trabajo y tablero del taller','Clientes y sus bicis','Reservas con abono','Fotos de llegada y entrega','Checklist de revisión y comprobante'],
+  pro:['Mecánicos ilimitados','Historial completo','Estadísticas','−20 % en todos los módulos'],
+  packs:[['🌱 Básico',1490,'Presupuesto por link, aviso "bici lista" y mantención'],['⭐ Normal',2490,'+ stock, garantías, reseñas y promo destacada'],['💎 Completo',3490,'Todos los módulos, también los nuevos']]},
+ {id:'estaciona', ico:'🅿️', nombre:'Estaciona', lema:'Arrienda tu estacionamiento por hora, día o mes.',
+  para:'Personas y edificios con estacionamientos libres, y quien busca dónde estacionar.',
+  free:['Publica tu estacionamiento en el mapa','Reservas con patente','Cobro por Mercado Pago o transferencia','Arriendo mensual que se renueva','Chat con quien arrienda'],
+  pro:['Hasta 10 publicaciones','−20 % en todos los módulos'],
+  packs:[['🌱 Básico',1490,'Destacado en el mapa y descuento por estadía larga'],['⭐ Normal',1990,'+ lista de espera, clientes frecuentes y tarifas'],['💎 Completo',2490,'Todos los módulos, también los nuevos']]}
+];
+const pesos = n => '$' + n.toLocaleString('es-CL');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function textoWa(a){
+  const m = MODS[a.id];
+  return `${a.ico} *${a.nombre}* — ${a.lema}\n\n` +
+    `✅ *Gratis para siempre:* ${a.free.slice(0,4).join(', ').toLowerCase()}.\n` +
+    `⭐ *Premium $3.000/mes:* ${a.pro.join(', ').replace(/−20 %/,'-20%')}.\n` +
+    `🧩 *${m.length} módulos* desde $990/mes (o pack desde ${pesos(a.packs[0][1])}). Ej.: ${m.slice(0,3).map(x=>x[0]).join(', ')}.\n\n` +
+    `🎁 Pruebas Premium y cada módulo 7 días gratis. Tus clientes no pagan nada.\n¿Te mando el link para crear tu cuenta?`;
+}
+document.getElementById('nav').innerHTML = APPS.map(a => `<a href="#${a.id}">${a.ico} ${esc(a.nombre)}</a>`).join('') + `<a href="#todas">💬 Mensaje general</a>`;
+document.getElementById('apps').innerHTML = APPS.map(a => {
+  const m = MODS[a.id];
+  return `<section class="app" id="${a.id}">
+    <div class="cab"><span class="ico" aria-hidden="true">${a.ico}</span><h2>${esc(a.nombre)}</h2><p>${esc(a.lema)} ${esc(a.para)}</p></div>
+    <div class="planes">
+      <div class="plan free"><span class="tag">Free · $0</span><ul>${a.free.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
+      <div class="plan pro"><span class="tag">Premium · $3.000/mes</span><ul>${a.pro.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
+    </div>
+    <div class="plan"><h3>Packs de módulos (al mes)</h3>
+      <div class="packs">${a.packs.map((p,i)=>`<div class="pack${i===1?' dest':''}"><span class="n">${p[0]}${i===1?' · más elegido':''}</span><b>${pesos(p[1])}</b><span>${esc(p[2])}</span></div>`).join('')}</div>
+    </div>
+    <details><summary>Ver los ${m.length} módulos sueltos ($990/mes c/u)</summary>
+      <ul class="mods">${m.map(x=>`<li><b>${esc(x[0])}</b><span>${esc(x[1])}</span></li>`).join('')}</ul>
+    </details>
+    <div class="wa"><pre id="wa-${a.id}">${esc(textoWa(a))}</pre><div class="fila"><span class="nota">Listo para pegar en WhatsApp</span><button type="button" data-copiar="wa-${a.id}">Copiar</button></div></div>
+  </section>`;
+}).join('');
+document.getElementById('wa-todas').textContent =
+  `👋 Soy Josué, de *CodeFix*. Hago apps para negocios chilenos, listas para usar desde el celular:\n\n` +
+  APPS.map(a => `${a.ico} *${a.nombre}:* ${a.lema}`).join('\n') +
+  `\n\n✅ Todas parten *gratis y sin límite de días*.\n⭐ Premium $3.000/mes · 🧩 módulos desde $990/mes.\n🎁 Prueba 7 días con un botón. Tus clientes no pagan.\n\n¿Cuál te sirve? Te ayudo a dejarla lista.`;
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-copiar]'); if (!b) return;
+  const el = document.getElementById(b.dataset.copiar);
+  try { await navigator.clipboard.writeText(el.textContent); b.textContent = 'Copiado ✓'; }
+  catch { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = 'Seleccionado: copia'; }
+  setTimeout(() => b.textContent = 'Copiar', 2000);
+});
+</script>
