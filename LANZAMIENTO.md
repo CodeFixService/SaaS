@@ -298,6 +298,13 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. (Opcional) Supabase → proyecto de Cerebro → **Project Settings** → **Pause project**. Si ya no entras, no importa.
 3. El repo **Contenido** queda guardado en GitHub (no lo borres: nada se pierde). Su motor ya está en CM → 🎬 Estudio.
 
+## G116 · 🎨 Menú Más y pie iguales · núcleo 3.23 · CM 5.56 · Despega 6.72 · Barbería 3.43 · Billetera 1.21.102 · BiciTaller 3.33 · Estaciona 2.23 (bases y funciones SIN cambio)
+1. Cloudflare → **Listo** en las 6 apps → CM → **Apps** → 🚀 **Liberar todo**.
+2. En el teléfono, en cada app: toca **⋯ Más** (abajo a la derecha): abre **Ajustes directo**, sin ventanita. En Barbería y BiciTaller, **Clientes** está arriba en la lista.
+3. Despega → ⋯ Más: se ven las opciones (antes salía en blanco), y también **Cupones y sellos** y **Estadísticas**. Desliza con el dedo sobre la lista: pasa a **Tu tienda**, **Vender más**…
+4. Baja hasta el final en cualquier pantalla: el pie **© … derechos reservados** queda abajo del todo, sin un hueco grande.
+5. Despega → ⋯ Más → **Despacho**: la lista de comunas sube y baja con el dedo sin cerrar la hoja.
+
 ## G114 · 🐞 Tablero: mover hacia atrás · núcleo 3.22 · CM 5.55 · Despega 6.71 · Barbería 3.42 · Billetera 1.21.101 · BiciTaller 3.32 · Estaciona 2.22 (bases y funciones SIN cambio)
 1. Cloudflare → **Listo** en las 6 apps → CM → **Apps** → 🚀 **Liberar todo**.
 2. En el teléfono: CM (tu app personal) → **Tablero** → en una tarea de **En revisión** toca la flecha **←**: pasa a **Haciendo** y sigues en el Tablero. Otra vez **←**: pasa a **Pendiente**.
