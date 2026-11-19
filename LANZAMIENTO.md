@@ -303,6 +303,14 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. (Opcional) Supabase → proyecto de Cerebro → **Project Settings** → **Pause project**. Si ya no entras, no importa.
 3. El repo **Contenido** queda guardado en GitHub (no lo borres: nada se pierde). Su motor ya está en CM → 🎬 Estudio.
 
+## G122 · 🖼️ Fotos a Storage · núcleo 3.27 · CM 5.60 bd 4.68 · Despega 6.76 bd 5.88 · Barbería 3.47 bd 3.18 · Billetera 1.21.107 bd 72 · BiciTaller 3.37 bd 2.68 · Estaciona 2.27 bd 69 (funciones SIN cambio)
+0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo**. (La base crea sola el almacén público **vitrina** en Storage de cada app.)
+1. Despega → **Caja** → un producto → **📷 foto** → Guardar → abre tu catálogo: la foto se ve. (Supabase de Despega → **Storage** → **vitrina**: aparece el archivo.)
+2. Barbería → ⋯ Más → **Servicios** (o Portafolio / Ofertas / Portada) → sube una foto → Guardar → se ve en tu página.
+3. BiciTaller → Bicis usadas → una con foto → Guardar → se ve en su página.
+4. Las fotos viejas pasan solas: cada vez que el dueño entra, 10 fotos viejas se mudan a Storage (se siguen viendo igual). Comprobantes y carnet NO van ahí (siguen privados).
+5. En 1 semana: pega `nucleo/sql/peso.sql` (G121) → **🖼️ Fotos dentro de la base** debe bajar.
+
 ## G118 · 📊 Planilla de carga masiva · núcleo 3.26 · CM 5.59 · Despega 6.75 bd 5.87 · Barbería 3.46 · Billetera 1.21.105 · BiciTaller 3.36 · Estaciona 2.26 (va junto con G117: un solo Liberar)
 0. CM → Apps → Despega → **⬆️ Actualizar base** (5.87) → Cloudflare **Listo** en las 6 → CM → Apps → 🚀 **Liberar todo**.
 1. Despega → **Caja** → **Productos** → arriba **📊 Planilla única** → **⬇️ Descargar planilla** (Excel con ejemplos de tu rubro).

@@ -364,9 +364,11 @@ function crear(opts) {
       if (type.startsWith('multipart/form-data')) {
         const borde = '--' + type.split('boundary=')[1];
         const s = datos.toString('latin1');
-        const ini = s.indexOf('\r\n\r\n', s.indexOf(borde)) + 4;
+        // la parte del archivo (supabase-js con Blob manda antes 'cacheControl'): la que trae Content-Type, o la primera
+        let pos = s.indexOf(borde); for (let q = pos; q >= 0; q = s.indexOf(borde, q + borde.length)) { const c = s.slice(q, s.indexOf('\r\n\r\n', q)); if (/Content-Type:/i.test(c)) { pos = q; break; } }
+        const ini = s.indexOf('\r\n\r\n', pos) + 4;
         const fin = s.indexOf('\r\n' + borde, ini);
-        const cab = s.slice(s.indexOf(borde), ini);
+        const cab = s.slice(pos, ini);
         const m = cab.match(/Content-Type:\s*([^\r\n]+)/i);
         type = m ? m[1] : 'application/octet-stream';
         datos = Buffer.from(s.slice(ini, fin), 'latin1');
