@@ -298,6 +298,13 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. (Opcional) Supabase → proyecto de Cerebro → **Project Settings** → **Pause project**. Si ya no entras, no importa.
 3. El repo **Contenido** queda guardado en GitHub (no lo borres: nada se pierde). Su motor ya está en CM → 🎬 Estudio.
 
+## G113 · 🎨 Uniformidad · núcleo 3.21 · CM 5.54 · Despega 6.70 · Barbería 3.41 · Billetera 1.21.100 · BiciTaller 3.31 · Estaciona 2.21 (bases y funciones SIN cambio)
+1. Cloudflare → **Listo** en las 6 apps → CM → **Apps** → 🚀 **Liberar todo**: el aviso muestra cada app en su fila (nombre + versión).
+2. Cualquier app → **Más**: arriba las categorías como pestañas; desliza de lado (una categoría por página).
+3. **⇅** (al lado de las pestañas) → ↑ ↓ para ordenar, ✏️ para cambiar el nombre → **Cerrar**. Sale de y vuelve a entrar: sigue igual. "Volver al orden de fábrica" lo deshace.
+4. En el computador (pantalla ancha): las opciones del Más salen en tarjetas del mismo tamaño, una al lado de la otra.
+5. CM (tu app personal) → **Tablero**: el espacio se elige en la caja (toca ▾ → Cicloservice…), ya no en botones que se salen.
+
 ## G112 d · 🎬 Estudio de contenido (módulo) · núcleo 3.20 · CM 5.53 bd 4.67 · Despega 6.69 bd 5.86 · Barbería 3.40 bd 3.17 · Billetera 1.21.99 bd 71 · BiciTaller 3.30 bd 2.67 · Estaciona 2.20 bd 68
 1. Cloudflare → **Listo** en las 6 apps. CM → **Apps** → ⬆️ **Actualizar base** en LAS 5 con negocios (y el CM) → 🚀 **Liberar**.
 2. Entra como dueño de prueba (cualquier app) → **Más** → 🎬 **Estudio de contenido** → ▶️ **Probar módulo** (7 días gratis).

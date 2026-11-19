@@ -298,11 +298,15 @@
     if (!ui.esp || !esp()) { const f = CM.ui.esp; ui.esp = (f && f !== 'todo' && f.indexOf('modo:') !== 0 && CM.espacio(f)) ? f : (espacios()[0] || {}).id || null; }
     const top = head + '<div class="chips" data-cfx-pestanas>' + [['idea', '💡 Idea'], ['semana', '📅 Semana'], ['base', '📚 Base'], ['bi', '📊 Qué funciona'], ['espacio', '🎯 Espacio']].map((t) => '<button type="button" class="chip' + (ui.v === t[0] ? ' on' : '') + '" data-v="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>';
     if (!espacios().length) { el.innerHTML = top + '<p class="empty">Crea un Espacio (Más → Espacios) para cada marca: Ciclaselfie, Personal…</p>'; bind(el, alSub); return; }
-    const selE = '<div class="chips">' + espacios().map((e) => '<button type="button" class="chip' + (e.id === ui.esp ? ' on' : '') + '" data-esp="' + e.id + '"><i class="dot" style="background:' + esc(e.color) + '"></i> ' + esc(e.nombre) + '</button>').join('') + '</div>';
+    // G113 b: el espacio se elige en la 🗂️ caja del núcleo (antes chips que se salían a la derecha).
+    const selE = window.CFX_CAJA ? '<div id="estEsp"></div>' : '<div class="chips">' + espacios().map((e) => '<button type="button" class="chip' + (e.id === ui.esp ? ' on' : '') + '" data-esp="' + e.id + '"><i class="dot" style="background:' + esc(e.color) + '"></i> ' + esc(e.nombre) + '</button>').join('') + '</div>';
     try { await cargarLibs(); } catch (e) { el.innerHTML = top + '<p class="err">' + esc(e.message) + '</p>'; bind(el, alSub); return; }
     const c = cf(), o = OBJ.find((x) => x[0] === c.obj);
     el.innerHTML = top + selE + '<p class="sub">Objetivo: ' + esc(o ? o[1] : '') + (conf() ? '' : ' · <button type="button" class="lnk" data-v="espacio">elegir</button>') + '</p><div id="estCuerpo">' + ({ idea: vIdea, semana: vSemana, base: vBase, bi: vBI, espacio: vEspacio }[ui.v] || vIdea)() + '</div>';
     bind(el, alSub);
+    const ce = el.querySelector('#estEsp');
+    if (ce) window.CFX_CAJA.montar(ce, { opciones: espacios().map((e) => ({ id: e.id, t: e.nombre, color: e.color || '#94a3b8' })), actual: ui.esp, dato: 'ca-esp', titulo: 'Elige el espacio', aviso: 'Espacio · toca para cambiar',
+      alElegir: (id) => { ui.esp = id; ui.idea = null; ui.semana = null; CM.pintar(); } });
   }
   function bind(el, alSub) {
     el.onclick = async (e) => {

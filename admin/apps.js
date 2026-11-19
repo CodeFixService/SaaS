@@ -183,7 +183,8 @@
       (listas.length ? '<button type="button" class="block" id="libTodo">' + A.ico('cohete', 18) + ' Liberar todo lo que está listo (' + listas.length + ')</button>' : '');
     const b = h.querySelector('#libTodo');
     if (b) b.onclick = async () => {
-      if (!(await confirmar('Se liberan ' + listas.map((a) => a.nombre + ' v' + E[a.id].pub).join(', ') + '. A sus usuarios les aparece el botón Actualizar.', 'Liberar todo'))) return;
+      const pregunta = 'Se liberan ' + listas.length + ' app(s). A sus usuarios les aparece el botón Actualizar.', fil = listas.map((a) => ({ t: a.nombre, d: 'v' + E[a.id].pub }));  // G113 a: lista hacia abajo
+      if (!(await (global.CFX_DIALOGO ? global.CFX_DIALOGO.confirmar(pregunta, { si: 'Liberar todo', lista: fil }) : confirmar(pregunta + '\n' + fil.map((f) => '• ' + f.t + ' ' + f.d).join('\n'), 'Liberar todo')))) return;
       for (const a of listas) await liberar(a, true);
       toast('Listo: ' + listas.length + ' app(s) liberadas');
     };
@@ -568,41 +569,27 @@
   async function cajaApps(cont, actualId, alElegir, o) {
     o = o || {};
     await imagenes();
-    let abierta = false, editar = false;
-    const img = (a) => '<img class="ca-img" alt="" src="' + esc(imgDe(a)) + '">';
+    // G113 b: la caja ahora es del núcleo (CFX_CAJA, ui.js + tema.css); aquí solo se agregan las imágenes propias del CM.
     const corto = (a) => a.nombre.split(' ·')[0];
-    const pintar = () => {
-      const a = APPS.find((x) => x.id === actualId) || APPS[0];
-      cont.innerHTML = '<div class="ca' + (abierta ? ' abierta' : '') + '">' +
-        '<button type="button" class="ca-btn" data-ca="abrir" aria-expanded="' + abierta + '">' + img(a) +
-          '<span class="ca-txt"><b>' + esc(corto(a)) + '</b><small>' + (abierta ? 'Elige la app' : 'Toca para cambiar de app') + '</small></span><span class="ca-flecha" aria-hidden="true"></span></button>' +
-        (abierta ? '<div class="ca-lista" role="listbox">' + APPS.map((x) => '<div class="ca-fila' + (x.id === a.id ? ' on' : '') + '">' +
-            '<button type="button" class="ca-op" role="option" aria-selected="' + (x.id === a.id) + '" data-ca-app="' + x.id + '">' + img(x) +
-              '<span class="ca-txt"><b>' + esc(corto(x)) + '</b>' + (o.sub && o.sub(x) ? '<small>' + esc(o.sub(x)) + '</small>' : '') + '</span>' + (x.id === a.id ? '<span class="ca-ok" aria-hidden="true">✓</span>' : '') + '</button>' +
-            (editar ? '<span class="ca-ed"><button type="button" class="small ghost" data-ca-img="' + x.id + '">Imagen</button>' + (IMG[x.id] ? '<button type="button" class="small ghost" data-ca-quitar="' + x.id + '">Original</button>' : '') + '</span>' : '') +
-          '</div>').join('') +
-          (global.CM_SOCIO ? '' : '<button type="button" class="small ghost ca-cambiar" data-ca="editar">' + (editar ? 'Listo' : 'Cambiar imágenes') + '</button>') + '</div>' : '') + '</div>';
-      // Si la imagen no carga, queda un cuadro neutro del mismo tamaño (nunca el ícono roto).
-      const sin = (i) => { const d = document.createElement('span'); d.className = 'ca-img sin'; i.replaceWith(d); };
-      cont.querySelectorAll('img.ca-img').forEach((i) => { if (i.complete && !i.naturalWidth) sin(i); else i.onerror = () => sin(i); });
-    };
     const guardar = async () => {
       try { await A.rpc('admin_config_guardar', { p_clave: 'apps_imagenes', p_valor: IMG, p_motivo: 'Imagen de app' }); toast('Imagen guardada'); }
       catch (x) { toast(/Ajuste no válido/.test(x.message) ? 'Actualiza la base del Centro de Mando para guardar imágenes' : x.message); }
     };
-    cont.onclick = (ev) => {
-      const b = ev.target.closest('[data-ca],[data-ca-app],[data-ca-img],[data-ca-quitar]'); if (!b) return;
-      if (b.dataset.ca === 'abrir') { abierta = !abierta; editar = false; return pintar(); }
-      if (b.dataset.ca === 'editar') { editar = !editar; return pintar(); }
-      if (b.dataset.caApp) { abierta = false; if (b.dataset.caApp === actualId) return pintar(); actualId = b.dataset.caApp; pintar(); return alElegir(actualId); }
-      if (b.dataset.caQuitar) { delete IMG[b.dataset.caQuitar]; pintar(); return guardar(); }
-      if (b.dataset.caImg) {
+    const c = global.CFX_CAJA.montar(cont, {
+      opciones: () => APPS.map((x) => ({ id: x.id, t: corto(x), img: imgDe(x), sub: o.sub ? o.sub(x) : '' })),
+      actual: actualId, alElegir, dato: 'ca-app', titulo: 'Elige la app', aviso: 'Toca para cambiar de app',
+      extra: (x, ed) => (ed ? '<span class="ca-ed"><button type="button" class="small ghost" data-ca-img="' + x.id + '">Imagen</button>' + (IMG[x.id] ? '<button type="button" class="small ghost" data-ca-quitar="' + x.id + '">Original</button>' : '') + '</span>' : ''),
+      pie: (ed) => (global.CM_SOCIO ? '' : '<button type="button" class="small ghost ca-cambiar" data-ca="editar">' + (ed ? 'Listo' : 'Cambiar imágenes') + '</button>'),
+      alTocar: (ev, st, pintar) => {
+        const b = ev.target.closest('[data-ca=editar],[data-ca-img],[data-ca-quitar]'); if (!b) return;
+        if (b.dataset.ca === 'editar') { st.editando = !st.editando; return pintar(); }
+        if (b.dataset.caQuitar) { delete IMG[b.dataset.caQuitar]; pintar(); return guardar(); }
         const f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*';
         f.onchange = async () => { if (!f.files[0]) return; try { IMG[b.dataset.caImg] = await achicarImg(f.files[0]); pintar(); guardar(); } catch (x) { toast(x.message); } };
         f.click();
       }
-    };
-    pintar();
+    });
+    return c;
   }
   global.MisApps = { cajaApps, render, APPS, urlLimpia, cliente, estado: E, preparar, conectar, rpcDe, abrirAdmin, abrirPanel, vincular, kpis, nombre, valor, peso, respaldar, limpieza };
 })(window);

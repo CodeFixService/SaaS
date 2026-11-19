@@ -226,26 +226,6 @@ footer.pie { text-align: center; font-size: 12px; color: var(--muted); padding: 
 p.pill { display: flex; white-space: normal; line-height: 1.35; border-radius: 12px; padding: 8px 12px; }
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
 
-/* G85 · 🗂️ Caja de apps (CM → Control): botón con la app elegida; al tocarlo se abre la lista con la imagen de cada app. */
-.ca { margin: 4px 0 10px; border: 1px solid var(--line); border-radius: 16px; background: var(--card); overflow: hidden; }
-.ca .ca-btn, .ca .ca-op { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 8px 12px; margin: 0; border: 0; border-radius: 0; background: transparent; color: var(--text); text-align: left; font: inherit; box-shadow: none; cursor: pointer; }
-.ca .ca-img { flex: none; width: 40px; height: 40px; border-radius: 10px; object-fit: cover; background: color-mix(in srgb, var(--text) 8%, transparent); }
-.ca .ca-img.sin { display: inline-block; border: 1px solid var(--line); }
-.ca .ca-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.2; }
-.ca .ca-txt b { font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ca .ca-txt small { font-size: 12.5px; color: var(--muted, #6b7280); font-weight: 500; }
-.ca .ca-flecha { flex: none; width: 10px; height: 10px; border-right: 2.5px solid currentColor; border-bottom: 2.5px solid currentColor; transform: rotate(45deg); margin: 0 6px 4px; opacity: .7; transition: transform .15s; }
-.ca.abierta .ca-flecha { transform: rotate(-135deg); margin-bottom: -4px; }
-.ca .ca-lista { border-top: 1px solid var(--line); padding: 4px 0; max-height: 60vh; overflow-y: auto; }
-.ca .ca-fila { display: flex; align-items: center; }
-.ca .ca-fila .ca-op { min-height: 52px; }
-.ca .ca-fila .ca-img { width: 34px; height: 34px; border-radius: 9px; }
-.ca .ca-fila.on .ca-op { background: color-mix(in srgb, var(--brand) 12%, transparent); }
-.ca .ca-fila.on .ca-txt b { color: var(--brand); }
-.ca .ca-ok { flex: none; font-weight: 800; color: var(--brand); }
-.ca .ca-ed { display: flex; gap: 6px; padding-right: 10px; flex: none; }
-.ca .ca-ed button { min-height: 34px; padding: 0 10px; font-size: 13px; }
-.ca .ca-cambiar { display: block; margin: 6px 12px 8px auto; }
-@media (min-width: 900px) { .ca { max-width: 520px; } }
+/* G85 · 🗂️ Caja de apps → G113 b: ahora en el núcleo (tema.css .ca, CFX_CAJA). */
 .pg-medio { border: 1px solid var(--line); border-radius: 14px; padding: 4px 12px 8px; margin: 10px 0; }
 .pg-medio h3 { margin: 8px 0 2px; }

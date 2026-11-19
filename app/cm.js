@@ -413,16 +413,17 @@
     try { await cargarMod(n); } catch (e) { document.getElementById('v-' + n).innerHTML = '<p class="err">' + esc(e.message) + '</p>'; return; }
     if (CM.actual === n) CM.pintar();
   };
-  CM.selectorEspacio = () => {
-    const l = esps();
-    if (l.length < 2) return '';
-    const m = (v, t) => '<button type="button" data-e="' + v + '" class="' + (CM.ui.esp === v ? 'on' : '') + '">' + t + '</button>';
-    return '<div class="seg" id="segEsp">' + m('todo', 'Todo') + (l.some((e) => e.modo === 'trabajo') ? m('modo:trabajo', CM.ico('maletin', 13) + ' Trabajo') : '') + (l.some((e) => e.modo === 'personal') ? m('modo:personal', CM.ico('casa', 13) + ' Personal') : '') +
-      (l.length > 2 ? l.map((e) => '<button type="button" data-e="' + e.id + '" class="' + (CM.ui.esp === e.id ? 'on' : '') + '"><i style="background:' + esc(e.color) + '"></i>' + esc(e.nombre) + '</button>').join('') : '') + '</div>';
-  };
+  // G113 b: el filtro de espacios (Todo · Trabajo · Personal · cada espacio) era una fila de chips que se salía a la derecha → 🗂️ CFX_CAJA del núcleo.
+  CM.selectorEspacio = () => (esps().length < 2 ? '' : '<div id="segEsp" class="cfx-caja-esp"></div>');
   CM.alSelectorEspacio = (el) => {
     const s = el.querySelector('#segEsp'); if (!s) return;
-    s.onclick = (e) => { const b = e.target.closest('[data-e]'); if (b) { CM.ui.esp = b.dataset.e; CM.pintar(); } };
+    const l = esps(), ops = [{ id: 'todo', t: 'Todo', ico: CM.ico('listas', 20) }];
+    if (l.some((e) => e.modo === 'trabajo')) ops.push({ id: 'modo:trabajo', t: 'Trabajo', ico: CM.ico('maletin', 20) });
+    if (l.some((e) => e.modo === 'personal')) ops.push({ id: 'modo:personal', t: 'Personal', ico: CM.ico('casa', 20) });
+    if (l.length > 2) l.forEach((e) => ops.push({ id: e.id, t: e.nombre, color: e.color || '#94a3b8' }));
+    if (!global.CFX_CAJA) { s.innerHTML = ops.map((o) => '<button type="button" class="chip' + (CM.ui.esp === o.id ? ' on' : '') + '" data-e="' + esc(o.id) + '">' + esc(o.t) + '</button>').join(''); s.className = 'chips';
+      s.onclick = (e) => { const b = e.target.closest('[data-e]'); if (b) { CM.ui.esp = b.dataset.e; CM.pintar(); } }; return; }
+    global.CFX_CAJA.montar(s, { opciones: ops, actual: CM.ui.esp, titulo: 'Elige el espacio', aviso: 'Espacio · toca para cambiar', alElegir: (id) => { CM.ui.esp = id; CM.pintar(); } });
   };
   const listasUsadas = () => { const m = {}; CM.por('falta').forEach((i) => { const l = (i.datos && i.datos.lista) || 'General'; m[l] = Math.max(m[l] || 0, Date.parse(i.created_at) || 0); }); return Object.keys(m).sort((a, b) => m[b] - m[a]); };
   CM.listasUsadas = listasUsadas;
