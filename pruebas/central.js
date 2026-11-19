@@ -510,7 +510,7 @@ const ok = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('ok',
         await t.sim.su('delete from public.cfx_modulos_negocio where negocio = $1', [tid]); await t.sim.su('delete from public.cfx_modulos_pruebas where negocio = $1', [tid]);
         const [g19w0] = await t.sim.su("select set_config('request.jwt.claim.sub', $1, false), public.conexiones_estado() c, public.mis_modulos($1::uuid) m", [tid]); await t.sim.su("select set_config('request.jwt.claim.sub', '', false)");
         await q.goto(t.base + '/#modulos'); await q.reload(); await q.waitForTimeout(3000);
-        const g19u0 = await q.evaluate(() => { const b = document.getElementById('modTienda'); return [!!b.offsetParent, b.querySelectorAll('.cfxm-pack').length, !!b.querySelector('.cfxm-pack.top .cfxm-tag'),
+        const g19u0 = await q.evaluate(() => { const b = document.getElementById('modTienda'); return [!!b.offsetParent, b.querySelectorAll('.cfxm-pack').length, !!b.querySelector('.cfxm-pack.cfxm-top .cfxm-tag'),
           b.querySelectorAll('.cfxm-mod').length, !!b.querySelector('[data-probar="crecer"]'), /\$990\/mes/.test(b.textContent), document.documentElement.scrollWidth <= innerWidth + 1, Cuenta.puede('estadisticas')]; });
         await t.foto('modulos', q);
         await q.evaluate(() => document.querySelector('#modTienda [data-probar="crecer"]').click()); await q.waitForTimeout(1500);

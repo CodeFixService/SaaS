@@ -303,9 +303,15 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. (Opcional) Supabase → proyecto de Cerebro → **Project Settings** → **Pause project**. Si ya no entras, no importa.
 3. El repo **Contenido** queda guardado en GitHub (no lo borres: nada se pierde). Su motor ya está en CM → 🎬 Estudio.
 
+## G129–G131 · 🐞 Errores de Josué · núcleo 3.30 · CM 5.63 · Despega 6.79 · Barbería 3.50 · Billetera 1.21.110 · BiciTaller 3.40 · Estaciona 2.30 (bases y funciones SIN cambio; mismo 🚀 Liberar que G128)
+1. **G129** Estaciona → **Más → 🧩 Módulos** (celular): la tarjeta **⭐ Más elegido** se ve normal (etiqueta horizontal, chips abajo del texto, precio en una línea, Ver demo / Comprar bajo el precio).
+2. **G130** Billetera → **Más**: las pestañas terminan en **⚙️ Ajustes** (ya no existe "Cuenta y ayuda"). Desliza a ⚙️ Ajustes: al final están 💬 Chat con soporte, 🐞 Reportar una falla, 📄 Términos, 🔒 Privacidad, 🗂️ Mis datos y 🚪 Cerrar sesión (último).
+3. Billetera → Más → **Billeteras conectadas** (o Comprobantes, Reportes): abajo YA NO sale "Cuenta y ayuda". Repite el paso 2 en Barbería y Estaciona: ahora sí aparece 💬 **Chat con soporte** en ⚙️ Ajustes.
+4. **G131** Mándame pantallazo de **CM → Control → 🩺 Salud** (errores de las 6). Si no se ve completo: Supabase de cada app → **SQL Editor** → Run: `select veces, ultimo::date, version, left(mensaje,120) mensaje, left(donde,80) donde, left(pagina,60) pagina from cfx_errores order by ultimo desc limit 30;` → pantallazo del resultado.
+
 ## G128 · 🛒 Cobro de pedidos · núcleo 3.29 · CM 5.62 bd 4.69 · Despega 6.78 bd 5.89 · Barbería 3.49 bd 3.19 · Billetera 1.21.109 bd 73 · BiciTaller 3.39 bd 2.69 · Estaciona 2.29 bd 70 (funciones SIN cambio)
 0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo**.
-1. **Tu tienda de prueba: ¿qué medio tiene?** Supabase de Despega → **SQL Editor** → pega y **Run**: `select empresa, slug, coalesce(trim(datos_pago),'') <> '' transferencia, public.link_activo(id,'pedido') medios from profiles where role='user';` → si `medios` sale vacío, tus clientes hoy "💰 Pagan al retirar".
+1. ✅ (19/11: tu tienda **codefix** tiene ⚡ Mercado Pago y no tiene 🏦 transferencia → el paso 2 no muestra el aviso; sáltalo o pon transferencia para probarlo) **Tu tienda de prueba: ¿qué medio tiene?** Supabase de Despega → **SQL Editor** → pega y **Run**: `select empresa, slug, coalesce(trim(datos_pago),'') <> '' transferencia, public.link_activo(id,'pedido') medios from profiles where role='user';` → si `medios` sale vacío, tus clientes hoy "💰 Pagan al retirar".
 2. Despega → **Hoy**: sin medio sale **⚠️ Tus clientes no pueden pagar en línea → Configurar**. Pon tus datos de 🏦 transferencia (Ajustes → Mi tienda) → el aviso se va.
 3. **Caja** → un producto → **🛒 Venta online** → elige 💵 **Abono** 30 % → Guardar. Otro → 🛠️ **Servicio** + 💰 **Pagar al retirar**. Otro → 🔑 **Acceso digital** + escribe un link → Guardar.
 4. Abre tu tienda (/t/) en incógnito → agrega el del abono → **💳 ¿Cómo pagas?** muestra ⚡ Todo ahora / 💵 Abono → elige Abono → Enviar → en /r/ sale **💵 Paga tu abono** + **📋 Copiar enlace / 📲 Mandarme por WhatsApp**.
