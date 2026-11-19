@@ -303,6 +303,12 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. (Opcional) Supabase → proyecto de Cerebro → **Project Settings** → **Pause project**. Si ya no entras, no importa.
 3. El repo **Contenido** queda guardado en GitHub (no lo borres: nada se pierde). Su motor ya está en CM → 🎬 Estudio.
 
+## G128 b · ⚠️ Aviso "tus clientes no pueden pagar" · núcleo 3.31 · CM 5.64 · Despega 6.80 · Barbería 3.51 · Billetera 1.21.111 · BiciTaller 3.41 · Estaciona 2.31 bd 71 (funciones SIN cambio)
+0. Cloudflare Listo → CM → Apps → 🅿️ Estaciona → ⬆️ Actualizar base (debe quedar 71) → 🚀 Liberar todo.
+1. 💈 Barbería (dueño): Más → 💳 Links de pago → borra link y datos de banco (con abono > 0) → Inicio: arriba "⚠️ Tus clientes no pueden reservar online" → **Configurar** te lleva a Links de pago. Vuelve a poner tus datos: el aviso se va.
+2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
+3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
+
 ## G129–G131 · 🐞 Errores de Josué · núcleo 3.30 · CM 5.63 · Despega 6.79 · Barbería 3.50 · Billetera 1.21.110 · BiciTaller 3.40 · Estaciona 2.30 (bases y funciones SIN cambio; mismo 🚀 Liberar que G128)
 1. **G129** Estaciona → **Más → 🧩 Módulos** (celular): la tarjeta **⭐ Más elegido** se ve normal (etiqueta horizontal, chips abajo del texto, precio en una línea, Ver demo / Comprar bajo el precio).
 2. **G130** Billetera → **Más**: las pestañas terminan en **⚙️ Ajustes** (ya no existe "Cuenta y ayuda"). Desliza a ⚙️ Ajustes: al final están 💬 Chat con soporte, 🐞 Reportar una falla, 📄 Términos, 🔒 Privacidad, 🗂️ Mis datos y 🚪 Cerrar sesión (último).
