@@ -298,6 +298,11 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. (Opcional) Supabase → proyecto de Cerebro → **Project Settings** → **Pause project**. Si ya no entras, no importa.
 3. El repo **Contenido** queda guardado en GitHub (no lo borres: nada se pierde). Su motor ya está en CM → 🎬 Estudio.
 
+## G114 · 🐞 Tablero: mover hacia atrás · núcleo 3.22 · CM 5.55 · Despega 6.71 · Barbería 3.42 · Billetera 1.21.101 · BiciTaller 3.32 · Estaciona 2.22 (bases y funciones SIN cambio)
+1. Cloudflare → **Listo** en las 6 apps → CM → **Apps** → 🚀 **Liberar todo**.
+2. En el teléfono: CM (tu app personal) → **Tablero** → en una tarea de **En revisión** toca la flecha **←**: pasa a **Haciendo** y sigues en el Tablero. Otra vez **←**: pasa a **Pendiente**.
+3. La flecha **→** sigue llevándola hacia adelante. Los botones "Volver" de las apps siguen volviendo.
+
 ## G113 · 🎨 Uniformidad · núcleo 3.21 · CM 5.54 · Despega 6.70 · Barbería 3.41 · Billetera 1.21.100 · BiciTaller 3.31 · Estaciona 2.21 (bases y funciones SIN cambio)
 1. Cloudflare → **Listo** en las 6 apps → CM → **Apps** → 🚀 **Liberar todo**: el aviso muestra cada app en su fila (nombre + versión).
 2. Cualquier app → **Más**: arriba las categorías como pestañas; desliza de lado (una categoría por página).

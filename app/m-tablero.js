@@ -33,7 +33,7 @@
       (i.prioridad === 3 ? '<span class="pill warn">Top</span>' : i.prioridad === 2 ? '<span class="pill bad">urgente</span>' : '') +
       (i.fecha ? '<span class="pill' + (i.fecha < h && i.estado !== 'hecho' ? ' bad' : '') + '">' + A.fCorta(i.fecha) + '</span>' : '') + (sub.length ? '<span class="pill">' + sh + '/' + sub.length + '</span>' : '') + '</div>' +
       (i.tipo === 'proyecto' && i.datos.donde ? '<p class="donde">' + CM.ico('flecha', 13) + ' ' + esc(i.datos.donde) + '</p>' : '') +
-      '<div class="mv">' + (idx > 0 ? '<button type="button" class="x" data-mv="' + COLS[idx - 1][0] + '" data-id="' + i.id + '" aria-label="Mover atrás">' + CM.ico('izq', 16) + '</button>' : '<span></span>') +
+      '<div class="mv">' + (idx > 0 ? '<button type="button" class="x" data-mv="' + COLS[idx - 1][0] + '" data-id="' + i.id + '" aria-label="Mover atrás" data-sin-atras>' + CM.ico('izq', 16) + '</button>' : '<span></span>') +
       (idx < COLS.length - 1 ? '<button type="button" class="x" data-mv="' + COLS[idx + 1][0] + '" data-id="' + i.id + '" aria-label="Mover adelante">' + CM.ico('der', 16) + '</button>' : '') + '</div></div>';
   }
   // G93: pestañas de la pantalla (menú principal → deslizar cambia de pestaña).
