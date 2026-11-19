@@ -303,6 +303,14 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. (Opcional) Supabase → proyecto de Cerebro → **Project Settings** → **Pause project**. Si ya no entras, no importa.
 3. El repo **Contenido** queda guardado en GitHub (no lo borres: nada se pierde). Su motor ya está en CM → 🎬 Estudio.
 
+## G117 · 🗂️ Ajustes ordenados (horario y datos de banco) · núcleo 3.25 · CM 5.58 · Despega 6.74 bd 5.87 · Barbería 3.45 · Billetera 1.21.104 · BiciTaller 3.35 · Estaciona 2.25 (solo Despega cambia base)
+1. CM → Apps → Despega → **⬆️ Actualizar base** (5.87) → Cloudflare **Listo** en las 6 → CM → Apps → 🚀 **Liberar todo**.
+2. Despega → ⋯ Más → **Mi tienda**: el horario sale por días. **⚡ Rápido** = Lun a Vie, Sáb y Dom; **📅 Día por día** = cada día; **＋ colación** agrega un 2.º tramo. Abajo dice **👀 Así lo ven tus clientes**. Si tu horario estaba escrito raro, sale tal cual con **📅 Pasar a días** (no se pierde si no lo tocas).
+3. Mismo lugar, **Datos para transferencia**: banco (lista), tipo, N°, RUT (✅ si está bien), nombre y correo. Tus datos viejos salen arriba y los campos ya vienen llenos: revisa y toca **Guardar mi tienda**.
+4. Barbería → ⋯ Más → **💳 Links de pago** → datos de transferencia por campos → **Guardar**.
+5. Estaciona → ⋯ Más → **💳 Links de pago** → en un espacio toca **🏦 Escribir datos de banco por campos** → llena → **Guardar espacio**. (✏️ Volver a texto libre si lo usas para otra cosa.)
+6. Teléfono 2 (cliente): en el pedido (Despega) o la reserva (Estaciona) sale **📋 Copiar todo / Copiar datos**.
+
 ## G116 · 🎨 Menú Más y pie iguales · núcleo 3.23 · CM 5.56 · Despega 6.72 · Barbería 3.43 · Billetera 1.21.102 · BiciTaller 3.33 · Estaciona 2.23 (bases y funciones SIN cambio)
 1. Cloudflare → **Listo** en las 6 apps → CM → **Apps** → 🚀 **Liberar todo**.
 2. En el teléfono, en cada app: toca **⋯ Más** (abajo a la derecha): abre **Ajustes directo**, sin ventanita. En Barbería y BiciTaller, **Clientes** está arriba en la lista.
