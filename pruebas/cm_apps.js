@@ -12,7 +12,23 @@ const assert = (c, m) => { if (!c) throw new Error('FALLA: ' + m); console.log('
     // G42g: Respaldo y limpieza está en Apps (antes en Resumen → Empresas).
     await p.goto(t.base + '/admin/#apps'); await p.waitForTimeout(4000); await t.sinModales();
     await p.click('[data-app=cm] [data-a=limp]'); await p.waitForTimeout(1500);
-    assert(await p.locator('dialog [data-c]').count() === 8, '8 limpiezas (4 núcleo + 4 CM)');
+    assert(await p.locator('dialog [data-c]').count() === 9, '9 limpiezas (5 núcleo + 4 CM)');
+    // G131 b · 🖼️ Fotos de cuentas borradas: el admin las borra por Storage; la que algo aún usa se queda.
+    const MU = '22222222-2222-4222-8222-222222222222', FB = MU + '/bbbbbbbb-aaaa-4aaa-8aaa-bbbbbbbbbbbb.webp', FC = MU + '/cccccccc-aaaa-4aaa-8aaa-cccccccccccc.webp';
+    await t.sim.su("insert into storage.buckets (id, name, public) values ('vitrina', 'vitrina', true) on conflict do nothing");
+    await t.sim.su("insert into storage.objects (bucket_id, name) values ('vitrina', $1), ('vitrina', $2)", [FB, FC]);
+    await t.sim.su("create table if not exists public.z_g131b (t text)"); await t.sim.su("insert into public.z_g131b values ($1)", ['https://abc.supabase.co/storage/v1/object/public/vitrina/' + FC]);
+    await t.sinModales();
+    await p.click('[data-app=cm] [data-a=limp]'); await p.waitForTimeout(1500);
+    const fc = p.locator('dialog [data-c="n_fotos_cuentas"]');
+    assert(/2 por borrar/.test(await p.locator('dialog .fila', { has: p.locator('[data-c="n_fotos_cuentas"]') }).innerText()), '🖼️ Fotos de cuentas borradas: 2 por borrar');
+    await fc.click(); await p.waitForTimeout(300);
+    for (let k = 0; k < 2; k++) { const b = p.locator('dialog button', { hasText: /^(Borrar igual|Borrar)$/ }).last(); if (await b.isVisible().catch(() => false)) { await b.click(); await p.waitForTimeout(500); } }
+    await p.waitForTimeout(1200);
+    const quedan = (await t.sim.su("select array_agg(name) a from storage.objects where bucket_id = 'vitrina'"))[0].a || [];
+    assert(quedan.length === 1 && quedan[0] === FC, '🧹 borró la foto huérfana y dejó la que una tabla usa');
+    await t.sim.su('drop table public.z_g131b');
+    await t.sinModales(); await p.click('[data-app=cm] [data-a=limp]'); await p.waitForTimeout(1500);
     assert(await p.locator('dialog [data-tb]').count() === 2, '2 tablas sobrantes');
     // G87 E · ↺ Ingresos de prueba
     assert(/todo el historial/.test(await p.locator('dialog [data-cero-txt]').innerText()), '↺ muestra: cuenta todo el historial');

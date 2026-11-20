@@ -352,7 +352,16 @@
         if (b.dataset.c) {
           if (!e.respaldado && !(await confirmar('Aún no descargas el respaldo de ' + a.nombre + ' en esta sesión. ¿Borrar igual?', 'Borrar igual'))) return;
           if (!(await confirmar(b.dataset.t + ': se borra lo indicado. No se puede deshacer.', 'Borrar'))) return;
-          toast(await rpcDe(c, 'cfx_limpiar', { p_clave: b.dataset.c }) + ' borrados');
+          if (b.dataset.c === 'n_fotos_cuentas') {
+            // G131 b: fotos de cuentas borradas → se borran por la API de Storage (el servidor ya sacó las que algo aún usa).
+            const lista = (await rpcDe(c, 'cfx_fotos_sin_cuenta')) || []; let n = 0;
+            for (let i = 0; i < lista.length; i += 100) {
+              const { data, error } = await c.storage.from('vitrina').remove(lista.slice(i, i + 100));
+              if (error) throw new Error(error.message);
+              n += (data || []).length;
+            }
+            toast(n + ' fotos borradas' + (n < lista.length ? ' (' + (lista.length - n) + ' no se pudieron)' : ''));
+          } else toast(await rpcDe(c, 'cfx_limpiar', { p_clave: b.dataset.c }) + ' borrados');
         } else if (b.dataset.td) {
           CFX_RESPALDO.json(a.repo.toLowerCase() + '-' + b.dataset.td, await rpcDe(c, 'cfx_inventario_datos', { p_tabla: b.dataset.td })); bajadas.add(b.dataset.td); toast('Respaldo descargado');
         } else {

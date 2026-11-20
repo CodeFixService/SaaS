@@ -315,6 +315,11 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G131 b · 🖼️ Fotos de cuentas borradas · núcleo 3.33 · CM 5.66 bd 4.71 · Despega 6.82 bd 5.91 · Barbería 3.53 bd 3.21 · Billetera 1.21.113 bd 75 · BiciTaller 3.43 bd 2.71 · Estaciona 2.33 bd 73 (funciones SIN cambio)
+0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo**.
+1. CM → **Apps** → una app → **🧹 Respaldo y limpieza** → en **2. Limpieza** aparece **🖼️ Fotos de cuentas borradas · N por borrar** (sin 🌙: solo a mano).
+2. Si N > 0 → **Borrar** → dice "N fotos borradas". Las fotos que algo aún usa (otra fila, un respaldo) se quedan.
+
 ## G129–G131 · 🐞 Errores de Josué · núcleo 3.30 · CM 5.63 · Despega 6.79 · Barbería 3.50 · Billetera 1.21.110 · BiciTaller 3.40 · Estaciona 2.30 (bases y funciones SIN cambio; mismo 🚀 Liberar que G128)
 1. **G129** Estaciona → **Más → 🧩 Módulos** (celular): la tarjeta **⭐ Más elegido** se ve normal (etiqueta horizontal, chips abajo del texto, precio en una línea, Ver demo / Comprar bajo el precio).
 2. **G130** Billetera → **Más**: las pestañas terminan en **⚙️ Ajustes** (ya no existe "Cuenta y ayuda"). Desliza a ⚙️ Ajustes: al final están 💬 Chat con soporte, 🐞 Reportar una falla, 📄 Términos, 🔒 Privacidad, 🗂️ Mis datos y 🚪 Cerrar sesión (último).

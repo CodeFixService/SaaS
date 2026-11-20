@@ -17,8 +17,25 @@ begin
     jsonb_build_object('clave', 'n_reportes', 'titulo', 'Reportes del chat ya revisados', 'detalle', 'Más de 90 días.', 'auto', true,
       'filas', (select count(*) from public.cfx_reportes where resuelto and creado < now() - interval '90 days')),
     jsonb_build_object('clave', 'n_carritos', 'titulo', 'Carritos abandonados', 'detalle', 'Sin tocar hace más de 30 días.', 'auto', true,
-      'filas', (select count(*) from public.cfx_carritos where actualizado < now() - interval '30 days')));
+      'filas', (select count(*) from public.cfx_carritos where actualizado < now() - interval '30 days')))
+    -- G131 b: se borra desde el CM por la API de Storage (no por SQL); las que algo aún usa se quedan.
+    || jsonb_build_array(jsonb_build_object('clave', 'n_fotos_cuentas', 'titulo', '🖼️ Fotos de cuentas borradas', 'detalle', 'En Storage; las que algo aún usa se quedan.', 'auto', false, 'storage', true,
+      'filas', public.cfx_fotos_sin_cuenta_n()));
 end $$;
+
+-- G131 b: cuántas fotos hay en carpetas de cuentas que ya no existen (rápido, sin revisar tablas). Sin Storage → 0.
+create or replace function public.cfx_fotos_sin_cuenta_n() returns int
+language plpgsql stable security definer set search_path = '' as $$
+declare n int := 0;
+begin
+  if to_regclass('storage.objects') is null then return 0; end if;
+  execute $q$select count(*) from storage.objects o where o.bucket_id = 'vitrina'
+    and split_part(o.name, '/', 1) ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    and not exists (select 1 from auth.users x where x.id::text = split_part(o.name, '/', 1))$q$ into n;
+  return n;
+exception when others then return 0;
+end $$;
+revoke all on function public.cfx_fotos_sin_cuenta_n() from public, anon, authenticated;
 
 create or replace function public.cfx_limpiar_nucleo(p_clave text) returns int
 language plpgsql security definer set search_path = '' as $$
