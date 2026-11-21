@@ -87,10 +87,12 @@ let f = 0; const ok = (c, m) => { console.log((c ? '✓ ' : '✗ ') + m); if (!c
     // 📊 Qué funciona + historial CSV
     await p.click('[data-cfx-pestanas] [data-v=bi]'); await p.waitForTimeout(800);
     fs.writeFileSync('/tmp/g94a_hist.csv', 'fecha de publicacion,red,descripcion,visualizaciones,guardados,compartidos,comentarios,clientes generados\n2026-11-02 19:00,tiktok,Video uno,800,3,1,0,0\n2026-11-03 20:00,instagram,Video dos,3000,40,12,5,1\n');
+    await p.evaluate(() => document.querySelectorAll('#v-cerebro details').forEach((d) => { d.open = true; }));  // G141: el CSV quedó en "Avanzado"
     const [fc3] = await Promise.all([p.waitForEvent('filechooser'), p.click('[data-act=subirHist]')]);
     await fc3.setFiles('/tmp/g94a_hist.csv'); await p.waitForTimeout(2000);
     n = (await su("select count(*)::int n from public.items where owner = $1 and tipo = 'est_idea' and estado = 'publicada'", [u.id]))[0].n;
     ok(n === 3, '⬆️ historial importado (' + n + ' publicadas)');
+    await p.evaluate(() => document.querySelectorAll('#v-cerebro details').forEach((d) => { d.open = true; }));
     const bi = await p.locator('#v-cerebro').innerText();
     ok(/3 publicaciones/.test(bi) && /Temas/.test(bi) && /▲ \d+ %/.test(bi) && /Redes/.test(bi) && /Horas/.test(bi), '📊 BI por tema/red/hora con 🏆');
     await t.foto('g94a-bi'); ok(await t.anchoOk(p), 'ancho ok BI');

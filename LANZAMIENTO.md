@@ -315,6 +315,15 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G141 · 📱 Mis redes + 🎬 Estudio por link · núcleo 3.37 · CM 5.70 bd 4.74 · Despega 6.86 bd 5.95 · Barbería 3.57 bd 3.24 · Billetera 1.21.117 bd 78 · BiciTaller 3.47 bd 2.74 · Estaciona 2.37 bd 76 · funciones SIN cambio
+0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo**.
+1. 💈 Barbería (dueño): Más → **📱 Mis redes** → pega el link de tu Instagram (cópialo desde Instagram → tu perfil → Compartir perfil) → sale "Instagram · @tu_usuario ✓" → **➕ Agregar** → igual con TikTok → **💾 Guardar mis redes**.
+2. Abre tu link de reservas (/b/?b=…): bajo el nombre salen los íconos; tócalos → abren tu perfil.
+3. Repite en 🚀 Despega (Más → 🔗 Mis redes → mira /t/ de tu tienda), 🚲 BiciTaller (/t/), 💰 Billetera (link de un cliente) y 🅿️ Estaciona (ficha de tu estacionamiento).
+4. 🎬 Estudio (cualquier app con el módulo o probándolo): si no tienes base → **💡 ¿No sabes qué publicar?** → escribe qué vendes → **✨ Dame ideas ahora** → sale la idea con sus cajas 📋.
+5. 📊 **Qué funciona** → **🔗 Anotar publicación por link** → pega el link de un reel/TikTok tuyo (sale la red y la fecha) → **📸 Leer pantallazo** → elige el pantallazo de sus Estadísticas (la 1.ª vez demora ~10 s) → los números quedan en verde → corrige si alguno no calza → 💾.
+6. Con 5 o más anotadas: cifras, 📈 línea semanal, barras y **🧭 Qué hacer ahora**. Toca una barra: abajo sale su detalle.
+
 ## G140 · 🎨 Personalizar · núcleo 3.36 · CM 5.69 bd 4.73 · Despega 6.85 bd 5.94 · Barbería 3.56 bd 3.23 · Billetera 1.21.116 bd 77 · BiciTaller 3.46 bd 2.73 · Estaciona 2.36 bd 75 (funciones SIN cambio)
 0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo**.
 1. En el celular, cualquier app → Más → **Mi perfil** → **🎨 Personalizar**: arriba **Temas listos** → toca **Océano**: cambia el fondo al tiro.

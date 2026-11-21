@@ -45,8 +45,8 @@
 
   /* ---------- carga perezosa del motor y el importador ---------- */
   let libs;
-  const cargarLibs = () => libs || (libs = Promise.all(['est-motor.js', 'est-importador.js'].map((f) => new Promise((ok, no) => {  // G112 d: viven en el núcleo (shared/)
-    if ((f === 'est-motor.js' && window.Motor) || (f === 'est-importador.js' && window.Importador)) return ok();
+  const cargarLibs = () => libs || (libs = Promise.all(['est-motor.js', 'est-importador.js', 'est-links.js'].map((f) => new Promise((ok, no) => {  // G112 d: viven en el núcleo (shared/) · G141 b: est-links
+    if ((f === 'est-motor.js' && window.Motor) || (f === 'est-importador.js' && window.Importador) || (f === 'est-links.js' && window.EstLinks)) return ok();
     const s = document.createElement('script'); s.src = '../shared/' + f + '?v=' + (window.BT_CONFIG.VERSION || ''); s.onload = ok; s.onerror = () => { libs = null; no(new Error('No se pudo cargar el Estudio. Revisa tu conexión.')); }; document.head.appendChild(s);
   }))));
 
@@ -243,8 +243,9 @@
   function vBI() {
     const P = publicadas();
     let x = '<div class="card"><b>📊 Lo que funciona en ' + esc((esp() || {}).nombre || '') + '</b><p class="sub">Sale de TUS métricas: marca las ideas como publicadas con sus números, o sube tu historial / el export de Meta Business Suite o TikTok Studio.</p>' +
-      '<div class="btns-s"><button type="button" class="small" data-act="subirHist">⬆️ Subir historial</button><button type="button" class="small ghost" data-act="plant" data-p="historial">⬇️ Plantilla historial</button><button type="button" class="small ghost" data-act="plant" data-p="videos">⬇️ Plantilla videos</button></div></div>';
-    if (!P.length) return x + '<p class="empty">Aún sin publicaciones con métricas. Mientras tanto el motor usa 70 % lo probado y 30 % lo nuevo, con horas de fábrica.</p>';
+      '<button type="button" class="big" data-act="link">🔗 Anotar publicación por link</button>' +
+      '<details><summary class="sub">Avanzado: planilla CSV</summary><div class="btns-s"><button type="button" class="small" data-act="subirHist">⬆️ Subir historial</button><button type="button" class="small ghost" data-act="plant" data-p="historial">⬇️ Plantilla historial</button><button type="button" class="small ghost" data-act="plant" data-p="videos">⬇️ Plantilla videos</button></div></details></div>';
+    if (!P.length) return x + '<p class="empty">Aún sin publicaciones con métricas. Pega el link de las últimas 5 con su pantallazo y verás qué funciona. Mientras tanto el motor usa 70 % lo probado y 30 % lo nuevo, con horas de fábrica.</p>';
     const media = P.reduce((a, i) => a + puntos(i.datos.m), 0) / P.length || 1;
     const top = (k, nombre, fmt) => {
       const g = {}; P.forEach((i) => { const v = fmt ? fmt(i) : i.datos[k]; if (v) (g[v] = g[v] || []).push(puntos(i.datos.m) / media); });
@@ -255,7 +256,8 @@
     const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
     const tot = P.reduce((a, i) => { const m = i.datos.m; a.v += +m.vistas || 0; a.c += +m.clientes || 0; a.s += +m.seguidores || 0; return a; }, { v: 0, c: 0, s: 0 });
     x += '<div class="card"><b>' + P.length + ' publicaciones</b><p class="sub">👁️ ' + tot.v.toLocaleString('es-CL') + ' vistas · 👥 +' + tot.s + ' seguidores · 💰 ' + tot.c + ' clientes (' + (tot.c / P.length).toFixed(1).replace('.', ',') + ' por video)</p></div>';
-    x += top('tema', '🏷️ Temas') + top('estructura_nombre', '🎣 Ganchos') + top('formato', '🎞️ Formatos') + top('red', '📱 Redes') + top('hora', '⏰ Horas') + top(null, '📅 Días', (i) => i.fecha ? DIAS[new Date(i.fecha + 'T12:00:00').getDay()] : '');
+    x += window.EstLinks ? '<div class="cfx-est">' + EstLinks.analisis(P, cf().obj) + '</div>' : '';  // G141 b: gráficos + qué hacer
+    x += '<details><summary class="sub">📋 Ver en listas (ganchos y horas exactas)</summary>' + top('estructura_nombre', '🎣 Ganchos') + top('hora', '⏰ Horas') + top('tema', '🏷️ Temas') + top('formato', '🎞️ Formatos') + top('red', '📱 Redes') + top(null, '📅 Días', (i) => i.fecha ? DIAS[new Date(i.fecha + 'T12:00:00').getDay()] : '') + '</details>';
     // Temas cansados: sus 3 últimas publicaciones bajo el promedio.
     const porT = {}; P.slice().sort((a, b) => (b.fecha || '').localeCompare(a.fecha || '')).forEach((i) => { const t = i.datos.tema; if (t) (porT[t] = porT[t] || []).push(puntos(i.datos.m) / media); });
     const cans = Object.keys(porT).filter((t) => porT[t].length >= 3 && porT[t].slice(0, 3).every((v) => v < 0.8));
@@ -322,18 +324,35 @@
       '<button type="button" class="big" data-act="guardarConf">💾 Guardar</button></div>';
   }
 
+  // G141 b 🔗 Publicación por link + 📸 pantallazo (núcleo est-links.js). Con id = completa esa idea.
+  async function anotarLink(id) {
+    await cargarLibs();
+    const it = id ? CM.get(id) : null, d0 = (it && it.datos) || {};
+    const d = modal('<h2>🔗 Anotar publicación</h2><div id="eLink" class="cfx-est"></div>');
+    EstLinks.ventana(d.querySelector('#eLink'), { temas: Array.from(new Set(base().map((b) => (b.datos || {}).tema).filter(Boolean))), conTexto: !it,
+      m: d0.m, link: d0.link, fecha: it ? it.fecha || '' : '', hora: d0.hora || '', red: d0.red, formato: d0.formato,
+      alCancelar: () => d.close(),
+      alGuardar: async (r) => {
+        const extra = { link: r.link, m: r.m }; if (r.hora) extra.hora = r.hora;
+        if (it) await CM.upd(id, { estado: 'publicada', fecha: r.fecha || it.fecha, datos: Object.assign({}, d0, extra) });
+        else await insertar([{ tipo: 'est_idea', estado: 'publicada', espacio_id: ui.esp, titulo: (r.titulo || r.link || 'Publicación').slice(0, 200), fecha: r.fecha,
+          datos: { gancho: (r.titulo || '').slice(0, 300), red: r.red, formato: r.formato || 'Publicación', hora: r.hora, fecha_plan: r.fecha, tema: r.tema || 'Sin tema', estructura: 'link', link: r.link, m: r.m } }]);
+        d.close(); toast('✅ Guardada: el análisis y el motor ya la usan');
+      } });
+  }
   function abrir(id) {
     const it = CM.get(id); if (!it) return;
     const idea = Object.assign({}, it.datos, { gancho: it.titulo, fecha_plan: it.fecha }), m = (it.datos || {}).m || {};
     const d = modal('<h2>🎬 ' + esc(dia(it.fecha) || 'Idea') + '</h2><div id="eCaj">' + htmlCajas(idea, true) + '</div>' +
       '<div class="card"><b>Estado</b><div class="chips">' + [['pendiente', '⏳ Por grabar'], ['grabada', '🎥 Grabada'], ['publicada', '✅ Publicada']].map((s) => '<button type="button" class="chip' + (it.estado === s[0] ? ' on' : '') + '" data-est="' + s[0] + '">' + s[1] + '</button>').join('') + '</div>' +
       '<p class="sub">Métricas (a los 7 días)</p><div class="est-ritmo">' + [['vistas', '👁️ Vistas'], ['guardados', '🔖 Guardados'], ['compartidos', '🔁 Compartidos'], ['comentarios', '💬 Comentarios'], ['seguidores', '👥 Seguidores'], ['clientes', '💰 Clientes']].map((k) => '<label>' + k[1] + '<input type="number" min="0" inputmode="numeric" data-m="' + k[0] + '" value="' + (m[k[0]] != null ? +m[k[0]] : '') + '"></label>').join('') + '</div>' +
-      '<div class="btns-s"><button type="button" class="small" data-act="guardarM">💾 Guardar métricas</button><button type="button" class="small ghost" data-act="pedido">📲 Pedir grabación</button><button type="button" class="small ghost" data-act="borrar">🗑️ Borrar</button></div></div><div class="btns"><button type="button" class="ghost" data-cerrar>Cerrar</button></div>');
+      '<div class="btns-s"><button type="button" class="small" data-act="guardarM">💾 Guardar métricas</button><button type="button" class="small ghost" data-act="linkDet">🔗📸 Link o pantallazo</button><button type="button" class="small ghost" data-act="pedido">📲 Pedir grabación</button><button type="button" class="small ghost" data-act="borrar">🗑️ Borrar</button></div></div><div class="btns"><button type="button" class="ghost" data-cerrar>Cerrar</button></div>');
     d.onclick = async (e) => {
       const b = e.target.closest('[data-act],[data-est]'); if (!b) return;
       try {
         if (b.dataset.est) { await CM.upd(id, { estado: b.dataset.est }); d.querySelectorAll('[data-est]').forEach((x) => x.classList.toggle('on', x === b)); toast('Listo'); }
         else if (b.dataset.act === 'guardarM') { const nm = {}; d.querySelectorAll('[data-m]').forEach((i) => { if (i.value !== '') nm[i.dataset.m] = Math.max(0, Math.round(+i.value) || 0); }); await CM.upd(id, { estado: 'publicada', datos: Object.assign({}, CM.get(id).datos, { m: nm }) }); toast('✅ Métricas guardadas: el motor ya aprende de esta'); d.close(); }
+        else if (b.dataset.act === 'linkDet') { d.close(); anotarLink(id); }
         else if (b.dataset.act === 'pedido') { await cargarLibs(); open('https://wa.me/?text=' + encodeURIComponent(window.Motor.mensajePedido(idea, (esp() || {}).nombre)), '_blank', 'noopener'); }
         else if (b.dataset.act === 'borrar') { if (await CFX_DIALOGO.confirmar('¿Borrar esta idea?', { si: 'Borrar' })) { await CM.del(id); d.close(); } }
         else accionCaja(b, idea, d);
@@ -409,6 +428,7 @@
         else if (a === 'abrir') abrir(id);
         else if (a === 'subirBase') subirBase();
         else if (a === 'subirHist') subirHistorial();
+        else if (a === 'link') anotarLink();
         else if (a === 'plant') bajarCsv('plantilla-' + b.dataset.p + '.csv', PLANT[b.dataset.p]());
         else if (a === 'agregar' || a === 'tema') agregar(b.dataset.t);
         else if (a === 'guardarConf') {
