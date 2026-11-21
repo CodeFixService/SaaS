@@ -315,6 +315,13 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G139 · 🛒 Pagar antes del pedido · núcleo 3.35 · CM 5.68 · Despega 6.84 bd 5.93 · Barbería 3.55 · Billetera 1.21.115 · BiciTaller 3.45 · Estaciona 2.35 (solo Despega cambia base; funciones SIN cambio)
+0. Cloudflare **Listo** en las 6 → CM → Apps → 🛒 Despega → **⬆️ Actualizar base** (debe quedar 5.93) → 🚀 **Liberar todo**.
+1. Con tu cuenta de cliente → tienda → agrega $20.000 → **Pedido**: el botón ahora dice **⚡ Pagar $20.000** y abajo "Pagas primero…". Tócalo → se abre **Mercado Pago** al tiro (paga algo chico con cupón si quieres probar real).
+2. Al pagar → a la tienda le llega 🔔 **"💳 Pagado: prepara el pedido de …"** (antes de pagar NO le llega nada).
+3. Tienda → **Pedidos** → el pedido → **✅ Listo** → aparece **📲 Avisar: ✅ listo** → abre WhatsApp con el mensaje listo. (Despacho: 🚚 En camino igual.)
+4. Si la tienda solo tiene 🏦 transferencia: el cliente ve "🏦 Pagar todo ahora · por transferencia" y el dueño ve "⚠️ Sin ⚡ Mercado Pago ni 💳 Webpay → Configurar".
+
 ## G138 · 🐞 Errores de Josué 21/11 · núcleo 3.34 · CM 5.67 bd 4.72 · Despega 6.83 bd 5.92 · Barbería 3.54 bd 3.22 · Billetera 1.21.114 bd 76 · BiciTaller 3.44 bd 2.72 · Estaciona 2.34 bd 74 (funciones SIN cambio)
 0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo** (cubre también G131 b). En el celular: cierra y abre la app (o Más → Reparar la app).
 1. Despega → **Chat** → abre un chat → toca el campo y escribe 2 líneas: el 🎙️ queda **dentro**, en la esquina de abajo a la derecha. La cabecera (Mensajes) **no se sube**; la barra de abajo se esconde mientras escribes y vuelve al cerrar el teclado.
