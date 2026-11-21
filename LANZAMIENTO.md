@@ -315,6 +315,16 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G144 · 🛡️ Todo se administra en el CM + ❤️ redondo + 💬 un solo WhatsApp · núcleo 3.40 · CM 5.73 bd 4.76 · Despega 6.89 bd 5.97 · Barbería 3.60 bd 3.26 · Billetera 1.21.120 bd 80 · BiciTaller 3.50 bd 2.76 · Estaciona 2.40 bd 78 · funciones SIN cambio
+0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo**.
+1. 🛡️ En el navegador abre `https://saas.juanjosuecastilloloyola.workers.dev/PLAN.md` → debe decir que **no existe** (antes se podía leer). Prueba igual `/supabase/instalar.sql` en Despega (`aplicaciones.…`). Si alguna SÍ abre, mándame pantallazo.
+2. Menú de tu foto en cualquier app → ya **no** está "🛡️ Panel de administración". En el CM sigues teniendo el botón **Panel** arriba.
+3. CM → **Apps** → una app → **🧹 Respaldo y limpieza** → todo sigue ahí (y en el panel de cada app, 🧹 Limpieza).
+4. 🛍️ Despega con cuenta de cliente → Tienda → toca el ❤️ de un producto → el corazón se pone **ROJO**, sin óvalo rojo detrás, y el botón es un círculo.
+5. 💬 Con una cuenta de negocio que tenga WhatsApp en el registro: Más → 📱 **Mis redes** → ya aparece **WhatsApp** sin agregarlo. Intenta agregar otro número → dice "Ya tienes WhatsApp… deja uno solo".
+6. Abre tu página pública (Despega tienda, Barbería, BiciTaller o el link del cliente en Billetera) → se ve **un solo** WhatsApp (el de redes; al tocarlo sale el mensaje listo).
+7. Quita WhatsApp en Mis redes y guarda → ya no vuelve solo, y en la página aparece el botón 💬 WhatsApp de antes.
+
 ## G143 · 🔤 Una letra para todas + 🧭 barra igual en las 7 · núcleo 3.39 · CM 5.72 · Despega 6.88 · Barbería 3.59 · Billetera 1.21.119 · BiciTaller 3.49 · Estaciona 2.39 · base y funciones SIN cambio
 0. Cloudflare **Listo** en las 6 → CM → Apps → 🚀 **Liberar todo** (no hay que actualizar base).
 1. Abre cada app en el teléfono: la barra de abajo se ve IGUAL en todas (íconos del mismo tamaño y centrados; en BiciTaller y Barbería ya no se ven chicos ni corridos).

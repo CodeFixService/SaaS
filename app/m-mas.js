@@ -121,7 +121,6 @@
       { k: 'premium', ico: CM.ico('estrella', 20), t: c.rol === 'admin' ? 'Administrador' : c.rol === 'socio' ? 'Socio' : c.premium ? 'Plan Pro' : 'Pasar a Pro', grupo: 'Tu plan',
         d: c.premium && hasta ? 'Hasta el ' + hasta : usuario && pago && pago.estado === 'pendiente' ? 'Pago en revisión' : '', dato: usuario ? (c.premium ? 'PRO' : 'Gratis') : '', accion: usuario ? pagar : () => {} },
       usuario && { k: 'verif', ico: '🪪', t: 'Verificar identidad', grupo: 'Tu plan', accion: () => CFX_VERIFICAR.abrir({ rpc }) },
-      !usuario && { k: 'panel', ico: '🛡️', t: 'Panel de administración', grupo: 'Tu plan', ir: '../admin/' },
       { k: 'tour', ico: '🧭', t: 'Ver guía', grupo: 'Tu plan', accion: () => CM.tour() },
       { k: 'vinc', ico: CM.ico('compartir', 20), t: 'Cuentas vinculadas', d: 'Comparte con quien trabaja contigo', grupo: 'Configuración', abrir: hojaDe('vinc') },
       { k: 'espacios', ico: '🗂️', t: 'Espacios', d: 'Personal y trabajo con horario', grupo: 'Configuración', abrir: hojaDe('espacios') },
