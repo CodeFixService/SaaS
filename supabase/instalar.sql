@@ -144,7 +144,7 @@ end $$;
 create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '4.72'::text $$;
+language sql immutable as $$ select '4.73'::text $$;
 create or replace function public.cfg_int(c text) returns int
 language sql stable security definer set search_path = '' as $$
   select (valor #>> '{}')::int from public.config where clave = c
@@ -3968,7 +3968,7 @@ grant execute on function public.cfx_es_socio(), public.cfx_socios_lista(), publ
 --   Nada se borra solo: las vacías se borran con un toque; las que tienen datos piden descargar el respaldo y escribir "sí".
 --   cfx_tablas() = las tablas que crea este archivo (la revisa pruebas/inventario.py --verificar).
 -- ---------------------------------------------------------------------
-create or replace function public.cfx_tablas() returns text[] language sql immutable as $$ select array['public.auditoria', 'public.cfx_analisis', 'public.cfx_anuncio_vistos', 'public.cfx_anuncios', 'public.cfx_bloqueos', 'public.cfx_boleta_cuentas', 'public.cfx_boletas', 'public.cfx_brechas', 'public.cfx_calificaciones', 'public.cfx_cargas', 'public.cfx_carritos', 'public.cfx_chat', 'public.cfx_clave_temporal', 'public.cfx_config', 'public.cfx_consent', 'public.cfx_consent_hist', 'public.cfx_cupones', 'public.cfx_derechos', 'public.cfx_descuentos', 'public.cfx_errores', 'public.cfx_estudio', 'public.cfx_exentos', 'public.cfx_fallas', 'public.cfx_flow_negocio', 'public.cfx_hilos', 'public.cfx_keys', 'public.cfx_legal', 'public.cfx_login_fallos', 'public.cfx_login_qr', 'public.cfx_mensajes', 'public.cfx_modulos_negocio', 'public.cfx_modulos_pruebas', 'public.cfx_mp_avisos', 'public.cfx_mp_neg_cobros', 'public.cfx_mp_neg_sub_pagos', 'public.cfx_mp_neg_subs', 'public.cfx_mp_negocio', 'public.cfx_mp_sub_cobros', 'public.cfx_mp_subs', 'public.cfx_pagos', 'public.cfx_pin', 'public.cfx_pruebas_usadas', 'public.cfx_push_entrega', 'public.cfx_ref_codigos', 'public.cfx_referidos', 'public.cfx_registro', 'public.cfx_reportes', 'public.cfx_salud', 'public.cfx_secretos', 'public.cfx_sellos', 'public.cfx_sellos_cfg', 'public.cfx_socios', 'public.cfx_verificaciones', 'public.cfx_versiones', 'public.cm_campanas', 'public.cm_puentes', 'public.compartido_log', 'public.compartidos', 'public.config', 'public.espacios', 'public.invitaciones', 'public.items', 'public.notificaciones', 'public.pagos', 'public.perfiles', 'public.planes', 'public.push_subs', 'public.secretos', 'public.textos', 'public.uso_dia', 'public.vinculos'] $$;
+create or replace function public.cfx_tablas() returns text[] language sql immutable as $$ select array['public.auditoria', 'public.cfx_analisis', 'public.cfx_anuncio_vistos', 'public.cfx_anuncios', 'public.cfx_bloqueos', 'public.cfx_boleta_cuentas', 'public.cfx_boletas', 'public.cfx_brechas', 'public.cfx_calificaciones', 'public.cfx_cargas', 'public.cfx_carritos', 'public.cfx_chat', 'public.cfx_clave_temporal', 'public.cfx_config', 'public.cfx_consent', 'public.cfx_consent_hist', 'public.cfx_cupones', 'public.cfx_derechos', 'public.cfx_descuentos', 'public.cfx_errores', 'public.cfx_estudio', 'public.cfx_exentos', 'public.cfx_fallas', 'public.cfx_flow_negocio', 'public.cfx_hilos', 'public.cfx_keys', 'public.cfx_legal', 'public.cfx_login_fallos', 'public.cfx_login_qr', 'public.cfx_mensajes', 'public.cfx_modulos_negocio', 'public.cfx_modulos_pruebas', 'public.cfx_mp_avisos', 'public.cfx_mp_neg_cobros', 'public.cfx_mp_neg_sub_pagos', 'public.cfx_mp_neg_subs', 'public.cfx_mp_negocio', 'public.cfx_mp_sub_cobros', 'public.cfx_mp_subs', 'public.cfx_pagos', 'public.cfx_personal', 'public.cfx_pin', 'public.cfx_pruebas_usadas', 'public.cfx_push_entrega', 'public.cfx_ref_codigos', 'public.cfx_referidos', 'public.cfx_registro', 'public.cfx_reportes', 'public.cfx_salud', 'public.cfx_secretos', 'public.cfx_sellos', 'public.cfx_sellos_cfg', 'public.cfx_socios', 'public.cfx_verificaciones', 'public.cfx_versiones', 'public.cm_campanas', 'public.cm_puentes', 'public.compartido_log', 'public.compartidos', 'public.config', 'public.espacios', 'public.invitaciones', 'public.items', 'public.notificaciones', 'public.pagos', 'public.perfiles', 'public.planes', 'public.push_subs', 'public.secretos', 'public.textos', 'public.uso_dia', 'public.vinculos'] $$;
 create or replace function public.cfx_inventario() returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare r record; n bigint; out jsonb := '[]'::jsonb;
@@ -6989,6 +6989,44 @@ begin
 end $$;
 revoke all on function public.cfx_fotos_sin_cuenta() from public, anon;
 grant execute on function public.cfx_fotos_sin_cuenta() to authenticated;
+-- ---------------------------------------------------------------------
+-- CodeFix · G140 🎨 Personalizar (igual en las 7 apps; lo reparte nucleo/sincronizar.py).
+--   Lo que cada persona elige en Mi perfil → 🎨 Personalizar (colores a su gusto, letra y barra de abajo) queda en su cuenta:
+--   en otro celular se ve igual. El color y el modo de la app los guarda cada app como antes.
+--   cfx_personal()                → lo guardado de la cuenta ({} si nada).
+--   cfx_personal_guardar(datos)   → guarda solo lo permitido (col, letra, barra, v) y con tamaño acotado.
+-- ---------------------------------------------------------------------
+create table if not exists public.cfx_personal (
+  cuenta   uuid primary key references auth.users (id) on delete cascade,
+  datos    jsonb not null default '{}'::jsonb,
+  cambiado timestamptz not null default now()
+);
+alter table public.cfx_personal enable row level security;
+revoke all on public.cfx_personal from anon, authenticated;
+
+create or replace function public.cfx_personal() returns jsonb
+language sql stable security definer set search_path = public, pg_temp as $$
+  select coalesce((select datos from public.cfx_personal where cuenta = auth.uid()), '{}'::jsonb)
+$$;
+
+create or replace function public.cfx_personal_guardar(p_datos jsonb) returns void
+language plpgsql security definer set search_path = public, pg_temp as $$
+declare u uuid := auth.uid(); d jsonb;
+begin
+  if u is null then raise exception 'Inicia sesión para guardar.'; end if;
+  if p_datos is null or jsonb_typeof(p_datos) <> 'object' then raise exception 'Datos no válidos.'; end if;
+  if octet_length(p_datos::text) > 6000 then raise exception 'Demasiados datos.'; end if;
+  d := jsonb_strip_nulls(jsonb_build_object(
+    'v', case when jsonb_typeof(p_datos -> 'v') = 'number' then p_datos -> 'v' end,
+    'col', case when jsonb_typeof(p_datos -> 'col') = 'object' then p_datos -> 'col' end,
+    'letra', case when jsonb_typeof(p_datos -> 'letra') = 'object' then p_datos -> 'letra' end,
+    'barra', case when jsonb_typeof(p_datos -> 'barra') = 'object' then p_datos -> 'barra' end));
+  insert into public.cfx_personal (cuenta, datos, cambiado) values (u, d, now())
+  on conflict (cuenta) do update set datos = excluded.datos, cambiado = now();
+end $$;
+
+revoke all on function public.cfx_personal(), public.cfx_personal_guardar(jsonb) from public, anon;
+grant execute on function public.cfx_personal(), public.cfx_personal_guardar(jsonb) to authenticated;
 -- <<< CFX núcleo
 
 -- ---------- 4.31 · G33 🌐 Token de Cloudflare del dominio (se puede volver a correr) ----------
