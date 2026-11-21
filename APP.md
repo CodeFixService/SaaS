@@ -14,8 +14,8 @@ Leer esto antes que el código (G42j). Repo SaaS · id `mando` · Supabase vqevu
 | `/admin/#resumen` | Resumen · Empresas · 🧹 Limpiar |
 | `/admin/#apps` | Una tarjeta por app: versión, bd, 🚀 Liberar, ↗ Abrir app, 🧭 panel de la app · 🧩 venta de módulos de ESA app (precios, packs, 🎁 Campaña de lanzamiento G74 b, 🎁 Regalar) |
 | `/admin/#usuarios` `#pagos` `#mensajes` `#analitica` | Usuarios, pagos, soporte (💬 chat + 🐞 Fallas reportadas con 🎁 15 días, G55) y análisis nocturno de las 6 apps |
-| `/admin/#control` | 🔔 claves push, 📜 Registro, ✉️ Correo (Gmail + clave 16 letras), funciones cfx_* comunes |
-| `/admin/#ajustes` | Ajustes (Registro y Versiones también por `#registro` / `#versiones`) |
+| `/admin/#control` | 🔔 claves push (+ CM: claves nuevas y 🧪 probar servidor), 📜 Registro (CM: CSV y vaciar), ✉️ Correo, 🌐 Dominio de CodeFix (tiendas: solo mirar), 🛒 app ML de CodeFix · G145: UN solo lugar por cosa |
+| `/admin/#ajustes` | Versión, Ajustes generales, Mi cuenta (`#versiones` → Versión · `#registro` → Control → 📜) |
 | `/app/#hoy` `#pedidos` `#metas` `#tablero` `#insights` `#panel` `#mas` | App personal (CM.ir(hash)) |
 
 ## Archivos clave

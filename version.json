@@ -1,6 +1,6 @@
 {
-  "version": "5.73",
+  "version": "5.74",
   "bd": "4.76",
   "funcion": "3.7",
-  "notas": "🛡️ G144 (núcleo 3.40): sin botón \"Panel de administración\" ni limpieza dentro de las apps (todo en el CM → Apps) · ❤️ favorito rojo y redondo · contadores e íconos redondos = círculo perfecto · 🎤 y ⬜ ahora son íconos de línea · 💬 el WhatsApp del registro pasa solo a 📱 Mis redes (uno solo; el botón antiguo se oculta) · 🧹 archivos internos fuera de la página publicada."
+  "notas": "🧭 G145: un solo lugar para cada cosa en el CM (🔔 Notificaciones y 📜 Registro ahora solo en Control, con todo lo que tenían) · 🌐 el dominio de cada tienda lo conecta la tienda en su app (aquí solo el de CodeFix + lista para mirar) · 🛒 Mercado Libre = solo la app de CodeFix (1 vez)"
 }

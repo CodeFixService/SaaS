@@ -315,6 +315,13 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G145 · 🏪 Lo de cada tienda en su app + 🧭 CM con un solo lugar por cosa · CM 5.74 (bd 4.76) · Despega 6.90 bd 5.98 · función **enviar 3.9** de Despega (las otras sin cambio)
+0. Supabase de **Despega** → Edge Functions → **enviar** → Code → pega la línea de `Aplicaciones/supabase/functions/enviar/corto.ts` → **Deploy** (Verify JWT APAGADO). Luego Cloudflare **Listo** → CM → Apps → **⬆️ Actualizar base** de Despega → 🚀 **Liberar todo**.
+1. CM → **Ajustes** → ya NO están 🔔 Notificaciones ni 📜 Registro. Están en CM → **Control** → **🔔 Notificaciones** (abajo: "🛸 Centro de Mando: claves nuevas y 🧪 probar servidor" → toca **Probar servidor** → "Funciona") y **📜 Registro** (con 📥 Descargar CSV).
+2. CM → Control → **🛒 Mercado Libre** → dice "app de CodeFix, 1 sola vez"; cada tienda conecta la suya en Despega → Ajustes → 🛒 Mercado Libre.
+3. CM → Control → **🌐 Dominio** → arriba el de CodeFix; abajo "🏪 Dominio de las tiendas" solo para mirar (toca "Ver tiendas con dominio").
+4. 🌐 Cuando compres el dominio de CodeFix (FUTURO): al pegar el token de Cloudflare en el CM queda copiado también en Despega. Desde ahí cada tienda con el módulo 🌐 escribe su dominio en Despega → Ajustes → 🌐 Mi dominio → copia el dato → lo pega en nic.cl → toca 🔄 Revisar → ✅ (tú no haces nada). Hoy, sin dominio de CodeFix, la tienda ve "⏳ CodeFix está terminando de activar los dominios propios".
+
 ## G144 · 🛡️ Todo se administra en el CM + ❤️ redondo + 💬 un solo WhatsApp · núcleo 3.40 · CM 5.73 bd 4.76 · Despega 6.89 bd 5.97 · Barbería 3.60 bd 3.26 · Billetera 1.21.120 bd 80 · BiciTaller 3.50 bd 2.76 · Estaciona 2.40 bd 78 · funciones SIN cambio
 0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo**.
 1. 🛡️ En el navegador abre `https://saas.juanjosuecastilloloyola.workers.dev/PLAN.md` → debe decir que **no existe** (antes se podía leer). Prueba igual `/supabase/instalar.sql` en Despega (`aplicaciones.…`). Si alguna SÍ abre, mándame pantallazo.

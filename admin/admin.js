@@ -269,10 +269,8 @@
     AJ = window.CFX_AJUSTES.montar(el('ajustes'), [
       { k: 'version', ico: '🔄', t: 'Versión', d: 'Probar y liberar la app', abrir: versiones },
       { k: 'generales', ico: '⚙️', t: 'Ajustes generales', d: 'Prueba Pro, soporte y límites', abrir: generales },
-      { k: 'push', ico: '🔔', t: 'Notificaciones', d: 'Claves push y servidor', abrir: push },
-      { k: 'registro', ico: '📜', t: 'Registro de cambios', d: 'Quién cambió qué y por qué', abrir: registro },
       { k: 'cuenta', ico: '👤', t: 'Mi cuenta', d: 'Foto, nombre y clave', abrir: (z) => window.CFX_PERFIL.montar(z) }
-    ], { arriba: '<div class="titulo-v"><h2>Ajustes</h2></div><p class="sub">Precios, planes, textos, keys, cupones y avisos de las 7 apps están en Pagos y Control.</p>' });
+    ], { arriba: '<div class="titulo-v"><h2>Ajustes</h2></div><p class="sub">Precios, planes, textos, keys, cupones, avisos, 🔔 notificaciones y 📜 registro de las 7 apps están en Pagos y Control (un solo lugar para cada cosa).</p>' });
   }
   function generales(z) {
     const c = pub.config || {};
@@ -310,8 +308,10 @@
       if ($('rV')) $('rV').onclick = async () => { if (!filas.length) return; if (!App.pendienteVaciar) return toast('Primero descarga el CSV'); if (!(await confirmar('Se borran ' + filas.length + ' filas del registro (ya descargadas).', 'Vaciar'))) return; try { await rpc('auditoria_vaciar', { p_hasta_id: filas[0].id }); App.pendienteVaciar = false; toast('Registro vaciado'); registro(z); } catch (x) { err(x); } };
     } catch (e) { z.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; }
   }
-  // Direcciones antiguas (#registro, #versiones) abren su sección dentro de Ajustes.
-  const viejo = () => { const h = location.hash.slice(1); if (h === 'registro' || h === 'versiones') { irAjuste(h === 'registro' ? 'registro' : 'version'); return true; } return false; };
+  // G145 c: 🔔 y 📜 del CM viven en Control (un solo lugar); Control los monta con estas mismas funciones (no se pierde nada).
+  window.CM_PUSH = push; window.CM_REGISTRO = registro;
+  // Direcciones antiguas: #versiones abre Ajustes → Versión · #registro abre Control → 📜 Registro.
+  const viejo = () => { const h = location.hash.slice(1); if (h === 'versiones') { irAjuste('version'); return true; } if (h === 'registro') { try { sessionStorage.setItem('cm-control-secc', 'registro'); } catch (e) { /* nada */ } show('control'); return true; } return false; };
   addEventListener('hashchange', viejo);
   if (!viejo()) show(location.hash.slice(1) || 'resumen');
 })();

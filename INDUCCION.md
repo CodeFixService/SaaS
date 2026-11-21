@@ -20,6 +20,7 @@ B=/usr/lib/postgresql/16/bin; mkdir -p /var/tmp/pgdata /var/tmp/pgb; chown postg
 su postgres -c "$B/initdb -A trust -D /var/tmp/pgdata"
 su postgres -c "$B/pg_ctl -D /var/tmp/pgdata -o '-k /var/tmp/pgb -p 54329' -l /var/tmp/pg.log start"
 cd SaaS/pruebas && npm i
+./base.sh /home/user/barberia barberia_prueba   # central.js la necesita (G145)
 ```
 Sin red a Supabase. Sin deno: `.ts` con `node --experimental-strip-types --check`.
 

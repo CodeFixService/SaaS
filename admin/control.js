@@ -276,7 +276,11 @@
       if (!d) { toast('Escribe tu dominio, ej: codefix.cl'); return; }
       r.innerHTML = '<p class="sub">Armando en Cloudflare… (puede tardar 20 s)</p>'; $('#dbG').disabled = true;
       try {
-        if (tk) { await rpcCM('cfx_cf_token_guardar', { p_token: tk }); $('#dbT').value = ''; }
+        if (tk) {
+          await rpcCM('cfx_cf_token_guardar', { p_token: tk }); $('#dbT').value = '';
+          // G145 a: copia a Despega para que cada tienda conecte su dominio sola (función enviar).
+          if (conectada(despega())) { try { await M().rpcDe(M().cliente(despega()), 'admin_set_secret', { p_name: 'cf_token', p_value: tk }); } catch (e) { toast('Despega: ' + nf(e)); } }
+        }
         pintarDominio(await armarDominio(d));
       } catch (x) { r.innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; }
       $('#dbG').disabled = false;
@@ -303,18 +307,21 @@
     if (d.tiendas) pintarTiendas(d.tiendas);
   }
   // 🌐 Dominio de los negocios (G29 · Cloudflare for SaaS). Con el dominio de CodeFix ✅ el CNAME y los Custom Hostnames se arman solos.
+  // G145 a: el dominio de cada tienda lo conecta la tienda en SU app (Despega → Ajustes → 🌐 Mi dominio → función enviar → Cloudflare).
+  // Aquí solo: el token de CodeFix copiado a Despega + la lista para mirar (contraíble). Nada por tienda se configura en el CM.
   async function negociosDominio(dom) {
-    const z = raiz.querySelector('#dbNeg');
-    if (actual !== 'aplicaciones') { z.innerHTML = '<p class="sub">Dominio propio de cada negocio: elige Despega Pyme arriba.</p>'; return; }
-    let d;
-    try { d = await rpc('cfx_dominio'); } catch (x) { z.innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
+    const z = raiz.querySelector('#dbNeg'), dp = despega();
+    if (!dp || !conectada(dp)) { z.innerHTML = '<p class="sub">Dominio de las tiendas: conéctate a Despega Pyme (Apps).</p>'; return; }
+    let d, tok = null;
+    try { [d, tok] = await Promise.all([M().rpcDe(M().cliente(dp), 'cfx_dominio'), M().rpcDe(M().cliente(dp), 'admin_secret_status').then((r) => !!(r || {}).cf_token).catch(() => null)]); }
+    catch (x) { z.innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
     const T = d.tiendas || [];
-    z.innerHTML = '<div class="card"><h2>🏪 Dominio de los negocios</h2><p class="sub">El negocio pone en su DNS: <b>CNAME www → ' + esc(d.cname || (dom ? 'tiendas.' + dom : '…')) + '</b>. Despega Pyme se lo muestra con 📋 Copiar.</p>' +
-      (dom ? '<p class="sub">Se conectan solos en Cloudflare cada vez que abres esta pantalla.</p>' :
-        '<label>Destino del CNAME<input id="doC" inputmode="url" maxlength="80" placeholder="tiendas.codefix.cl" value="' + esc(d.cname || '') + '"></label><button type="button" class="block" id="doG">Guardar</button>') + '</div>' +
-      '<div id="doT">' + (T.length ? '<div class="card">' + T.map((t) => '<div class="fila" data-host="www.' + esc(t.dominio) + '"><span class="grow"><b>www.' + esc(t.dominio) + '</b><br><span class="sub">tienda ' + esc(t.slug || '—') + '</span></span>' +
-        (t.activo ? '<span class="pill ok">con módulo</span>' : '<span class="pill warn">sin módulo</span>') + '</div>').join('') + '</div>' : '<p class="empty">Ningún negocio ha puesto su dominio todavía.</p>') + '</div>';
-    if (z.querySelector('#doG')) z.querySelector('#doG').onclick = async () => { try { await rpc('cfx_dominio_guardar', { p_cname: z.querySelector('#doC').value.trim() }); toast('Destino guardado en Despega Pyme'); negociosDominio(dom); } catch (x) { toast(nf(x)); } };
+    z.innerHTML = '<div class="card"><h2>🏪 Dominio de las tiendas</h2><p class="sub">Cada tienda conecta <b>su</b> dominio en su app (Despega → Ajustes → 🌐 Mi dominio): copia el dato, lo pega en nic.cl y se activa solo. No tienes que hacer nada.</p>' +
+      (tok === false ? '<p class="sub warn">⚠️ Despega aún no tiene el token de Cloudflare: pégalo arriba (Cambiar) y toca 🔄 para que las tiendas se conecten solas.</p>' : '') +
+      (dom ? '' : '<details class="sub"><summary>Avanzado: destino del CNAME</summary><label>Destino del CNAME<input id="doC" inputmode="url" maxlength="80" placeholder="tiendas.codefix.cl" value="' + esc(d.cname || '') + '"></label><button type="button" class="block" id="doG">Guardar</button></details>') +
+      '<details class="sub" id="doT"><summary>Ver tiendas con dominio (' + T.length + ')</summary>' + (T.length ? T.map((t) => '<div class="fila" data-host="www.' + esc(t.dominio) + '"><span class="grow"><b>www.' + esc(t.dominio) + '</b><br><span class="sub">tienda ' + esc(t.slug || '—') + '</span></span>' +
+        (t.activo ? '<span class="pill ok">con módulo</span>' : '<span class="pill warn">sin módulo</span>') + '</div>').join('') : '<p class="empty">Ninguna tienda ha puesto su dominio todavía.</p>') + '</details></div>';
+    if (z.querySelector('#doG')) z.querySelector('#doG').onclick = async () => { try { await M().rpcDe(M().cliente(dp), 'cfx_dominio_guardar', { p_cname: z.querySelector('#doC').value.trim() }); toast('Destino guardado en Despega Pyme'); negociosDominio(dom); } catch (x) { toast(nf(x)); } };
   }
   function pintarTiendas(L) {
     L.forEach((t) => {
@@ -377,6 +384,12 @@
   }
 
   async function registro() {
+    // G145 c: el registro del CM (CSV, vaciar, motivo) vive aquí; antes estaba repetido en Ajustes.
+    if (actual === 'cm' && window.CM_REGISTRO) {
+      caja().innerHTML = '<div id="rgCfx"></div><div id="rgCm"></div>';
+      setTimeout(() => window.CFX_AJUSTES && window.CFX_AJUSTES.registro(caja().querySelector('#rgCfx'), rpc, { lista: true }), 0);
+      return window.CM_REGISTRO(caja().querySelector('#rgCm'));
+    }
     let L = [];
     try { L = await rpc('cfx_registro_lista', { p_limite: 200 }); } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + '</p>'; return; }
     setTimeout(() => window.CFX_AJUSTES && window.CFX_AJUSTES.registro(caja(), rpc, { recargar: registro }), 0);
@@ -407,7 +420,9 @@
   };
   async function push() {
     const L = M().APPS.filter((a) => PUSH[a.id]);
-    caja().innerHTML = '<div class="card"><h2>🔔 Notificaciones de las apps</h2><p class="sub">Cada app necesita sus claves push una sola vez. Si a alguien le sale "el administrador aún no activa las notificaciones", es porque a esa app le faltan: créalas aquí.</p><div id="puL"><p class="sub">Revisando…</p></div></div>';
+    caja().innerHTML = '<div class="card"><h2>🔔 Notificaciones de las apps</h2><p class="sub">Cada app necesita sus claves push una sola vez. Si a alguien le sale "el administrador aún no activa las notificaciones", es porque a esa app le faltan: créalas aquí.</p><div id="puL"><p class="sub">Revisando…</p></div></div>' +
+      (window.CM_PUSH ? '<details class="card" id="puCm"><summary><b>🛸 Centro de Mando: claves nuevas y 🧪 probar servidor</b></summary><div></div></details>' : '');
+    { const d = caja().querySelector('#puCm'); if (d) d.addEventListener('toggle', () => { if (d.open && !d.dataset.ok) { d.dataset.ok = 1; window.CM_PUSH(d.querySelector('div')); } }); }
     const filas = await Promise.all(L.map(async (a) => {
       if (!conectada(a)) return [a, null, 'sin conectar'];
       try { return [a, !!(await PUSH[a.id].leer(M().cliente(a))), '']; } catch (x) { return [a, null, nf(x)]; }
@@ -433,7 +448,7 @@
     const a = M().APPS.find((x) => x.id === 'aplicaciones');
     if (!a || !conectada(a)) { caja().innerHTML = '<div class="card"><p class="sub">Conéctate primero a Despega (arriba).</p></div>'; return; }
     const url = M().urlLimpia(a).split('?')[0];
-    caja().innerHTML = '<div class="card"><h2>🛒 Mercado Libre</h2><p class="sub">Para que las tiendas de Despega unan su stock con Mercado Libre (módulo 🧩). Una vez:</p>' +
+    caja().innerHTML = '<div class="card"><h2>🛒 Mercado Libre · app de CodeFix</h2><p class="sub">Esto es de CodeFix, se hace <b>1 sola vez</b>: la "app de desarrollador" que Mercado Libre pide para que <b>cada tienda conecte SU cuenta en su app</b> (Despega → Ajustes → 🛒 Mercado Libre). Aquí nunca se configura una tienda.</p>' +
       '<p class="sub">1) Entra a <b>developers.mercadolibre.cl</b> → Mis aplicaciones → Crear aplicación.<br>2) En "URI de redirect" pega: <b class="una">' + esc(url) + '</b><br>3) Permisos: lectura y escritura (offline_access, read, write).<br>4) Copia aquí el App ID y la Clave secreta.</p>' +
       '<label>App ID<input id="mlI" inputmode="numeric" autocomplete="off" maxlength="25"></label>' +
       '<label>Clave secreta<input id="mlS" autocomplete="off" maxlength="80" data-sin-voz placeholder="(déjala vacía para no cambiarla)"></label>' +
