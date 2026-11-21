@@ -315,6 +315,20 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G142 · 🎁 Prueba de módulos uniforme + 🚲 Recibir bici completo + 📱 redes por persona + 📲 NFC · núcleo 3.38 · CM 5.71 bd 4.75 · Despega 6.87 bd 5.96 · Barbería 3.58 bd 3.25 · Billetera 1.21.118 bd 79 · BiciTaller 3.48 bd 2.75 · Estaciona 2.38 bd 77 · funciones SIN cambio
+0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo**.
+1. 🎁 Con una cuenta de dueño NUEVA (correo que nunca probó módulos), en cada app: Más → 🧩 Módulos → toca **▶️ Ver demo** de un módulo → arriba sale **🎁 Probar 7 días gratis** (sin bajar) → tócalo → queda activo 7 días.
+2. Con tu correo de siempre (ya probaste): la hoja ahora DICE "⌛ Ya usaste tu prueba gratis de este módulo con este correo" (antes el botón desaparecía sin aviso: por eso no lo veías).
+3. 💈 Barbería (dueño Free): toca algo ⭐ de un módulo (ej. Clientes que no vuelven) → sale **🎁 Probar Clientes que no vuelven 7 días gratis** además de ⭐ Ver Premium.
+4. 🚲 BiciTaller → Hoy → **🚲 Recibir bici · Nueva orden**: nombre, WhatsApp, correo (opcional) → en **Bici** escribe "tre ma" → toca **Trek Marlin 5**.
+5. Baja a **📋 Ingreso completo**: aro, talla, grupo, color (todos sugieren al escribir) · toca lo que **Trae** (Luces, Candado…) · toca cada parte en **Cómo llega** (⬜ → ✅ → 🔧 → ⚠️, vibra) · **N° de serie**: 📷 Escanear (Android) o 📸 Leer con foto · **📷 Sacar foto** (hasta 4) · el cliente **firma con el dedo** → **✅ Recibir bici**.
+6. En la orden sale la tarjeta **📋 Ingreso de la bici** (✏️ Editar) y **🧾 Orden de trabajo** → **🖨️ Imprimir / PDF** o **📤 Compartir** con el cliente.
+7. Más → **🧾 Órdenes y presupuestos**: botones 🚲 Recibir bici / 💰 Presupuesto y la lista de bicis en el taller (toca una = abre).
+8. 👤 Cliente sin cuenta: crea una orden con el correo de alguien que NO tiene cuenta → esa persona se registra en tu link con ESE correo y lo **confirma** → en su app ve su bici y la orden. (Sin confirmar el correo no se asocia nada.)
+9. 📱 Barbería (dueño o barbero): Más → ⚙️ Ajustes → Cuenta y ayuda → **📱 Mis redes personales** → pega tu Instagram → 💾 → abre el link /b/ de la barbería: en "Nuestro equipo" sale tu ícono bajo tu nombre. (BiciTaller: igual para el dueño y mecánicos.)
+10. 🧾 Cualquier comprobante de venta: abajo dice "Síguenos: Instagram @…" con las redes del negocio (Más → Mis redes).
+11. 📲 BiciTaller (Android con Chrome): Más → 🪪 Pasaportes → abre uno → **📲 Grabar etiqueta NFC** → acerca una etiqueta NFC (NTAG213, ~$300 c/u) → al acercar otro teléfono abre el pasaporte.
+
 ## G141 · 📱 Mis redes + 🎬 Estudio por link · núcleo 3.37 · CM 5.70 bd 4.74 · Despega 6.86 bd 5.95 · Barbería 3.57 bd 3.24 · Billetera 1.21.117 bd 78 · BiciTaller 3.47 bd 2.74 · Estaciona 2.37 bd 76 · funciones SIN cambio
 0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo**.
 1. 💈 Barbería (dueño): Más → **📱 Mis redes** → pega el link de tu Instagram (cópialo desde Instagram → tu perfil → Compartir perfil) → sale "Instagram · @tu_usuario ✓" → **➕ Agregar** → igual con TikTok → **💾 Guardar mis redes**.
