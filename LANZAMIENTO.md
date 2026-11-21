@@ -315,6 +315,13 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G138 · 🐞 Errores de Josué 21/11 · núcleo 3.34 · CM 5.67 bd 4.72 · Despega 6.83 bd 5.92 · Barbería 3.54 bd 3.22 · Billetera 1.21.114 bd 76 · BiciTaller 3.44 bd 2.72 · Estaciona 2.34 bd 74 (funciones SIN cambio)
+0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo** (cubre también G131 b). En el celular: cierra y abre la app (o Más → Reparar la app).
+1. Despega → **Chat** → abre un chat → toca el campo y escribe 2 líneas: el 🎙️ queda **dentro**, en la esquina de abajo a la derecha. La cabecera (Mensajes) **no se sube**; la barra de abajo se esconde mientras escribes y vuelve al cerrar el teclado.
+2. Con tu cuenta de cliente Premium → Cuenta → **Mi Caja** → Reporte y Finanzas: abajo ya **no** sale "Cuenta y ayuda".
+3. Tienda → carrito largo (**🛒 Mi pedido**) → baja: el título queda pegado bajo las pestañas, con fondo y color, sin mezclarse con "Total".
+4. Más → ⚙️ Ajustes → **🐞 Reportar una falla**: envía 2 seguidos → el 2.º dice "Espera 1 minuto"; al minuto, pasa (hasta 30 al día).
+
 ## G131 b · 🖼️ Fotos de cuentas borradas · núcleo 3.33 · CM 5.66 bd 4.71 · Despega 6.82 bd 5.91 · Barbería 3.53 bd 3.21 · Billetera 1.21.113 bd 75 · BiciTaller 3.43 bd 2.71 · Estaciona 2.33 bd 73 (funciones SIN cambio)
 0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo**.
 1. CM → **Apps** → una app → **🧹 Respaldo y limpieza** → en **2. Limpieza** aparece **🖼️ Fotos de cuentas borradas · N por borrar** (sin 🌙: solo a mano).

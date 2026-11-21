@@ -37,14 +37,14 @@ const login = async (p, base, em, pw) => { await p.goto(base + '/'); await p.wai
     ok(/Gracias por avisarnos/.test(await dlg.textContent()), '1) pantalla de gracias');
     const [r] = await t.sim.su('select * from public.cfx_fallas');
     ok(r && r.cuenta === u.id && r.rol === 'negocio' && /^data:image\//.test(r.foto || ''), '1) llega con cuenta, rol y foto');
-    ok(r && r.datos.version === '6.26' && r.datos.app && r.datos.celular && r.datos.tamano === '320×680' && r.datos.oscuro === true, '1) adjunta versión, app, celular, tamaño y modo ' + JSON.stringify(r && { v: r.datos.version, a: r.datos.app, c: r.datos.celular, p: r.datos.pantalla }));
+    ok(r && r.datos.version === require('/home/user/Aplicaciones/version.json').version && r.datos.app && r.datos.celular && r.datos.tamano === '320×680' && r.datos.oscuro === true, '1) adjunta versión, app, celular, tamaño y modo ' + JSON.stringify(r && { v: r.datos.version, a: r.datos.app, c: r.datos.celular, p: r.datos.pantalla }));
     ok(r && (r.datos.errores || []).some((e) => /Prueba G55/.test(e.m)), '1) adjunta los últimos errores de la sesión ' + JSON.stringify(r && r.datos.errores));
     ok(/Recibido/.test(await dlg.textContent()), '1) "Tus reportes" muestra ⏳ Recibido');
     // 2) anti-spam
     await p.evaluate(() => document.querySelectorAll('dialog[open]').forEach((d) => d.close()));
     await p.locator('[data-k=falla]:visible').first().click(); await p.waitForTimeout(800);
     await dlg.locator('[data-t]').fill('Otra cosa que falló'); await dlg.locator('[data-enviar]').click(); await p.waitForTimeout(1000);
-    ok(/2 minutos/.test(await dlg.locator('.ca-err').textContent()), '2) segundo reporte antes de 2 min se frena');
+    ok(/1 minuto/.test(await dlg.locator('.ca-err').textContent()), '2) segundo reporte antes de 1 min se frena (G138)');
     // 3) permisos
     const yo = { sub: u.id, email: 'tienda@x.cl' }, ad = { sub: adm.id, email: adm.email };
     ok(await t.sim.rpc('public', 'cfx_fallas_lista', {}, yo).then(() => false, () => true), '3) un negocio NO ve la lista de fallas');
@@ -73,8 +73,13 @@ const login = async (p, base, em, pw) => { await p.goto(base + '/'); await p.wai
     ok((await t.sim.su("select count(*)::int n from public.notifications where target_id = $1 and title = '🐞 Revisamos tu reporte'", [u.id]))[0].n === 1, '4) "No es falla" responde con mensaje amable');
     const ts = await t.sim.su("select count(*)::int n from public.cfx_fallas where cuenta = $1", [u.id]);
     await t.sim.su("update public.cfx_fallas set creado = now() - interval '1 hour'");
-    for (let i = 0; i < 2; i++) { await t.sim.su("update public.cfx_fallas set creado = now() - interval '1 hour'"); await t.sim.rpc('public', 'cfx_falla_enviar', { p_texto: 'falla número ' + i }, yo).catch(() => {}); }
-    ok(await t.sim.rpc('public', 'cfx_falla_enviar', { p_texto: 'una más hoy' }, yo).then(() => false, (e) => /3 reportes hoy/.test(e.message)) || ts[0].n < 0, '2) máximo 3 reportes al día por cuenta');
+    // G138: ya no son 3 al día: 1 minuto entre reportes y 30 al día.
+    let g138 = 0; for (let i = 0; i < 6; i++) { await t.sim.su("update public.cfx_fallas set creado = now() - interval '1 hour'"); await t.sim.rpc('public', 'cfx_falla_enviar', { p_texto: 'falla número ' + i }, yo).then(() => g138++, () => {}); }
+    ok(g138 === 6, '2) G138: 6 reportes el mismo día pasan (antes máximo 3)');
+    ok(await t.sim.rpc('public', 'cfx_falla_enviar', { p_texto: 'otra al tiro' }, yo).then(() => false, (e) => /1 minuto/.test(e.message)), '2) G138: 1 minuto entre reportes');
+    await t.sim.su("update public.cfx_fallas set creado = now() - interval '1 hour'");
+    await t.sim.su("insert into public.cfx_fallas (cuenta, rol, texto, creado) select $1, 'negocio', 'falla vieja', now() - interval '2 hours' from generate_series(1, 30)", [u.id]);
+    ok(await t.sim.rpc('public', 'cfx_falla_enviar', { p_texto: 'la 31 de hoy' }, yo).then(() => false, (e) => /30 reportes hoy/.test(e.message)) || ts[0].n < 0, '2) máximo 30 reportes al día por cuenta');
   } catch (e) { fallas++; console.log('✗ ' + e.message.split('\n')[0]); }
   await t.cerrar();
   // 5) CM → Mensajes → 🐞 Fallas (base del propio CM)
