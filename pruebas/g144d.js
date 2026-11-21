@@ -14,6 +14,11 @@ let f = 0; const ok = (c, m) => { console.log((c ? '✓ ' : '✗ ') + m); if (!c
     let m = await como('tienda@x.cl', 'public.cfx_redes_mias()');
     ok(/whatsapp:https:\/\/wa\.me\/56912345678/.test(reds(m.lista)), 'El WhatsApp del registro ya está en Mis redes (' + reds(m.lista) + ')');
     ok(/whatsapp/.test(reds(await como('tienda@x.cl', "public.cfx_redes_publicas('ana')"))), 'Y en las redes públicas');
+    // Redes de antes (perfil.instagram) + WhatsApp automático: se ven las dos (nada se pierde)
+    await su("update public.profiles set perfil = '{\"instagram\":\"@anaviejo\"}'::jsonb where id = $1", [u.id]);
+    await t.page.goto(t.base + '/t/?s=ana'); await t.page.waitForTimeout(3500);
+    const v0 = await t.page.evaluate(() => [...document.querySelectorAll('[data-pf-redes] a.cfx-red')].map((a) => a.dataset.red).join(','));
+    ok(/whatsapp/.test(v0) && /instagram/.test(v0), 'Sin redes guardadas: WhatsApp del registro + Instagram de antes (' + v0 + ')');
     let e = ''; try { await como('tienda@x.cl', "public.cfx_redes_guardar('[{\"red\":\"whatsapp\",\"url\":\"https://wa.me/56912345678\"},{\"red\":\"whatsapp\",\"url\":\"https://wa.me/56999999999\"}]')"); } catch (x) { e = x.message; }
     ok(/uno solo/.test(e), 'Servidor: no deja 2 WhatsApp (' + e + ')');
     await como('tienda@x.cl', "public.cfx_redes_guardar('[{\"red\":\"instagram\",\"url\":\"https://instagram.com/ana\"}]')");

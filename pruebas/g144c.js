@@ -35,7 +35,7 @@ const barrer = (p) => p.evaluate(() => {
       const tabs = await p.evaluate(() => [...document.querySelectorAll('nav.cfx-barra > a, nav.cfx-barra > button')].filter((b) => b.offsetParent).map((b) => (b.innerText || b.getAttribute('aria-label') || '').trim()).filter(Boolean));
       const R = [await barrer(p)];
       for (const tx of tabs) {
-        await p.locator('nav.cfx-barra > :is(a,button)', { hasText: tx }).first().click().catch(() => {}); await p.waitForTimeout(1200);
+        await t.sinModales(p).catch(() => {}); await p.locator('nav.cfx-barra > :is(a,button)', { hasText: tx }).first().click({ timeout: 5000 }).catch(() => {}); await p.waitForTimeout(1200);
         R.push(await barrer(p)); await p.screenshot({ path: __dirname + '/capturas/g144c-' + n + '-' + tx.replace(/\W+/g, '') + '.png' });
         await p.keyboard.press('Escape').catch(() => {}); await p.waitForTimeout(300);
       }
