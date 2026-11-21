@@ -30,25 +30,25 @@ let f = 0; const ok = (c, m) => { console.log((c ? '✓ ' : '✗ ') + m); if (!c
     // ---------- Perfil → Color y modo → tamaño y grosor ----------
     await p.evaluate(() => window.CFX_PERFIL.abrir('estilo')); await p.waitForTimeout(900);
     const lt = p.locator('.cfx-hoja-m [data-lt]').last();
-    ok(await lt.count() === 1 && await p.locator('.cfx-hoja-m [data-lg]').count() === 3, 'Perfil → Color y modo: tamaño (rango) y 3 grosores');
+    ok(await lt.count() === 1 && await p.locator('.cfx-hoja-m [data-lg]').count() === 3 && await p.locator('.cfx-hoja-m [data-lf]').count() === 6, 'Perfil → Color y modo: tamaño (rango), 6 tipos de letra (G143) y 3 grosores');
     await t.foto('g92a-perfil');
-    await lt.evaluate((i) => { i.value = '4'; i.dispatchEvent(new Event('input')); i.dispatchEvent(new Event('change')); }); await p.waitForTimeout(400);
-    ok(await p.evaluate(() => document.documentElement.style.zoom) === '1.12', '🔤 tamaño máx 112 % aplicado');
-    ok(await t.anchoOk(p), '🔤 con 112 % no se sale del ancho');
+    await lt.evaluate((i) => { i.value = '6'; i.dispatchEvent(new Event('input')); i.dispatchEvent(new Event('change')); }); await p.waitForTimeout(400);
+    ok(await p.evaluate(() => !document.documentElement.style.zoom && document.documentElement.classList.contains('cfx-lt') && parseFloat(getComputedStyle(document.body).fontSize) > 19), '🔤 tamaño máx 125 %: agranda el TEXTO, sin zoom (G143)');
+    ok(await t.anchoOk(p), '🔤 con 125 % no se sale del ancho');
     await p.click('.cfx-hoja-m [data-lg=gruesa]'); await p.waitForTimeout(400);
     ok(await p.evaluate(() => document.documentElement.dataset.cfxGrosor === 'gruesa' && getComputedStyle(document.body).fontWeight === '500'), '🔤 gruesa: texto normal en 500');
     await p.reload(); await p.waitForTimeout(2500);
-    ok(await p.evaluate(() => document.documentElement.style.zoom === '1.12' && document.documentElement.dataset.cfxGrosor === 'gruesa'), '💾 se mantiene al recargar');
+    ok(await p.evaluate(() => document.documentElement.classList.contains('cfx-lt') && parseFloat(getComputedStyle(document.body).fontSize) > 19 && document.documentElement.dataset.cfxGrosor === 'gruesa'), '💾 se mantiene al recargar');
     await t.sinModales(p);
     await p.evaluate(() => window.CFX_PERFIL.abrir('estilo')); await p.waitForTimeout(900);
     await p.click('.cfx-hoja-m [data-lg=normal]'); await p.locator('.cfx-hoja-m [data-lt]').last().evaluate((i) => { i.value = '2'; i.dispatchEvent(new Event('change')); }); await p.waitForTimeout(400);
-    ok(await p.evaluate(() => !document.documentElement.style.zoom && !document.documentElement.dataset.cfxGrosor), '↺ normal y 100 %: sin zoom ni reescritura');
+    ok(await p.evaluate(() => !document.documentElement.classList.contains('cfx-lt') && !document.documentElement.dataset.cfxGrosor), '↺ normal y 100 %: sin reescritura');
     // ---------- aprende: 3 veces agrandando con los dedos → sugiere (y se acepta) ----------
     const c0 = (await t.sim.su('select 1')).length; void c0;
     await p.evaluate(() => { const k = Object.keys(localStorage).find((x) => x.startsWith('cfx-letra:')); const g = JSON.parse(localStorage.getItem(k)); g.s = 2; localStorage.setItem(k, JSON.stringify(g)); });
     await p.reload(); await p.waitForTimeout(2000);
     await p.evaluate(() => { Object.defineProperty(visualViewport, 'scale', { get: () => 1.6 }); visualViewport.dispatchEvent(new Event('resize')); }); await p.waitForTimeout(1600);
-    ok(await p.evaluate(() => document.documentElement.style.zoom) === '1.06', '🧠 aprende: sugiere y sube un paso (106 %)');
+    ok(await p.evaluate(() => window.CFX_LETRA.leer().t === 106 && document.documentElement.classList.contains('cfx-lt')), '🧠 aprende: sugiere y sube un paso (106 %)');
     ok(!t.errores.filter((e) => !/favicon|ERR_|Failed to load/.test(e)).length, 'sin errores: ' + t.errores.slice(0, 3).join(' | '));
   } finally { await t.cerrar(); }
   console.log(f ? '✗ ' + f + ' fallas' : '✓ todo ok'); process.exit(f ? 1 : 0);

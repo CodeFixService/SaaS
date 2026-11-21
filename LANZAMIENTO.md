@@ -315,6 +315,14 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G143 · 🔤 Una letra para todas + 🧭 barra igual en las 7 · núcleo 3.39 · CM 5.72 · Despega 6.88 · Barbería 3.59 · Billetera 1.21.119 · BiciTaller 3.49 · Estaciona 2.39 · base y funciones SIN cambio
+0. Cloudflare **Listo** en las 6 → CM → Apps → 🚀 **Liberar todo** (no hay que actualizar base).
+1. Abre cada app en el teléfono: la barra de abajo se ve IGUAL en todas (íconos del mismo tamaño y centrados; en BiciTaller y Barbería ya no se ven chicos ni corridos).
+2. Mi perfil (tu foto) → **🎨 Personalizar** → **Tipo de letra**: toca Montserrat → cambia al tiro toda la app · vuelve a **Inter** (la de fábrica).
+3. **Grosor de letra**: Delgada / Normal / Gruesa → ahora SÍ se nota (también en la barra de abajo).
+4. **🔤 Tamaño de letra**: mueve hasta 125 % → crece el TEXTO (no la pantalla entera) y nada se sale del ancho.
+5. Abre la misma app en otro teléfono con tu cuenta → queda tu letra.
+
 ## G142 · 🎁 Prueba de módulos uniforme + 🚲 Recibir bici completo + 📱 redes por persona + 📲 NFC · núcleo 3.38 · CM 5.71 bd 4.75 · Despega 6.87 bd 5.96 · Barbería 3.58 bd 3.25 · Billetera 1.21.118 bd 79 · BiciTaller 3.48 bd 2.75 · Estaciona 2.38 bd 77 · funciones SIN cambio
 0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo**.
 1. 🎁 Con una cuenta de dueño NUEVA (correo que nunca probó módulos), en cada app: Más → 🧩 Módulos → toca **▶️ Ver demo** de un módulo → arriba sale **🎁 Probar 7 días gratis** (sin bajar) → tócalo → queda activo 7 días.

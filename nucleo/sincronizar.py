@@ -49,6 +49,7 @@ OPCIONAL = {'Aplicaciones': ('estudio.js', 'est-motor.js', 'est-importador.js', 
 # CSS de terceros (G20): Bootstrap 5.3.8, SOLO utilidades (sin reboot, grid ni componentes: su .row/.card/.btn chocarían con core.css).
 # Va en <css>/vendor/ y se enlaza ANTES de la hoja propia de la app, así core.css y tema.css siguen mandando.
 VENDOR_CSS = ('vendor/bootstrap-utilities.min.css',)
+LETRAS = tuple('vendor/letras/' + n + '.woff2' for n in ('inter', 'roboto', 'open-sans', 'montserrat', 'nunito'))  # G143 🔤 letras comunes (tema.css las usa)
 SALTAR = re.compile(r'(^docs/|guia|legal|actualizar\.html|^contador/)')  # contador/: link público de solo lectura (Billetera G94), sin el núcleo
 
 
@@ -94,7 +95,7 @@ def cachear(repo, js, css, sw):
     if not os.path.exists(p):
         return
     s = open(p, encoding='utf-8').read()
-    falta = [x for x in [js + '/' + n for n in CABEZA + JS] + [css + '/tema.css'] + [css + '/' + v for v in VENDOR_CSS] if "'" + x + "'" not in s]
+    falta = [x for x in [js + '/' + n for n in CABEZA + JS] + [css + '/tema.css'] + [css + '/' + v for v in VENDOR_CSS + LETRAS] if "'" + x + "'" not in s]
     if not falta:
         return
     # Se agregan junto al primer archivo de esa carpeta que ya esté en la lista.
@@ -144,7 +145,7 @@ def main():
         for nombre in OPCIONAL.get(repo, ()):
             shutil.copy(os.path.join(AQUI, nombre), os.path.join(r, js, nombre))
         shutil.copy(os.path.join(AQUI, 'tema.css'), os.path.join(r, css, 'tema.css'))
-        for v in VENDOR_CSS:
+        for v in VENDOR_CSS + LETRAS:
             os.makedirs(os.path.dirname(os.path.join(r, css, v)), exist_ok=True)
             shutil.copy(os.path.join(AQUI, v), os.path.join(r, css, v))
         shutil.copy(os.path.join(AQUI, '_headers'), os.path.join(r, '_headers'))  # encabezados de seguridad (Cloudflare)
