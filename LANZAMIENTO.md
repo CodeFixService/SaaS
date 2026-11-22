@@ -315,6 +315,13 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G148 · 🙂 Perfiles sin ícono: foto o letra (núcleo 3.43) · CM 5.77 · Despega 6.93 bd 5.99 · Barbería 3.63 · Billetera 1.21.123 · BiciTaller 3.53 · Estaciona 2.43 (funciones SIN cambio)
+0. Cloudflare **Listo** en las 6 → CM → Apps → 🚀 Despega → **⬆️ Actualizar base** (debe quedar 5.99) → **🚀 Liberar todo**.
+1. En cada app: toca tu foto/círculo arriba → **Mi perfil** → **Foto y nombre** → ya NO sale "Tu ícono"; solo **📷 Poner foto** y el nombre.
+2. Sin foto: el círculo muestra la **primera letra** de tu nombre. Pon una foto → **Guardar** → sale la foto. **Quitar foto** → vuelve la letra.
+3. 💈 Barbería: lista de barberos y clientes → foto o letra (nada de 🙂). 🅿️ Estaciona: perfil y chat → foto o letra.
+4. 🚀 Despega como cliente → **⭐ Premium**: dice "Elige el color de tu app" (ya no "y tu ícono").
+
 ## G147 · 📱 "Síguenos" en el QR y el afiche (núcleo 3.42) · CM 5.76 · Despega 6.92 · Barbería 3.62 · Billetera 1.21.122 · BiciTaller 3.52 · Estaciona 2.42 (bases y funciones SIN cambio)
 0. Cloudflare **Listo** en las 6 → CM → **🚀 Liberar todo**.
 1. 💈 Barbería como dueño → **Más** → **📱 Mis redes** → pon tu Instagram → **Guardar**. Luego **Más** → **🔗 Enlace y QR** → bajo el QR dice "Síguenos: Instagram @…".

@@ -37,7 +37,7 @@
     const p = pr(), r = document.documentElement;
     if (/^#[0-9a-f]{6}$/i.test(p.color || '')) { r.style.setProperty('--brand', p.color); r.style.setProperty('--c1', p.color); const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = p.tema === 'claro' ? '#f3f5fa' : '#0a0e17'; }
     if (p.tema === 'claro' || p.tema === 'oscuro') r.dataset.theme = p.tema === 'claro' ? 'light' : 'dark'; else delete r.dataset.theme;
-    const a = document.getElementById('bAvatar'); if (a) { const d = CM.items.find((i) => i.tipo === 'diario' && i.fecha === hoy()), an = d && d.datos && d.datos.animo; a.innerHTML = '<span>' + esc(p.avatar || '🙂') + '</span>' + (an ? '<small>' + CM.ANIMO[an][0] + '</small>' : ''); }
+    const a = document.getElementById('bAvatar'); if (a) { const d = CM.items.find((i) => i.tipo === 'diario' && i.fecha === hoy()), an = d && d.datos && d.datos.animo; a.innerHTML = '<span>' + esc(((CM.cuenta && CM.cuenta.nombre) || '?').trim().charAt(0).toUpperCase() || '?') + '</span>' + (an ? '<small>' + CM.ANIMO[an][0] + '</small>' : ''); }
   };
 
   /* Estado automático del día: ánimo, energía y carga salen de lo que registras (no se guarda nada). */
@@ -87,7 +87,7 @@
     const I = CM.items, p = pr();
     return [['Crea tu espacio de trabajo con horario', CM.espacios.some((e) => e.modo === 'trabajo' && !e.archivado), 'mas'], ['Anota tu primera tarea', I.some((i) => i.tipo === 'tarea'), 'hoy'],
       ['Dicta algo con el micrófono del + (ej: "mañana a las 10 llamar a Maya")', I.some((i) => i.tipo === 'tarea' && i.datos && i.datos.hora), 'nuevo'], ['Crea tu primer pedido', I.some((i) => i.tipo === 'pedido'), 'pedidos'],
-      ['Activa las notificaciones (Más → Notificaciones)', typeof Notification !== 'undefined' && Notification.permission === 'granted', 'mas'], ['Personaliza tu estilo (color e ícono)', !!(p.color || p.avatar), 'mas']];
+      ['Activa las notificaciones (Más → Notificaciones)', typeof Notification !== 'undefined' && Notification.permission === 'granted', 'mas'], ['Personaliza tu estilo (color y foto)', !!(p.color || p.avatar || localStorage.getItem('cm:fotoPerfil')), 'mas']];
   };
   CM.guiaCard = () => {
     if (pr().guia === 'ok') return '';
