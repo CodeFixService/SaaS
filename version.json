@@ -1,6 +1,6 @@
 {
-  "version": "5.75",
+  "version": "5.76",
   "bd": "4.76",
   "funcion": "3.7",
-  "notas": "🛒 G146 (núcleo 3.41): el ↑ (subir) ya no queda bajo el menú de abajo cuando el menú vuelve a aparecer. · 🧭 G145: un solo lugar para cada cosa en el CM (🔔 Notificaciones y 📜 Registro ahora solo en Control, con todo lo que tenían) · 🌐 el dominio de cada tienda lo conecta la tienda en su app (aquí solo el de CodeFix + lista para mirar) · 🛒 Mercado Libre = solo la app de CodeFix (1 vez)"
+  "notas": "📱 G147 (núcleo 3.42): texto \"Síguenos\" con tus redes listo para QR y afiches. · 🛒 G146 (núcleo 3.41): el ↑ (subir) ya no queda bajo el menú de abajo cuando el menú vuelve a aparecer. · 🧭 G145: un solo lugar para cada cosa en el CM (🔔 Notificaciones y 📜 Registro ahora solo en Control, con todo lo que tenían) · 🌐 el dominio de cada tienda lo conecta la tienda en su app (aquí solo el de CodeFix + lista para mirar) · 🛒 Mercado Libre = solo la app de CodeFix (1 vez)"
 }

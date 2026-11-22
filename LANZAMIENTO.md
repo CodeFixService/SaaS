@@ -315,6 +315,12 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G147 · 📱 "Síguenos" en el QR y el afiche (núcleo 3.42) · CM 5.76 · Despega 6.92 · Barbería 3.62 · Billetera 1.21.122 · BiciTaller 3.52 · Estaciona 2.42 (bases y funciones SIN cambio)
+0. Cloudflare **Listo** en las 6 → CM → **🚀 Liberar todo**.
+1. 💈 Barbería como dueño → **Más** → **📱 Mis redes** → pon tu Instagram → **Guardar**. Luego **Más** → **🔗 Enlace y QR** → bajo el QR dice "Síguenos: Instagram @…".
+2. **Más** → **🔳 Mi link y QR** → si pusiste redes en Cuenta y ayuda → 📱 Mis redes personales salen ESAS; si no, las de la barbería.
+3. 🚲 BiciTaller como taller → **Más** → **📱 Mis redes** → pon una → **Hoy** → botón **QR** → bajo el QR dice "Síguenos: …" → **🖨️ Afiche** → la hoja para imprimir trae la misma línea. Sin redes no sale nada (no queda hueco).
+
 ## G146 · 🛒 Carrito flotante (núcleo 3.41) · CM 5.75 · Despega 6.91 · Barbería 3.61 · Billetera 1.21.121 · BiciTaller 3.51 · Estaciona 2.41 (bases y funciones SIN cambio)
 0. Cloudflare **Listo** en las 6 → CM → **🚀 Liberar todo** (no hay que actualizar base).
 1. Celular, Despega como **cliente** → tienda → **Agregar** un producto → abajo a la derecha aparece un 🛒 **redondo** con el número y el total al lado, **encima** del menú.
