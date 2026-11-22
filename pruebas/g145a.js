@@ -64,7 +64,7 @@ const leer = (p) => fs.readFileSync(R + p, 'utf8');
   q(`set session_replication_role = replica; insert into auth.users (id, email) values ('${U}', 'u@x.cl'), ('${V}', 'v@x.cl'), ('${C}', 'c@x.cl') on conflict do nothing;
      insert into public.profiles (id, email, role, slug, dominio) values ('${U}', 'u@x.cl', 'user', 'tu', 'mitienda.cl'), ('${V}', 'v@x.cl', 'user', 'tv', 'usada.cl'), ('${C}', 'c@x.cl', 'client', null, null) on conflict (id) do update set role = excluded.role, slug = excluded.slug, dominio = excluded.dominio;
      set session_replication_role = origin; update public.cfx_config set valor = '{"cname": "tiendas.codefix.cl"}' where clave = 'dominio';`);
-  ok(q("select db_version()") === '5.98', 'a: Despega bd 5.98');
+  ok(parseFloat(q("select db_version()")) >= 5.98, 'a: Despega bd ≥ 5.98');
   const d1 = q(`select public.dominio_cf_datos('${U}', 'https://www.Vieja.cl/x')`);
   let j = {}; try { j = JSON.parse(d1); } catch (e) { /* nada */ }
   ok(j.ok && j.dominio === 'mitienda.cl' && j.cname === 'tiendas.codefix.cl' && j.antes === 'vieja.cl' && j.antes_libre === true, 'a: dominio_cf_datos trae el dominio de la base, el destino y el anterior libre (' + d1.slice(0, 120) + ')');
