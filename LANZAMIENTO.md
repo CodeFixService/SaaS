@@ -315,6 +315,13 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G146 · 🛒 Carrito flotante (núcleo 3.41) · CM 5.75 · Despega 6.91 · Barbería 3.61 · Billetera 1.21.121 · BiciTaller 3.51 · Estaciona 2.41 (bases y funciones SIN cambio)
+0. Cloudflare **Listo** en las 6 → CM → **🚀 Liberar todo** (no hay que actualizar base).
+1. Celular, Despega como **cliente** → tienda → **Agregar** un producto → abajo a la derecha aparece un 🛒 **redondo** con el número y el total al lado, **encima** del menú.
+2. Baja la página (el menú se esconde) y sube un poco (vuelve): el 🛒 sube y baja con el menú, nunca queda debajo; la ↑ queda **encima** del 🛒 sin tapar el total.
+3. Toca el 🛒 → abre tu pedido. Vuelve a la tienda → toca la **✕** del 🛒 → se va y aparece un 🛒 chico arriba junto a la 🔔 con el número; tócalo → abre el pedido (no se borró nada).
+4. 💈 Barbería → Reservar → elige un servicio → la barra "🛒 1 servicio · Vaciar" sube y baja con el menú; la ↑ queda encima.
+
 ## G145 · 🏪 Lo de cada tienda en su app + 🧭 CM con un solo lugar por cosa · CM 5.74 (bd 4.76) · Despega 6.90 bd 5.98 · función **enviar 3.9** de Despega (las otras sin cambio)
 0. Supabase de **Despega** → Edge Functions → **enviar** → Code → pega la línea de `Aplicaciones/supabase/functions/enviar/corto.ts` → **Deploy** (Verify JWT APAGADO). Luego Cloudflare **Listo** → CM → Apps → **⬆️ Actualizar base** de Despega → 🚀 **Liberar todo**.
 1. CM → **Ajustes** → ya NO están 🔔 Notificaciones ni 📜 Registro. Están en CM → **Control** → **🔔 Notificaciones** (abajo: "🛸 Centro de Mando: claves nuevas y 🧪 probar servidor" → toca **Probar servidor** → "Funciona") y **📜 Registro** (con 📥 Descargar CSV).

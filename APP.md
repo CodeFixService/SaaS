@@ -40,6 +40,7 @@ Ahora: app 5.55 · bd 4.67 · función 3.7 · núcleo 3.22 (G114: 🐞 Tablero "
 - Bootstrap: solo utilidades (`vendor/`), nunca el completo (choca .btn/.card/.modal/.row/.toast). tema.css mapea --bs-* → --cfx-*.
 - El título de cabecera (`.cfx-cab-h h1`) no se adorna.
 - Colores nuevos con var(--cfx-*)/var(--brand) (respetan 🎨 Colores a tu gusto).
+- G146 (núcleo 3.41): 🛒 CFX_CARRITO en ui.js (montar/poner/mostrar): carrito flotante redondo sobre el menú + ✕ → 🛒 chico en la cabecera; ↑ y barras [data-cfx-sobre-menu] usan --cfx-carro-b (alto real del menú).
 - G85: CM → Control elige la app con la 🗂️ caja de apps (MisApps.cajaApps, imágenes en config 'apps_imagenes'). G113: la caja es del núcleo (CFX_CAJA en ui.js, CSS .ca en tema.css); también el filtro de espacios de /app/ (CM.alSelectorEspacio) y el de 🎬 Estudio. CM → Pagos = un solo pago general (link abierto + transferencia) + ⚡ Mercado Pago automático (token en cada app, cfx_mp_*) + 🏷️ Cupones.
 
 - G87 A: Control → Negocios usa cfx_negocios (núcleo) → cfx_cuentas_app(rol, q) + cfx_quitar_premium(uuid) que define CADA app (las 6 + CM ya la tienen). El menú de secciones de Control lleva data-cfx-pestanas (deslizar la página cambia de sección). Tiras con mouse: ayuda.js tiraMouse(). Prueba: pruebas/g87a.js.
