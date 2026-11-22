@@ -315,6 +315,13 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G149 · 📌 Títulos fijos en todo + 🔔 aviso bajo la barra (núcleo 3.44) · CM 5.78 · Despega 6.94 · Barbería 3.64 · Billetera 1.21.124 · BiciTaller 3.54 · Estaciona 2.44 (bases y funciones SIN cambio)
+0. Cloudflare **Listo** en las 6 → CM → **🚀 Liberar todo**.
+1. En cada app (teléfono): baja despacio por **Inicio**, **Más** y cada pestaña del menú → cada título (de tarjeta, de sección, "Movimientos  Ver", "‹ Noviembre ›", las pestañas del Más) al llegar a la barra de arriba **se queda pegado** con fondo y línea de color; al terminar su tarjeta se va y el siguiente toma su lugar.
+2. Arriba de todo (sin bajar) nada se ve corrido ni más separado que antes.
+3. Con la app abierta, desde otro teléfono genera un aviso (ej. un pedido o reserva) → el cuadro 🔔 baja **debajo** de la barra de arriba (no tapa tu nombre ni la campana). Tócalo → abre los avisos; deslízalo → se va.
+🐞 Si algún título aún sube completo: 🐞 Reportar una falla con pantallazo + nombre de la pantalla.
+
 ## G148 · 🙂 Perfiles sin ícono: foto o letra (núcleo 3.43) · CM 5.77 · Despega 6.93 bd 5.99 · Barbería 3.63 · Billetera 1.21.123 · BiciTaller 3.53 · Estaciona 2.43 (funciones SIN cambio)
 0. Cloudflare **Listo** en las 6 → CM → Apps → 🚀 Despega → **⬆️ Actualizar base** (debe quedar 5.99) → **🚀 Liberar todo**.
 1. En cada app: toca tu foto/círculo arriba → **Mi perfil** → **Foto y nombre** → ya NO sale "Tu ícono"; solo **📷 Poner foto** y el nombre.

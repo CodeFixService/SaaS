@@ -1,5 +1,5 @@
 {
-  "version": "5.77",
+  "version": "5.78",
   "bd": "4.76",
   "funcion": "3.7",
   "notas": "🙂 G148 (núcleo 3.43): los perfiles ya no usan ícono: sale tu foto o, si no tienes, la primera letra de tu nombre. · 📱 G147 (núcleo 3.42): texto \"Síguenos\" con tus redes listo para QR y afiches. · 🛒 G146 (núcleo 3.41): el ↑ (subir) ya no queda bajo el menú de abajo cuando el menú vuelve a aparecer. · 🧭 G145: un solo lugar para cada cosa en el CM (🔔 Notificaciones y 📜 Registro ahora solo en Control, con todo lo que tenían) · 🌐 el dominio de cada tienda lo conecta la tienda en su app (aquí solo el de CodeFix + lista para mirar) · 🛒 Mercado Libre = solo la app de CodeFix (1 vez)"
