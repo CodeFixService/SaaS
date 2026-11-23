@@ -37,7 +37,7 @@ const N = 'tienda@x.cl';
       esp.remove(); scrollTo(0, 0);
       return { fijo: g.classList.contains('cfx-fijo'), top: Math.round(r.top), h: Math.round(h), alto: Math.round(r.height), bg };
     });
-    assert(f.fijo && Math.abs(f.top - f.h) <= 2 && f.alto < 40 && !/rgba\(0, 0, 0, 0\)|transparent/.test(f.bg), '📌 Título pegado bajo la cabecera, 1 línea y opaco ' + JSON.stringify(f));
+    assert(!f.fijo && f.top < f.h - 20, '📌 G150: el título NO se queda fijo, se va con la página ' + JSON.stringify(f));
     // 🪟 Ventana principal: ✕ arriba + Cerrar abajo
     await p.click('#v-ajustes .cfx-aj [data-k=tienda]'); await p.waitForTimeout(1200);
     const v1 = await p.evaluate(() => { const d = document.querySelector('.cfx-hoja-m'), z = d.querySelector('.cfx-hm-zona'); return { x: !!d.querySelector('.cfx-hm-cab .cfx-hm-x:not(.cfx-hm-volver)'), cerrar: !!z.lastElementChild.querySelector('.cfx-hm-cerrar'), volver: !!d.querySelector('.cfx-hm-volver') }; });
@@ -63,7 +63,7 @@ const N = 'tienda@x.cl';
       const h = z.querySelector('h2'), r = h.getBoundingClientRect();
       return { d: Math.round(r.top - z.getBoundingClientRect().top), alto: Math.round(r.height), pegado: h.classList.contains('cfx-pegado'), bg: getComputedStyle(h).backgroundColor };
     });
-    assert(Math.abs(fv.d) <= 2 && fv.alto < 50 && fv.pegado && !/rgba\(0, 0, 0, 0\)/.test(fv.bg), '📌 En ventana: pegado arriba, 1 línea y opaco ' + JSON.stringify(fv));
+    assert(!fv.pegado && fv.d < -400, '📌 G150: en ventana el título tampoco se queda fijo ' + JSON.stringify(fv));
     await t.foto('g42_fijo_ventana');
     await p.click('.cfx-hm-volver'); await p.waitForTimeout(500);
     assert(await p.evaluate(() => document.querySelectorAll('.cfx-hoja-m').length === 1 && document.querySelector('.cfx-hoja-m').getClientRects().length > 0 && !!document.querySelector('#cTienda')), '← Volver regresa a Mi tienda');

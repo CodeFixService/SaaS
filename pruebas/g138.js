@@ -34,7 +34,7 @@ let f = 0; const ok = (c, m) => { console.log((c ? '✓ ' : '✗ ') + m); if (!c
       const y = h.parentElement.getBoundingClientRect().top + 600; if (sc) sc.scrollBy(0, y); else scrollBy(0, y); });
     await p.waitForTimeout(900);
     const fj = await p.evaluate(() => { const h = document.querySelector('#g138c > h2'); const r = h.getBoundingClientRect(), x = document.elementFromPoint(r.left + 40, r.top + r.height / 2); return { fijo: h.classList.contains('cfx-fijo'), pegado: h.classList.contains('cfx-pegado'), bg: getComputedStyle(h).backgroundColor, visible: !!x && h.contains(x) }; });
-    ok(fj.fijo && fj.pegado && fj.visible && !/rgba\(0, 0, 0, 0\)|transparent/.test(fj.bg), '4) 📌 título fijo con fondo sólido al bajar ' + JSON.stringify(fj));
+    ok(!fj.fijo && !fj.pegado, '4) 📌 G150: el título ya no se queda fijo al bajar ' + JSON.stringify(fj));
     await p.screenshot({ path: __dirname + '/capturas/g138-titulo.png' });
     // Y en la propia Cuenta del shell sigue el menú normal (no se rompió).
     await p.goto(t.base + '/#cuenta'); await p.waitForTimeout(2500); await t.sinModales(p);

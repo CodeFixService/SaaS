@@ -315,6 +315,12 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G150 · 📌 Títulos normales: ya NO se quedan fijos (núcleo 3.45) · CM 5.79 · Despega 6.95 · Barbería 3.65 · Billetera 1.21.125 · BiciTaller 3.55 · Estaciona 2.45 (bases y funciones SIN cambio)
+0. Cloudflare **Listo** en las 6 → CM → **🚀 Liberar todo**.
+1. En cada app (teléfono): baja por **Inicio**, **Más** y cada pestaña del menú → ningún título se queda pegado arriba: todos se van hacia arriba con la página, como antes de fábrica. Solo la barra de arriba (y el menú) quedan fijos.
+2. 🔔 Un aviso nuevo sigue bajando **debajo** de la barra de arriba (eso de G149 se mantiene).
+(El paso 1 de G149 de abajo ya NO aplica: se retiró.)
+
 ## G149 · 📌 Títulos fijos en todo + 🔔 aviso bajo la barra (núcleo 3.44) · CM 5.78 · Despega 6.94 · Barbería 3.64 · Billetera 1.21.124 · BiciTaller 3.54 · Estaciona 2.44 (bases y funciones SIN cambio)
 0. Cloudflare **Listo** en las 6 → CM → **🚀 Liberar todo**.
 1. En cada app (teléfono): baja despacio por **Inicio**, **Más** y cada pestaña del menú → cada título (de tarjeta, de sección, "Movimientos  Ver", "‹ Noviembre ›", las pestañas del Más) al llegar a la barra de arriba **se queda pegado** con fondo y línea de color; al terminar su tarjeta se va y el siguiente toma su lugar.
