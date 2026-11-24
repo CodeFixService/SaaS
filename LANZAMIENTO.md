@@ -315,6 +315,14 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G155 · 🔧 Túnel de fallas para Claude (núcleo 3.50) · CM 5.85 bd 4.78 · Despega 7.00 bd 6.01 · Barbería 3.70 bd 3.27 · Billetera 1.21.131 bd 82 · BiciTaller 3.60 bd 2.77 · Estaciona 2.50 bd 79 (funciones SIN cambio)
+0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo**.
+1. CM → Mensajes → 🐞 Fallas → **🔧 Túnel para Claude** → **🔑 Crear llave nueva** → **📋 Copiar llave** (sale una sola vez; las 6 apps deben decir 🟢 abierto).
+2. En el chat con Claude di "llave lista": te abre un formulario seguro por cada app → pegas la MISMA llave en cada uno (nunca en el chat).
+3. Claude lee las fallas, las arregla y las marca **🔧 Lista para revisar** (te llega aviso). NO se cierran solas.
+4. Tú: CM → Mensajes → 🐞 Fallas → abres la 🔧 → pruebas → **✅ Revisada** (cierra y agradece/regala días) o **↩️ Sigue fallando** (escribe qué pasa: vuelve a Claude).
+5. Para cortar el acceso: **🚫 Cerrar túnel** (o crear otra llave: la anterior deja de servir).
+
 ## G154 · 🔔 Cada aviso lleva a su lugar + ✓ tienda verificada (núcleo 3.49) · CM 5.84 · Despega 6.99 bd 6.00 · Barbería 3.69 · Billetera 1.21.130 · BiciTaller 3.59 · Estaciona 2.49 (funciones SIN cambio)
 0. Cloudflare **Listo** en las 6 → CM → Apps → 🛍️ Despega → **⬆️ Actualizar base** (debe quedar 6.00) → 🚀 **Liberar todo**.
 1. En cada app: toca la 🔔 de arriba → toca un aviso **🔄 Nueva versión** → se abre una ventana con la versión y "Tu versión ahora: v…" (ya NO recarga el inicio).
