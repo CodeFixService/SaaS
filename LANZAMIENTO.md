@@ -315,6 +315,13 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G159 · 🐞 Compras recurrentes (núcleo 3.54) · CM 5.89 · Despega 7.04 · Barbería 3.74 · Billetera 1.21.135 · BiciTaller 3.64 · Estaciona 2.54 (bases y funciones SIN cambio)
+0. Cloudflare **Listo** en las 6 → CM → Apps → 🚀 **Liberar todo** (no hay base nueva).
+1. Despega → Más → 🔁 **Compras recurrentes** → toca **Producto** → elige uno → **queda escrito** en el campo.
+2. Elige solo un servicio (ej. Diagnóstico) → desaparece **Entrega** y sale "🛠️ Servicio o 🔑 acceso digital: sin retiro ni despacho".
+3. **+ Otro producto** → uno físico → vuelve **Entrega** → elige cliente → **Guardar** → aparece en Activas.
+4. CM → Mensajes → 🐞 Fallas → Despega #6 → ✅ Revisada o ↩️ Sigue fallando.
+
 ## G158 · ⚙️ Ajustes del CM ordenado + 🐞 reportar desde el CM (núcleo 3.53) · CM 5.88 · Despega 7.03 · Barbería 3.73 · Billetera 1.21.134 · BiciTaller 3.63 · Estaciona 2.53 (bases y funciones SIN cambio; incluye G157)
 1. CM → Más → **Ajustes** (las pestañas del Más NO cambian): secciones **Centro de Mando** (Versión, Ajustes generales) · **Configuración** (Mi cuenta, 🛠️ Reparar la app) · **Cuenta y ayuda** (🐞 Reportar una falla, Términos, Privacidad, 🚪 Cerrar sesión).
 2. **🐞 Reportar una falla** → escribe + foto opcional → Enviar → aparece en CM → Mensajes → 🐞 Fallas (y Claude la ve por el 🔧 túnel).
