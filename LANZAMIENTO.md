@@ -315,6 +315,12 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G157 · 🔎 Buscar y filtrar (núcleo 3.52) · CM 5.87 · Despega 7.02 · Barbería 3.72 · Billetera 1.21.133 · BiciTaller 3.62 · Estaciona 2.52 (bases y funciones SIN cambio)
+0. Cloudflare **Listo** en las 6 → CM → Apps → 🚀 **Liberar todo** (no hay base nueva).
+1. CM → Mensajes → 🐞 Fallas: cada falla es una tarjeta ordenada (arriba app + estado + hace cuánto; abajo el nombre entero y el texto en 2 líneas).
+2. Arriba de la lista: **🔎 Buscar falla…** (busca solo en esa lista, sin importar tildes) y **Filtros** → App · Estado · Fecha (Hoy, 7 días, 30 días, Este mes) · Orden (Recientes, Antiguos, A–Z). El número en Filtros = cuántos tienes puestos; **Limpiar filtros** vuelve a todo.
+3. 💬 Conversaciones tiene la misma barra (Estado: Sin leer / Leídas).
+
 ## G156 · 🐞 Fallas del túnel arregladas (núcleo 3.51) · CM 5.86 · Despega 7.01 bd 6.02 · Barbería 3.71 · Billetera 1.21.132 · BiciTaller 3.61 · Estaciona 2.51 (bd de las otras y funciones SIN cambio)
 0. Cloudflare **Listo** en las 6 → CM → Apps → 🛍️ Despega → **⬆️ Actualizar base** (6.02) y 💼 Billetera (82) → 🚀 **Liberar todo**.
 1. CM → Mensajes → 🐞 Fallas: las que dicen **🔧 Lista para revisar** → pruébalas → **✅ Revisada** o **↩️ Sigue fallando** (escribe qué pasa).

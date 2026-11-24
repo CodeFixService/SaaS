@@ -198,20 +198,33 @@
       '<p class="sub">Lo que te escriben desde el botón 🛟 de cada app. Te llega un aviso apenas escriben.</p>' +
       (sin.length ? '<div class="card"><p class="sub" style="margin:0 0 10px">Para ver sus mensajes, conecta:</p><div class="apps-con" style="display:flex;flex-wrap:wrap;gap:8px">' + sin.map((a) => '<button type="button" class="small ghost" data-con="' + a.id + '">' + esc(corto(a)) + '</button>').join('') + '</div></div>' : '') +
       avisos.map((t) => '<p class="sub warn">' + esc(t) + '</p>').join('') +
-      '<div class="card"><div class="fila"><h3 class="grow" style="margin:0">🐞 Fallas reportadas</h3>' + (fn ? '<span class="pill bad">' + fn + ' nuevas</span>' : '') + (fl ? ' <span class="pill info">' + fl + ' 🔧 por revisar</span>' : '') + '</div>' +
+      '<div class="card"><div class="cfx-fa-cab"><h3>🐞 Fallas reportadas</h3>' + (fn ? '<span class="pill bad">' + fn + (fn === 1 ? ' nueva' : ' nuevas') + '</span>' : '') + (fl ? ' <span class="pill info">' + fl + ' 🔧 por revisar</span>' : '') + '</div>' +
         '<p class="sub" style="margin:4px 0 8px">Las envían desde Más → Cuenta y ayuda → 🐞 Reportar una falla. Si es real, regálale 15 días Premium.</p>' +
-        (F.map((x, i) => '<button type="button" class="card" data-f="' + i + '" style="display:block;width:100%;text-align:left;margin:6px 0">' +
-          '<div class="fila"><span class="pill info">' + esc(corto(x.app)) + '</span><span class="tit grow">' + esc(x.nombre || x.email) + '</span><span class="pill ' + ((EST[x.estado] || [])[1] || '') + '">' + esc((EST[x.estado] || [x.estado])[0]) + '</span></div>' +
-          '<p class="sub" style="margin:4px 0 0">' + (x.con_foto ? '📷 ' : '') + esc(String(x.texto || '').slice(0, 90)) + ' · ' + esc(A.hace(x.creado)) + '</p></button>').join('') ||
+        (F.length ? '<div data-fx-fallas></div><div class="cfx-fa-lista" data-l-fallas>' + F.map((x, i) => {
+          const es = EST[x.estado] || [x.estado, ''];
+          return '<button type="button" class="cfx-fa" data-f="' + i + '" data-cfx-app="' + esc(x.app.id) + '" data-cfx-app-t="' + esc(corto(x.app)) + '" data-cfx-estado="' + esc(x.estado) + '" data-cfx-estado-t="' + esc(es[0]) + '"' +
+            ' data-cfx-fecha="' + esc(x.creado) + '" data-cfx-nombre="' + esc(x.nombre || x.email || '') + '" data-cfx-buscar="' + esc((x.email || '') + ' #' + x.id) + '">' +
+            '<span class="cfx-fa-top"><span class="pill info">' + esc(corto(x.app)) + '</span><span class="pill ' + esc(es[1]) + '">' + esc(es[0]) + '</span><span class="cfx-fa-hace">' + esc(A.hace(x.creado)) + '</span></span>' +
+            '<span class="cfx-fa-nom">' + esc(x.nombre || x.email || 'Sin nombre') + '</span>' +
+            '<span class="cfx-fa-txt">' + (x.con_foto ? '📷 ' : '') + esc(String(x.texto || '').slice(0, 220)) + '</span></button>';
+        }).join('') + '</div>' :
           '<p class="empty" style="margin:4px 0">' + (verTodas ? 'Sin reportes todavía' : 'Ninguna falla por revisar 🎉') + '</p>') +
+        '<div class="btns">' +
         '<button type="button" class="small ghost" data-todas>' + (verTodas ? 'Ver solo las por revisar' : 'Ver también las respondidas') + '</button> <button type="button" class="small ghost" data-tunel>🔧 Túnel para Claude</button>' +
-        (F.length ? ' <button type="button" class="small" data-bajar>📥 Descargar fallas (' + F.length + ')</button>' : '') + '</div>' +
+        (F.length ? ' <button type="button" class="small" data-bajar>📥 Descargar fallas (' + F.length + ')</button>' : '') + '</div></div>' +
       '<h3 style="margin:14px 0 6px">💬 Conversaciones</h3>' +
-      (L.map((x, i) => '<button type="button" class="card" data-i="' + i + '" style="display:block;width:100%;text-align:left">' +
-        '<div class="fila"><span class="pill info">' + esc(corto(x.app)) + '</span><span class="tit grow">' + esc(x.nombre || x.email) + '</span>' +
-        (+x.sin_leer ? '<span class="pill bad">' + x.sin_leer + '</span>' : '') + '</div>' +
-        '<p class="sub" style="margin:4px 0 0">' + (x.de === 'soporte' ? 'Tú: ' : '') + esc(String(x.texto || '').slice(0, 90)) + ' · ' + esc(A.hace(x.ultimo)) + '</p></button>').join('') ||
+      (L.length ? '<div data-fx-chats></div><div class="cfx-fa-lista" data-l-chats>' + L.map((x, i) => '<button type="button" class="cfx-fa" data-i="' + i + '" data-cfx-app="' + esc(x.app.id) + '" data-cfx-app-t="' + esc(corto(x.app)) + '"' +
+        ' data-cfx-leido="' + (+x.sin_leer ? 'no' : 'si') + '" data-cfx-fecha="' + esc(x.ultimo) + '" data-cfx-nombre="' + esc(x.nombre || x.email || '') + '" data-cfx-buscar="' + esc(x.email || '') + '">' +
+        '<span class="cfx-fa-top"><span class="pill info">' + esc(corto(x.app)) + '</span>' + (+x.sin_leer ? '<span class="pill bad">' + x.sin_leer + ' sin leer</span>' : '') + '<span class="cfx-fa-hace">' + esc(A.hace(x.ultimo)) + '</span></span>' +
+        '<span class="cfx-fa-nom">' + esc(x.nombre || x.email || 'Sin nombre') + '</span>' +
+        '<span class="cfx-fa-txt">' + (x.de === 'soporte' ? 'Tú: ' : '') + esc(String(x.texto || '').slice(0, 220)) + '</span></button>').join('') + '</div>' :
         '<p class="empty">Sin mensajes todavía 🎉</p>');
+    if (window.CFX_FILTRO) {
+      if (F.length) CFX_FILTRO.montar(el.querySelector('[data-fx-fallas]'), { en: el.querySelector('[data-l-fallas]'), buscar: 'Buscar falla…', clave: 'cm-fallas',
+        grupos: [{ k: 'app', t: 'App' }, { k: 'estado', t: 'Estado' }], fecha: true, orden: true, vacio: 'Ninguna falla coincide' });
+      if (L.length) CFX_FILTRO.montar(el.querySelector('[data-fx-chats]'), { en: el.querySelector('[data-l-chats]'), buscar: 'Buscar conversación', clave: 'cm-chats',
+        grupos: [{ k: 'app', t: 'App' }, { k: 'leido', t: 'Estado', op: [['no', 'Sin leer'], ['si', 'Leídas']] }], fecha: true, orden: true, vacio: 'Ninguna conversación coincide' });
+    }
     el.onclick = (ev) => {
       const b = ev.target.closest('[data-i],[data-con],[data-f],[data-todas],[data-tunel],[data-bajar]'); if (!b) return;
       if (b.hasAttribute('data-bajar')) return descargar(F, b);
