@@ -315,6 +315,14 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G156 · 🐞 Fallas del túnel arregladas (núcleo 3.51) · CM 5.86 · Despega 7.01 bd 6.02 · Barbería 3.71 · Billetera 1.21.132 · BiciTaller 3.61 · Estaciona 2.51 (bd de las otras y funciones SIN cambio)
+0. Cloudflare **Listo** en las 6 → CM → Apps → 🛍️ Despega → **⬆️ Actualizar base** (6.02) y 💼 Billetera (82) → 🚀 **Liberar todo**.
+1. CM → Mensajes → 🐞 Fallas: las que dicen **🔧 Lista para revisar** → pruébalas → **✅ Revisada** o **↩️ Sigue fallando** (escribe qué pasa).
+2. 🛍️ Despega (negocio): el inicio ya NO tiene la tarjeta "Avisos" (están en la 🔔) · sin número rojo en **Más** · Diseños: si limpias la app, tus diseños vuelven solos ("♻️ recuperados") · Mi Caja: las 4 pestañas caben sin moverse a los lados · producto con categoría "Servicio" → pasa solo a 🛠️ Servicio.
+3. 🛍️ Despega (cliente): Cuenta → tu perfil primero → pestaña **Tu tienda** con "Tu tienda: …" y **Mi Caja** · Tienda → Pedido: cada dato de transferencia con su 📋 (RUT sin puntos) · en la vista de 3 por fila ya no sale el ❤️ · un servicio no pide retiro/despacho.
+4. 💼 Billetera: Caja → botón **💵 Cierre de caja** · Anotar gasto → **＋ Nueva** categoría → aparece y queda elegida sin recargar · Efectivo/Transferencia/Tarjeta/Otro con ícono arriba y texto entero · el color Ámbar se guarda (tras ⬆️ Actualizar base 82).
+5. Las 6 apps: Mi perfil → Personalizar → **↩️ Volver todo a lo de fábrica** con aire arriba · el aviso "Activa los avisos" queda bajo la barra con margen · Cargar planilla con botones redondeados.
+
 ## G155 · 🔧 Túnel de fallas para Claude (núcleo 3.50) · CM 5.85 bd 4.78 · Despega 7.00 bd 6.01 · Barbería 3.70 bd 3.27 · Billetera 1.21.131 bd 82 · BiciTaller 3.60 bd 2.77 · Estaciona 2.50 bd 79 (funciones SIN cambio)
 0. Cloudflare **Listo** en las 6 → CM → Apps → **⬆️ Actualizar base** en las 6 → 🚀 **Liberar todo**.
 1. CM → Mensajes → 🐞 Fallas → **🔧 Túnel para Claude** → **🔑 Crear llave nueva** → **📋 Copiar llave** (sale una sola vez; las 6 apps deben decir 🟢 abierto).
