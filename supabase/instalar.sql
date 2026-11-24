@@ -144,7 +144,7 @@ end $$;
 create or replace function public.admin_email() returns text
 language sql immutable as $$ select 'juanjosuecastilloloyola@gmail.com'::text $$;
 create or replace function public.db_version() returns text
-language sql immutable as $$ select '4.76'::text $$;
+language sql immutable as $$ select '4.77'::text $$;
 create or replace function public.cfg_int(c text) returns int
 language sql stable security definer set search_path = '' as $$
   select (valor #>> '{}')::int from public.config where clave = c
@@ -742,6 +742,33 @@ begin
   if not found then raise exception 'Usuario no encontrado'; end if;
   perform public.auditar(case when p_suspender then 'suspender' else 'reactivar' end, nom, p_motivo);
 end $$;
+
+-- G153 · 🤝 Usuario ⇄ Socio (solo el súper admin). Nunca al admin ni a uno mismo. Al pasar a socio se quita el Pro
+-- de prueba (sin pagos aprobados; el socio ya cuenta como Pro en es_pro). Sus datos no se tocan.
+create or replace function public.admin_cambiar_rol(p_id uuid, p_rol text, p_motivo text default '') returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare t public.perfiles;
+begin
+  perform public.super_check();
+  if p_rol is null or p_rol not in ('socio', 'usuario') then raise exception 'Tipo de cuenta no válido'; end if;
+  if p_id is null or p_id = auth.uid() then raise exception 'No puedes cambiar tu propia cuenta'; end if;
+  select * into t from public.perfiles where id = p_id for update;
+  if t.id is null then raise exception 'Usuario no encontrado'; end if;
+  if t.rol = 'admin' then raise exception 'No se puede cambiar al administrador'; end if;
+  if t.rol = p_rol then return jsonb_build_object('ok', true, 'rol', p_rol, 'sin_cambio', true); end if;
+  update public.perfiles set rol = p_rol,
+    premium_hasta = case when p_rol = 'socio' and not exists (select 1 from public.pagos g where g.usuario = p_id and g.estado = 'aprobado')
+                          and not exists (select 1 from public.cfx_pagos g where g.cuenta = p_id and g.estado = 'aprobado') then null else premium_hasta end,
+    aviso_venc_para = null, aviso_vencido_para = null
+  where id = p_id;
+  perform public.auditar('cambiar_rol', t.rol || '→' || p_rol || ' ' || t.email, p_motivo);
+  perform public.avisar(p_id, case when p_rol = 'socio' then '🤝 Ahora eres socio' else 'Tu cuenta ahora es de usuario' end,
+    case when p_rol = 'socio' then 'Al entrar verás el panel de administración.' else 'Al entrar verás tu app. Tus datos siguen intactos.' end,
+    case when p_rol = 'socio' then '/admin/' else '/app/' end);
+  return jsonb_build_object('ok', true, 'rol', p_rol);
+end $$;
+revoke all on function public.admin_cambiar_rol(uuid, text, text) from public, anon;
+grant execute on function public.admin_cambiar_rol(uuid, text, text) to authenticated;
 
 create or replace function public.admin_plan_guardar(p_codigo text, p_nombre text, p_descripcion text, p_limites jsonb,
   p_beneficios jsonb, p_duracion int, p_motivo text default '') returns void

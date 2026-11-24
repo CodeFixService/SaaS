@@ -196,7 +196,7 @@
       const L = await rpc('admin_usuarios', { p_buscar: q || '' });
       $('uL').innerHTML = L.map((u) => '<div class="card"><div class="fila"><span class="tit">' + esc(u.nombre || u.email) + '</span><span class="pill ' + (u.rol === 'admin' ? 'dark' : u.rol === 'socio' ? 'info' : '') + '">' + u.rol + '</span>' + (u.suspendido ? '<span class="pill bad">suspendido</span>' : '') + '</div>' +
         '<p class="sub">' + esc(u.email) + ' · ' + u.registros + ' registros · ' + (u.premium_hasta && new Date(u.premium_hasta) > new Date() ? 'Pro hasta ' + App.fCorta(u.premium_hasta.slice(0, 10)) : 'gratis') + ' · visto ' + (u.visto_at ? App.hace(u.visto_at) : 'nunca') + '</p>' +
-        (u.rol === 'admin' || !SUPER ? '' : '<div class="btns-s"><button class="small ghost" data-a="clave" data-id="' + u.id + '" data-n="' + esc(u.email) + '" data-t="' + esc(u.telefono || '') + '">🔑 Clave</button><button class="small ghost" data-a="pro" data-id="' + u.id + '">Días Pro</button><button class="small ghost" data-a="susp" data-id="' + u.id + '" data-s="' + (u.suspendido ? 0 : 1) + '">' + (u.suspendido ? 'Reactivar' : 'Suspender') + '</button><button class="small ghost" data-a="del" data-id="' + u.id + '" data-n="' + esc(u.email) + '">Eliminar</button></div>') + '</div>').join('') || '<p class="empty">Sin resultados</p>';
+        (u.rol === 'admin' || !SUPER ? '' : '<div class="btns-s"><button class="small ghost" data-a="clave" data-id="' + u.id + '" data-n="' + esc(u.email) + '" data-t="' + esc(u.telefono || '') + '">🔑 Clave</button><button class="small ghost" data-a="pro" data-id="' + u.id + '">Días Pro</button><button class="small ghost" data-a="susp" data-id="' + u.id + '" data-s="' + (u.suspendido ? 0 : 1) + '">' + (u.suspendido ? 'Reactivar' : 'Suspender') + '</button><button class="small ghost" data-a="rol" data-id="' + u.id + '" data-n="' + esc(u.email) + '" data-r="' + (u.rol === 'socio' ? 'usuario' : 'socio') + '">' + (u.rol === 'socio' ? 'Pasar a usuario' : '🤝 Pasar a socio') + '</button><button class="small ghost" data-a="del" data-id="' + u.id + '" data-n="' + esc(u.email) + '">Eliminar</button></div>') + '</div>').join('') || '<p class="empty">Sin resultados</p>';
     } catch (e) { $('uL').innerHTML = '<p class="err">' + esc(e.message) + '</p>'; }
   }
   el('usuarios').onclick = async (e) => {
@@ -207,6 +207,12 @@
         d.querySelector('#dk').onclick = async () => { const n = +d.querySelector('#dp').value; d.close(); const m = await motivo('Días de Pro'); if (m === null) return; try { await rpc('admin_premium', { p_id: id, p_dias: n, p_motivo: m }); toast('Listo'); usuarios($('uQ').value); } catch (x) { err(x); } };
       } else if (b.dataset.a === 'susp') { const m = await motivo(b.dataset.s === '1' ? 'Suspender cuenta' : 'Reactivar cuenta'); if (m === null) return; await rpc('admin_suspender', { p_id: id, p_suspender: b.dataset.s === '1', p_motivo: m }); usuarios($('uQ').value); }
       else if (b.dataset.a === 'clave') await restablecer(id, b.dataset.n, b.dataset.t);
+      else if (b.dataset.a === 'rol') { // G153: 🤝 Usuario ⇄ Socio (solo súper admin; al entrar va a admin/ o app/)
+        const r = b.dataset.r, s = r === 'socio';
+        if (!(await confirmar(b.dataset.n + (s ? ' pasa a socio: al entrar verá el panel de administración.' : ' vuelve a usuario: al entrar verá su app, sin el panel.'), s ? 'Pasar a socio' : 'Pasar a usuario'))) return;
+        const m = await motivo(s ? 'Pasar a socio' : 'Pasar a usuario'); if (m === null) return;
+        await rpc('admin_cambiar_rol', { p_id: id, p_rol: r, p_motivo: m }); toast('Listo'); usuarios($('uQ').value);
+      }
       else if (b.dataset.a === 'del') { if (!(await confirmar('Eliminar a ' + b.dataset.n + ' y todos sus datos. No se puede deshacer.', 'Eliminar'))) return; const m = await motivo('Eliminar cuenta'); if (m === null) return; await App.borrarCuenta(id, m); toast('Eliminada'); usuarios($('uQ').value); }
     } catch (x) { err(x); }
   };

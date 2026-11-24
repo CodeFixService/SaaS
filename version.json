@@ -1,6 +1,6 @@
 {
-  "version": "5.82",
-  "bd": "4.76",
+  "version": "5.83",
+  "bd": "4.77",
   "funcion": "3.7",
-  "notas": "📣 G152 (núcleo 3.48): la tarjeta \"Activa los avisos\" queda debajo del menú de arriba (en Barbería ya no se mete a la altura de tu foto y el ☰)."
+  "notas": "🤝 G153: en Usuarios el súper admin pasa una cuenta de Usuario a Socio (y de vuelta), con motivo y aviso a la persona."
 }
