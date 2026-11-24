@@ -1,6 +1,6 @@
 {
-  "version": "5.83",
+  "version": "5.84",
   "bd": "4.77",
   "funcion": "3.7",
-  "notas": "🤝 G153: en Usuarios el súper admin pasa una cuenta de Usuario a Socio (y de vuelta), con motivo y aviso a la persona."
+  "notas": "🔔 G154 (núcleo 3.49): tocar un aviso de la campana te lleva a su lugar (🔄 versión → ventana con la versión, 💬 soporte → el chat, ⭐ plan → Mi plan; ya no recarga el inicio). Despega: ✓ tienda verificada a la vista de sus clientes."
 }

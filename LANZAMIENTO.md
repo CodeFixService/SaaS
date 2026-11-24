@@ -315,6 +315,14 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G154 · 🔔 Cada aviso lleva a su lugar + ✓ tienda verificada (núcleo 3.49) · CM 5.84 · Despega 6.99 bd 6.00 · Barbería 3.69 · Billetera 1.21.130 · BiciTaller 3.59 · Estaciona 2.49 (funciones SIN cambio)
+0. Cloudflare **Listo** en las 6 → CM → Apps → 🛍️ Despega → **⬆️ Actualizar base** (debe quedar 6.00) → 🚀 **Liberar todo**.
+1. En cada app: toca la 🔔 de arriba → toca un aviso **🔄 Nueva versión** → se abre una ventana con la versión y "Tu versión ahora: v…" (ya NO recarga el inicio).
+2. Escríbele a soporte desde una app y respóndele desde el CM → en esa app: 🔔 → **💬 Soporte te respondió** → se abre el chat de soporte.
+3. Un aviso de chat o de pedido sigue llevando a su pantalla (Mensajes, Pedidos…).
+4. 🛍️ Despega: CM → Control → 🪪 aprueba la cédula de una tienda → abre su tienda como cliente (link público o cuenta de cliente) → junto al nombre sale el ✓ azul y "Identidad verificada".
+🐞 Si un aviso aún te deja en el inicio: 🐞 Reportar una falla con pantallazo de la 🔔 (que se vea el título del aviso).
+
 ## G150 · 📌 Títulos normales: ya NO se quedan fijos (núcleo 3.45) · CM 5.79 · Despega 6.95 · Barbería 3.65 · Billetera 1.21.125 · BiciTaller 3.55 · Estaciona 2.45 (bases y funciones SIN cambio)
 0. Cloudflare **Listo** en las 6 → CM → **🚀 Liberar todo**.
 1. En cada app (teléfono): baja por **Inicio**, **Más** y cada pestaña del menú → ningún título se queda pegado arriba: todos se van hacia arriba con la página, como antes de fábrica. Solo la barra de arriba (y el menú) quedan fijos.
