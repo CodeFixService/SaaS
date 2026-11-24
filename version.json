@@ -1,6 +1,6 @@
 {
-  "version": "5.87",
+  "version": "5.88",
   "bd": "4.78",
   "funcion": "3.7",
-  "notas": "🔎 G157 (núcleo 3.52): barra 🔎 Buscar + filtros universales (fecha, tipo, orden) en el núcleo, lista para usarse donde haya que buscar. CM: 🐞 Fallas y 💬 Conversaciones en tarjetas ordenadas, con buscador y filtros por app, estado y fecha."
+  "notas": "🐞 G158 (núcleo 3.53): el Centro de Mando también puede reportar fallas y su ⚙️ Ajustes quedó ordenado como el de las apps. 🔎 G157: barra Buscar + filtros (fecha, tipo, orden) en el núcleo. CM: 🐞 Fallas y 💬 Conversaciones en tarjetas ordenadas, con buscador y filtros por app, estado y fecha."
 }

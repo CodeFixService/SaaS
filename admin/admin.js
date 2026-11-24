@@ -272,15 +272,26 @@
   // Precios, links y transferencia ya no van aquí: se editan una vez para las 7 apps en Pagos.
   const CFG = [['dias_prueba', 'Días de prueba Pro'], ['soporte_whatsapp', 'WhatsApp de soporte', 1], ['dias_comprobantes', 'Guardar comprobantes (días)'], ['limite_db_mb', 'Límite de base de datos (MB)'], ['auditoria_max', 'Máximo de filas del registro']];
   function ajustes() {
+    const A = window.CFX_AYUDA;
     AJ = window.CFX_AJUSTES.montar(el('ajustes'), [
-      { k: 'version', ico: '🔄', t: 'Versión', d: 'Probar y liberar la app', abrir: versiones },
-      { k: 'generales', ico: '⚙️', t: 'Ajustes generales', d: 'Prueba Pro, soporte y límites', abrir: generales },
-      { k: 'cuenta', ico: '👤', t: 'Mi cuenta', d: 'Foto, nombre y clave', abrir: (z) => window.CFX_PERFIL.montar(z) }
-    ], { arriba: '<div class="titulo-v"><h2>Ajustes</h2></div><p class="sub">Precios, planes, textos, keys, cupones, avisos, 🔔 notificaciones y 📜 registro de las 7 apps están en Pagos y Control (un solo lugar para cada cosa).</p>' });
+      // G158: igual que el ⚙️ Ajustes de las otras apps: secciones con título y, al final, Cuenta y ayuda (🐞 Reportar una falla también desde el CM).
+      { k: 'version', ico: '🔄', t: 'Versión', d: 'Probar y liberar la app', abrir: versiones, grupo: 'Centro de Mando' },
+      { k: 'generales', ico: '⚙️', t: 'Ajustes generales', d: 'Prueba Pro, soporte y límites', abrir: generales, grupo: 'Centro de Mando' },
+      { k: 'cuenta', ico: '👤', t: 'Mi cuenta', d: 'Foto, nombre y clave', abrir: (z) => window.CFX_PERFIL.montar(z), grupo: 'Configuración' },
+      A && A.reparar && { k: 'reparar', ico: '🛠️', t: 'Reparar la app', d: 'Si algo falla o no se actualiza', accion: A.reparar, grupo: 'Configuración' },
+      A && A.falla && { k: 'falla', ico: '🐞', t: 'Reportar una falla', d: 'Llega a Mensajes → 🐞 Fallas', accion: A.falla, grupo: 'Cuenta y ayuda' },
+      A && A.terminos && { k: 'terminos', ico: '📄', t: 'Términos y condiciones', accion: () => A.terminos(), grupo: 'Cuenta y ayuda' },
+      A && A.privacidad && { k: 'privacidad', ico: '🔒', t: 'Política de privacidad', accion: () => A.privacidad(), grupo: 'Cuenta y ayuda' },
+      A && A.salir && { k: 'salir', ico: '🚪', t: 'Cerrar sesión', rojo: true, accion: A.salir, grupo: 'Cuenta y ayuda' }
+    ], { arriba: '<div class="titulo-v"><h2>Ajustes</h2></div><p class="sub">Precios, textos, cupones y avisos de las 7 apps están en Pagos y Control.</p>' });
   }
   function generales(z) {
     const c = pub.config || {};
-    z.innerHTML = '<div class="card">' + CFG.map((f) => '<label>' + f[1] + '<input data-c="' + f[0] + '" data-t="' + (f[2] ? 's' : 'n') + '" value="' + esc(c[f[0]] === undefined ? '' : c[f[0]]) + '"' + (SUPER ? '' : ' readonly') + '></label>').join('') + (SUPER ? '<button type="button" id="cg">Guardar ajustes</button>' : '<p class="sub">👀 Solo para mirar: los cambios los hace el administrador.</p>') + '</div>';
+    // G158: en bloques con título (igual que los ajustes de las otras apps) y Guardar a lo ancho.
+    const campo = (f) => '<label>' + f[1] + '<input data-c="' + f[0] + '" data-t="' + (f[2] ? 's' : 'n') + '"' + (f[2] ? '' : ' inputmode="numeric"') + ' value="' + esc(c[f[0]] === undefined ? '' : c[f[0]]) + '"' + (SUPER ? '' : ' readonly') + '></label>';
+    const bloque = (t, d, ks) => '<div class="card"><h3 style="margin:0 0 2px">' + t + '</h3><p class="sub" style="margin:0 0 10px">' + d + '</p>' + CFG.filter((f) => ks.includes(f[0])).map(campo).join('') + '</div>';
+    z.innerHTML = bloque('⭐ Clientes', 'Prueba Pro y contacto de soporte', ['dias_prueba', 'soporte_whatsapp']) + bloque('🗄️ Límites', 'Cuánto se guarda en el servidor', ['dias_comprobantes', 'limite_db_mb', 'auditoria_max']) +
+      (SUPER ? '<button type="button" id="cg" style="width:100%">Guardar ajustes</button>' : '<p class="sub">👀 Solo para mirar: los cambios los hace el administrador.</p>');
     if ($('cg')) $('cg').onclick = async () => {
       const m = await motivo('Cambiar ajustes'); if (m === null) return;
       try { for (const i of z.querySelectorAll('[data-c]')) { const nv = i.dataset.t === 'n' ? Number(i.value) : i.value; if (JSON.stringify(nv) !== JSON.stringify(c[i.dataset.c]) && !(i.value === '' && c[i.dataset.c] === undefined)) await rpc('admin_config_guardar', { p_clave: i.dataset.c, p_valor: nv, p_motivo: m }); } pub = await App.cargarPublica(); toast('Guardado'); } catch (x) { err(x); }

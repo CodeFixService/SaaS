@@ -315,6 +315,11 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G158 · ⚙️ Ajustes del CM ordenado + 🐞 reportar desde el CM (núcleo 3.53) · CM 5.88 · Despega 7.03 · Barbería 3.73 · Billetera 1.21.134 · BiciTaller 3.63 · Estaciona 2.53 (bases y funciones SIN cambio; incluye G157)
+1. CM → Más → **Ajustes** (las pestañas del Más NO cambian): secciones **Centro de Mando** (Versión, Ajustes generales) · **Configuración** (Mi cuenta, 🛠️ Reparar la app) · **Cuenta y ayuda** (🐞 Reportar una falla, Términos, Privacidad, 🚪 Cerrar sesión).
+2. **🐞 Reportar una falla** → escribe + foto opcional → Enviar → aparece en CM → Mensajes → 🐞 Fallas (y Claude la ve por el 🔧 túnel).
+3. Ajustes generales: 2 bloques (⭐ Clientes · 🗄️ Límites) y Guardar a lo ancho.
+
 ## G157 · 🔎 Buscar y filtrar (núcleo 3.52) · CM 5.87 · Despega 7.02 · Barbería 3.72 · Billetera 1.21.133 · BiciTaller 3.62 · Estaciona 2.52 (bases y funciones SIN cambio)
 0. Cloudflare **Listo** en las 6 → CM → Apps → 🚀 **Liberar todo** (no hay base nueva).
 1. CM → Mensajes → 🐞 Fallas: cada falla es una tarjeta ordenada (arriba app + estado + hace cuánto; abajo el nombre entero y el texto en 2 líneas).
