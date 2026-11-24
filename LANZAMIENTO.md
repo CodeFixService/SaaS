@@ -322,6 +322,7 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 3. Claude lee las fallas, las arregla y las marca **🔧 Lista para revisar** (te llega aviso). NO se cierran solas.
 4. Tú: CM → Mensajes → 🐞 Fallas → abres la 🔧 → pruebas → **✅ Revisada** (cierra y agradece/regala días) o **↩️ Sigue fallando** (escribe qué pasa: vuelve a Claude).
 5. Para cortar el acceso: **🚫 Cerrar túnel** (o crear otra llave: la anterior deja de servir).
+6. Sin túnel (más rápido): CM → Mensajes → 🐞 Fallas → **📥 Descargar fallas** → baja `fallas-AAAA-MM-DD.html` (tabla con foto, texto y descripción; sin correo ni nombre; no cambia estados) → ábrelo para ver que se lee → **pásaselo a Claude en el chat** (📎) → Claude arregla y publica → tú las marcas en el CM (✅ Revisada / ↩️ Sigue fallando). "Ver también las respondidas" baja también las cerradas.
 
 ## G154 · 🔔 Cada aviso lleva a su lugar + ✓ tienda verificada (núcleo 3.49) · CM 5.84 · Despega 6.99 bd 6.00 · Barbería 3.69 · Billetera 1.21.130 · BiciTaller 3.59 · Estaciona 2.49 (funciones SIN cambio)
 0. Cloudflare **Listo** en las 6 → CM → Apps → 🛍️ Despega → **⬆️ Actualizar base** (debe quedar 6.00) → 🚀 **Liberar todo**.

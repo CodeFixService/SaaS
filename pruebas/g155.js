@@ -33,6 +33,22 @@ const login = async (p, base, em, pw) => { await p.goto(base + '/'); await p.wai
     md = p.locator('dialog[open]').last(); await md.locator('[data-si]').click(); await p.waitForTimeout(1500);
     r = (await t.sim.su('select estado, resuelto from public.cfx_fallas where id = 77'))[0];
     ok(r.estado === 'real' && r.resuelto, '✅ Revisada la cierra (solo el admin)');
+    // 📥 Descargar fallas: .html con tabla, foto, texto y descripción; sin correo ni nombre; NO cambia el estado.
+    const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    await t.sim.su("insert into public.cfx_fallas (id, cuenta, email, nombre, rol, texto, foto, datos) values (78, $1, 'ana@x.cl', 'Ana', 'negocio', 'El precio sale <b>mal</b>', $2, '{\"version\":\"5.85\",\"pantalla\":\"/#caja\",\"errores\":[{\"m\":\"x is undefined\"}]}')", [u.id, PNG]);
+    await abrirM();
+    const bj = p.locator('[data-bajar]');
+    ok(await bj.count() === 1 && /Descargar fallas \(1\)/.test(await bj.textContent()), 'botón 📥 Descargar fallas (1)');
+    const [dl] = await Promise.all([p.waitForEvent('download', { timeout: 15000 }), bj.click()]);
+    const html = require('fs').readFileSync(await dl.path(), 'utf8');
+    ok(/^fallas-\d{4}-\d{2}-\d{2}\.html$/.test(dl.suggestedFilename()), 'archivo ' + dl.suggestedFilename());
+    ok(html.includes('<img src="' + PNG) && html.includes('El precio sale &lt;b&gt;mal&lt;/b&gt;') && /Versión:<\/b> 5\.85/.test(html) && html.includes('x is undefined'), 'tabla con foto, texto (escapado) y descripción');
+    ok(!html.includes('ana@x.cl') && !html.includes('>Ana<'), 'sin correo ni nombre');
+    const js = JSON.parse(/<script type="application\/json" id="fallas">([\s\S]*?)<\/script>/.exec(html)[1]);
+    ok(js.length === 1 && js[0].id === 78 && js[0].app === 'cm', 'datos para Claude dentro del archivo');
+    ok((await t.sim.su('select estado from public.cfx_fallas where id = 78'))[0].estado === 'nuevo', 'descargar no cambia el estado');
+    { const q = await t.nuevo(); await q.page.setViewportSize({ width: 320, height: 680 }); await q.page.setContent(html); await q.page.waitForTimeout(300);
+      ok(await q.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'el archivo se lee a 320 px'); await q.page.screenshot({ path: __dirname + '/capturas/saas/g155-archivo.png' }); }
     // 🔧 Túnel para Claude
     await abrirM(); await p.locator('[data-tunel]').click(); await p.waitForTimeout(1500);
     md = p.locator('dialog[open]').last();

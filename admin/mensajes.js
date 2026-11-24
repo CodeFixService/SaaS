@@ -82,6 +82,43 @@
     d.addEventListener('close', () => { if (raiz && raiz.isConnected) render(raiz); });
   }
 
+  // ---------- G155 📥 Descargar fallas: un .html (tabla con foto, texto y descripción) para pasárselo a Claude. Sin correo ni nombre; no cambia estados ----------
+  async function descargar(F, b) {
+    if (!F.length) return toast('No hay fallas para descargar');
+    b.disabled = true; const t0 = b.textContent; b.textContent = '⏳ Preparando…';
+    try {
+      const fotos = {};
+      await Promise.all(M().APPS.map(async (a) => {
+        const ids = F.filter((x) => x.app === a && x.con_foto).map((x) => x.id); if (!ids.length) return;
+        try { Object.assign(fotos, Object.fromEntries(Object.entries(await M().rpcDe(M().cliente(a), 'cfx_fallas_fotos', { p_ids: ids }) || {}).map(([k, v]) => [a.id + ':' + k, v]))); } catch (e) { /* sin bd nueva: va sin foto */ }
+      }));
+      const fecha = (x) => x ? new Date(x).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' }) : '';
+      const filas = F.map((x) => {
+        const d = x.datos || {}, errs = Array.isArray(d.errores) ? d.errores : [], ft = fotos[x.app.id + ':' + x.id];
+        const desc = [['Versión', d.version], ['Pantalla', d.pantalla], ['Recorrido', (d.recorrido || []).join(' → ')], ['Celular', d.celular],
+          ['Tamaño', d.tamano ? d.tamano + (d.oscuro ? ' · oscuro' : '') + (d.instalada ? ' · instalada' : '') : '']].filter((y) => y[1]).map((y) => '<b>' + y[0] + ':</b> ' + esc(y[1])).join('<br>') +
+          (errs.length ? '<br><b>Errores:</b><ul>' + errs.map((e) => '<li>' + esc([e.m, e.d, e.p].filter(Boolean).join(' · ')) + '</li>').join('') + '</ul>' : '');
+        return '<tr><td data-l="Falla"><b>' + esc(corto(x.app)) + ' #' + esc(x.id) + '</b><br>' + esc((EST[x.estado] || [x.estado])[0]) + '<br>' + esc(fecha(x.creado)) + '<br>' + esc(ROL[x.rol] || x.rol || '') + '</td>' +
+          '<td data-l="Texto" class="tx">' + esc(x.texto) + '</td><td data-l="Descripción">' + (desc || '—') + (x.arreglo ? '<p class="ar">' + esc(x.arreglo) + '</p>' : '') + '</td>' +
+          '<td data-l="Foto">' + (ft && /^data:image\/(webp|jpeg|png);base64,/.test(ft) ? '<a href="' + ft + '" target="_blank"><img src="' + ft + '" alt="Foto falla ' + esc(x.id) + '"></a>' : x.con_foto ? '(no se pudo bajar)' : '—') + '</td></tr>';
+      }).join('');
+      const json = JSON.stringify(F.map((x) => ({ app: x.app.id, id: x.id, estado: x.estado, rol: x.rol, texto: x.texto, datos: x.datos, arreglo: x.arreglo || '', con_foto: !!x.con_foto, creado: x.creado }))).replace(/</g, '\\u003c');
+      const hoy = new Date().toISOString().slice(0, 10);
+      const html = '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fallas ' + hoy + '</title><style>' +
+        'body{font:15px/1.4 system-ui,sans-serif;margin:16px;color:#1b1f24;background:#fff}h1{font-size:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccd;padding:8px;vertical-align:top;text-align:left}' +
+        'th{background:#eef1f6}.tx{white-space:pre-wrap;word-break:break-word}td{word-break:break-word}img{max-width:220px;max-height:360px;border-radius:8px}ul{margin:4px 0;padding-left:18px}.ar{white-space:pre-wrap;background:#eef6ff;padding:6px;border-radius:6px}' +
+        '@media(max-width:700px){thead{display:none}tr{display:block;border:1px solid #ccd;border-radius:10px;margin:0 0 12px;padding:4px}td{display:block;border:0;border-bottom:1px solid #eee}td::before{content:attr(data-l);display:block;font-size:12px;color:#667}img{max-width:100%}}' +
+        '@media(prefers-color-scheme:dark){body{background:#111418;color:#e6e9ee}th{background:#1d232b}th,td,tr{border-color:#333b46}.ar{background:#16263a}}</style></head><body>' +
+        '<h1>🐞 Fallas · ' + esc(hoy) + ' · ' + F.length + '</h1><p>Para Claude: arreglar y avisar. Se marcan en CM → Mensajes → 🐞 Fallas.</p>' +
+        '<table><thead><tr><th>Falla</th><th>Texto</th><th>Descripción</th><th>Foto</th></tr></thead><tbody>' + filas + '</tbody></table>' +
+        '<script type="application/json" id="fallas">' + json + '</scr' + 'ipt></body></html>';
+      const u = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' })), l = document.createElement('a');
+      l.href = u; l.download = 'fallas-' + hoy + '.html'; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
+      toast('📥 ' + F.length + ' falla(s) descargadas: pásale el archivo a Claude');
+    } catch (e) { toast(nf(e)); }
+    b.disabled = false; b.textContent = t0;
+  }
+
   // ---------- G155 🔧 Túnel para Claude: una llave para ver las fallas y marcarlas 🔧 Lista (nada más) ----------
   async function tunel() {
     const apps = M().APPS.filter((a) => (M().estado[a.id] || {}).conectado);
@@ -167,7 +204,8 @@
           '<div class="fila"><span class="pill info">' + esc(corto(x.app)) + '</span><span class="tit grow">' + esc(x.nombre || x.email) + '</span><span class="pill ' + ((EST[x.estado] || [])[1] || '') + '">' + esc((EST[x.estado] || [x.estado])[0]) + '</span></div>' +
           '<p class="sub" style="margin:4px 0 0">' + (x.con_foto ? '📷 ' : '') + esc(String(x.texto || '').slice(0, 90)) + ' · ' + esc(A.hace(x.creado)) + '</p></button>').join('') ||
           '<p class="empty" style="margin:4px 0">' + (verTodas ? 'Sin reportes todavía' : 'Ninguna falla por revisar 🎉') + '</p>') +
-        '<button type="button" class="small ghost" data-todas>' + (verTodas ? 'Ver solo las por revisar' : 'Ver también las respondidas') + '</button> <button type="button" class="small ghost" data-tunel>🔧 Túnel para Claude</button></div>' +
+        '<button type="button" class="small ghost" data-todas>' + (verTodas ? 'Ver solo las por revisar' : 'Ver también las respondidas') + '</button> <button type="button" class="small ghost" data-tunel>🔧 Túnel para Claude</button>' +
+        (F.length ? ' <button type="button" class="small" data-bajar>📥 Descargar fallas (' + F.length + ')</button>' : '') + '</div>' +
       '<h3 style="margin:14px 0 6px">💬 Conversaciones</h3>' +
       (L.map((x, i) => '<button type="button" class="card" data-i="' + i + '" style="display:block;width:100%;text-align:left">' +
         '<div class="fila"><span class="pill info">' + esc(corto(x.app)) + '</span><span class="tit grow">' + esc(x.nombre || x.email) + '</span>' +
@@ -175,7 +213,8 @@
         '<p class="sub" style="margin:4px 0 0">' + (x.de === 'soporte' ? 'Tú: ' : '') + esc(String(x.texto || '').slice(0, 90)) + ' · ' + esc(A.hace(x.ultimo)) + '</p></button>').join('') ||
         '<p class="empty">Sin mensajes todavía 🎉</p>');
     el.onclick = (ev) => {
-      const b = ev.target.closest('[data-i],[data-con],[data-f],[data-todas],[data-tunel]'); if (!b) return;
+      const b = ev.target.closest('[data-i],[data-con],[data-f],[data-todas],[data-tunel],[data-bajar]'); if (!b) return;
+      if (b.hasAttribute('data-bajar')) return descargar(F, b);
       if (b.hasAttribute('data-tunel')) return tunel();
       if (b.dataset.f) return falla(F[+b.dataset.f]);
       if (b.hasAttribute('data-todas')) { verTodas = !verTodas; return render(el); }

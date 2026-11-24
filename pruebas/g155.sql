@@ -36,6 +36,7 @@ begin
   perform set_config('request.jwt.claim.sub', gen_random_uuid()::text, true);
   begin perform public.cfx_falla_reabrir(9001, 'x'); ok := false; exception when others then ok := true; end; assert ok, 'reabrir solo admin';
   begin perform public.cfx_tunel_fijar(repeat('0', 64)); ok := false; exception when others then ok := true; end; assert ok, 'fijar solo admin';
+  begin perform public.cfx_fallas_fotos(array[9001]::bigint[]); ok := false; exception when others then ok := true; end; assert ok, 'fotos solo admin';
   assert (select estado from public.cfx_fallas where id = 9001) = 'listo', 'sigue lista';
 end $$;
 -- Permisos: anon solo las 3 del túnel.
@@ -44,11 +45,13 @@ select has_function_privilege('anon', 'public.cfx_tunel_fallas(boolean)', 'execu
        not has_function_privilege('anon', 'public.cfx_tunel_fijar(text)', 'execute') as anon_sin_fijar,
        not has_function_privilege('anon', 'public.cfx_falla_reabrir(bigint, text)', 'execute') as anon_sin_reabrir,
        not has_function_privilege('anon', 'public.cfx_tunel_ok()', 'execute') as anon_sin_ok,
+       not has_function_privilege('anon', 'public.cfx_fallas_fotos(bigint[])', 'execute') as anon_sin_fotos,
        not has_table_privilege('anon', 'public.cfx_tunel', 'select') as anon_sin_tabla \gset
 \if :anon_fallas \else \echo 'FALLA permiso anon fallas' \quit \endif
 \if :anon_listo \else \echo 'FALLA permiso anon listo' \quit \endif
 \if :anon_sin_fijar \else \echo 'FALLA anon fija' \quit \endif
 \if :anon_sin_reabrir \else \echo 'FALLA anon reabre' \quit \endif
+\if :anon_sin_fotos \else \echo 'FALLA anon fotos' \quit \endif
 \if :anon_sin_ok \else \echo 'FALLA anon ok' \quit \endif
 \if :anon_sin_tabla \else \echo 'FALLA anon tabla' \quit \endif
 \if :cm
@@ -58,6 +61,10 @@ declare r jsonb;
 begin
   perform set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000a1', true);
   assert (select count(*) from jsonb_array_elements(public.cfx_fallas_lista()) e where e ->> 'estado' = 'listo') = 1, 'el CM ve la lista';
+  update public.cfx_fallas set foto = 'data:image/png;base64,AAAA' where id = 9002;
+  r := public.cfx_fallas_fotos(array[9001, 9002]::bigint[]);
+  assert r ->> '9002' = 'data:image/png;base64,AAAA' and not (r ? '9001'), 'fotos de varias: ' || r;
+  assert (select estado from public.cfx_fallas where id = 9002) = 'nuevo', 'bajar fotos no cambia el estado';
   r := public.cfx_falla_reabrir(9001, 'en 320 px sigue');
   assert r ->> 'estado' = 'revisando', 'reabierta';
   assert (select arreglo from public.cfx_fallas where id = 9001) like '%Sigue fallando: en 320 px sigue%', 'nota de Josué';
