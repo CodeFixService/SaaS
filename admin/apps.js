@@ -420,6 +420,7 @@
         (on ? '<p class="sub">Ahora: ' + V.activos + ' negocio(s) pagando · ' + V.pruebas + ' probando gratis.</p>' : '') + '</div>';
       d.querySelector('#mods').innerHTML = e.modulos.map((m) => '<label class="fila" style="gap:10px;margin:8px 0;align-items:flex-start"><input type="checkbox" data-m="' + esc(m.clave) + '"' + (m.activo ? ' checked' : '') + '>' +
         '<span class="grow" style="min-width:0"><b>' + esc(m.nombre) + '</b><br><span class="sub">' + esc(m.detalle) + '</span>' +
+        (m.nota ? '<br><span class="sub" data-pronto>🔜 No se ofrece todavía: ' + esc(m.nota) + '</span>' : '') +  // G163
         (on ? '<br><span class="sub">' + (m.negocios || 0) + ' negocio(s) lo tienen</span>' : '') + '</span>' +
         (on ? '<input data-pr="' + esc(m.clave) + '" inputmode="numeric" style="width:92px" aria-label="Precio al mes de ' + esc(m.nombre) + '" placeholder="' + esc(String(cfg.precio || 0)) + '" value="' + (m.clave in pr ? esc(String(pr[m.clave])) : '') + '">' : '') +
         '</label>').join('') + (on ? '<p class="sub">Precio al mes de cada uno (vacío = precio base; 0 = incluido gratis para todos).</p>' : '');
