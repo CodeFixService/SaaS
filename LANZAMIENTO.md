@@ -315,6 +315,15 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G160 · 🧩 Tipo de venta + 🔑 clave de un solo uso + 💳 regla de entrega (núcleo 3.55) · CM 5.90 · Despega 7.05 · Barbería 3.75 · Billetera 1.21.136 · BiciTaller 3.65 · Estaciona 2.55
+1. Despega → Caja → Productos → crea "Diagnóstico" sin stock → el tipo se marca solo 🛠️ Servicio (3 botones grandes; tócalos para cambiarlo).
+2. Más → 🔁 Compras recurrentes → elige Diagnóstico → NO aparece Retiro/Despacho.
+3. Crea "Curso online" → 🔑 Digital · ¿Cada cuánto paga? Mensual · escribe el link → cómpralo con otra cuenta y aprueba el pago.
+4. El cliente ve la clave → 🔓 Ver mi acceso → sale el link y "📅 Vale hasta…" (30 días). Con OTRA cuenta la misma clave → "Esta clave ya fue usada".
+5. Dueño → Pedidos → ese pedido → 🔑 Claves → ves quién la canjeó → 🔄 Reponer → la vieja queda ❌ anulada.
+6. Caja → Productos → 📊 Planilla → ⬇️ Descargar: trae columnas Tipo, Período y Acceso · 🤖 Pídele a Claude: el texto ya las explica.
+7. Al pagar (carrito o plan): se ve "⚡ Mercado Pago o 💳 Webpay: al tiro · 🔗 Link o 🏦 transferencia: ⏳ la revisa una persona".
+
 ## G159 · 🐞 Compras recurrentes (núcleo 3.54) · CM 5.89 · Despega 7.04 · Barbería 3.74 · Billetera 1.21.135 · BiciTaller 3.64 · Estaciona 2.54 (bases y funciones SIN cambio)
 0. Cloudflare **Listo** en las 6 → CM → Apps → 🚀 **Liberar todo** (no hay base nueva).
 1. Despega → Más → 🔁 **Compras recurrentes** → toca **Producto** → elige uno → **queda escrito** en el campo.
