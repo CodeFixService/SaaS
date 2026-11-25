@@ -56,9 +56,23 @@ revoke all on public.cfx_flow_negocio from anon, authenticated;
 alter table public.cfx_mp_neg_cobros add column if not exists medio text not null default 'mp';
 alter table public.cfx_mp_neg_cobros add column if not exists volver text;
 
+-- G162: el token del Mercado Pago del negocio: su cfx_mp_negocio o, si la app tiene el suyo de antes, el gancho
+--   cfx_mp_neg_token_app(negocio, solo_activo) → token (Despega: mp_cuentas). p_activo = solo si está activo.
+create or replace function public.cfx_mp_neg_tk(p_negocio uuid, p_activo boolean default true) returns text
+language plpgsql stable security definer set search_path = '' as $$
+declare tk text;
+begin
+  if p_negocio is null then return null; end if;
+  select public.cfx_secreto(token) into tk from public.cfx_mp_negocio where negocio = p_negocio and (activo or not coalesce(p_activo, true));
+  if tk is null and to_regprocedure('public.cfx_mp_neg_token_app(uuid, boolean)') is not null then
+    execute 'select public.cfx_mp_neg_token_app($1, $2)' into tk using p_negocio, coalesce(p_activo, true);
+  end if;
+  return nullif(tk, '');
+end $$;
+revoke all on function public.cfx_mp_neg_tk(uuid, boolean) from public, anon, authenticated;
 create or replace function public.cfx_mp_neg_mp(p_negocio uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
-  select exists (select 1 from public.cfx_mp_negocio where negocio = p_negocio and activo)
+  select public.cfx_mp_neg_tk(p_negocio, true) is not null
 $$;
 create or replace function public.cfx_flow_neg_on(p_negocio uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
@@ -114,7 +128,7 @@ declare tk text; c public.cfx_mp_neg_cobros; r jsonb; v text := left(coalesce(p_
         md text := coalesce(p_medio, case when public.cfx_mp_neg_mp(p_negocio) then 'mp' else 'flow' end);
 begin
   if md = 'flow' then return public.cfx_flow_neg_cobro(p_negocio, p_ref, p_titulo, p_monto, p_volver, p_vence); end if;
-  select public.cfx_secreto(token) into tk from public.cfx_mp_negocio where negocio = p_negocio and activo;
+  tk := public.cfx_mp_neg_tk(p_negocio, true);
   if tk is null then return jsonb_build_object('ok', false, 'error', 'Este negocio no tiene Mercado Pago activo'); end if;
   if coalesce(p_monto, 0) < 1 then return jsonb_build_object('ok', false, 'error', 'Monto no válido'); end if;
   if p_vence is not null and p_vence < now() + interval '1 minute' then return jsonb_build_object('ok', false, 'error', 'Se pasó el tiempo para pagar'); end if;
@@ -146,7 +160,7 @@ begin
   if c.id is null then return false; end if;
   if c.pago is not null then return true; end if;
   if c.medio = 'flow' then return public.cfx_flow_neg_confirmar(c); end if;  -- G107
-  select public.cfx_secreto(token) into tk from public.cfx_mp_negocio where negocio = c.negocio;
+  tk := public.cfx_mp_neg_tk(c.negocio, false);
   if tk is null then return false; end if;
   r := public.cfx_mp_api(tk, 'GET', '/v1/payments/search?sort=date_created&criteria=desc&external_reference=' || c.id::text);
   select e into pg from jsonb_array_elements(coalesce(r #> '{body,results}', '[]'::jsonb)) e
@@ -155,7 +169,8 @@ begin
     and not exists (select 1 from public.cfx_mp_neg_cobros u where u.pago = left(e ->> 'id', 40)) limit 1;
   if pg is null then return false; end if;
   update public.cfx_mp_neg_cobros set pago = left(pg ->> 'id', 40), pagado_at = now() where id = c.id;
-  if to_regprocedure('public.cfx_mp_neg_pagado_app(text, text, integer)') is not null then
+  if c.ref like 'rcob:%' then perform public.cfx_recurrente_cobrado(c.ref, left(pg ->> 'id', 40), c.monto, 'mp');  -- G162 🔁
+  elsif to_regprocedure('public.cfx_mp_neg_pagado_app(text, text, integer)') is not null then
     execute 'select public.cfx_mp_neg_pagado_app($1, $2, $3)' using c.ref, left(pg ->> 'id', 40), c.monto;
   end if;
   return true;
@@ -248,7 +263,8 @@ begin
   nro := 'flow:' || left(b ->> 'flowOrder', 34);
   if exists (select 1 from public.cfx_mp_neg_cobros u where u.pago = nro) then return false; end if;
   update public.cfx_mp_neg_cobros set pago = nro, pagado_at = now() where id = c.id;
-  if to_regprocedure('public.cfx_mp_neg_pagado_app(text, text, integer)') is not null then
+  if c.ref like 'rcob:%' then perform public.cfx_recurrente_cobrado(c.ref, nro, c.monto, 'flow');  -- G162 🔁
+  elsif to_regprocedure('public.cfx_mp_neg_pagado_app(text, text, integer)') is not null then
     execute 'select public.cfx_mp_neg_pagado_app($1, $2, $3)' using c.ref, nro, c.monto;
   end if;
   return true;
@@ -345,18 +361,20 @@ revoke all on public.cfx_mp_neg_sub_pagos from anon, authenticated;
 create or replace function public._cfx_mp_neg_sub_gancho(p_ref text, p_evento text, p_pago text, p_monto int) returns void
 language plpgsql security definer set search_path = '' as $$
 begin
+  if p_ref like 'rec:%' then perform public.cfx_recurrente_auto_evento(p_ref, p_evento, p_pago, p_monto); return; end if;  -- G162 🔁
   if to_regprocedure('public.cfx_mp_neg_sub_app(text, text, text, integer)') is not null then
     execute 'select public.cfx_mp_neg_sub_app($1, $2, $3, $4)' using p_ref, p_evento, p_pago, p_monto;
   end if;
 end $$;
 
 -- La app pide la suscripción (solo desde sus funciones). Devuelve { ok, url } o { ok: false, error }.
-create or replace function public.cfx_mp_neg_suscribir(p_negocio uuid, p_ref text, p_titulo text, p_monto int, p_email text, p_volver text, p_inicio timestamptz default null) returns jsonb
+-- G162: p_dias (7…365) = cada cuántos días cobra MP (null = 1 vez al mes, como siempre).
+create or replace function public.cfx_mp_neg_suscribir_cada(p_negocio uuid, p_ref text, p_titulo text, p_monto int, p_email text, p_volver text, p_inicio timestamptz, p_dias int) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare tk text; s public.cfx_mp_neg_subs; r jsonb; v text := left(coalesce(p_volver, ''), 500); m text := lower(trim(coalesce(p_email, '')));
   ini timestamptz := greatest(coalesce(p_inicio, now()), now() + interval '5 minutes');
 begin
-  select public.cfx_secreto(token) into tk from public.cfx_mp_negocio where negocio = p_negocio and activo;
+  tk := public.cfx_mp_neg_tk(p_negocio, true);
   if tk is null then return jsonb_build_object('ok', false, 'error', 'Este negocio no tiene Mercado Pago activo'); end if;
   if coalesce(p_monto, 0) < 1 then return jsonb_build_object('ok', false, 'error', 'Monto no válido'); end if;
   if m !~ '^[^@\s"<>]+@[^@\s"<>]+\.[a-z]{2,}$' or length(m) > 120 then return jsonb_build_object('ok', false, 'error', 'Escribe el correo de tu cuenta de Mercado Pago'); end if;
@@ -369,7 +387,7 @@ begin
   returning * into s;
   r := public.cfx_mp_api(tk, 'POST', '/preapproval', jsonb_build_object(
     'reason', s.titulo, 'external_reference', s.id::text, 'payer_email', m, 'back_url', v, 'status', 'pending',
-    'auto_recurring', jsonb_build_object('frequency', 1, 'frequency_type', 'months', 'currency_id', 'CLP', 'transaction_amount', s.monto,
+    'auto_recurring', jsonb_build_object('frequency', case when p_dias between 7 and 365 then p_dias else 1 end, 'frequency_type', case when p_dias between 7 and 365 then 'days' else 'months' end, 'currency_id', 'CLP', 'transaction_amount', s.monto,
       'start_date', to_char(ini at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS".000+00:00"'))));
   if coalesce((r ->> 'status')::int, 0) not in (200, 201) or r #>> '{body,init_point}' is null or r #>> '{body,id}' is null then
     delete from public.cfx_mp_neg_subs where id = s.id;
@@ -379,6 +397,9 @@ begin
   return jsonb_build_object('ok', true, 'url', r #>> '{body,init_point}');
 end $$;
 
+create or replace function public.cfx_mp_neg_suscribir(p_negocio uuid, p_ref text, p_titulo text, p_monto int, p_email text, p_volver text, p_inicio timestamptz default null) returns jsonb
+language sql security definer set search_path = '' as $$ select public.cfx_mp_neg_suscribir_cada(p_negocio, p_ref, p_titulo, p_monto, p_email, p_volver, p_inicio, null) $$;
+
 -- Pregunta a MP por UNA suscripción: estado + cobros nuevos. Devuelve cuántos cobros nuevos encontró.
 create or replace function public.cfx_mp_neg_sub_revisar(p_id uuid) returns int
 language plpgsql security definer set search_path = '' as $$
@@ -386,7 +407,7 @@ declare s public.cfx_mp_neg_subs; tk text; r jsonb; e jsonb; nuevo text; n int :
 begin
   select * into s from public.cfx_mp_neg_subs where id = p_id for update skip locked;
   if s.id is null or s.preapproval is null or s.estado = 'cancelada' then return 0; end if;
-  select public.cfx_secreto(token) into tk from public.cfx_mp_negocio where negocio = s.negocio;
+  tk := public.cfx_mp_neg_tk(s.negocio, false);
   if tk is null then return 0; end if;
   update public.cfx_mp_neg_subs set revisado_at = now() where id = s.id;
   r := public.cfx_mp_api(tk, 'GET', '/preapproval/' || s.preapproval);
@@ -437,7 +458,7 @@ language plpgsql security definer set search_path = '' as $$
 declare s public.cfx_mp_neg_subs; tk text; r jsonb; todo boolean := true;
 begin
   for s in select * from public.cfx_mp_neg_subs where ref = p_ref and estado <> 'cancelada' for update loop
-    select public.cfx_secreto(token) into tk from public.cfx_mp_negocio where negocio = s.negocio;
+    tk := public.cfx_mp_neg_tk(s.negocio, false);
     if s.preapproval is not null and tk is not null then
       r := public.cfx_mp_api(tk, 'PUT', '/preapproval/' || s.preapproval, jsonb_build_object('status', 'cancelled'));
       if coalesce((r ->> 'status')::int, 0) not in (200, 201) and coalesce(r #>> '{body,status}', '') <> 'cancelled' then todo := false; continue; end if;
@@ -461,7 +482,7 @@ begin
   return n;
 end $$;
 
-revoke all on function public._cfx_mp_neg_sub_gancho(text, text, text, int), public.cfx_mp_neg_suscribir(uuid, text, text, int, text, text, timestamptz),
+revoke all on function public._cfx_mp_neg_sub_gancho(text, text, text, int), public.cfx_mp_neg_suscribir(uuid, text, text, int, text, text, timestamptz), public.cfx_mp_neg_suscribir_cada(uuid, text, text, int, text, text, timestamptz, int),
   public.cfx_mp_neg_sub_revisar(uuid), public.cfx_mp_neg_sub_revisar_ref(text), public.cfx_mp_neg_sub_ver(text), public.cfx_mp_neg_sub_cancelar(text),
   public.cfx_mp_neg_subs_revisar() from public, anon, authenticated;
 do $$

@@ -57,14 +57,16 @@ const falla = async (fn) => { try { await fn(); return null; } catch (e) { retur
     ok(/cliente/.test(await falla(() => como('tienda@x.cl', "public.suscripcion_guardar('{\"cliente\":\"" + u.id + "\",\"items\":[{\"clave\":\"cafe\"}]}'::jsonb)")) || ''), '🔒 Solo para clientes de la tienda');
     const s = await como('tienda@x.cl', "public.suscripcion_guardar(jsonb_build_object('cliente', $2::text, 'items', '[{\"clave\":\"cafe\",\"cant\":1}]'::jsonb, 'cada', 14))", [c.id]);
     ok(s.cada === 14 && +s.total === 10000 && s.activa, '🔁 Compra recurrente: Café cada 14 días ($10.000)');
+    // G162: la de antes (app sin actualizar) se copia al núcleo y el cron del núcleo crea el pedido (sin doble pedido).
     const antes = +(await su('select count(*) n from public.pedidos where cliente_id = $1', [c.id]))[0].n;
-    ok(+(await su('select public.suscripciones_correr() n'))[0].n === 1, '🔁 Hoy se crea el pedido solo');
-    const x = (await su('select * from public.suscripciones where id = $1', [s.id]))[0];
-    ok(+(await su('select count(*) n from public.pedidos where cliente_id = $1', [c.id]))[0].n === antes + 1 && x.pedidos === 1 && Math.round((new Date(x.proxima) - Date.now()) / 864e5) >= 13, '🔁 Pedido creado y el próximo en 14 días');
-    ok(+(await su('select public.suscripciones_correr() n'))[0].n === 0, '🔁 No se repite el mismo día');
+    ok(+(await su('select public.suscripciones_correr() n'))[0].n === 1, '🔁 La de antes se copia al núcleo (mismo id)');
+    ok(+(await su('select public.cfx_recurrentes_correr() n'))[0].n === 1, '🔁 Hoy se crea el pedido solo (núcleo)');
+    const x = (await su('select * from public.cfx_recurrentes where id = $1', [s.id]))[0];
+    ok(+(await su('select count(*) n from public.pedidos where cliente_id = $1', [c.id]))[0].n === antes + 1 && x.veces === 1 && Math.round((new Date(x.proxima) - Date.now()) / 864e5) >= 13, '🔁 Pedido creado y el próximo en 14 días');
+    ok(+(await su('select public.cfx_recurrentes_correr() n'))[0].n === 0 && +(await su('select public.suscripciones_correr() n'))[0].n === 0, '🔁 No se repite el mismo día');
     ok(+(await su("select count(*) n from public.notifications where target_id = $1 and title like '🔁%'", [c.id]))[0].n >= 2, '🔔 Al cliente le llega el aviso');
-    r = await como('cli@x.cl', 'public.suscripcion_estado($2, false)', [s.id]);
-    ok(r.activa === false && (await como('cli@x.cl', 'public.mis_suscripciones()')).length === 1, '⏸️ El cliente la pausa desde su app');
+    r = await como('cli@x.cl', 'public.cfx_recurrente_estado($2, false)', [s.id]);
+    ok(r.rec.activa === false && (await como('cli@x.cl', 'public.cfx_recurrente_mias()')).length === 1, '⏸️ El cliente la pausa desde su app');
     // ---------- 📦 Stock mínimo y proveedores ----------
     ok(/WhatsApp/.test(await falla(() => como('tienda@x.cl', "public.proveedor_guardar(null, 'Don Juan', '1234')")) || ''), '🔒 WhatsApp del proveedor validado (+56 9)');
     const v = await como('tienda@x.cl', "public.proveedor_guardar(null, 'Don Juan', '+56 9 8765 4321')");
@@ -92,7 +94,7 @@ const falla = async (fn) => { try { await fn(); return null; } catch (e) { retur
     await p.fill('#gxMonto', '20000'); await p.click('[data-gx=crear]'); await p.waitForTimeout(1500);
     ok(/Nueva gift card/.test(await p.evaluate(() => document.querySelector('.cfx-hoja-m #gxNueva').innerText)), '🎁 Crear desde la hoja muestra el código + 💬 WhatsApp');
     await hoja('carritos', /Pepe|cli/, '🛒 Carritos olvidados');
-    await hoja('recurrentes', /cada 14 días/, '🔁 Compras recurrentes');
+    await hoja('recurrentes', /cada 2 semanas/, '🔁 Compras recurrentes');
     await hoja('proveedores', /Don Juan/, '📦 Stock mínimo y proveedores');
     await p.goto(t.base + '/apps/caja/'); await p.waitForTimeout(3000); await t.sinModales(p);
     ok(await p.evaluate(() => !document.getElementById('mGift').hidden), 'Caja: aparece 🎁 Gift card como medio de pago');

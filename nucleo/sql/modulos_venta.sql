@@ -83,7 +83,7 @@ language sql immutable as $$
          ('descuentos', '🏷️ Descuento por estadía larga', 'Premia a quien reserva más tiempo: un % menos desde las horas, días o meses que elijas.'),
          ('ganancias', '📊 Ganancias y ocupación', 'Cuánto ganaste por mes, ocupación de cada lugar, mejores días y planilla para Excel.'),
          -- G96: módulos de tienda (Despega primero).
-         ('suscripciones', '🔁 Compras recurrentes', 'Tu cliente recibe su pedido solo cada semana o cada mes (café, alimento, agua…): venta segura sin tener que pedirla.'),
+         ('suscripciones', '🔁 Compras recurrentes', 'Lo que tu cliente compra fijo (café, un corte, la mantención…) cada semana, mes o año: le avisamos antes, se crea solo y se cobra (también automático con tarjeta).'),
          ('proveedores', '📦 Stock mínimo y proveedores', 'Te avisa cuando un producto baja de su mínimo y arma el pedido a tu proveedor por WhatsApp con un toque.'),
          -- G96 b: 🏬 sucursales (Despega) y 📣 promos en la app de tus clientes (Despega, Barbería, BiciTaller).
          ('sucursales', '🏬 Sucursales y bodegas', 'Stock separado por local o bodega: vendes en la Caja desde cada sucursal y mueves mercadería entre ellas.'),

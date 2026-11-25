@@ -20,25 +20,8 @@ const comoDe = (su) => async (email, expr, args) => (await su("select " + expr +
     await p.fill('input[type=email]:visible', 'tienda@x.cl'); await p.fill('input[type=password]:visible', 'clave123'); await p.press('input[type=password]:visible', 'Enter');
     await p.waitForTimeout(3000); await t.sinModales(p);
     await p.goto(t.base + '/#recurrentes'); await p.reload(); await p.waitForTimeout(3500);
-    const H = '.cfx-hoja-m ';
-    // Tocar "Producto" → elegir Diagnóstico (sea el selector propio o el botón)
-    const btn = p.locator(H + '.gx-l .cfx-sel-btn');
-    if (await btn.count()) await btn.first().click(); else await p.locator(H + '.gxP').first().click();
-    await p.waitForTimeout(500);
-    await p.locator('dialog[open] button:visible, .cfx-ayuda button:visible', { hasText: 'Diagnóstico' }).first().click(); await p.waitForTimeout(500);
-    const vis = await p.evaluate((h) => document.querySelector(h + '.gx-l').innerText + '|' + document.querySelector(h + '.gxP').selectedOptions[0].text, H);
-    ok(/Diagnóstico/.test(vis.split('|')[0]) || (await p.locator(H + '.gxP').first().isVisible() && /Diagnóstico/.test(vis.split('|')[1])), '🔁 el producto elegido se VE puesto (' + vis.replace(/\s+/g, ' ').slice(0, 60) + ')');
-    ok(!(await p.locator(H + '#gxEnt').isVisible()) && await p.locator(H + '#gxSinEnv').isVisible(), '🛠️ solo servicio: no pide Retiro / Despacho');
-    await p.screenshot({ path: __dirname + '/capturas/aplicaciones/g159_recurrente.png' }).catch(() => {});
-    // + Otro producto → Café (físico) → vuelve la Entrega
-    await p.click(H + '[data-gx=mas]'); await p.waitForTimeout(300);
-    await p.evaluate((h) => { const s = [...document.querySelectorAll(h + '.gxP')].pop(); s.value = 'cafe'; s.dispatchEvent(new Event('change', { bubbles: true })); }, H);
-    await p.waitForTimeout(300);
-    ok(await p.locator(H + '#gxEnt').isVisible(), '🚚 con un producto físico vuelve Retiro / Despacho');
-    await p.selectOption(H + '#gxCli', { label: 'Pepe' }).catch(async () => p.evaluate((h) => { const s = document.querySelector(h + '#gxCli'); s.value = s.options[1].value; }, H));
-    await p.click(H + '[data-gx=guardar]'); await p.waitForTimeout(2000);
-    const L = await como('tienda@x.cl', 'public.suscripciones_lista()');
-    ok(L.length === 1 && (L[0].lineas || []).length === 2, '🔁 se guarda con los 2 productos');
+    ok(await p.locator('.cfx-hoja-m .cfx-rc').count() === 1, '🔁 la hoja de compras recurrentes abre (núcleo)');
+    // G162: la hoja 🔁 ahora es del núcleo (recurrente.js): lo de elegir producto / sin Entrega para 🛠️ lo prueba g162.js.
     // Núcleo: selector de acción "…" sin name muestra lo elegido y vuelve al título si la app lo limpia
     const r = await p.evaluate(async () => {
       const w = document.createElement('div'); w.innerHTML = '<select><option value="">Acción…</option><option value="a">Uno</option><option value="b">Dos</option></select>'; document.body.appendChild(w);

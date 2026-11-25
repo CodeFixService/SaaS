@@ -315,6 +315,16 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G162 · 🔁 Compras recurrentes en las 5 apps (núcleo 3.56) · CM 5.91 (bd 4.80) · Despega 7.06 (bd 6.04) · Barbería 3.76 (bd 3.29) · Billetera 1.21.137 (bd 84) · BiciTaller 3.66 (bd 2.79) · Estaciona 2.56 (bd 81)
+0. Cloudflare **Listo** en las 6 → CM → Apps → ⬆️ **Actualizar base** en las 6 → 🚀 **Liberar todo**.
+1. Despega → Más → 🔁 **Compras recurrentes** → arriba ves 💰 **Al mes**, ✅ Cobrado, ⏳ Por cobrar y 📅 Próximas. Las que ya tenías siguen ahí (mismo cliente y productos).
+2. **➕ Nueva compra recurrente** → Cliente → Diagnóstico → **Cada**: elige "Otro…" y escribe 20 → 🔔 Avisar 1 día antes → **🔁 Guardar** (Diagnóstico no pide Retiro/Despacho).
+3. Con Mercado Pago conectado: en la tarjeta → **⚡ Cobro automático** → escribe el correo de Mercado Pago del cliente → se abre WhatsApp con el link para que autorice su tarjeta.
+4. Con la cuenta del cliente: Pedidos → "🔁 Tus compras recurrentes" → **⏸️ Pausar** (a la tienda le llega el aviso) → **▶️ Seguir**.
+5. Barbería / BiciTaller / Billetera / Estaciona → Más → 🔁 (**Compras** / **Cobros** / **Arriendos recurrentes**) → ▶️ Probar módulo → **➕ Nueva**: nombre + WhatsApp + qué + precio + cada → Guardar.
+6. El día que toca: en la tarjeta sale "⏳ Por cobrar" → **📲 Cobrar** (WhatsApp con el link de pago si el negocio tiene ⚡/💳) o **✅ Pagado** (transferencia/efectivo).
+7. CM → Mensajes → 🐞 Fallas → Despega #6 → ✅ Revisada o ↩️ Sigue fallando.
+
 ## G160 · 🧩 Tipo de venta + 🔑 clave de un solo uso + 💳 regla de entrega (núcleo 3.55) · CM 5.90 · Despega 7.05 · Barbería 3.75 · Billetera 1.21.136 · BiciTaller 3.65 · Estaciona 2.55
 1. Despega → Caja → Productos → crea "Diagnóstico" sin stock → el tipo se marca solo 🛠️ Servicio (3 botones grandes; tócalos para cambiarlo).
 2. Más → 🔁 Compras recurrentes → elige Diagnóstico → NO aparece Retiro/Despacho.
