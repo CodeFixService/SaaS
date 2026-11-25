@@ -56,6 +56,18 @@ const comoDe = (su) => async (email, expr, args) => (await su("select " + expr +
     ok(rp.ok && acc2.some((a) => a.clave === rp.clave) && !acc2.some((a) => a.clave === k1), '🔄 reponer: el pedido muestra la nueva');
     ok(/anulada/.test((await como('cli@x.cl', 'public.cfx_clave_canjear($2)', [k1])).error || ''), '❌ la vieja queda anulada (no se borra)');
     ok((await su("select count(*)::int as n from public.cfx_claves where clave = $1", [k1]))[0].n === 1, '🛡️ la vieja sigue guardada');
+    // 3 b) 🔑 por período: mensual = la clave dura 30 días desde que se canjea; vencida → no abre
+    await como('tienda@x.cl', "public.catalogo_venta('lic', $2::jsonb)", [JSON.stringify({ tipo: 'digital', cobro: 'ahora', periodo: 'mensual', acceso: 'https://x.cl/club', manual: true })]);
+    const ped2 = (await su("insert into public.pedidos (negocio_id, cliente_id, lineas, subtotal, total, entrega, estado, token) values ($1, $2, $3::jsonb, 7000, 7000, 'retiro', 'recibido', 'tok-g160b') returning id",
+      [u.id, cli, JSON.stringify([{ clave: 'lic', nombre: 'Club mensual', cant: 1, precio: 7000, subtotal: 7000, tipo: 'digital', cobro: 'ahora' }])]))[0].id;
+    await su("update public.pedidos set estado = 'preparando', pagado_at = now() where id = $1", [ped2]);
+    const a3 = (await su('select accesos from public.pedidos where id = $1', [ped2]))[0].accesos[0];
+    ok(a3.dias === 30, '📅 mensual → la clave dura 30 días (' + a3.dias + ')');
+    const r3 = await como('cli@x.cl', 'public.cfx_clave_canjear($2)', [a3.clave]);
+    const d3 = r3.vence ? Math.round((new Date(r3.vence) - Date.now()) / 864e5) : -1;
+    ok(r3.ok && d3 === 30, '📅 al canjear vence en 30 días (' + d3 + ')');
+    await su("update public.cfx_claves set vence_at = now() - interval '1 day' where clave = $1", [a3.clave]);
+    ok(/venci/.test((await como('cli@x.cl', 'public.cfx_clave_canjear($2)', [a3.clave])).error || ''), '⌛ vencida: pide renovar el pago');
     // 4) Pantalla: Caja con 3 botones · recurrentes sin Despacho · regla de entrega
     await su("update public.cfx_config set valor = jsonb_set(valor, '{activo}', 'true') where clave = 'modulos_venta'");
     await como('tienda@x.cl', 'public.cfx_modulo_probar($2)', ['suscripciones']);
@@ -70,6 +82,8 @@ const comoDe = (su) => async (email, expr, args) => (await su("select " + expr +
     await p.evaluate(() => document.querySelector('.cfx-tipo').scrollIntoView()); await p.screenshot({ path: __dirname + '/capturas/aplicaciones/g160_caja.png' }).catch(() => {});
     ok(auto === 'servicio', '✨ Caja: escribir "Mantención…" lo marca 🛠️ solo (' + auto + ')');
     const reg = await p.evaluate(() => !!(window.CFX_COBRO && CFX_COBRO.regla && /al tiro/.test(CFX_COBRO.regla()) && /revisa/.test(CFX_COBRO.regla())));
+    const pl = await p.evaluate(async () => { const d = document.getElementById('impPlanD'); if (!d) return ''; d.open = true; d.dispatchEvent(new Event('toggle')); await new Promise((x) => setTimeout(x, 1500)); return document.getElementById('impPlanilla').textContent; });
+    ok(/Tipo/.test(pl) && /Período/.test(pl) && /Acceso/.test(pl), '📊 planilla (descarga + 🤖 IA) trae Tipo, Período y Acceso');
     ok(reg, '💳 G161 CFX_COBRO.regla: ⚡ al tiro · 🏦 verificación humana');
     await p.goto(t.base + '/#recurrentes'); await p.reload(); await p.waitForTimeout(3500);
     const H = '.cfx-hoja-m ';
