@@ -33,7 +33,7 @@ language plpgsql stable security definer set search_path = '' as $$
 begin
   perform <CHK>;
   return coalesce((select jsonb_agg(jsonb_build_object('clave', k, 'nombre', coalesce(c.nombre, k), 'detalle', coalesce(c.detalle, ''),
-      'activo', public.cfx_modulo(k), 'precio', public.cfx_venta_precio(k),
+      'activo', public.cfx_modulo(k), 'precio', public.cfx_venta_precio(k), 'nota', case when to_regprocedure('public.cfx_modulo_nota(text)') is not null then public.cfx_modulo_nota(k) end,
       'negocios', (select count(*) from public.cfx_modulos_negocio m where m.modulo = k and m.hasta > now())) order by o)
     from unnest(public.cfx_modulos_de_app()) with ordinality u(k, o)
     left join public.cfx_modulos_catalogo() c on c.clave = k), '[]');

@@ -173,6 +173,7 @@ begin
   if p_producto is not null then
     if public.cfx_negocio_cuenta((y ->> 'id')::uuid) is distinct from (y ->> 'id')::uuid then raise exception 'Pide al dueño del negocio que haga el pago'; end if;
     if p_periodo not in ('mensual', 'anual') or not coalesce((public.cfx_venta() ->> 'activo')::boolean, false) or cardinality(public.cfx_venta_modulos(p_producto)) = 0 then raise exception 'Módulo no válido'; end if;
+    if public.cfx_modulo_pronto(p_producto) is not null then raise exception '🔜 Todavía no disponible: %', public.cfx_modulo_pronto(p_producto); end if;  -- G163
   end if;
   if coalesce(p_monto, 0) < 1 then raise exception 'Escribe el monto que pagaste'; end if;
   if coalesce(length(p_comprobante), 0) < 200 then raise exception 'Sube la foto del comprobante'; end if;
@@ -504,9 +505,11 @@ begin
   if p_producto is not null and not coalesce(p_regalo, false) then
     if public.cfx_negocio_cuenta((y ->> 'id')::uuid) is distinct from (y ->> 'id')::uuid then raise exception 'Pide al dueño del negocio que haga el pago'; end if;
     if p_periodo not in ('mensual', 'anual') or not coalesce((public.cfx_venta() ->> 'activo')::boolean, false) or cardinality(public.cfx_venta_modulos(p_producto)) = 0 then raise exception 'Módulo no válido'; end if;
+    if public.cfx_modulo_pronto(p_producto) is not null then raise exception '🔜 Todavía no disponible: %', public.cfx_modulo_pronto(p_producto); end if;  -- G163
     cup := null;
   elsif p_producto is not null then
     if p_periodo not in ('mensual', 'anual') or not coalesce((public.cfx_venta() ->> 'activo')::boolean, false) or cardinality(public.cfx_venta_modulos(p_producto)) = 0 then raise exception 'Módulo no válido'; end if;
+    if public.cfx_modulo_pronto(p_producto) is not null then raise exception '🔜 Todavía no disponible: %', public.cfx_modulo_pronto(p_producto); end if;  -- G163
     cup := null;
   end if;
   if exists (select 1 from public.cfx_pagos where cuenta = (y ->> 'id')::uuid and estado = 'pendiente' and medio not in ('mp', 'flow')) then raise exception 'Ya tienes un pago en revisión. Te avisamos apenas se apruebe.'; end if;

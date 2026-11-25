@@ -315,6 +315,12 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G163 · 🧩 No se ofrece lo que todavía no funciona (núcleo 3.57) · CM 5.92 (bd 4.81) · Despega 7.07 (bd 6.05) · Barbería 3.77 (bd 3.30) · Billetera 1.21.138 (bd 85) · BiciTaller 3.67 (bd 2.80) · Estaciona 2.57 (bd 82)
+0. Cloudflare **Listo** en las 6 → CM → Apps → ⬆️ **Actualizar base** en las 6 → 🚀 **Liberar todo**.
+1. Despega (dueño) → Más → ⭐ Mi plan y módulos → 🌐 **Dominio propio** y 🛒 **Mercado Libre** salen con "🔜 Todavía no disponible…" y el botón **Pronto** apagado (sin Comprar ni 🎁). Los demás, normales.
+2. CM → Apps → Despega → 🧩 Módulos → bajo Dominio y Mercado Libre dice "🔜 No se ofrece todavía: …".
+3. Cuando compres el dominio (CM → Control → 🌐) o crees la app de Mercado Libre (CM → Control → 🛒), vuelve al paso 1: ya aparecen con **Comprar**.
+
 ## G162 · 🔁 Compras recurrentes en las 5 apps (núcleo 3.56) · CM 5.91 (bd 4.80) · Despega 7.06 (bd 6.04) · Barbería 3.76 (bd 3.29) · Billetera 1.21.137 (bd 84) · BiciTaller 3.66 (bd 2.79) · Estaciona 2.56 (bd 81)
 0. Cloudflare **Listo** en las 6 → CM → Apps → ⬆️ **Actualizar base** en las 6 → 🚀 **Liberar todo**.
 1. Despega → Más → 🔁 **Compras recurrentes** → arriba ves 💰 **Al mes**, ✅ Cobrado, ⏳ Por cobrar y 📅 Próximas. Las que ya tenías siguen ahí (mismo cliente y productos).
