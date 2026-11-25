@@ -1,6 +1,6 @@
 {
-  "version": "5.93",
+  "version": "5.94",
   "bd": "4.81",
   "funcion": "3.7",
-  "notas": "🐞 G165 (núcleo 3.58): un solo botón ↺ Volver todo a lo de fábrica, con aire arriba. 🧩 G163 (núcleo 3.57): en 🧩 Módulos, lo que todavía no funciona se ve 🔜 deshabilitado con su nota (no se compra ni se prueba). Lo que ya tienes sigue a la vista."
+  "notas": "📌 G168 (núcleo 3.60): en Personalizar → Barra de abajo eliges tus 3 «Accesos directos» (el + y el Más quedan fijos). El último botón de la barra se ve igual en todas las apps: ⋯ y la palabra «Más»."
 }
