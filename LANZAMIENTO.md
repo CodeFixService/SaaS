@@ -315,6 +315,14 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G171 · 💵 Cierre de caja con retiro al banco · Billetera 1.21.143 (bd 87)
+0. Cloudflare Listo → CM → Apps → 💰 Billetera → ⬆️ Actualizar base (debe quedar 87) → 🚀 Liberar todo.
+1. 💰 Billetera (dueño): Caja → 💵 Cierre de caja → toca ❓ ¿Cómo se usa? (dice que cerrar NO cambia tu balance).
+2. Lo de transferencia/tarjeta sale aparte en 📲 (entró, salió, neto). Si hoy no hubo efectivo, sale el aviso "pon 0 y cierra".
+3. Escribe lo que contaste → toca 💸 **Lo saqué todo** → "Queda en caja para mañana $0" → 🔒 **Cerrar caja**. Tu balance en Caja queda igual.
+4. Mañana, al abrir el cierre, "Efectivo con que partiste" sale en lo que quedó (0 si sacaste todo).
+5. CM → Mensajes → 🐞 Fallas → Billetera #16: ✅ Revisada o ↩️ Sigue fallando.
+
 ## G164 · 📱 Máximo de equipos por cuenta (núcleo 3.62) · CM 5.96 (bd 4.82) · Despega 7.12 (bd 6.06) · Barbería 3.82 (bd 3.31) · Billetera 1.21.142 (bd 86) · BiciTaller 3.72 (bd 2.81) · Estaciona 2.61 (bd 83)
 1. Cloudflare en Listo → en cada app ⬆️ Actualizar base → CM → Apps → 🚀 Liberar.
 2. CM → Control → 📱 Equipos: debe decir Tope 3 y Extra 2. Si quieres otro número: cámbialo, marca «Guardar en todas las apps» → Guardar (cada app debe decir ✓).
