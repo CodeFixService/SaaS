@@ -315,6 +315,13 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G164 · 📱 Máximo de equipos por cuenta (núcleo 3.62) · CM 5.96 (bd 4.82) · Despega 7.12 (bd 6.06) · Barbería 3.82 (bd 3.31) · Billetera 1.21.142 (bd 86) · BiciTaller 3.72 (bd 2.81) · Estaciona 2.61 (bd 83)
+1. Cloudflare en Listo → en cada app ⬆️ Actualizar base → CM → Apps → 🚀 Liberar.
+2. CM → Control → 📱 Equipos: debe decir Tope 3 y Extra 2. Si quieres otro número: cámbialo, marca «Guardar en todas las apps» → Guardar (cada app debe decir ✓).
+3. Prueba (cuenta de prueba, NO la tuya de admin, que no tiene tope): entra con la misma cuenta en 4 equipos o navegadores. En el 4.º sale «Tienes 3 equipos abiertos» → toca Cerrar en uno → entras. Abre la app en el equipo cerrado: vuelve al ingreso.
+4. En cualquiera: Mi perfil → Avanzado → 📱 Mis equipos: ves los abiertos y cierras uno con «Cerrar».
+5. ➕ Extra: CM → Control → 📱 Equipos → «Dar equipos extra» con el correo y los días (0 = quitar).
+
 ## G163 · 🧩 No se ofrece lo que todavía no funciona (núcleo 3.57) · CM 5.92 (bd 4.81) · Despega 7.07 (bd 6.05) · Barbería 3.77 (bd 3.30) · Billetera 1.21.138 (bd 85) · BiciTaller 3.67 (bd 2.80) · Estaciona 2.57 (bd 82)
 0. Cloudflare **Listo** en las 6 → CM → Apps → ⬆️ **Actualizar base** en las 6 → 🚀 **Liberar todo**.
 1. Despega (dueño) → Más → ⭐ Mi plan y módulos → 🌐 **Dominio propio** y 🛒 **Mercado Libre** salen con "🔜 Todavía no disponible…" y el botón **Pronto** apagado (sin Comprar ni 🎁). Los demás, normales.
