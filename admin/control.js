@@ -6,7 +6,7 @@
   const A = global.App, { esc, toast, modal, confirmar } = A;
   const M = () => global.MisApps;
   let raiz = null, actual = 'cm', seccion = 'negocios';
-  const SECC = [['negocios', '🏪 Negocios'], ['avisar', '📣 Avisar'], ['anuncios', '📢 Anuncios'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['pruebas', '🎁 Pruebas'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['dominio', '🌐 Dominio'], ['push', '🔔 Notificaciones'], ['correo', '✉️ Correo'], ['ml', '🛒 Mercado Libre'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['salud', '🩺 Salud'], ['registro', '📜 Registro']];
+  const SECC = [['negocios', '🏪 Negocios'], ['avisar', '📣 Avisar'], ['anuncios', '📢 Anuncios'], ['planes', '🧩 Planes'], ['textos', '✏️ Textos'], ['keys', '🔑 Keys'], ['pruebas', '🎁 Pruebas'], ['cupones', '🏷️ Cupones'], ['verif', '🪪 Verificaciones'], ['humano', '🤖 Humano'], ['equipos', '📱 Equipos'], ['dominio', '🌐 Dominio'], ['push', '🔔 Notificaciones'], ['correo', '✉️ Correo'], ['ml', '🛒 Mercado Libre'], ['referidos', '🎁 Referidos'], ['socios', '🤝 Socios'], ['datos', '🔒 Datos'], ['seguridad', '🛡️ Seguridad'], ['salud', '🩺 Salud'], ['registro', '📜 Registro']];
   // Nombres legibles de las claves de los planes (las demás se muestran tal cual).
   const NOMBRE = { productos: 'Productos', clientes: 'Clientes', fichas: 'Diseños publicados', equipo: 'Equipo', pedidos_mes: 'Pedidos al mes', respuestas: 'Respuestas rápidas',
     contactos: 'Contactos', favoritos: 'Favoritos', mensajes_seguidos: 'Mensajes seguidos', barberos: 'Barberos', servicios: 'Servicios', ofertas: 'Ofertas',
@@ -228,6 +228,32 @@
       for (const a of apps) { try { await M().rpcDe(M().cliente(a), 'cfx_humano_guardar', { p_site_key: raiz.querySelector('#huK').value.trim(), p_secreto: sec }); res.push(a.nombre + ': ✓'); } catch (x) { res.push(a.nombre + ': ' + nf(x)); } }
       raiz.querySelector('#huS').value = '';
       raiz.querySelector('#huR').innerHTML = res.map((t) => '<p class="sub">' + esc(t) + '</p>').join('');
+    };
+  }
+
+  // G164 📱 Equipos por cuenta: tope por app (por defecto 3) + equipos extra (se suman a una cuenta por correo, como módulo 'equipos').
+  //   El servidor de cada app lee el tope (núcleo sql/equipos.sql): el que pasa del tope elige cuál cerrar. El administrador no tiene tope.
+  async function equipos() {
+    let e = {};
+    try { e = await rpc('cfx_equipos_conf_admin') || {}; } catch (x) { caja().innerHTML = '<p class="sub warn">' + esc(nf(x)) + ' · Falta correr el SQL de esta app (G164).</p>'; return; }
+    caja().innerHTML = '<div class="card"><h2>📱 Equipos por cuenta</h2><p class="sub">Cuántos celulares o computadores pueden usar la misma cuenta a la vez en <b>' + esc(app().nombre) +
+      '</b>. Si alguien entra en uno más, la app le pide elegir cuál cerrar. Evita cuentas compartidas.</p>' +
+      '<p class="sub">Ahora: ' + esc(e.abiertos || 0) + ' equipos abiertos en ' + esc(e.cuentas || 0) + ' cuentas · ' + esc(e.extras || 0) + ' cuentas con equipos extra.</p>' +
+      '<label>Tope por cuenta<input id="eqT" type="number" inputmode="numeric" min="1" max="20" value="' + esc(e.tope || 3) + '"></label>' +
+      '<label>➕ Equipos extra (lo que suma el extra)<input id="eqX" type="number" inputmode="numeric" min="0" max="20" value="' + esc(e.extra == null ? 2 : e.extra) + '"></label>' +
+      '<label class="fila" style="gap:8px"><input type="checkbox" id="eqTodas" style="width:auto"> Guardar en todas las apps</label><button type="button" class="block" id="eqG">Guardar</button><div id="eqR"></div></div>' +
+      '<div class="card"><h2>➕ Dar equipos extra</h2><p class="sub">A una cuenta de ' + esc(app().nombre) + ' (su negocio entero). 0 días = quitarlos.</p>' +
+      '<label>Correo de la cuenta<input id="eqC" type="email" autocomplete="off" placeholder="cliente@correo.cl"></label>' +
+      '<label>Días<input id="eqD" type="number" inputmode="numeric" min="0" max="3660" value="30"></label><button type="button" class="block" id="eqDar">Dar extra</button></div>';
+    raiz.querySelector('#eqG').onclick = async () => {
+      const t = +raiz.querySelector('#eqT').value, x = +raiz.querySelector('#eqX').value, res = [];
+      const apps = raiz.querySelector('#eqTodas').checked ? M().APPS.filter(conectada) : [app()];
+      for (const a of apps) { try { const r = await M().rpcDe(M().cliente(a), 'cfx_equipos_guardar', { p_tope: t, p_extra: x }); res.push(a.nombre + ': ' + (r && r.error ? r.error : '✓')); } catch (y) { res.push(a.nombre + ': ' + nf(y)); } }
+      raiz.querySelector('#eqR').innerHTML = res.map((z) => '<p class="sub">' + esc(z) + '</p>').join('');
+    };
+    raiz.querySelector('#eqDar').onclick = async () => {
+      try { const r = await rpc('cfx_equipos_dar', { p_email: raiz.querySelector('#eqC').value.trim(), p_dias: +raiz.querySelector('#eqD').value });
+        if (r && r.error) return toast(r.error); toast(+raiz.querySelector('#eqD').value ? '➕ Equipos extra activos' : 'Equipos extra quitados'); equipos(); } catch (y) { toast(nf(y)); }
     };
   }
 
@@ -572,7 +598,7 @@
 
   // G93 📢 Anuncios: campañas del CM que se publican en las apps (admin/anuncios.js).
   const anuncios = () => global.AnunciosCM.render(caja());
-  const F = { negocios, avisar, anuncios, planes, textos, keys, pruebas, cupones, verif, humano, dominio, push, correo, ml, referidos, socios, datos, seguridad, salud, registro };
+  const F = { negocios, avisar, anuncios, planes, textos, keys, pruebas, cupones, verif, humano, equipos, dominio, push, correo, ml, referidos, socios, datos, seguridad, salud, registro };
   // Referidos: quién invitó a quién (con qué cuenta), ranking, premio automático y premio a mano (días + sticker).
   const STICKERS = ['🏆 ¡Eres un crack invitando!', '🚀 ¡Vas volando! Gracias por recomendarnos', '💪 ¡Sigue así, vas muy bien!', '🌟 ¡Gracias por correr la voz!'];
   // G95 🎁 Pruebas gratis: quién probó qué y cuándo (una vez por correo; la lista no se borra al eliminar la cuenta).

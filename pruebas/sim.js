@@ -22,7 +22,7 @@ function crear(opts) {
     const c = await pool.connect();
     try {
       await c.query('begin');
-      const claims = user ? JSON.stringify({ sub: user.sub, email: user.email, role: 'authenticated', iat: user.iat, amr: user.amr }) : JSON.stringify({ role: 'anon' });
+      const claims = user ? JSON.stringify({ sub: user.sub, email: user.email, role: 'authenticated', iat: user.iat, amr: user.amr, session_id: user.session_id }) : JSON.stringify({ role: 'anon' });
       await c.query("select set_config('request.jwt.claim.sub', $1, true), set_config('request.jwt.claims', $2, true), set_config('request.jwt.claim.role', $3, true)",
         [user ? user.sub : '', claims, user ? 'authenticated' : 'anon']);
       await c.query('set local role ' + (user ? 'authenticated' : 'anon'));
@@ -240,8 +240,15 @@ function crear(opts) {
 
   // ---- auth ----
   const sids = {};
-  const sesion = (u, amr, nueva = true) => ({ access_token: jwt(u.id, u.email, amr, (nueva || !sids[u.id]) ? (sids[u.id] = require('crypto').randomUUID()) : sids[u.id]), token_type: 'bearer', expires_in: 36000, expires_at: Math.floor(Date.now() / 1000) + 36000, refresh_token: 'r-' + u.id,
+  // G164: cada inicio de sesión queda en auth.sessions (como Supabase) y el token de refresco lleva su sesión: 'r-<usuario>.<sesión>'.
+  //   Si la sesión se borró (equipo cerrado), refrescar falla igual que en Supabase.
+  const sesion = (u, amr, nueva = true, fija) => ({ access_token: jwt(u.id, u.email, amr, fija || ((nueva || !sids[u.id]) ? (sids[u.id] = require('crypto').randomUUID()) : sids[u.id])), token_type: 'bearer', expires_in: 36000, expires_at: Math.floor(Date.now() / 1000) + 36000, refresh_token: 'r-' + u.id + '.' + (fija || sids[u.id]),
     user: { id: u.id, email: u.email, aud: 'authenticated', role: 'authenticated', app_metadata: { provider: 'email' }, user_metadata: u.raw_user_meta_data || {}, created_at: new Date().toISOString(), email_confirmed_at: new Date().toISOString() } });
+  async function sesionDb(u, amr, nueva, fija) {
+    const o = sesion(u, amr, nueva, fija), sid = JSON.parse(Buffer.from(o.access_token.split('.')[1], 'base64url')).session_id;
+    await su('insert into auth.sessions (id, user_id) values ($1, $2) on conflict (id) do nothing', [sid, u.id]).catch(() => {});
+    return o;
+  }
   async function crearUsuario(email, pass, data) {
     email = String(email || '').trim().toLowerCase();
     const [u] = await su('insert into auth.users (email, raw_user_meta_data) values ($1, $2) returning id, email, raw_user_meta_data', [email, JSON.stringify(data || {})]);
@@ -267,21 +274,22 @@ function crear(opts) {
       if (p === '/auth/v1/token') {
         const g = url.searchParams.get('grant_type');
         if (g === 'refresh_token') {
-          const id = String(body.refresh_token || '').replace(/^r-/, '');
+          const [id, sid] = String(body.refresh_token || '').replace(/^r-/, '').split('.');
           const r = await su('select id, email, raw_user_meta_data from auth.users where id::text = $1', [id]);
-          if (!r.length) return json(400, { error: 'invalid_grant', error_description: 'Invalid Refresh Token', msg: 'Invalid Refresh Token' });
-          return json(200, sesion(r[0], undefined, false));
+          const viva = !sid || (await su('select 1 from auth.sessions where id::text = $1', [sid]).catch(() => [1])).length;
+          if (!r.length || !viva) return json(400, { error: 'invalid_grant', error_description: 'Invalid Refresh Token', msg: 'Invalid Refresh Token' });
+          return json(200, await sesionDb(r[0], undefined, false, sid));
         }
         const r = await su('select u.id, u.email, u.raw_user_meta_data from auth.users u join auth.claves m on m.email = u.email where u.email = $1 and m.pass = $2', [String(body.email || '').toLowerCase(), body.password]);
         if (!r.length) return json(400, { code: 400, error_code: 'invalid_credentials', error: 'invalid_grant', error_description: 'Invalid login credentials', msg: 'Invalid login credentials' });
         await su('update auth.users set last_sign_in_at = now() where id = $1', [r[0].id]);
-        return json(200, sesion(r[0]));
+        return json(200, await sesionDb(r[0]));
       }
       if (p === '/auth/v1/signup') {
         let u;
         try { u = await crearUsuario(body.email, body.password, body.data); }
         catch (e) { log('signup: ' + e.message); return json(e.code === '23505' ? 422 : 500, { code: e.code === '23505' ? 422 : 500, error_code: e.code === '23505' ? 'user_already_exists' : 'unexpected_failure', msg: e.code === '23505' ? 'User already registered' : 'Database error saving new user' }); }
-        return json(200, sesion(u));
+        return json(200, await sesionDb(u));
       }
       if (p === '/auth/v1/user') {
         if (!user) return json(401, { code: 401, msg: 'not authenticated' });
@@ -295,7 +303,7 @@ function crear(opts) {
       if (p === '/auth/v1/verify' && body && /^th-/.test(body.token_hash || '')) {
         const r = await su('select id, email, raw_user_meta_data from auth.users where id::text = $1', [body.token_hash.slice(3)]);
         if (!r.length) return json(403, { code: 403, error_code: 'otp_expired', msg: 'Token has expired or is invalid' });
-        return json(200, sesion(r[0], 'otp'));
+        return json(200, await sesionDb(r[0], 'otp'));
       }
       if (p === '/auth/v1/logout') return json(204);
       if (p === '/auth/v1/recover' || p === '/auth/v1/otp' || p === '/auth/v1/resend') { ultimoAuth.otp = Object.assign({ ruta: p }, body); return json(200, {}); }

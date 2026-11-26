@@ -77,7 +77,7 @@ async function abrir(repo, db, opts = {}) {
     base, page, ctx, sim, errores, browser, nuevo,
     foto: (nombre, p) => (p || page).screenshot({ path: path.join(capt, nombre + '.png'), fullPage: !process.env.ANCHO }),
     // Cierra los diálogos abiertos (p. ej. "Activa las notificaciones", que en el navegador de prueba siempre aparece).
-    sinModales: (p) => (p || page).evaluate(() => { document.querySelectorAll('dialog[open]:not(.cfx-pago)').forEach((d) => d.close()); document.querySelectorAll('.cfx-hoja, .cfx-hoja-velo').forEach((d) => d.remove()); document.querySelectorAll('.sheet .cerrar').forEach((b) => b.click()); }),
+    sinModales: (p) => (p || page).evaluate(() => { document.querySelectorAll('dialog[open]:not(.cfx-pago):not(.cfx-eq)').forEach((d) => d.close()); document.querySelectorAll('.cfx-hoja, .cfx-hoja-velo').forEach((d) => d.remove()); document.querySelectorAll('.sheet .cerrar').forEach((b) => b.click()); }),
     anchoOk: async (p) => (p || page).evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
     async cerrar() { await browser.close(); servidor.close(); await sim.cerrar(); },
   };

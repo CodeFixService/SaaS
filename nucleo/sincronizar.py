@@ -41,7 +41,7 @@ SQL = {
 }
 INI, FIN = '-- >>> CFX núcleo (no editar aquí: se copia de saas/nucleo/sql con sincronizar.py)', '-- <<< CFX núcleo'
 TABLA = re.compile(r'create table (?:if not exists )?((?:public|privado)\.[a-z_]+)', re.I)
-CABEZA = ('seguro.js', 'humano.js', 'carga.js')  # van primero en el <head> (antes de que la app cree su conexión a Supabase)
+CABEZA = ('seguro.js', 'humano.js', 'equipos.js', 'carga.js')  # van primero en el <head> (antes de que la app cree su conexión a Supabase)
 JS = ('iconos.js', 'instalar.js', 'barra.js', 'ui.js', 'auto.js', 'fotos.js', 'voz.js', 'respaldo.js', 'pagos.js', 'verificar.js', 'premium.js', 'ayuda.js', 'datos.js', 'vitrina.js', 'filtro.js')
 # Módulos de JS opcionales: se copian solo a las apps que los usan (la app los enlaza donde corresponde; no van en todas las páginas).
 OPCIONAL = {'Aplicaciones': ('estudio.js', 'recurrente.js', 'est-motor.js', 'est-importador.js', 'est-links.js', 'tienda.js', 'despacho.js', 'modulos.js', 'qr.js', 'comprobante.js', 'impresora.js', 'tap.js'), 'saas': ('est-motor.js', 'est-importador.js', 'est-links.js', 'qr.js', 'comprobante.js', 'impresora.js'), 'barberia': ('estudio.js', 'recurrente.js', 'est-motor.js', 'est-importador.js', 'est-links.js', 'qr.js', 'modulos.js', 'comprobante.js', 'impresora.js', 'boleta.js'),  # G37: comprobante + impresora · G39: módulos
@@ -115,7 +115,7 @@ def sql_comun(repo, nombre):
         print('  ⚠️ ', nombre, 'no tiene las marcas del SQL común en', archivo)
         return
     i, j = s.index(INI), s.index(FIN)
-    comun = ''.join(open(os.path.join(AQUI, 'sql', f), encoding='utf-8').read() for f in ('pagos.sql', 'admin.sql', 'ayuda.sql', 'legal.sql', 'referidos.sql', 'socios.sql', 'inventario.sql', 'salud.sql', 'modulos.sql', 'modulos_venta.sql', 'chat.sql', 'calificaciones.sql', 'fidelidad.sql', 'carrito.sql', 'limpieza.sql', 'analisis.sql', 'qr.sql', 'seguridad.sql', 'dominio.sql', 'push.sql', 'boleta.sql', 'anuncios.sql', 'mp_negocio.sql', 'estudio.sql', 'fotos.sql', 'personal.sql', 'redes.sql', 'catalogo.sql', 'reclamar.sql', 'tipo.sql', 'recurrente.sql'))
+    comun = ''.join(open(os.path.join(AQUI, 'sql', f), encoding='utf-8').read() for f in ('pagos.sql', 'admin.sql', 'ayuda.sql', 'legal.sql', 'referidos.sql', 'socios.sql', 'inventario.sql', 'salud.sql', 'modulos.sql', 'modulos_venta.sql', 'chat.sql', 'calificaciones.sql', 'fidelidad.sql', 'carrito.sql', 'limpieza.sql', 'analisis.sql', 'qr.sql', 'seguridad.sql', 'dominio.sql', 'push.sql', 'boleta.sql', 'anuncios.sql', 'mp_negocio.sql', 'estudio.sql', 'fotos.sql', 'personal.sql', 'redes.sql', 'catalogo.sql', 'reclamar.sql', 'tipo.sql', 'recurrente.sql', 'equipos.sql'))
     tablas = sorted(set(TABLA.findall(s[:i] + s[j:])) | set(TABLA.findall(comun)))
     comun = comun.replace('<CHK>', chk).replace('<LISTA>', "array['" + "', '".join(tablas) + "']")
     nuevo = s[:i] + INI + '\n' + comun + s[j:]
