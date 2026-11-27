@@ -315,6 +315,12 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G172 · 🎨 La barra del celular sigue tus colores (núcleo 3.63) · CM 5.97 · Despega 7.13 · Barbería 3.83 · Billetera 1.21.144 · BiciTaller 3.73 · Estaciona 2.62 (bases SIN cambio)
+0. Cloudflare Listo → CM → Apps → 🚀 Liberar todo. Abre cada app instalada en el celular (si no cambia: cerrarla del todo y abrir).
+1. En cualquiera de las 6: Mi perfil → 🎨 Personalizar → elige un fondo fuerte (ej. morado) → la franja de ARRIBA (hora y batería) queda del mismo color que la cabecera.
+2. Cambia a 🌙 oscuro y a ☀️ claro: la franja de arriba cambia junto con la pantalla. ↺ Volver todo a lo de fábrica → vuelve al color normal de arriba.
+3. Si ABAJO (bajo el menú) todavía ves una franja de otro color: manda pantallazo (app, modo claro/oscuro, y si está instalada o en Chrome).
+
 ## G171 · 💵 Cierre de caja con retiro al banco · Billetera 1.21.143 (bd 87)
 0. Cloudflare Listo → CM → Apps → 💰 Billetera → ⬆️ Actualizar base (debe quedar 87) → 🚀 Liberar todo.
 1. 💰 Billetera (dueño): Caja → 💵 Cierre de caja → toca ❓ ¿Cómo se usa? (dice que cerrar NO cambia tu balance).

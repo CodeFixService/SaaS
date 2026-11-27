@@ -35,7 +35,7 @@
     modo: () => pf().tema || 'auto', guardarModo: (m) => CM.guardarPrefs({ tema: m })
   };  CM.aplicarTema = () => {
     const p = pr(), r = document.documentElement;
-    if (/^#[0-9a-f]{6}$/i.test(p.color || '')) { r.style.setProperty('--brand', p.color); r.style.setProperty('--c1', p.color); const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = p.tema === 'claro' ? '#f3f5fa' : '#0a0e17'; }
+    if (/^#[0-9a-f]{6}$/i.test(p.color || '')) { r.style.setProperty('--brand', p.color); r.style.setProperty('--c1', p.color); /* G172: la barra del celular la pinta el núcleo (ayuda.js pintarBarraCel) */ }
     if (p.tema === 'claro' || p.tema === 'oscuro') r.dataset.theme = p.tema === 'claro' ? 'light' : 'dark'; else delete r.dataset.theme;
     const a = document.getElementById('bAvatar'); if (a) { const d = CM.items.find((i) => i.tipo === 'diario' && i.fecha === hoy()), an = d && d.datos && d.datos.animo; a.innerHTML = '<span>' + esc(((CM.cuenta && CM.cuenta.nombre) || '?').trim().charAt(0).toUpperCase() || '?') + '</span>' + (an ? '<small>' + CM.ANIMO[an][0] + '</small>' : ''); }
   };
