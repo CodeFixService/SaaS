@@ -315,6 +315,10 @@ Necesitas una cuenta de Mercado Pago de prueba o la tuya (el pago es real: usa u
 2. 🅿️ Estaciona (dueño): Más → 🚗 Mis estacionamientos: sin link/banco/MP sale "⚠️ Tus arrendatarios no pueden pagar en línea". Con solo 🏦 datos de banco ya no sale, y quien reserva ve "🏦 Transfiere $…" + 📋 Copiar datos.
 3. 🚲 BiciTaller (taller): abre una orden de un cliente CON cuenta → botón **💬 Chat** (el mismo chat de Mensajes). Orden sin cuenta: no aparece (queda 📲 WhatsApp y 🔗 enlace).
 
+## G173 · ➕ El + del menú en computador sin cuadrado (núcleo 3.64) · CM 5.98 · Despega 7.14 · Barbería 3.84 · Billetera 1.21.145 · BiciTaller 3.74 · Estaciona 2.63 (bases SIN cambio)
+0. Cloudflare Listo → CM → Apps → 🚀 Liberar todo.
+1. En el COMPUTADOR, abre el Centro de Mando (cuenta Premium) → el ➕ dorado del menú lateral es un círculo limpio, sin cuadrado adentro. En el celular sigue igual.
+
 ## G172 · 🎨 La barra del celular sigue tus colores (núcleo 3.63) · CM 5.97 · Despega 7.13 · Barbería 3.83 · Billetera 1.21.144 · BiciTaller 3.73 · Estaciona 2.62 (bases SIN cambio)
 0. Cloudflare Listo → CM → Apps → 🚀 Liberar todo. Abre cada app instalada en el celular (si no cambia: cerrarla del todo y abrir).
 1. En cualquiera de las 6: Mi perfil → 🎨 Personalizar → elige un fondo fuerte (ej. morado) → la franja de ARRIBA (hora y batería) queda del mismo color que la cabecera.
